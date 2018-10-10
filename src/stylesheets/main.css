@@ -116,7 +116,7 @@ span.greek:hover {
 }
 
 .hidden {
-    display: 'none';
+  display: 'none' !important;
 }
 
 input[type='file'] {
@@ -147,12 +147,19 @@ input[type='file'] {
   -webkit-margin-before: 0;
 }
 
+#trns > p.hidden {
+  display: none;
+}
+
 #hleft {
   float: left;
-  padding-left: 50px;
 }
 
 #hright {
-  float: right;
-  padding-right: 50px;
+  float: left;
+}
+
+.header {
+  box-shadow: 0.15em 0.15em 1em rgba(0, 0, 0, 0.75);
+  background: white;
 }

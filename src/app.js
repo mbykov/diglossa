@@ -1,7 +1,7 @@
 //
 
-import "./stylesheets/app.css";
-import "./stylesheets/main.css";
+// import "./stylesheets/app.css";
+// import "./stylesheets/main.css";
 
 import "./lib/context_menu.js";
 // import { readCfg, writeCfg, recreateDBs, addDB } from "./lib/databases.js";
@@ -13,7 +13,7 @@ import { shell } from 'electron'
 // import sband from "./lib/clean-greek";
 import { ipcRenderer } from "electron";
 import { q, qs, empty, create, span, p, div, enclitic } from './lib/utils'
-import { parseBook } from './lib/book'
+import { parseBook, parseHeaders } from './lib/book'
 
 let fse = require('fs-extra')
 const log = console.log
@@ -89,10 +89,13 @@ function scrollPanes(event) {
 }
 
 function go(event) {
-  if (event.target.dataset.section) {
-    showSection(event.target.dataset.section)
-  } else if (event.target.dataset.book) {
-    showBook(event.target.dataset.book)
+  let data = event.target.dataset
+  if (data.header) {
+    parseHeaders(data.header)
+  } if (data.section) {
+    showSection(data.section)
+  } else if (data.book) {
+    showBook(data.book)
   }
 }
 
@@ -272,17 +275,17 @@ function installDB() {
   // showDicts()
 }
 
-function cleanStr(str) {
-  str = str.replace(/·/, '')
-  return str
-}
+// function cleanStr(str) {
+//   str = str.replace(/·/, '')
+//   return str
+// }
 
-const links = document.querySelectorAll('link[rel="import"]')
-log('LINKS', links)
+// const links = document.querySelectorAll('link[rel="import"]')
+// // log('LINKS', links)
 
-// Import and add each page to the DOM
-Array.prototype.forEach.call(links, (link) => {
-  let template = link.import.querySelector('.task-template')
-  let clone = document.importNode(template.content, true)
-  document.querySelector('.container').appendChild(clone)
-})
+// // Import and add each page to the DOM
+// Array.prototype.forEach.call(links, (link) => {
+//   let template = link.import.querySelector('.task-template')
+//   let clone = document.importNode(template.content, true)
+//   document.querySelector('.container').appendChild(clone)
+// })
