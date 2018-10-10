@@ -433,13 +433,13 @@ function parseBook(book) {
       alignPanes();
     }
   });
-  placeHplaces();
+  placeHeaders();
   let bookpath = '../../texts/Thrax';
   getFiles(bookpath);
 }
 
-function getFiles(book) {
-  let bookpath = path.resolve(__dirname, book);
+function getFiles(bookname) {
+  let bookpath = path.resolve(__dirname, bookname);
   let dir = bookpath.split('/')[bookpath.split('/').length - 1];
   let fns = glob.sync('**/*', {
     cwd: bookpath
@@ -451,8 +451,11 @@ function getFiles(book) {
 
   fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
     return path.extname != '.info';
-  });
-  let trns = [];
+  }); // let trns = []
+
+  let book = {
+    nics: []
+  };
   let auths = [];
   let author;
   let titles = [];
@@ -466,6 +469,7 @@ function getFiles(book) {
     titles.push(title);
     let lang = parts[1];
     let nic = parts[2];
+    if (!comment) book.nics.push(nic);
     let txt = fse.readFileSync(path.resolve(bookpath, fn)).toString(); // no txt ?
 
     let rows = txt.split(/\n+/);
@@ -476,11 +480,12 @@ function getFiles(book) {
       fn: fn,
       rows: rows
     };
-    if (dir.toLowerCase() == nic.toLowerCase()) auth.author = true;else if (comment) auth.com = true;
+    if (dir.toLowerCase() == nic.toLowerCase()) auth.author = true, book.author = nic, book.lang = lang;else if (comment) auth.com = true;
     auths.push(auth);
   }); // if (_.uniq(titles).length != 1) return { err: 'different titles' } // тут нужно хитрее, неясно как
 
   localStorage.setItem('auths', JSON.stringify(auths));
+  localStorage.setItem('book', JSON.stringify(book));
   parsePars(auths);
 }
 
@@ -501,7 +506,7 @@ function parsePars(auths) {
   let nics = trns.map(auth => {
     return auth.nic;
   });
-  let current = localStorage.getItem('current-nic');
+  let current = localStorage.getItem('current');
   if (!current) current = nics[0];
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
@@ -554,9 +559,24 @@ function parseLeftHeader() {
 
 function parseRightHeader() {
   let oheader = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#hright');
-  oheader.textContent = ' == right header ==';
   oheader.classList.add('header');
   oheader.dataset.header = 'close';
+  let json = localStorage.getItem('book');
+  if (!json) return;
+  let book = JSON.parse(json);
+
+  let nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(book.nics);
+
+  log('NICS', book.nics);
+  let current = localStorage.getItem('current');
+  if (!current) current = nics[0];
+  let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('ul');
+  nics.forEach(nic => {
+    let oli = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('li');
+    oli.textContent = nic;
+    oul.appendChild(oli);
+  });
+  oheader.appendChild(oul); // oheader.textContent = ' == right header =='
 }
 
 function closeHeaders() {
@@ -565,15 +585,30 @@ function closeHeaders() {
   oright.dataset.header = 'right';
 }
 
-function placeHplaces() {
+function placeHeaders() {
   let oapp = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
   let arect = oapp.getBoundingClientRect();
-  let ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#hleft');
-  ohleft.style.paddingLeft = arect.width * 0.25 - 100 + 'px';
-  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
-  let rect = otrns.getBoundingClientRect();
-  let ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#hright');
-  ohright.style.marginLeft = arect.width * 0.75 - 200 + 'px';
+  let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
+  oright.classList.add('hright');
+  oright.style.left = arect.width * 0.70 + 'px';
+  let json = localStorage.getItem('book');
+  if (!json) return;
+  let book = JSON.parse(json);
+
+  let nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(book.nics);
+
+  let current = localStorage.getItem('current');
+  if (!current) current = nics[0];
+  let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('ul');
+  let cnics = [current];
+  cnics.forEach(nic => {
+    let oli = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('li');
+    oli.textContent = nic;
+    oul.appendChild(oli);
+  });
+  oright.appendChild(oul);
+  oapp.appendChild(oright);
+  log('PLAICING', oright);
 }
 
 /***/ }),

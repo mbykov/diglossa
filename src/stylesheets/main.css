@@ -151,15 +151,31 @@ input[type='file'] {
   display: none;
 }
 
-#hleft {
+.hleft {
   float: left;
 }
 
-#hright {
-  float: left;
+.hright {
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
 }
 
 .header {
   box-shadow: 0.15em 0.15em 1em rgba(0, 0, 0, 0.75);
   background: white;
+}
+
+#headers {
+  height: 16px;
+}
+
+#book > div.hright > ul  {
+  margin: 0;
+  padding: 0;
+  -webkit-margin-before: 0;
+  -webkit-margin-after: 0;
+  -webkit-margin-start: 0;
+  -webkit-margin-end: 0;
+  -webkit-padding-start: 0;
 }
