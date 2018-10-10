@@ -1,0 +1,158 @@
+#main {
+    margin: 0;
+    padding: 10px;
+    height: 100%;
+    overflow-y: hidden;
+    overflow-x: hidden;
+}
+
+.split {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.gutter {
+    background-color: #eee;
+    background-repeat: no-repeat;
+    background-position: 50%;
+    height: 100%;
+    width: 5px;
+}
+
+.gutter.gutter-horizontal {
+    background-image: url('../../resources/vertical.png');
+    cursor: ew-resize;
+}
+
+.split, .gutter.gutter-horizontal {
+    height: 100%;
+    float: left;
+}
+
+#source {
+    font-family: "Helvetica Neue", Helvetica, Arial;
+    font-size: 14px;
+    padding-left: 15px;
+    padding-top: 25px;
+    padding-bottom: 25px;
+    /* -webkit-app-region: drag; */
+    overflow-y: hidden;
+    /* overflow-x: hidden; */
+}
+
+#trns {
+    font-family: "Helvetica Neue", Helvetica, Arial;
+    font-size: 14px;
+    padding-left: 15px;
+    padding-top: 25px;
+    padding-bottom: 25px;
+    /* margin-top: -50px; */
+    overflow-y: hidden;
+    overflow-x: hidden;
+}
+
+
+#hsource_ {
+  font-family: "Helvetica Neue", Helvetica, Arial;
+  font-size: 16px;
+  /* padding: 15px; */
+  margin-top: 15px;
+  margin-bottom: 25px;
+  /* padding: 50px; */
+  padding-top: 15px;
+  padding-bottom: 25px;
+  /* -webkit-app-region: drag; */
+  overflow-y: hidden;
+  /* overflow-x: hidden; */
+}
+
+#thrns_ {
+  font-family: "Helvetica Neue", Helvetica, Arial;
+  font-size: 14px;
+  padding-left: 15px;
+  padding-top: 25px;
+  padding-bottom: 25px;
+  /* margin-top: -50px; */
+  overflow-y: hidden;
+  overflow-x: hidden;
+}
+
+.link {
+    cursor: pointer;
+}
+
+.clause {
+    background-color: #eee;
+}
+
+
+span {
+    padding-right: 5px;
+}
+
+span.space {
+    padding-right: 0;
+}
+
+span.greek {
+    padding-right: 0;
+}
+
+span.term {
+    padding-right: 0;
+}
+
+span.greek:hover {
+    background-color: #eee8aa;
+}
+
+
+
+.grey {
+    color: grey;
+}
+
+.hidden {
+    display: 'none';
+}
+
+input[type='file'] {
+    color: transparent;
+}
+
+.maroon {
+    color: maroon;
+}
+
+/* span.clear { clear: left; display: block; } */
+
+#book {
+  padding-top: 0;
+  margin: 0;
+  height: 100%;
+  overflow-y: hidden;
+  overflow-x: hidden;
+}
+
+#headers {
+  margin: 0;
+  height: 25px;
+}
+
+#headers > p {
+  margin: 0;
+  -webkit-margin-before: 0;
+}
+
+#hleft {
+  float: left;
+  padding-left: 50px;
+}
+
+#hright {
+  float: right;
+  padding-right: 50px;
+}
