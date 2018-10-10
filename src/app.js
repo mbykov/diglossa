@@ -92,6 +92,7 @@ function go(event) {
   let data = event.target.dataset
   if (data.header) {
     parseHeaders(data.header)
+    log('GO HEAD', data.header)
   } if (data.section) {
     showSection(data.section)
   } else if (data.book) {

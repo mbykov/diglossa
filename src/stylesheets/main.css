@@ -159,6 +159,8 @@ input[type='file'] {
   cursor: pointer;
   position: absolute;
   top: 10px;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 .header {

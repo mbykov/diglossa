@@ -21,7 +21,7 @@ export function parseBook(book) {
     }
   })
 
-  placeHeaders()
+  placeRightHeader()
 
   let bookpath = '../../texts/Thrax'
   getFiles(bookpath)
@@ -111,67 +111,91 @@ function alignPanes() {
 
 
 export function parseHeaders(name) {
-  if (name == 'close') closeHeaders()
-  if (name == 'left') parseLeftHeader()
-  if (name == 'right') parseRightHeader()
+  log('HEAD REMOVED', name)
+  // if (name == 'close') closeHeaders()
+  // if (name == 'left') parseLeftHeader()
+  // if (name == 'right') parseRightHeader()
 }
 
 function parseLeftHeader() {
   let anchor = q('#hleft')
-  // let oheader = placeHeader(anchor)
   // oheader.textContent = '========================'
 }
 
-function parseRightHeader() {
-  let oheader = q('#hright')
-  oheader.classList.add('header')
-  oheader.dataset.header = 'close'
+function chaingeRightHeader() {
+  log('------------------------------------->chaingeRightHeader')
+  let oright = q('.hright')
+  oright.classList.add('header')
+  // oright.dataset.header = 'close'
   let json = localStorage.getItem('book')
   if (!json) return
   let book = JSON.parse(json)
   let nics = _.uniq(book.nics)
   log('NICS', book.nics)
+  createHeader(nics)
+  // log('OUL', oul)
+  // oright.appendChild(oul)
+  oright.addEventListener("click", selectCurrent, false)
+}
 
+function selectCurrent(ev) {
+  let oright = q('.hright')
+  let current = ev.target.textContent
+  log('EV-selectCurrent', ev.target, current)
+  localStorage.setItem('current', current)
+  let cnics = [current]
+  createHeader(cnics)
+  oright.classList.remove('header')
+
+  // oul.classList.remove('header')
+  oright.addEventListener("click", chaingeRightHeader, false)
+}
+
+function placeRightHeader() {
+  let oapp = q('#book')
+  let arect = oapp.getBoundingClientRect()
+  let oright = div()
+  oright.classList.add('hright')
+  oright.style.left = arect.width*0.70 + 'px'
+  // oright.dataset.header = 'right'
+  oright.addEventListener("click", chaingeRightHeader, false)
   let current = localStorage.getItem('current')
-  if (!current) current = nics[0]
+  // current = false
+  if (!current) {
+    let json = localStorage.getItem('book')
+    if (!json) return
+    let book = JSON.parse(json)
+    let nics = _.uniq(book.nics)
+    current = nics[0]
+    localStorage.setItem('current', current)
+  }
+  let cnics = [current]
+  log('CNICS', cnics)
+  let oul = createHeader(cnics)
+  oright.appendChild(oul)
+  oapp.appendChild(oright)
+  log('PLAICING', oright)
+}
 
-  let oul = create('ul')
+function createHeader(nics) {
+  let oul = q('#oul')
+  if (!oul) {
+    oul = create('ul')
+    oul.id = 'oul'
+  }
+  empty(oul)
   nics.forEach(nic=> {
     let oli = create('li')
     oli.textContent = nic
     oul.appendChild(oli)
   })
-  oheader.appendChild(oul)
-  // oheader.textContent = ' == right header =='
-
+  log('createHeader-nics', nics)
+  log('createHeader', oul)
+  return oul
 }
 
 function closeHeaders() {
   let oright = q('#hright')
   oright.classList.remove('header')
   oright.dataset.header = 'right'
-}
-
-function placeHeaders() {
-  let oapp = q('#book')
-  let arect = oapp.getBoundingClientRect()
-  let oright = div()
-  oright.classList.add('hright')
-  oright.style.left = arect.width*0.70 + 'px'
-  let json = localStorage.getItem('book')
-  if (!json) return
-  let book = JSON.parse(json)
-  let nics = _.uniq(book.nics)
-  let current = localStorage.getItem('current')
-  if (!current) current = nics[0]
-  let oul = create('ul')
-  let cnics = [current]
-  cnics.forEach(nic=> {
-    let oli = create('li')
-    oli.textContent = nic
-    oul.appendChild(oli)
-  })
-  oright.appendChild(oul)
-  oapp.appendChild(oright)
-  log('PLAICING', oright)
 }
