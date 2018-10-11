@@ -138,18 +138,19 @@ const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app;
 const appPath = app.getAppPath();
 let userDataPath = app.getPath("userData"); // enableDBs(userDataPath, appPath, isDev)
 
-showSection('title');
-electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('section', function (event, name) {
-  if (name == 'dicts') showDicts();else if (name == 'cleanup') showCleanup();else if (name == 'install') showInstall();else showSection(name);
-});
-
-function orthoPars(pars) {
-  pars.forEach(spans => {
-    spans.forEach(spn => {
-      if (spn.gr) spn.text = comb(spn.text);
-    });
-  });
-}
+showSection('title'); // ipcRenderer.on('section', function (event, name) {
+//   if (name == 'dicts') showDicts()
+//   else if (name == 'cleanup') showCleanup()
+//   else if (name == 'install') showInstall()
+//   else showSection(name)
+// })
+// function orthoPars(pars) {
+//   pars.forEach(spans => {
+//     spans.forEach(spn => {
+//       if (spn.gr) spn.text = comb(spn.text)
+//     })
+//   })
+// }
 
 clipboard.on('text-changed', () => {// showText ([])
 }).startWatching();
@@ -167,8 +168,7 @@ function showBook(book) {
   oprg.style.display = "inline-block";
   Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseBook"])(book);
   oprg.style.display = "none";
-} // document.addEventListener("mouseover", checkGreek, false)
-
+}
 
 document.addEventListener("click", go, false);
 document.addEventListener("wheel", scrollPanes, false);
@@ -213,202 +213,6 @@ function keyGo(ev) {
   trns.scrollTop = source.scrollTop;
 }
 
-function showText(pars) {
-  if (!pars) return;
-  showSection('main');
-  let oprg = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#progress');
-  oprg.style.display = "inline-block"; // Split(['#text', '#results'], {
-  //   sizes: [50, 50],
-  //   gutterSize: 5,
-  //   cursor: 'col-resize',
-  //   minSize: [0, 0]
-  // })
-
-  let otext = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#text');
-  Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["empty"])(otext);
-  let wfs = [];
-  pars.forEach(spans => {
-    let opar = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["p"])();
-    opar.classList.add('greek');
-    spans.forEach(spn => {
-      let ospan = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["span"])(spn.text);
-      if (spn.gr) ospan.classList.add('greek'), wfs.push(spn.text);
-      if (spn.text == ' ') ospan.classList.add('space');
-      opar.appendChild(ospan);
-    });
-    otext.appendChild(opar);
-  });
-  oprg.style.display = "none";
-}
-
-function showNoRes() {
-  let nores = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["span"])('no result');
-  let ores = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#results');
-  ores.appendChild(nores);
-}
-
-const historyMode = event => {
-  const checkArrow = element => {
-    // if (!element.classList.contains("arrow")) return
-    if (element.id === "new-version") {// log('NEW VERS CLICKED')
-    }
-
-    if (element.id === "arrow-left") {
-      if (hstate - 1 > -1) hstate--; // showText(hstates[hstate])
-    } else if (element.id === "arrow-right") {
-      if (hstate + 1 < hstates.length) hstate++; // showText(hstates[hstate])
-    }
-  };
-
-  checkArrow(event.target);
-};
-
-const checkGreek = event => {
-  if (event.shiftKey) return;
-
-  const checkDomElement = element => {
-    if (element.nodeName !== "SPAN") return;
-
-    if (element.classList.contains("greek")) {
-      let query = element.textContent;
-      if (!query) return; // showResults(query)
-    }
-  };
-
-  checkDomElement(event.target);
-};
-
-Mousetrap.bind(['command+p', 'ctrl+p'], function () {
-  let el = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('span.greek:hover');
-  if (!el) return;
-  let query = el.textContent;
-  let href1 = 'http://www.perseus.tufts.edu/hopper/morph?l=';
-  let href2 = '&la=greek#lexicon';
-  let href = [href1, query, href2].join('');
-  electron__WEBPACK_IMPORTED_MODULE_2__["shell"].openExternal(href);
-  return false;
-});
-Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
-  if (ev.which == 37 && hstate - 1 > -1) hstate--;
-  if (ev.which == 39 && hstate + 1 < hstates.length) hstate++; // showText(hstates[hstate])
-
-  return false;
-});
-
-function showDicts() {
-  showSection('dicts');
-  let cfg = readCfg();
-  let hiddens = ['flex', 'specs'];
-
-  let mins = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.filter(cfg, db => {
-    return !hiddens.includes(db.name);
-  });
-
-  let obj = {
-    dbs: mins
-  };
-  const tablePath = path.resolve(appPath, 'src/sections/dictTable.mustache');
-  const tmpl = fse.readFileSync(tablePath).toString();
-  let html = mustache.render(tmpl, obj);
-  let otbody = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#tbody');
-  otbody.innerHTML = html;
-  let rows = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["qs"])('.active-dict');
-  rows.forEach(row => {
-    let cf = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(cfg, db => {
-      return db.name == row.name;
-    });
-
-    if (!cf) return;
-    row.checked = cf.active ? true : false;
-  });
-  let oorder = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#order');
-  otbody.addEventListener("click", activeCfg, false);
-  oorder.addEventListener("click", reorderCfg, false);
-}
-
-function reorderCfg(ev) {
-  let cfg = readCfg();
-
-  let clicked = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(cfg, db => {
-    return db.name == ev.target.id;
-  });
-
-  if (!clicked) return;
-  cfg = cfg.filter(db => db.name !== ev.target.id);
-  cfg.unshift(clicked);
-  cfg.forEach((cf, idx) => {
-    cf.idx = idx;
-  });
-  writeCfg(cfg);
-  showDicts();
-}
-
-function activeCfg(ev) {
-  if (ev.target.type != 'checkbox') return;
-  let cfg = readCfg();
-
-  let clicked = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(cfg, db => {
-    return db.name == ev.target.name;
-  });
-
-  if (!clicked) return;
-  let chk = ev.target.checked;
-  clicked.active = chk ? true : false; // погасить галочку
-
-  let row = ev.target.parentNode.parentNode;
-  let img = row.getElementsByTagName('img')[0]; // if (chk) img.style.display = 'block'
-  // else img.style.display = 'none'
-
-  writeCfg(cfg);
-  showDicts();
-}
-
-function showCleanup() {
-  showSection('cleanup');
-  let ocleanup = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#cleanup');
-  ocleanup.addEventListener("click", cleanupDBs, false);
-}
-
-function cleanupDBs() {
-  recreateDBs();
-  showDicts();
-}
-
-function showInstall() {
-  showSection('install');
-  let oinputfile = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#inputfile');
-
-  oinputfile.onchange = function (ev) {
-    let fileList = oinputfile.files;
-    let fname = fileList[0].name;
-    let fpath = fileList[0].path;
-    let ofn = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#filename');
-    ofn.textContent = fname;
-    ofn.setAttribute('fpath', fpath);
-  };
-
-  let oinstall = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#dbinstall');
-  oinstall.addEventListener("click", installDB, false);
-}
-
-function installDB() {
-  let ofn = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#filename');
-  let fpath = ofn.getAttribute('fpath');
-  addDB(fpath);
-  ofn.textContent = 'done'; // showDicts()
-} // function cleanStr(str) {
-//   str = str.replace(/·/, '')
-//   return str
-// }
-// const links = document.querySelectorAll('link[rel="import"]')
-// // log('LINKS', links)
-// // Import and add each page to the DOM
-// Array.prototype.forEach.call(links, (link) => {
-//   let template = link.import.querySelector('.task-template')
-//   let clone = document.importNode(template.content, true)
-//   document.querySelector('.container').appendChild(clone)
-// })
-
 /***/ }),
 
 /***/ "./src/lib/book.js":
@@ -449,7 +253,8 @@ function parseBook(book) {
     onDragEnd: function (sizes) {
       reSetBook();
     }
-  });
+  }); //
+
   createRightHeader();
   let bookpath = '../../texts/Thrax';
   let auths = getFiles(bookpath);

@@ -21,8 +21,8 @@ export function parseBook(book) {
     }
   })
 
+  //
   createRightHeader()
-
   let bookpath = '../../texts/Thrax'
   let auths = getFiles(bookpath)
   setBookText(auths)
