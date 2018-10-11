@@ -172,6 +172,7 @@ function showBook(book) {
 
 document.addEventListener("click", go, false);
 document.addEventListener("wheel", scrollPanes, false);
+document.addEventListener("keydown", keyGo, false);
 
 function scrollPanes(ev) {
   if (ev.shiftKey == true) return;
@@ -182,18 +183,34 @@ function scrollPanes(ev) {
   trns.scrollTop = source.scrollTop;
 }
 
-function go(event) {
-  let data = event.target.dataset;
-
-  if (data.header) {// parseHeaders(data.header)
-    // log('GO HEAD', data.header)
-  }
+function go(ev) {
+  let data = ev.target.dataset;
 
   if (data.section) {
     showSection(data.section);
   } else if (data.book) {
     showBook(data.book);
   }
+}
+
+function keyGo(ev) {
+  let source = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#source');
+  let trns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#trns');
+  trns.scrollTop = source.scrollTop;
+
+  if (ev.keyCode == 38) {
+    source.scrollTop = source.scrollTop - 24;
+  } else if (ev.keyCode == 40) {
+    source.scrollTop = source.scrollTop + 24;
+  } else if (ev.keyCode == 33) {
+    let height = source.clientHeight;
+    source.scrollTop = source.scrollTop - height + 60;
+  } else if (ev.keyCode == 34) {
+    let height = source.clientHeight;
+    source.scrollTop = source.scrollTop + height - 60;
+  }
+
+  trns.scrollTop = source.scrollTop;
 }
 
 function showText(pars) {
