@@ -13,7 +13,7 @@ import { shell } from 'electron'
 // import sband from "./lib/clean-greek";
 import { ipcRenderer } from "electron";
 import { q, qs, empty, create, span, p, div, enclitic } from './lib/utils'
-import { parseBook, parseHeaders } from './lib/book'
+import { parseBook } from './lib/book'
 
 let fse = require('fs-extra')
 const log = console.log
@@ -80,8 +80,9 @@ function showBook(book) {
 document.addEventListener("click", go, false)
 document.addEventListener("wheel", scrollPanes, false)
 
-function scrollPanes(event) {
-  let delta = (event.deltaY > 0) ? 24 : -24
+function scrollPanes(ev) {
+  if (ev.shiftKey == true) return;
+  let delta = (ev.deltaY > 0) ? 24 : -24
   let source = q('#source')
   let trns = q('#trns')
   source.scrollTop += delta
@@ -91,8 +92,8 @@ function scrollPanes(event) {
 function go(event) {
   let data = event.target.dataset
   if (data.header) {
-    parseHeaders(data.header)
-    log('GO HEAD', data.header)
+    // parseHeaders(data.header)
+    // log('GO HEAD', data.header)
   } if (data.section) {
     showSection(data.section)
   } else if (data.book) {

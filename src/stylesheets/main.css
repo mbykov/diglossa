@@ -151,9 +151,9 @@ input[type='file'] {
   display: none;
 }
 
-.hleft {
-  float: left;
-}
+/* .hleft { */
+/*   float: left; */
+/* } */
 
 .hright {
   cursor: pointer;
@@ -161,6 +161,7 @@ input[type='file'] {
   top: 10px;
   padding-left: 15px;
   padding-right: 15px;
+  color: maroon;
 }
 
 .header {
@@ -170,9 +171,20 @@ input[type='file'] {
 
 #headers {
   height: 16px;
+  padding-bottom: 10px;
 }
 
 #book > div.hright > ul  {
+  margin: 0;
+  padding: 0;
+  -webkit-margin-before: 0;
+  -webkit-margin-after: 0;
+  -webkit-margin-start: 0;
+  -webkit-margin-end: 0;
+  -webkit-padding-start: 0;
+}
+
+#book {
   margin: 0;
   padding: 0;
   -webkit-margin-before: 0;

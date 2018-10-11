@@ -17,14 +17,15 @@ export function parseBook(book) {
     cursor: 'col-resize',
     minSize: [0, 0],
     onDragEnd: function (sizes) {
-      alignPanes()
+      reSetBook()
     }
   })
 
   createRightHeader()
 
   let bookpath = '../../texts/Thrax'
-  getFiles(bookpath)
+  let auths = getFiles(bookpath)
+  setBookText(auths)
 }
 
 function getFiles(bookname) {
@@ -60,10 +61,11 @@ function getFiles(bookname) {
   // if (_.uniq(titles).length != 1) return { err: 'different titles' } // тут нужно хитрее, неясно как
   localStorage.setItem('auths', JSON.stringify(auths))
   localStorage.setItem('book', JSON.stringify(book))
-  parsePars(auths)
+  return auths
+  // setBookText(auths)
 }
 
-function parsePars(auths) {
+function setBookText(auths) {
   let otext = q('#source')
   let ores = q('#trns')
   empty(otext)
@@ -77,44 +79,64 @@ function parsePars(auths) {
   let otrns = q('#trns')
   author.rows.forEach((astr, idx) => {
     let oleft = p(astr)
+    oleft.setAttribute('idx', idx)
+    oleft.setAttribute('nic', author.nic)
     osource.appendChild(oleft)
+    let orights = []
     trns.forEach(auth => {
       let rstr = auth.rows[idx]
       let oright = p(rstr)
+      oright.setAttribute('idx', idx)
+      oright.setAttribute('nic', auth.nic)
       otrns.appendChild(oright)
-      if (auth.nic != current) oright.classList.add('hidden')
-      else alignPar(oleft, oright)
+      if (auth.nic == current) oright.setAttribute('active', true)
+      orights.push(oright)
     })
+    alignPars(idx, oleft, orights)
+  })
+  otrns.addEventListener("wheel", cyclePar, false)
+}
+
+function alignPars(idx, oleft, orights) {
+  orights.push(oleft)
+  let heights = orights.map(par => { return par.scrollHeight })
+  let max = _.max(heights)
+  orights.forEach(par => {
+    par.style.height = max + 'px'
+    if (!par.getAttribute('active')) par.classList.add('hidden')
   })
 }
 
-function alignPar(oleft, oright) {
-  // oright.style.marginBottom = '12px';
-  // oleft.style.marginBottom = '12px';
-  let aheight = oleft.offsetHeight
-  let rheight = oright.offsetHeight
-  let max = _.max([aheight, rheight])
-  let bottom
-  if (rheight == max) {
-    oleft.style.height = max + 'px'
-  } else {
-    oright.style.height = max + 'px'
-  }
+function cyclePar(ev) {
+  if (ev.shiftKey != true) return
+  let idx = ev.target.getAttribute('idx')
+  let book = localStorage.getItem('book')
+  if (!book) return
+  book = JSON.parse(book)
+  let nics = book.nics
+  if (nics.length < 2) return
+
+  let selector = '#trns [idx="'+idx+'"]'
+  let pars = qs(selector)
+  let cur = _.find(pars, par=> { return !par.classList.contains('hidden') })
+  let nic = cur.getAttribute('nic')
+  let nicidx = nics.indexOf(nic)
+  let nextnic = (nicidx+1 == nics.length) ? nics[0] : nics[nicidx+1]
+  let next = _.find(pars, par=> { return par.getAttribute('nic') == nextnic })
+  next.classList.remove('hidden')
+  cur.classList.add('hidden')
 }
 
-function alignPanes() {
+function reSetBook() {
   let auths = localStorage.getItem('auths')
   if (!auths) return
   auths = JSON.parse(auths)
-  parsePars(auths)
-}
-
-
-export function parseHeaders(name) {
-  log('HEAD REMOVED', name)
-  // if (name == 'close') closeHeaders()
-  // if (name == 'left') parseLeftHeader()
-  // if (name == 'right') parseRightHeader()
+  let osource = q('#source')
+  let otrns = q('#trns')
+  let scrollTop = osource.scrollTop
+  setBookText(auths)
+  osource.scrollTop = scrollTop
+  otrns.scrollTop = scrollTop
 }
 
 function parseLeftHeader() {
@@ -122,46 +144,34 @@ function parseLeftHeader() {
   // oheader.textContent = '========================'
 }
 
-function chaingeRightHeader(ev) {
-  // log('-----> chaingeRightHeader', ev.currentTarget.nodeName)
-  // if (ev.currentTarget.nodeName == 'UL') return
+function changeRightHeader(ev) {
   let oright = q('.hright')
   oright.classList.add('header')
   let json = localStorage.getItem('book')
   if (!json) return
   let book = JSON.parse(json)
   let nics = _.uniq(book.nics)
-  // log('NICS', book.nics)
   createNicList(nics)
 }
 
 function selectCurrent(ev) {
-  // log('-----> selectCurrent', ev.currentTarget.nodeName)
-  // if (ev.currentTarget.nodeName == 'DIV') return
   let oright = q('.hright')
   let current = ev.target.textContent
   // log('EV-selectCurrent', ev.target, current)
   localStorage.setItem('current', current)
   let cnics = [current]
-  // log('EV-selectCurrent-nics', cnics)
   createNicList(cnics)
   oright.classList.remove('header')
-
-  // oul.classList.remove('header')
-  // oright.addEventListener("click", chaingeRightHeader, false)
+  reSetBook()
 }
 
 function createRightHeader() {
-  // log('--> createRightHeader')
   let oapp = q('#book')
   let arect = oapp.getBoundingClientRect()
   let oright = div()
   oright.classList.add('hright')
   oright.style.left = arect.width*0.70 + 'px'
-  // oright.dataset.header = 'right'
-  // oright.addEventListener("click", chaingeRightHeader, false)
   let current = localStorage.getItem('current')
-  // current = false
   if (!current) {
     let json = localStorage.getItem('book')
     if (!json) return
@@ -171,7 +181,6 @@ function createRightHeader() {
     localStorage.setItem('current', current)
   }
   let cnics = [current]
-  // log('CNICS', cnics)
   let oul = createNicList(cnics)
   oright.appendChild(oul)
   oapp.appendChild(oright)
@@ -186,19 +195,16 @@ function createNicList(nics) {
   empty(oul)
   nics.forEach(nic=> {
     let oli = create('li')
-    if (nics.length == 1) oli.addEventListener("click", chaingeRightHeader, false)
+    if (nics.length == 1) oli.addEventListener("click", changeRightHeader, false)
     else oli.addEventListener("click", selectCurrent, false)
     oli.textContent = nic
     oul.appendChild(oli)
   })
-  // oul.addEventListener("click", selectCurrent, false)
-  // log('createHeader-nics', nics)
-  // log('createHeader', oul)
   return oul
 }
 
 function closeHeaders() {
-  let oright = q('#hright')
-  oright.classList.remove('header')
-  oright.dataset.header = 'right'
+  // let oright = q('#hright')
+  // oright.classList.remove('header')
+  // oright.dataset.header = 'right'
 }

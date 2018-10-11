@@ -173,8 +173,9 @@ function showBook(book) {
 document.addEventListener("click", go, false);
 document.addEventListener("wheel", scrollPanes, false);
 
-function scrollPanes(event) {
-  let delta = event.deltaY > 0 ? 24 : -24;
+function scrollPanes(ev) {
+  if (ev.shiftKey == true) return;
+  let delta = ev.deltaY > 0 ? 24 : -24;
   let source = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#source');
   let trns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#trns');
   source.scrollTop += delta;
@@ -184,9 +185,8 @@ function scrollPanes(event) {
 function go(event) {
   let data = event.target.dataset;
 
-  if (data.header) {
-    Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseHeaders"])(data.header);
-    log('GO HEAD', data.header);
+  if (data.header) {// parseHeaders(data.header)
+    // log('GO HEAD', data.header)
   }
 
   if (data.section) {
@@ -398,13 +398,12 @@ function installDB() {
 /*!*************************!*\
   !*** ./src/lib/book.js ***!
   \*************************/
-/*! exports provided: parseBook, parseHeaders */
+/*! exports provided: parseBook */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseBook", function() { return parseBook; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseHeaders", function() { return parseHeaders; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! split.js */ "split.js");
@@ -431,12 +430,13 @@ function parseBook(book) {
     cursor: 'col-resize',
     minSize: [0, 0],
     onDragEnd: function (sizes) {
-      alignPanes();
+      reSetBook();
     }
   });
   createRightHeader();
   let bookpath = '../../texts/Thrax';
-  getFiles(bookpath);
+  let auths = getFiles(bookpath);
+  setBookText(auths);
 }
 
 function getFiles(bookname) {
@@ -487,10 +487,10 @@ function getFiles(bookname) {
 
   localStorage.setItem('auths', JSON.stringify(auths));
   localStorage.setItem('book', JSON.stringify(book));
-  parsePars(auths);
+  return auths; // setBookText(auths)
 }
 
-function parsePars(auths) {
+function setBookText(auths) {
   let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let ores = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otext);
@@ -513,89 +513,111 @@ function parsePars(auths) {
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   author.rows.forEach((astr, idx) => {
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])(astr);
+    oleft.setAttribute('idx', idx);
+    oleft.setAttribute('nic', author.nic);
     osource.appendChild(oleft);
+    let orights = [];
     trns.forEach(auth => {
       let rstr = auth.rows[idx];
       let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])(rstr);
+      oright.setAttribute('idx', idx);
+      oright.setAttribute('nic', auth.nic);
       otrns.appendChild(oright);
-      if (auth.nic != current) oright.classList.add('hidden');else alignPar(oleft, oright);
+      if (auth.nic == current) oright.setAttribute('active', true);
+      orights.push(oright);
     });
+    alignPars(idx, oleft, orights);
+  });
+  otrns.addEventListener("wheel", cyclePar, false);
+}
+
+function alignPars(idx, oleft, orights) {
+  orights.push(oleft);
+  let heights = orights.map(par => {
+    return par.scrollHeight;
+  });
+
+  let max = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.max(heights);
+
+  orights.forEach(par => {
+    par.style.height = max + 'px';
+    if (!par.getAttribute('active')) par.classList.add('hidden');
   });
 }
 
-function alignPar(oleft, oright) {
-  // oright.style.marginBottom = '12px';
-  // oleft.style.marginBottom = '12px';
-  let aheight = oleft.offsetHeight;
-  let rheight = oright.offsetHeight;
+function cyclePar(ev) {
+  if (ev.shiftKey != true) return;
+  let idx = ev.target.getAttribute('idx');
+  let book = localStorage.getItem('book');
+  if (!book) return;
+  book = JSON.parse(book);
+  let nics = book.nics;
+  if (nics.length < 2) return;
+  let selector = '#trns [idx="' + idx + '"]';
+  let pars = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])(selector);
 
-  let max = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.max([aheight, rheight]);
+  let cur = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(pars, par => {
+    return !par.classList.contains('hidden');
+  });
 
-  let bottom;
+  let nic = cur.getAttribute('nic');
+  let nicidx = nics.indexOf(nic);
+  let nextnic = nicidx + 1 == nics.length ? nics[0] : nics[nicidx + 1];
 
-  if (rheight == max) {
-    oleft.style.height = max + 'px';
-  } else {
-    oright.style.height = max + 'px';
-  }
+  let next = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(pars, par => {
+    return par.getAttribute('nic') == nextnic;
+  });
+
+  next.classList.remove('hidden');
+  cur.classList.add('hidden');
 }
 
-function alignPanes() {
+function reSetBook() {
   let auths = localStorage.getItem('auths');
   if (!auths) return;
   auths = JSON.parse(auths);
-  parsePars(auths);
-}
-
-function parseHeaders(name) {
-  log('HEAD REMOVED', name); // if (name == 'close') closeHeaders()
-  // if (name == 'left') parseLeftHeader()
-  // if (name == 'right') parseRightHeader()
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
+  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
+  let scrollTop = osource.scrollTop;
+  setBookText(auths);
+  osource.scrollTop = scrollTop;
+  otrns.scrollTop = scrollTop;
 }
 
 function parseLeftHeader() {
   let anchor = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#hleft'); // oheader.textContent = '========================'
 }
 
-function chaingeRightHeader(ev) {
-  // log('-----> chaingeRightHeader', ev.currentTarget.nodeName)
-  // if (ev.currentTarget.nodeName == 'UL') return
+function changeRightHeader(ev) {
   let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('.hright');
   oright.classList.add('header');
   let json = localStorage.getItem('book');
   if (!json) return;
   let book = JSON.parse(json);
 
-  let nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(book.nics); // log('NICS', book.nics)
-
+  let nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(book.nics);
 
   createNicList(nics);
 }
 
 function selectCurrent(ev) {
-  // log('-----> selectCurrent', ev.currentTarget.nodeName)
-  // if (ev.currentTarget.nodeName == 'DIV') return
   let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('.hright');
   let current = ev.target.textContent; // log('EV-selectCurrent', ev.target, current)
 
   localStorage.setItem('current', current);
-  let cnics = [current]; // log('EV-selectCurrent-nics', cnics)
-
+  let cnics = [current];
   createNicList(cnics);
-  oright.classList.remove('header'); // oul.classList.remove('header')
-  // oright.addEventListener("click", chaingeRightHeader, false)
+  oright.classList.remove('header');
+  reSetBook();
 }
 
 function createRightHeader() {
-  // log('--> createRightHeader')
   let oapp = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
   let arect = oapp.getBoundingClientRect();
   let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
   oright.classList.add('hright');
-  oright.style.left = arect.width * 0.70 + 'px'; // oright.dataset.header = 'right'
-  // oright.addEventListener("click", chaingeRightHeader, false)
-
-  let current = localStorage.getItem('current'); // current = false
+  oright.style.left = arect.width * 0.70 + 'px';
+  let current = localStorage.getItem('current');
 
   if (!current) {
     let json = localStorage.getItem('book');
@@ -608,8 +630,7 @@ function createRightHeader() {
     localStorage.setItem('current', current);
   }
 
-  let cnics = [current]; // log('CNICS', cnics)
-
+  let cnics = [current];
   let oul = createNicList(cnics);
   oright.appendChild(oul);
   oapp.appendChild(oright);
@@ -626,20 +647,16 @@ function createNicList(nics) {
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(oul);
   nics.forEach(nic => {
     let oli = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('li');
-    if (nics.length == 1) oli.addEventListener("click", chaingeRightHeader, false);else oli.addEventListener("click", selectCurrent, false);
+    if (nics.length == 1) oli.addEventListener("click", changeRightHeader, false);else oli.addEventListener("click", selectCurrent, false);
     oli.textContent = nic;
     oul.appendChild(oli);
-  }); // oul.addEventListener("click", selectCurrent, false)
-  // log('createHeader-nics', nics)
-  // log('createHeader', oul)
-
+  });
   return oul;
 }
 
-function closeHeaders() {
-  let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#hright');
-  oright.classList.remove('header');
-  oright.dataset.header = 'right';
+function closeHeaders() {// let oright = q('#hright')
+  // oright.classList.remove('header')
+  // oright.dataset.header = 'right'
 }
 
 /***/ }),
