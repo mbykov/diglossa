@@ -636,6 +636,7 @@ function parseCSV(str) {
   let size = rows[0].length;
   let book = {};
   rows.slice(0, 2).forEach((row, idx) => {
+    if (row[0] != '#') return;
     if (/title/.test(row)) book.title = row.split(',')[0].split(':')[1].trim();else book.nics = row.split(','), book.author = book.nics[0];
   });
   if (!book.nics) book.nics = ['a', 'b', 'c'];
@@ -653,7 +654,8 @@ function parseCSV(str) {
     if (row[0] == '#') return;
     let cols = row.split('","');
     cols.forEach((col, idy) => {
-      if (!auths[idy]) log('ERR', idx, idy, cols);
+      col = col.replace(/,,+/, ',');
+      if (col == ',') return;
       auths[idy].rows.push(col);
     });
   });
