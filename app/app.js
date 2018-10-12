@@ -102,6 +102,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./lib/utils */ "./src/lib/utils.js");
 /* harmony import */ var _lib_book__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./lib/book */ "./src/lib/book.js");
+/* harmony import */ var _lib_getfiles__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/getfiles */ "./src/lib/getfiles.js");
 //
 // import "./stylesheets/app.css";
 // import "./stylesheets/main.css";
@@ -111,6 +112,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
  // import sband from "./lib/clean-greek";
+
 
 
 
@@ -128,10 +130,11 @@ const path = __webpack_require__(/*! path */ "path"); // const mustache = requir
 
 const clipboard = __webpack_require__(/*! electron-clipboard-extended */ "electron-clipboard-extended");
 
-let hterms = {};
-let hstate = -1;
-let hstates = []; // const isDev = require('electron-is-dev')
+const {
+  dialog
+} = __webpack_require__(/*! electron */ "electron").remote; // const isDev = require('electron-is-dev')
 // const isDev = false
+
 
 const isDev = true;
 const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app;
@@ -162,12 +165,19 @@ function showSection(name) {
   oapp.innerHTML = section;
 }
 
-function showBook(book) {
+function showBook(fns) {
   showSection('main');
   let oprg = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#progress');
   oprg.style.display = "inline-block";
-  Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseBook"])(book);
-  oprg.style.display = "none";
+  let fpath = fns[0];
+  log('SHOWBOOK', fns);
+  if (/\.ods/.test(fpath)) Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openODS"])(fpath, csv => {
+    log('ODS END JSON', csv);
+    oprg.style.display = "none";
+  });else {
+    log('OTHER THEN ODS');
+    oprg.style.display = "none";
+  } // parseBook(book)
 }
 
 document.addEventListener("click", go, false);
@@ -190,12 +200,21 @@ function go(ev) {
     showSection(data.section);
   } else if (data.book) {
     showBook(data.book);
+  } else if (data.ods) {
+    dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [{
+        name: 'book',
+        extensions: ['ods']
+      }]
+    }, showBook);
   }
 }
 
 function keyGo(ev) {
   let source = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#source');
   let trns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#trns');
+  if (!source || !trns) return;
   trns.scrollTop = source.scrollTop;
 
   if (ev.keyCode == 38) {
@@ -219,11 +238,12 @@ function keyGo(ev) {
 /*!*************************!*\
   !*** ./src/lib/book.js ***!
   \*************************/
-/*! exports provided: parseBook */
+/*! exports provided: parseBook1, parseBook */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseBook1", function() { return parseBook1; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseBook", function() { return parseBook; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
@@ -242,6 +262,28 @@ const log = console.log;
 
 const glob = __webpack_require__(/*! glob */ "glob");
 
+function parseBook1(csv) {
+  var sizes = localStorage.getItem('split-sizes');
+  if (sizes) sizes = JSON.parse(sizes);else sizes = [50, 50];
+  split_js__WEBPACK_IMPORTED_MODULE_1___default()(['#source', '#trns'], {
+    sizes: sizes,
+    gutterSize: 5,
+    cursor: 'col-resize',
+    minSize: [0, 0],
+    onDragEnd: function (sizes) {
+      reSetBook();
+    }
+  });
+  csv.then(json => {
+    log('JSON', json.slice(0, 50));
+    let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
+    osource.textContent = json;
+  }); //
+  // createRightHeader()
+  // let bookpath = '../../texts/Thrax'
+  // let auths = getFiles(bookpath)
+  // setBookText(auths)
+}
 function parseBook(book) {
   var sizes = localStorage.getItem('split-sizes');
   if (sizes) sizes = JSON.parse(sizes);else sizes = [50, 50];
@@ -547,6 +589,87 @@ document.addEventListener("contextmenu", event => {
 
 /***/ }),
 
+/***/ "./src/lib/getfiles.js":
+/*!*****************************!*\
+  !*** ./src/lib/getfiles.js ***!
+  \*****************************/
+/*! exports provided: openODS */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "openODS", function() { return openODS; });
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
+
+ // import { parseBook1 } from './book'
+
+const fse = __webpack_require__(/*! fs-extra */ "fs-extra");
+
+const path = __webpack_require__(/*! path */ "path");
+
+const glob = __webpack_require__(/*! glob */ "glob");
+
+const csv = __webpack_require__(/*! csvtojson */ "csvtojson");
+
+const textract = __webpack_require__(/*! textract */ "textract");
+
+const log = console.log;
+function openODS(fpath, cb) {
+  if (fpath === undefined) return;
+
+  try {
+    textract.fromFileWithPath(fpath, {
+      preserveLineBreaks: true
+    }, function (err, str) {
+      parseCSV(str);
+      cb(true);
+    });
+  } catch (err) {
+    if (err) log('ODS ERR', err);
+  }
+}
+
+function parseCSV(str) {
+  let rows = str.split('\n');
+  let size = rows[0].length;
+  let book = {};
+  rows.slice(0, 2).forEach((row, idx) => {
+    if (/title/.test(row)) book.title = row.split(',')[0].split(':')[1].trim();else book.nics = row.split(','), book.author = book.nics[0];
+  });
+  if (!book.nics) book.nics = ['a', 'b', 'c'];
+  let auths = [];
+  book.nics.forEach((nic, idx) => {
+    let auth = {
+      idx: idx,
+      nic: nic,
+      rows: []
+    };
+    auths.push(auth);
+  });
+  log('AUS', auths);
+  rows.forEach((row, idx) => {
+    if (row[0] == '#') return;
+    let cols = row.split('","');
+    cols.forEach((col, idy) => {
+      if (!auths[idy]) log('ERR', idx, idy, cols);
+      auths[idy].rows.push(col);
+    });
+  });
+  log('A', auths[0]);
+} // csv({
+//   noheader: true,
+//   output: "json"
+// })
+//   .fromString(data)
+//   .then((json)=>{
+//     // cb(json)
+//     cb({})
+//   })
+
+/***/ }),
+
 /***/ "./src/lib/utils.js":
 /*!**************************!*\
   !*** ./src/lib/utils.js ***!
@@ -680,6 +803,17 @@ function enclitic(str) {
 
 /***/ }),
 
+/***/ "csvtojson":
+/*!****************************!*\
+  !*** external "csvtojson" ***!
+  \****************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("csvtojson");
+
+/***/ }),
+
 /***/ "electron":
 /*!***************************!*\
   !*** external "electron" ***!
@@ -765,6 +899,17 @@ module.exports = require("path");
 /***/ (function(module, exports) {
 
 module.exports = require("split.js");
+
+/***/ }),
+
+/***/ "textract":
+/*!***************************!*\
+  !*** external "textract" ***!
+  \***************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("textract");
 
 /***/ }),
 

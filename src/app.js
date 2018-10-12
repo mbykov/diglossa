@@ -14,6 +14,7 @@ import { shell } from 'electron'
 import { ipcRenderer } from "electron";
 import { q, qs, empty, create, span, p, div, enclitic } from './lib/utils'
 import { parseBook } from './lib/book'
+import { openODS } from './lib/getfiles'
 
 let fse = require('fs-extra')
 const log = console.log
@@ -25,10 +26,7 @@ const path = require('path')
 // const mustache = require('mustache')
 
 const clipboard = require('electron-clipboard-extended')
-
-let hterms = {}
-let hstate = -1
-let hstates = []
+const {dialog} = require('electron').remote
 
 // const isDev = require('electron-is-dev')
 // const isDev = false
@@ -68,12 +66,22 @@ function showSection(name) {
   oapp.innerHTML = section
 }
 
-function showBook(book) {
+function showBook(fns) {
   showSection('main')
   let oprg = q('#progress')
   oprg.style.display = "inline-block"
-  parseBook(book)
-  oprg.style.display = "none"
+  let fpath = fns[0]
+  log('SHOWBOOK', fns)
+  if (/\.ods/.test(fpath))
+    openODS(fpath, (csv) => {
+      log('ODS END JSON', csv)
+      oprg.style.display = "none"
+    })
+  else {
+    log('OTHER THEN ODS')
+    oprg.style.display = "none"
+  }
+  // parseBook(book)
 }
 
 document.addEventListener("click", go, false)
@@ -95,12 +103,15 @@ function go(ev) {
     showSection(data.section)
   } else if (data.book) {
     showBook(data.book)
+  } else if (data.ods) {
+    dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'book', extensions: ['ods'] }]}, showBook)
   }
 }
 
 function keyGo(ev) {
   let source = q('#source')
   let trns = q('#trns')
+  if (!source || !trns) return
   trns.scrollTop = source.scrollTop
   if (ev.keyCode == 38) {
     source.scrollTop = source.scrollTop - 24

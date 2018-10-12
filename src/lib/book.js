@@ -7,6 +7,33 @@ const log = console.log
 
 const glob = require('glob')
 
+export function parseBook1(csv) {
+  var sizes = localStorage.getItem('split-sizes')
+  if (sizes) sizes = JSON.parse(sizes)
+  else sizes = [50, 50]
+  Split(['#source', '#trns'], {
+    sizes: sizes,
+    gutterSize: 5,
+    cursor: 'col-resize',
+    minSize: [0, 0],
+    onDragEnd: function (sizes) {
+      reSetBook()
+    }
+  })
+
+  csv
+    .then((json)=>{
+      log('JSON', json.slice(0,50))
+      let osource = q('#source')
+      osource.textContent = json
+    })
+  //
+  // createRightHeader()
+  // let bookpath = '../../texts/Thrax'
+  // let auths = getFiles(bookpath)
+  // setBookText(auths)
+}
+
 export function parseBook(book) {
   var sizes = localStorage.getItem('split-sizes')
   if (sizes) sizes = JSON.parse(sizes)
