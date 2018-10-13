@@ -665,17 +665,20 @@ function parseCSV(str) {
   });
   log('AUS', auths);
   rows.forEach((row, idx) => {
-    if (idx > 10) return;
-    if (row[0] == '#') return; // if (row == ',,') return
-
+    // if (idx > 10) return
+    if (row[0] == '#') return;
+    if (row == ',,') return;
     let matches = extractAllText(row); // log('IDX____', idx)
     // log('M', matches)
 
-    if (matches.length == 1) matches = matches[0].split(',');
-    let cols = matches;
+    matches.forEach(str => {
+      let corr = str.split(',').join('COMMA');
+      row = row.replace(str, corr);
+    });
+    let cols = row.split(',');
     log('COLS', cols.length);
     cols.forEach((col, idy) => {
-      col = col.replace(/,,+/, ',');
+      col = col.split('COMMA').join(',');
       if (col == ',') return;
       if (!auths[idy]) log('ERR', idy, row);
       auths[idy].rows.push(col);
@@ -688,14 +691,14 @@ function parseCSV(str) {
 
 function extractAllText(str) {
   const re = /"(.*?)"/g;
-  const result = [];
+  const results = [];
   let current;
 
   while (current = re.exec(str)) {
-    result.push(current.pop());
+    results.push(current.pop());
   }
 
-  return result.length > 0 ? result : [str];
+  return results; // return (results.length > 0) ? results : [str]
 } // csv({
 //   noheader: true,
 //   output: "json"
