@@ -7,32 +7,32 @@ const log = console.log
 
 const glob = require('glob')
 
-export function parseBook1(csv) {
-  var sizes = localStorage.getItem('split-sizes')
-  if (sizes) sizes = JSON.parse(sizes)
-  else sizes = [50, 50]
-  Split(['#source', '#trns'], {
-    sizes: sizes,
-    gutterSize: 5,
-    cursor: 'col-resize',
-    minSize: [0, 0],
-    onDragEnd: function (sizes) {
-      reSetBook()
-    }
-  })
+// export function parseBook1(csv) {
+//   var sizes = localStorage.getItem('split-sizes')
+//   if (sizes) sizes = JSON.parse(sizes)
+//   else sizes = [50, 50]
+//   Split(['#source', '#trns'], {
+//     sizes: sizes,
+//     gutterSize: 5,
+//     cursor: 'col-resize',
+//     minSize: [0, 0],
+//     onDragEnd: function (sizes) {
+//       reSetBook()
+//     }
+//   })
 
-  csv
-    .then((json)=>{
-      log('JSON', json.slice(0,50))
-      let osource = q('#source')
-      osource.textContent = json
-    })
-  //
-  // createRightHeader()
-  // let bookpath = '../../texts/Thrax'
-  // let auths = getFiles(bookpath)
-  // setBookText(auths)
-}
+//   csv
+//     .then((json)=>{
+//       log('JSON', json.slice(0,50))
+//       let osource = q('#source')
+//       osource.textContent = json
+//     })
+//   //
+//   // createRightHeader()
+//   // let bookpath = '../../texts/Thrax'
+//   // let auths = getFiles(bookpath)
+//   // setBookText(auths)
+// }
 
 export function parseBook(book) {
   var sizes = localStorage.getItem('split-sizes')
@@ -51,8 +51,8 @@ export function parseBook(book) {
   //
   createRightHeader()
   let bookpath = '../../texts/Thrax'
-  let auths = getFiles(bookpath)
-  setBookText(auths)
+  // let auths = getFiles(bookpath)
+  setBookText()
 }
 
 function getFiles(bookname) {
@@ -89,10 +89,13 @@ function getFiles(bookname) {
   localStorage.setItem('auths', JSON.stringify(auths))
   localStorage.setItem('book', JSON.stringify(book))
   return auths
-  // setBookText(auths)
 }
 
-function setBookText(auths) {
+function setBookText() {
+  let auths = localStorage.getItem('auths')
+  if (!auths) return
+  auths = JSON.parse(auths)
+  log('==>A', auths)
   let otext = q('#source')
   let ores = q('#trns')
   empty(otext)
@@ -100,8 +103,10 @@ function setBookText(auths) {
   let author = _.find(auths, auth=> { return auth.author })
   let trns = _.filter(auths, auth=> { return !auth.author && !auth.com })
   let nics = trns.map(auth => { return auth.nic })
+  log('==>NICS', nics)
   let current = localStorage.getItem('current')
-  if (!current) current = nics[0]
+  if (!current || !nics.includes(current)) current = nics[0]
+  log('==>CUR', current)
   let osource = q('#source')
   let otrns = q('#trns')
   author.rows.forEach((astr, idx) => {
@@ -116,6 +121,7 @@ function setBookText(auths) {
       oright.setAttribute('idx', idx)
       oright.setAttribute('nic', auth.nic)
       otrns.appendChild(oright)
+      if (idx == 1) log('ANIC', auth.nic, current)
       if (auth.nic == current) oright.setAttribute('active', true)
       orights.push(oright)
     })

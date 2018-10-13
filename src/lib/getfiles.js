@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
-// import { parseBook1 } from './book'
+// import { parseBook } from './book'
 
 const fse = require('fs-extra')
 const path = require('path')
@@ -12,7 +12,7 @@ const log = console.log
 export function openODS(fpath, cb) {
   if (fpath === undefined) return
   try {
-    textract.fromFileWithPath(fpath, {preserveLineBreaks: true}, function(err, str) {
+    textract.fromFileWithPath(fpath, {preserveLineBreaks: true, delimiter: '|'}, function(err, str) {
       parseCSV(str)
       cb(true)
     })
@@ -28,27 +28,50 @@ function parseCSV(str) {
   rows.slice(0,2).forEach((row, idx) => {
     if (row[0] != '#') return
     if (/title/.test(row)) book.title = row.split(',')[0].split(':')[1].trim()
-    else book.nics = row.split(','), book.author = book.nics[0]
+    else book.nics = row.split(',')
   })
-  if (!book.nics) book.nics = ['a', 'b', 'c']
+  let nics = ['name_a', 'name_b', 'name_c']
+  if (!book.nics) book.nics = nics.slice(1)
+  book.author = nics[0]
   let auths = []
-  book.nics.forEach((nic, idx) => {
+  nics.forEach((nic, idx) => {
     let auth = { idx: idx, nic: nic, rows: [] }
+    if (nic == book.author) auth.author = true
     auths.push(auth)
   })
   log('AUS', auths)
   rows.forEach((row, idx) => {
+    if (idx > 10) return
     if (row[0] == '#') return
-    let cols = row.split('","')
+    // if (row == ',,') return
+    let matches = extractAllText(row)
+    // log('IDX____', idx)
+    // log('M', matches)
+    if (matches.length == 1) matches = matches[0].split(',')
+    let cols = matches
+    log('COLS', cols.length)
     cols.forEach((col, idy) => {
       col = col.replace(/,,+/, ',')
       if (col == ',') return
+      if (!auths[idy]) log('ERR', idy, row)
       auths[idy].rows.push(col)
     })
   })
-  log('A', auths[0])
+  log('BOOK', book)
+  localStorage.setItem('auths', JSON.stringify(auths))
+  localStorage.setItem('book', JSON.stringify(book))
+  // log('A', auths[0])
 }
 
+function extractAllText(str){
+  const re = /"(.*?)"/g
+  const result = []
+  let current
+  while (current = re.exec(str)) {
+    result.push(current.pop())
+  }
+  return (result.length > 0) ? result : [str]
+}
 
 // csv({
 //   noheader: true,

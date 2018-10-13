@@ -75,6 +75,7 @@ function showBook(fns) {
   if (/\.ods/.test(fpath))
     openODS(fpath, (csv) => {
       log('ODS END JSON', csv)
+      parseBook()
       oprg.style.display = "none"
     })
   else {

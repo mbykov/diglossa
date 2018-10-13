@@ -173,6 +173,7 @@ function showBook(fns) {
   log('SHOWBOOK', fns);
   if (/\.ods/.test(fpath)) Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openODS"])(fpath, csv => {
     log('ODS END JSON', csv);
+    Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseBook"])();
     oprg.style.display = "none";
   });else {
     log('OTHER THEN ODS');
@@ -238,12 +239,11 @@ function keyGo(ev) {
 /*!*************************!*\
   !*** ./src/lib/book.js ***!
   \*************************/
-/*! exports provided: parseBook1, parseBook */
+/*! exports provided: parseBook */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseBook1", function() { return parseBook1; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseBook", function() { return parseBook; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
@@ -260,30 +260,33 @@ let path = __webpack_require__(/*! path */ "path");
 
 const log = console.log;
 
-const glob = __webpack_require__(/*! glob */ "glob");
+const glob = __webpack_require__(/*! glob */ "glob"); // export function parseBook1(csv) {
+//   var sizes = localStorage.getItem('split-sizes')
+//   if (sizes) sizes = JSON.parse(sizes)
+//   else sizes = [50, 50]
+//   Split(['#source', '#trns'], {
+//     sizes: sizes,
+//     gutterSize: 5,
+//     cursor: 'col-resize',
+//     minSize: [0, 0],
+//     onDragEnd: function (sizes) {
+//       reSetBook()
+//     }
+//   })
+//   csv
+//     .then((json)=>{
+//       log('JSON', json.slice(0,50))
+//       let osource = q('#source')
+//       osource.textContent = json
+//     })
+//   //
+//   // createRightHeader()
+//   // let bookpath = '../../texts/Thrax'
+//   // let auths = getFiles(bookpath)
+//   // setBookText(auths)
+// }
 
-function parseBook1(csv) {
-  var sizes = localStorage.getItem('split-sizes');
-  if (sizes) sizes = JSON.parse(sizes);else sizes = [50, 50];
-  split_js__WEBPACK_IMPORTED_MODULE_1___default()(['#source', '#trns'], {
-    sizes: sizes,
-    gutterSize: 5,
-    cursor: 'col-resize',
-    minSize: [0, 0],
-    onDragEnd: function (sizes) {
-      reSetBook();
-    }
-  });
-  csv.then(json => {
-    log('JSON', json.slice(0, 50));
-    let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
-    osource.textContent = json;
-  }); //
-  // createRightHeader()
-  // let bookpath = '../../texts/Thrax'
-  // let auths = getFiles(bookpath)
-  // setBookText(auths)
-}
+
 function parseBook(book) {
   var sizes = localStorage.getItem('split-sizes');
   if (sizes) sizes = JSON.parse(sizes);else sizes = [50, 50];
@@ -298,9 +301,9 @@ function parseBook(book) {
   }); //
 
   createRightHeader();
-  let bookpath = '../../texts/Thrax';
-  let auths = getFiles(bookpath);
-  setBookText(auths);
+  let bookpath = '../../texts/Thrax'; // let auths = getFiles(bookpath)
+
+  setBookText();
 }
 
 function getFiles(bookname) {
@@ -351,10 +354,14 @@ function getFiles(bookname) {
 
   localStorage.setItem('auths', JSON.stringify(auths));
   localStorage.setItem('book', JSON.stringify(book));
-  return auths; // setBookText(auths)
+  return auths;
 }
 
-function setBookText(auths) {
+function setBookText() {
+  let auths = localStorage.getItem('auths');
+  if (!auths) return;
+  auths = JSON.parse(auths);
+  log('==>A', auths);
   let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let ores = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otext);
@@ -371,8 +378,10 @@ function setBookText(auths) {
   let nics = trns.map(auth => {
     return auth.nic;
   });
+  log('==>NICS', nics);
   let current = localStorage.getItem('current');
-  if (!current) current = nics[0];
+  if (!current || !nics.includes(current)) current = nics[0];
+  log('==>CUR', current);
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   author.rows.forEach((astr, idx) => {
@@ -387,6 +396,7 @@ function setBookText(auths) {
       oright.setAttribute('idx', idx);
       oright.setAttribute('nic', auth.nic);
       otrns.appendChild(oright);
+      if (idx == 1) log('ANIC', auth.nic, current);
       if (auth.nic == current) oright.setAttribute('active', true);
       orights.push(oright);
     });
@@ -603,7 +613,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
 
- // import { parseBook1 } from './book'
+ // import { parseBook } from './book'
 
 const fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
@@ -621,7 +631,8 @@ function openODS(fpath, cb) {
 
   try {
     textract.fromFileWithPath(fpath, {
-      preserveLineBreaks: true
+      preserveLineBreaks: true,
+      delimiter: '|'
     }, function (err, str) {
       parseCSV(str);
       cb(true);
@@ -637,29 +648,54 @@ function parseCSV(str) {
   let book = {};
   rows.slice(0, 2).forEach((row, idx) => {
     if (row[0] != '#') return;
-    if (/title/.test(row)) book.title = row.split(',')[0].split(':')[1].trim();else book.nics = row.split(','), book.author = book.nics[0];
+    if (/title/.test(row)) book.title = row.split(',')[0].split(':')[1].trim();else book.nics = row.split(',');
   });
-  if (!book.nics) book.nics = ['a', 'b', 'c'];
+  let nics = ['name_a', 'name_b', 'name_c'];
+  if (!book.nics) book.nics = nics.slice(1);
+  book.author = nics[0];
   let auths = [];
-  book.nics.forEach((nic, idx) => {
+  nics.forEach((nic, idx) => {
     let auth = {
       idx: idx,
       nic: nic,
       rows: []
     };
+    if (nic == book.author) auth.author = true;
     auths.push(auth);
   });
   log('AUS', auths);
   rows.forEach((row, idx) => {
-    if (row[0] == '#') return;
-    let cols = row.split('","');
+    if (idx > 10) return;
+    if (row[0] == '#') return; // if (row == ',,') return
+
+    let matches = extractAllText(row); // log('IDX____', idx)
+    // log('M', matches)
+
+    if (matches.length == 1) matches = matches[0].split(',');
+    let cols = matches;
+    log('COLS', cols.length);
     cols.forEach((col, idy) => {
       col = col.replace(/,,+/, ',');
       if (col == ',') return;
+      if (!auths[idy]) log('ERR', idy, row);
       auths[idy].rows.push(col);
     });
   });
-  log('A', auths[0]);
+  log('BOOK', book);
+  localStorage.setItem('auths', JSON.stringify(auths));
+  localStorage.setItem('book', JSON.stringify(book)); // log('A', auths[0])
+}
+
+function extractAllText(str) {
+  const re = /"(.*?)"/g;
+  const result = [];
+  let current;
+
+  while (current = re.exec(str)) {
+    result.push(current.pop());
+  }
+
+  return result.length > 0 ? result : [str];
 } // csv({
 //   noheader: true,
 //   output: "json"
