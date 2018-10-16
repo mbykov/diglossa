@@ -637,23 +637,32 @@ function openDir(bookname, cb) {
   }
 }
 
-function walk(dtree) {
-  let name = dtree.path.replace('/home/michael/greek/texts/', '');
-  log('--->', name);
-  if (!dtree.children) return;
-  dtree.children.forEach(child => {
+function walk(dname, dtree, tree) {
+  let name = dtree.path.split(dname)[1];
+  name = [dname, name].join('');
+  log('N--->', name);
+  tree.name = name;
+  if (!dtree.children) return; // tree.children = dtree.children.map(child=> { return {} })
+  // log('tree.children--->', tree.children)
+
+  dtree.children.forEach((child, idx) => {
     if (child.type != 'directory') return;
-    walk(child);
-  });
+    if (!tree.children) tree.children = [];
+    tree.children.push({});
+    walk(dname, child, tree.children[idx]);
+  }); // return tree
 }
 
 function parseDir(bookname) {
   let bpath = path.resolve(__dirname, bookname);
-  log('----------------BPATH', bpath);
-  const dtree = dirTree(bpath);
-  log('-DTREE', dtree);
-  log('----------------TREE');
-  walk(dtree);
+  let dname = bookname.split('/').slice(-1)[0]; // log('----------------BPATH', bpath)
+  // log('----DNAME', dname)
+
+  const dtree = dirTree(bpath); // log('DTREE', dtree)
+
+  let tree = {};
+  walk(dname, dtree, tree); // log('TREE', tree)
+
   let fns = glob.sync('**/*', {
     cwd: bpath
   });
@@ -665,14 +674,14 @@ function parseDir(bookname) {
   ipath = path.resolve(bpath, ipath);
   if (!ipath) return; // log('OPENING INFO', ipath)
 
-  let info = parseInfo(ipath);
-  log('INFO', info);
+  let info = parseInfo(ipath); // log('INFO', info)
+
   fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
     return fn != ipath;
   }); // let sects = _.filter(fns, fn=>{ return !/-com$/.test(fn) })
   // let coms = _.filter(fns, fn=>{ return /-com$/.test(fn) })
+  // log('FNS', fns.length)
 
-  log('FNS', fns.length);
   let book = {
     panes: [],
     coms: [] // let panes = []
@@ -707,6 +716,7 @@ function parseDir(bookname) {
   book.nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(book.panes.map(auth => {
     return auth.nic;
   }));
+  book.tree = tree;
   let lib = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["getStore"])('lib');
   lib[book.title] = info;
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["setStore"])('lib', lib); // log('getBook', book)

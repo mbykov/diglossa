@@ -79,23 +79,33 @@ export function openDir(bookname, cb) {
   }
 }
 
-function walk(dtree) {
-  let name = dtree.path.replace('/home/michael/greek/texts/', '')
-  log('--->', name)
+function walk(dname, dtree, tree) {
+  let name = dtree.path.split(dname)[1]
+  name = [dname, name].join('')
+  log('N--->', name)
+  tree.name = name
   if (!dtree.children) return
-  dtree.children.forEach(child=> {
+  // tree.children = dtree.children.map(child=> { return {} })
+  // log('tree.children--->', tree.children)
+  dtree.children.forEach((child, idx)=> {
     if (child.type != 'directory') return
-    walk(child)
+    if (!tree.children) tree.children = []
+    tree.children.push({})
+    walk(dname, child, tree.children[idx])
   })
+  // return tree
 }
 
 function parseDir(bookname) {
   let bpath = path.resolve(__dirname, bookname)
-  log('----------------BPATH', bpath)
+  let dname = bookname.split('/').slice(-1)[0]
+  // log('----------------BPATH', bpath)
+  // log('----DNAME', dname)
   const dtree = dirTree(bpath)
-  log('-DTREE', dtree)
-  log('----------------TREE')
-  walk(dtree)
+  // log('DTREE', dtree)
+  let tree = {}
+  walk(dname, dtree, tree)
+  // log('TREE', tree)
 
   let fns = glob.sync('**/*', {cwd: bpath})
   let ipath = _.find(fns, fn=>{ return /info.json/.test(fn) })
@@ -103,11 +113,11 @@ function parseDir(bookname) {
   if (!ipath) return
   // log('OPENING INFO', ipath)
   let info = parseInfo(ipath)
-  log('INFO', info)
+  // log('INFO', info)
   fns = _.filter(fns, fn=>{ return fn != ipath })
   // let sects = _.filter(fns, fn=>{ return !/-com$/.test(fn) })
   // let coms = _.filter(fns, fn=>{ return /-com$/.test(fn) })
-  log('FNS', fns.length)
+  // log('FNS', fns.length)
 
   let book = {panes: [], coms: []}
   // let panes = []
@@ -130,6 +140,7 @@ function parseDir(bookname) {
   })
   book.title = info.book.title
   book.nics = _.uniq(book.panes.map(auth => { return auth.nic }))
+  book.tree = tree
 
   let lib = getStore('lib')
   lib[book.title] = info
