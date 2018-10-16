@@ -141,22 +141,17 @@ const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app;
 const appPath = app.getAppPath();
 let userDataPath = app.getPath("userData"); // enableDBs(userDataPath, appPath, isDev)
 
-showSection('title'); // ipcRenderer.on('section', function (event, name) {
-//   if (name == 'dicts') showDicts()
-//   else if (name == 'cleanup') showCleanup()
-//   else if (name == 'install') showInstall()
-//   else showSection(name)
-// })
-// function orthoPars(pars) {
-//   pars.forEach(spans => {
-//     spans.forEach(spn => {
-//       if (spn.gr) spn.text = comb(spn.text)
-//     })
-//   })
-// }
+try {
+  let lib = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["getStore"])('lib');
 
-clipboard.on('text-changed', () => {// showText ([])
-}).startWatching();
+  if (!lib) {
+    Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["setStore"])('lib', {});
+  }
+} catch (err) {
+  log('LIB ERR', err);
+}
+
+showSection('title');
 
 function showSection(name) {
   let oapp = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#app');
@@ -170,15 +165,23 @@ function showBook(fns) {
   let oprg = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#progress');
   oprg.style.display = "inline-block";
   let fpath = fns[0];
-  log('SHOWBOOK', fns);
-  if (/\.ods/.test(fpath)) Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openODS"])(fpath, csv => {
-    log('ODS END JSON', csv);
-    Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseBook"])();
-    oprg.style.display = "none";
-  });else {
-    log('OTHER THEN ODS');
-    oprg.style.display = "none";
-  } // parseBook(book)
+  log('SHOWBOOK', fpath);
+  if (/\.ods/.test(fpath)) // это убрать
+    Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openODS"])(fpath, res => {
+      log('ODS END JSON', res);
+      if (!res) return; // parseBook()
+
+      oprg.style.display = "none";
+    });else {
+    // let bookpath = '../../texts/Thrax'
+    let bookpath = '../../texts/Aristotle/deAnima';
+    log('= OTHER THEN ODS =', bookpath);
+    Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openDir"])(bookpath, res => {
+      if (!res) return;
+      Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseBook"])();
+      oprg.style.display = "none";
+    });
+  }
 }
 
 document.addEventListener("click", go, false);
@@ -196,6 +199,7 @@ function scrollPanes(ev) {
 
 function go(ev) {
   let data = ev.target.dataset;
+  log('go DATA', ev.target.dataset);
 
   if (data.section) {
     showSection(data.section);
@@ -258,34 +262,7 @@ let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
 let path = __webpack_require__(/*! path */ "path");
 
-const log = console.log;
-
-const glob = __webpack_require__(/*! glob */ "glob"); // export function parseBook1(csv) {
-//   var sizes = localStorage.getItem('split-sizes')
-//   if (sizes) sizes = JSON.parse(sizes)
-//   else sizes = [50, 50]
-//   Split(['#source', '#trns'], {
-//     sizes: sizes,
-//     gutterSize: 5,
-//     cursor: 'col-resize',
-//     minSize: [0, 0],
-//     onDragEnd: function (sizes) {
-//       reSetBook()
-//     }
-//   })
-//   csv
-//     .then((json)=>{
-//       log('JSON', json.slice(0,50))
-//       let osource = q('#source')
-//       osource.textContent = json
-//     })
-//   //
-//   // createRightHeader()
-//   // let bookpath = '../../texts/Thrax'
-//   // let auths = getFiles(bookpath)
-//   // setBookText(auths)
-// }
-
+const log = console.log; // const glob = require('glob')
 
 function parseBook(book) {
   var sizes = localStorage.getItem('split-sizes');
@@ -298,70 +275,15 @@ function parseBook(book) {
     onDragEnd: function (sizes) {
       reSetBook();
     }
-  }); //
-
-  createRightHeader();
-  let bookpath = '../../texts/Thrax'; // let auths = getFiles(bookpath)
-
-  setBookText();
-}
-
-function getFiles(bookname) {
-  let bookpath = path.resolve(__dirname, bookname);
-  let dir = bookpath.split('/')[bookpath.split('/').length - 1];
-  let fns = glob.sync('**/*', {
-    cwd: bookpath
-  });
-
-  let info = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
-    return path.extname == '.info';
-  });
-
-  fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
-    return path.extname != '.info';
-  }); // let trns = []
-
-  let book = {
-    nics: []
-  };
-  let auths = [];
-  let author;
-  let titles = [];
-  fns.forEach(fn => {
-    let comment = false;
-    let com = fn.split('-')[1];
-    if (com && com == 'com') comment = true, fn = fn.replace('-com', '');
-    let parts = fn.split('.');
-    if (parts.length != 3) return;
-    let title = parts[0];
-    titles.push(title);
-    let lang = parts[1];
-    let nic = parts[2];
-    let txt = fse.readFileSync(path.resolve(bookpath, fn)).toString(); // no txt ?
-
-    let rows = txt.split(/\n+/);
-    let auth = {
-      lang: lang,
-      title: title,
-      nic: nic,
-      fn: fn,
-      rows: rows
-    };
-    if (dir.toLowerCase() == nic.toLowerCase()) auth.author = true, book.author = nic, book.lang = lang;else if (comment) auth.com = true;
-    if (!comment && !auth.author) book.nics.push(nic);
-    auths.push(auth);
-  }); // if (_.uniq(titles).length != 1) return { err: 'different titles' } // тут нужно хитрее, неясно как
-
-  localStorage.setItem('auths', JSON.stringify(auths));
-  localStorage.setItem('book', JSON.stringify(book));
-  return auths;
+  }); // createRightHeader()
+  // setBookText()
 }
 
 function setBookText() {
   let auths = localStorage.getItem('auths');
   if (!auths) return;
   auths = JSON.parse(auths);
-  log('==>A', auths);
+  log('setBT==>Auths', auths);
   let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let ores = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otext);
@@ -396,7 +318,7 @@ function setBookText() {
       oright.setAttribute('idx', idx);
       oright.setAttribute('nic', auth.nic);
       otrns.appendChild(oright);
-      if (idx == 1) log('ANIC', auth.nic, current);
+      if (idx == 1) log('AuthNIC', auth.nic, current);
       if (auth.nic == current) oright.setAttribute('active', true);
       orights.push(oright);
     });
@@ -476,8 +398,7 @@ function changeRightHeader(ev) {
 
 function selectCurrent(ev) {
   let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('.hright');
-  let current = ev.target.textContent; // log('EV-selectCurrent', ev.target, current)
-
+  let current = ev.target.textContent;
   localStorage.setItem('current', current);
   let cnics = [current];
   createNicList(cnics);
@@ -603,17 +524,18 @@ document.addEventListener("contextmenu", event => {
 /*!*****************************!*\
   !*** ./src/lib/getfiles.js ***!
   \*****************************/
-/*! exports provided: openODS */
+/*! exports provided: openODS, openDir */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "openODS", function() { return openODS; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "openDir", function() { return openDir; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
 
- // import { parseBook } from './book'
+
 
 const fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
@@ -621,11 +543,22 @@ const path = __webpack_require__(/*! path */ "path");
 
 const glob = __webpack_require__(/*! glob */ "glob");
 
-const csv = __webpack_require__(/*! csvtojson */ "csvtojson");
-
 const textract = __webpack_require__(/*! textract */ "textract");
 
 const log = console.log;
+
+function extractAllText(str) {
+  const re = /"(.*?)"/g;
+  const results = [];
+  let current;
+
+  while (current = re.exec(str)) {
+    results.push(current.pop());
+  }
+
+  return results;
+}
+
 function openODS(fpath, cb) {
   if (fpath === undefined) return;
 
@@ -634,11 +567,12 @@ function openODS(fpath, cb) {
       preserveLineBreaks: true,
       delimiter: '|'
     }, function (err, str) {
-      parseCSV(str);
+      // parseCSV(str)
       cb(true);
     });
   } catch (err) {
     if (err) log('ODS ERR', err);
+    cb(false);
   }
 }
 
@@ -663,51 +597,170 @@ function parseCSV(str) {
     if (nic == book.author) auth.author = true;
     auths.push(auth);
   });
-  log('AUS', auths);
   rows.forEach((row, idx) => {
-    // if (idx > 10) return
     if (row[0] == '#') return;
     if (row == ',,') return;
-    let matches = extractAllText(row); // log('IDX____', idx)
-    // log('M', matches)
-
+    let matches = extractAllText(row);
     matches.forEach(str => {
       let corr = str.split(',').join('COMMA');
       row = row.replace(str, corr);
     });
     let cols = row.split(',');
-    log('COLS', cols.length);
     cols.forEach((col, idy) => {
       col = col.split('COMMA').join(',');
-      if (col == ',') return;
-      if (!auths[idy]) log('ERR', idy, row);
+      if (col == ',') return; // if (!auths[idy]) log('ERR', idy, row)
+
       auths[idy].rows.push(col);
     });
   });
-  log('BOOK', book);
   localStorage.setItem('auths', JSON.stringify(auths));
-  localStorage.setItem('book', JSON.stringify(book)); // log('A', auths[0])
+  localStorage.setItem('book', JSON.stringify(book));
 }
 
-function extractAllText(str) {
-  const re = /"(.*?)"/g;
-  const results = [];
-  let current;
+function openDir(bookname, cb) {
+  try {
+    parseDir(bookname);
+    cb(true);
+  } catch (err) {
+    if (err) log('DIR ERR', err);
+    cb(false);
+  }
+}
 
-  while (current = re.exec(str)) {
-    results.push(current.pop());
+function parseDir(bookname) {
+  let bookpath = path.resolve(__dirname, bookname);
+  let dir = bookpath.split('/')[bookpath.split('/').length - 1];
+  let fns = glob.sync('**/*', {
+    cwd: bookpath
+  });
+
+  let ipath = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(fns, fn => {
+    return /info.json/.test(fn);
+  });
+
+  ipath = path.resolve(bookpath, ipath);
+  if (!ipath) return;
+  log('OPENING INFO', ipath);
+  let info = parseInfo(ipath);
+  log('INFO', info);
+  fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
+    return fn != ipath;
+  });
+
+  let sects = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
+    return !/-com$/.test(fn);
+  }); // let coms = _.filter(fns, fn=>{ return /-com$/.test(fn) })
+
+
+  log('FNS', fns);
+  let book = {
+    panes: [],
+    coms: [] // let panes = []
+
+  };
+  let titles = [];
+  fns.forEach(fn => {
+    let comment = false;
+    let com = fn.split('-')[1];
+    if (com && com == 'com') comment = true, fn = fn.replace('-com', '');
+    let ext = path.extname(fn);
+    if (!ext) return;
+    let nic = ext.replace(/^\./, '');
+
+    let auth = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(info.auths, auth => {
+      return auth.ext == nic;
+    });
+
+    if (!auth) return;
+    let txt = fse.readFileSync(path.resolve(bookpath, fn)).toString();
+    let rows = txt.split(/\n+/);
+    let pane = {
+      lang: auth.lang,
+      title: info.book.title,
+      nic: nic,
+      fn: fn,
+      rows: rows
+    };
+    if (auth.author) book.author = pane;
+    if (comment) book.coms.push(pane);else book.panes.push(pane);
+  });
+  book.title = info.book.title;
+  book.nics = book.panes.map(auth => {
+    return auth.ext;
+  });
+  let lib = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["getStore"])('lib');
+  lib[book.title] = info;
+  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["setStore"])('lib', lib);
+  log('getBook', book);
+  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["setStore"])(book.title, book);
+  let current = {
+    title: info.title
+  };
+  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["setStore"])('current', current);
+}
+
+function parseInfo(ipath) {
+  let info;
+
+  try {
+    info = fse.readJsonSync(ipath);
+  } catch (err) {
+    log('ERR INFO', err);
+    throw new Error();
   }
 
-  return results; // return (results.length > 0) ? results : [str]
-} // csv({
-//   noheader: true,
-//   output: "json"
-// })
-//   .fromString(data)
-//   .then((json)=>{
-//     // cb(json)
-//     cb({})
-//   })
+  return info;
+}
+
+function getFiles_(bookname) {
+  let bookpath = path.resolve(__dirname, bookname);
+  let dir = bookpath.split('/')[bookpath.split('/').length - 1];
+  let fns = glob.sync('**/*', {
+    cwd: bookpath
+  });
+
+  let info = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
+    return path.extname == '.info';
+  });
+
+  fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
+    return path.extname != '.info';
+  });
+  let book = {
+    nics: []
+  };
+  let auths = [];
+  let author;
+  let titles = [];
+  fns.forEach(fn => {
+    let comment = false;
+    let com = fn.split('-')[1];
+    if (com && com == 'com') comment = true, fn = fn.replace('-com', '');
+    let parts = fn.split('.');
+    if (parts.length != 3) return;
+    let title = parts[0];
+    titles.push(title);
+    let lang = parts[1];
+    let nic = parts[2];
+    let txt = fse.readFileSync(path.resolve(bookpath, fn)).toString(); // no txt ?
+
+    let rows = txt.split(/\n+/);
+    let auth = {
+      lang: lang,
+      title: title,
+      nic: nic,
+      fn: fn,
+      rows: rows
+    };
+    if (dir.toLowerCase() == nic.toLowerCase()) auth.author = true, book.author = nic, book.lang = lang;else if (comment) auth.com = true;
+    if (!comment && !auth.author) book.nics.push(nic);
+    auths.push(auth);
+  }); // if (_.uniq(titles).length != 1) return { err: 'different titles' } // тут нужно хитрее, неясно как
+
+  localStorage.setItem('auths', JSON.stringify(auths));
+  localStorage.setItem('book', JSON.stringify(book));
+  return auths;
+}
 
 /***/ }),
 
@@ -715,7 +768,7 @@ function extractAllText(str) {
 /*!**************************!*\
   !*** ./src/lib/utils.js ***!
   \**************************/
-/*! exports provided: q, qs, create, recreateDiv, recreate, span, br, div, p, empty, remove, removeAll, findAncestor, placePopup, log, plog, enclitic */
+/*! exports provided: q, qs, create, recreateDiv, recreate, span, br, div, p, empty, remove, removeAll, findAncestor, placePopup, log, plog, enclitic, getStore, setStore */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -737,6 +790,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "log", function() { return log; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "plog", function() { return plog; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "enclitic", function() { return enclitic; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getStore", function() { return getStore; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "setStore", function() { return setStore; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 
@@ -841,17 +896,13 @@ function enclitic(str) {
   });
   return clean.join('');
 }
-
-/***/ }),
-
-/***/ "csvtojson":
-/*!****************************!*\
-  !*** external "csvtojson" ***!
-  \****************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("csvtojson");
+function getStore(name) {
+  let json = localStorage.getItem(name);
+  return JSON.parse(json);
+}
+function setStore(name, obj) {
+  localStorage.setItem(name, JSON.stringify(obj));
+}
 
 /***/ }),
 

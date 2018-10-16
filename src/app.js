@@ -12,9 +12,9 @@ import { remote } from "electron";
 import { shell } from 'electron'
 // import sband from "./lib/clean-greek";
 import { ipcRenderer } from "electron";
-import { q, qs, empty, create, span, p, div, enclitic } from './lib/utils'
+import { q, qs, empty, create, span, p, div, enclitic, getStore, setStore } from './lib/utils'
 import { parseBook } from './lib/book'
-import { openODS } from './lib/getfiles'
+import { openODS, openDir } from './lib/getfiles'
 
 let fse = require('fs-extra')
 const log = console.log
@@ -36,28 +36,16 @@ const appPath = app.getAppPath()
 let userDataPath = app.getPath("userData")
 // enableDBs(userDataPath, appPath, isDev)
 
+try {
+  let lib = getStore('lib')
+  if (!lib) {
+    setStore('lib', {})
+  }
+} catch (err) {
+  log('LIB ERR', err)
+}
+
 showSection('title')
-
-// ipcRenderer.on('section', function (event, name) {
-//   if (name == 'dicts') showDicts()
-//   else if (name == 'cleanup') showCleanup()
-//   else if (name == 'install') showInstall()
-//   else showSection(name)
-// })
-
-// function orthoPars(pars) {
-//   pars.forEach(spans => {
-//     spans.forEach(spn => {
-//       if (spn.gr) spn.text = comb(spn.text)
-//     })
-//   })
-// }
-
-clipboard
-  .on('text-changed', () => {
-    // showText ([])
-  })
-  .startWatching()
 
 function showSection(name) {
   let oapp = q('#app')
@@ -71,18 +59,24 @@ function showBook(fns) {
   let oprg = q('#progress')
   oprg.style.display = "inline-block"
   let fpath = fns[0]
-  log('SHOWBOOK', fns)
-  if (/\.ods/.test(fpath))
-    openODS(fpath, (csv) => {
-      log('ODS END JSON', csv)
-      parseBook()
+  log('SHOWBOOK', fpath)
+  if (/\.ods/.test(fpath)) // это убрать
+    openODS(fpath, (res) => {
+      log('ODS END JSON', res)
+      if (!res) return
+      // parseBook()
       oprg.style.display = "none"
     })
   else {
-    log('OTHER THEN ODS')
-    oprg.style.display = "none"
+    // let bookpath = '../../texts/Thrax'
+    let bookpath = '../../texts/Aristotle/deAnima'
+    log('= OTHER THEN ODS =', bookpath)
+    openDir(bookpath, (res) => {
+      if (!res) return
+      parseBook()
+      oprg.style.display = "none"
+    })
   }
-  // parseBook(book)
 }
 
 document.addEventListener("click", go, false)
@@ -100,6 +94,7 @@ function scrollPanes(ev) {
 
 function go(ev) {
   let data = ev.target.dataset
+  log('go DATA', ev.target.dataset)
   if (data.section) {
     showSection(data.section)
   } else if (data.book) {

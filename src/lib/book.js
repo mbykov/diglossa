@@ -5,34 +5,7 @@ let fse = require('fs-extra')
 let path = require('path')
 const log = console.log
 
-const glob = require('glob')
-
-// export function parseBook1(csv) {
-//   var sizes = localStorage.getItem('split-sizes')
-//   if (sizes) sizes = JSON.parse(sizes)
-//   else sizes = [50, 50]
-//   Split(['#source', '#trns'], {
-//     sizes: sizes,
-//     gutterSize: 5,
-//     cursor: 'col-resize',
-//     minSize: [0, 0],
-//     onDragEnd: function (sizes) {
-//       reSetBook()
-//     }
-//   })
-
-//   csv
-//     .then((json)=>{
-//       log('JSON', json.slice(0,50))
-//       let osource = q('#source')
-//       osource.textContent = json
-//     })
-//   //
-//   // createRightHeader()
-//   // let bookpath = '../../texts/Thrax'
-//   // let auths = getFiles(bookpath)
-//   // setBookText(auths)
-// }
+// const glob = require('glob')
 
 export function parseBook(book) {
   var sizes = localStorage.getItem('split-sizes')
@@ -48,54 +21,15 @@ export function parseBook(book) {
     }
   })
 
-  //
-  createRightHeader()
-  let bookpath = '../../texts/Thrax'
-  // let auths = getFiles(bookpath)
-  setBookText()
-}
-
-function getFiles(bookname) {
-  let bookpath = path.resolve(__dirname, bookname)
-  let dir = bookpath.split('/')[bookpath.split('/').length-1]
-  let fns = glob.sync('**/*', {cwd: bookpath})
-  let info = _.filter(fns, fn=>{ return path.extname == '.info' })
-  fns = _.filter(fns, fn=>{ return path.extname != '.info' })
-  // let trns = []
-  let book = {nics: []}
-  let auths = []
-  let author
-  let titles = []
-  fns.forEach(fn => {
-    let comment = false
-    let com = fn.split('-')[1]
-    if (com && com == 'com') comment = true, fn = fn.replace('-com', '')
-    let parts = fn.split('.')
-    if (parts.length != 3) return
-    let title = parts[0]
-    titles.push(title)
-    let lang = parts[1]
-    let nic = parts[2]
-    let txt = fse.readFileSync(path.resolve(bookpath, fn)).toString()
-    // no txt ?
-    let rows = txt.split(/\n+/)
-    let auth = { lang: lang, title: title, nic: nic, fn: fn, rows: rows }
-    if (dir.toLowerCase() == nic.toLowerCase()) auth.author = true, book.author = nic, book.lang = lang
-    else if (comment) auth.com = true
-    if (!comment && !auth.author) book.nics.push(nic)
-    auths.push(auth)
-  })
-  // if (_.uniq(titles).length != 1) return { err: 'different titles' } // тут нужно хитрее, неясно как
-  localStorage.setItem('auths', JSON.stringify(auths))
-  localStorage.setItem('book', JSON.stringify(book))
-  return auths
+  // createRightHeader()
+  // setBookText()
 }
 
 function setBookText() {
   let auths = localStorage.getItem('auths')
   if (!auths) return
   auths = JSON.parse(auths)
-  log('==>A', auths)
+  log('setBT==>Auths', auths)
   let otext = q('#source')
   let ores = q('#trns')
   empty(otext)
@@ -121,7 +55,7 @@ function setBookText() {
       oright.setAttribute('idx', idx)
       oright.setAttribute('nic', auth.nic)
       otrns.appendChild(oright)
-      if (idx == 1) log('ANIC', auth.nic, current)
+      if (idx == 1) log('AuthNIC', auth.nic, current)
       if (auth.nic == current) oright.setAttribute('active', true)
       orights.push(oright)
     })
@@ -190,7 +124,6 @@ function changeRightHeader(ev) {
 function selectCurrent(ev) {
   let oright = q('.hright')
   let current = ev.target.textContent
-  // log('EV-selectCurrent', ev.target, current)
   localStorage.setItem('current', current)
   let cnics = [current]
   createNicList(cnics)

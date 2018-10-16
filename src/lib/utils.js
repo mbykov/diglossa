@@ -111,3 +111,12 @@ export function enclitic(str) {
   })
   return clean.join('')
 }
+
+export function getStore(name) {
+  let json = localStorage.getItem(name)
+  return JSON.parse(json)
+}
+
+export function setStore(name, obj) {
+  localStorage.setItem(name, JSON.stringify(obj))
+}
