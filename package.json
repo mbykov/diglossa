@@ -31,6 +31,7 @@
     "release": "npm test && webpack --config=build/webpack.app.config.js --env=production && electron-builder"
   },
   "dependencies": {
+    "directory-tree": "^2.1.0",
     "electron-clipboard-extended": "^1.1.1",
     "electron-settings": "^3.2.0",
     "file-loader": "^2.0.0",
@@ -43,6 +44,7 @@
     "lodash": "^4.17.11",
     "mousetrap": "^1.6.2",
     "mustache": "^3.0.0",
+    "node-dir": "^0.1.17",
     "split.js": "^1.4.0",
     "textract": "^2.4.0"
   },

@@ -1,13 +1,21 @@
 import _ from 'lodash'
 import Split from 'split.js'
-import { q, qs, empty, create, span, p, div, remove } from './utils'
+import { q, qs, empty, create, span, p, div, remove, getStore, setStore } from './utils'
 let fse = require('fs-extra')
 let path = require('path')
 const log = console.log
 
-// const glob = require('glob')
+export function parseTitle() {
+  log('========= parse title =============')
+  let lib = getStore('lib')
+  let cur = getStore('current')
+  let book = getStore(cur.title)
+  log('LIB', lib)
+  log('CUR', cur)
+  log('BOOK', book)
+}
 
-export function parseBook(book) {
+export function parseBook() {
   var sizes = localStorage.getItem('split-sizes')
   if (sizes) sizes = JSON.parse(sizes)
   else sizes = [50, 50]

@@ -141,14 +141,12 @@ const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app;
 const appPath = app.getAppPath();
 let userDataPath = app.getPath("userData"); // enableDBs(userDataPath, appPath, isDev)
 
-try {
-  let lib = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["getStore"])('lib');
+let lib;
 
-  if (!lib) {
-    Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["setStore"])('lib', {});
-  }
+try {
+  lib = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["getStore"])('lib');
 } catch (err) {
-  log('LIB ERR', err);
+  Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["setStore"])('lib', {});
 }
 
 showSection('title');
@@ -177,8 +175,9 @@ function showBook(fns) {
     let bookpath = '../../texts/Aristotle/deAnima';
     log('= OTHER THEN ODS =', bookpath);
     Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openDir"])(bookpath, res => {
-      if (!res) return;
-      Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseBook"])();
+      if (!res) return; // parseBook()
+
+      Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseTitle"])();
       oprg.style.display = "none";
     });
   }
@@ -243,11 +242,12 @@ function keyGo(ev) {
 /*!*************************!*\
   !*** ./src/lib/book.js ***!
   \*************************/
-/*! exports provided: parseBook */
+/*! exports provided: parseTitle, parseBook */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseTitle", function() { return parseTitle; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseBook", function() { return parseBook; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
@@ -262,9 +262,17 @@ let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
 let path = __webpack_require__(/*! path */ "path");
 
-const log = console.log; // const glob = require('glob')
-
-function parseBook(book) {
+const log = console.log;
+function parseTitle() {
+  log('========= parse title =============');
+  let lib = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])('lib');
+  let cur = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])('current');
+  let book = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])(cur.title);
+  log('LIB', lib);
+  log('CUR', cur);
+  log('BOOK', book);
+}
+function parseBook() {
   var sizes = localStorage.getItem('split-sizes');
   if (sizes) sizes = JSON.parse(sizes);else sizes = [50, 50];
   split_js__WEBPACK_IMPORTED_MODULE_1___default()(['#source', '#trns'], {
@@ -543,6 +551,8 @@ const path = __webpack_require__(/*! path */ "path");
 
 const glob = __webpack_require__(/*! glob */ "glob");
 
+const dirTree = __webpack_require__(/*! directory-tree */ "directory-tree");
+
 const textract = __webpack_require__(/*! textract */ "textract");
 
 const log = console.log;
@@ -627,32 +637,42 @@ function openDir(bookname, cb) {
   }
 }
 
+function walk(dtree) {
+  let name = dtree.path.replace('/home/michael/greek/texts/', '');
+  log('--->', name);
+  if (!dtree.children) return;
+  dtree.children.forEach(child => {
+    if (child.type != 'directory') return;
+    walk(child);
+  });
+}
+
 function parseDir(bookname) {
-  let bookpath = path.resolve(__dirname, bookname);
-  let dir = bookpath.split('/')[bookpath.split('/').length - 1];
+  let bpath = path.resolve(__dirname, bookname);
+  log('----------------BPATH', bpath);
+  const dtree = dirTree(bpath);
+  log('-DTREE', dtree);
+  log('----------------TREE');
+  walk(dtree);
   let fns = glob.sync('**/*', {
-    cwd: bookpath
+    cwd: bpath
   });
 
   let ipath = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(fns, fn => {
     return /info.json/.test(fn);
   });
 
-  ipath = path.resolve(bookpath, ipath);
-  if (!ipath) return;
-  log('OPENING INFO', ipath);
+  ipath = path.resolve(bpath, ipath);
+  if (!ipath) return; // log('OPENING INFO', ipath)
+
   let info = parseInfo(ipath);
   log('INFO', info);
   fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
     return fn != ipath;
-  });
+  }); // let sects = _.filter(fns, fn=>{ return !/-com$/.test(fn) })
+  // let coms = _.filter(fns, fn=>{ return /-com$/.test(fn) })
 
-  let sects = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
-    return !/-com$/.test(fn);
-  }); // let coms = _.filter(fns, fn=>{ return /-com$/.test(fn) })
-
-
-  log('FNS', fns);
+  log('FNS', fns.length);
   let book = {
     panes: [],
     coms: [] // let panes = []
@@ -672,7 +692,7 @@ function parseDir(bookname) {
     });
 
     if (!auth) return;
-    let txt = fse.readFileSync(path.resolve(bookpath, fn)).toString();
+    let txt = fse.readFileSync(path.resolve(bpath, fn)).toString();
     let rows = txt.split(/\n+/);
     let pane = {
       lang: auth.lang,
@@ -681,20 +701,19 @@ function parseDir(bookname) {
       fn: fn,
       rows: rows
     };
-    if (auth.author) book.author = pane;
-    if (comment) book.coms.push(pane);else book.panes.push(pane);
+    if (auth.author) book.author = pane;else if (comment) book.coms.push(pane);else book.panes.push(pane);
   });
   book.title = info.book.title;
-  book.nics = book.panes.map(auth => {
-    return auth.ext;
-  });
+  book.nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(book.panes.map(auth => {
+    return auth.nic;
+  }));
   let lib = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["getStore"])('lib');
   lib[book.title] = info;
-  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["setStore"])('lib', lib);
-  log('getBook', book);
+  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["setStore"])('lib', lib); // log('getBook', book)
+
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["setStore"])(book.title, book);
   let current = {
-    title: info.title
+    title: book.title
   };
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["setStore"])('current', current);
 }
@@ -713,10 +732,10 @@ function parseInfo(ipath) {
 }
 
 function getFiles_(bookname) {
-  let bookpath = path.resolve(__dirname, bookname);
-  let dir = bookpath.split('/')[bookpath.split('/').length - 1];
+  let bpath = path.resolve(__dirname, bookname);
+  let dir = bpath.split('/')[bpath.split('/').length - 1];
   let fns = glob.sync('**/*', {
-    cwd: bookpath
+    cwd: bpath
   });
 
   let info = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
@@ -742,7 +761,7 @@ function getFiles_(bookname) {
     titles.push(title);
     let lang = parts[1];
     let nic = parts[2];
-    let txt = fse.readFileSync(path.resolve(bookpath, fn)).toString(); // no txt ?
+    let txt = fse.readFileSync(path.resolve(bpath, fn)).toString(); // no txt ?
 
     let rows = txt.split(/\n+/);
     let auth = {
@@ -903,6 +922,17 @@ function getStore(name) {
 function setStore(name, obj) {
   localStorage.setItem(name, JSON.stringify(obj));
 }
+
+/***/ }),
+
+/***/ "directory-tree":
+/*!*********************************!*\
+  !*** external "directory-tree" ***!
+  \*********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("directory-tree");
 
 /***/ }),
 

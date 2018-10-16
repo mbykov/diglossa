@@ -13,7 +13,7 @@ import { shell } from 'electron'
 // import sband from "./lib/clean-greek";
 import { ipcRenderer } from "electron";
 import { q, qs, empty, create, span, p, div, enclitic, getStore, setStore } from './lib/utils'
-import { parseBook } from './lib/book'
+import { parseBook, parseTitle } from './lib/book'
 import { openODS, openDir } from './lib/getfiles'
 
 let fse = require('fs-extra')
@@ -36,13 +36,11 @@ const appPath = app.getAppPath()
 let userDataPath = app.getPath("userData")
 // enableDBs(userDataPath, appPath, isDev)
 
+let lib
 try {
-  let lib = getStore('lib')
-  if (!lib) {
-    setStore('lib', {})
-  }
+  lib = getStore('lib')
 } catch (err) {
-  log('LIB ERR', err)
+  setStore('lib', {})
 }
 
 showSection('title')
@@ -73,7 +71,8 @@ function showBook(fns) {
     log('= OTHER THEN ODS =', bookpath)
     openDir(bookpath, (res) => {
       if (!res) return
-      parseBook()
+      // parseBook()
+      parseTitle()
       oprg.style.display = "none"
     })
   }

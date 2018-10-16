@@ -4,6 +4,7 @@ import { q, qs, empty, create, span, p, div, remove, getStore, setStore } from '
 const fse = require('fs-extra')
 const path = require('path')
 const glob = require('glob')
+const dirTree = require('directory-tree')
 const textract = require('textract')
 const log = console.log
 
@@ -78,20 +79,35 @@ export function openDir(bookname, cb) {
   }
 }
 
+function walk(dtree) {
+  let name = dtree.path.replace('/home/michael/greek/texts/', '')
+  log('--->', name)
+  if (!dtree.children) return
+  dtree.children.forEach(child=> {
+    if (child.type != 'directory') return
+    walk(child)
+  })
+}
+
 function parseDir(bookname) {
-  let bookpath = path.resolve(__dirname, bookname)
-  let dir = bookpath.split('/')[bookpath.split('/').length-1]
-  let fns = glob.sync('**/*', {cwd: bookpath})
+  let bpath = path.resolve(__dirname, bookname)
+  log('----------------BPATH', bpath)
+  const dtree = dirTree(bpath)
+  log('-DTREE', dtree)
+  log('----------------TREE')
+  walk(dtree)
+
+  let fns = glob.sync('**/*', {cwd: bpath})
   let ipath = _.find(fns, fn=>{ return /info.json/.test(fn) })
-  ipath = path.resolve(bookpath, ipath)
+  ipath = path.resolve(bpath, ipath)
   if (!ipath) return
-  log('OPENING INFO', ipath)
+  // log('OPENING INFO', ipath)
   let info = parseInfo(ipath)
   log('INFO', info)
   fns = _.filter(fns, fn=>{ return fn != ipath })
-  let sects = _.filter(fns, fn=>{ return !/-com$/.test(fn) })
+  // let sects = _.filter(fns, fn=>{ return !/-com$/.test(fn) })
   // let coms = _.filter(fns, fn=>{ return /-com$/.test(fn) })
-  log('FNS', fns)
+  log('FNS', fns.length)
 
   let book = {panes: [], coms: []}
   // let panes = []
@@ -105,22 +121,22 @@ function parseDir(bookname) {
     let nic = ext.replace(/^\./, '')
     let auth = _.find(info.auths, auth=> { return auth.ext == nic})
     if (!auth) return
-    let txt = fse.readFileSync(path.resolve(bookpath, fn)).toString()
+    let txt = fse.readFileSync(path.resolve(bpath, fn)).toString()
     let rows = txt.split(/\n+/)
     let pane = { lang: auth.lang, title: info.book.title, nic: nic, fn: fn, rows: rows }
     if (auth.author) book.author = pane
-    if (comment) book.coms.push(pane)
+    else if (comment) book.coms.push(pane)
     else book.panes.push(pane)
   })
   book.title = info.book.title
-  book.nics = book.panes.map(auth => { return auth.ext })
+  book.nics = _.uniq(book.panes.map(auth => { return auth.nic }))
 
   let lib = getStore('lib')
   lib[book.title] = info
   setStore('lib', lib)
-  log('getBook', book)
+  // log('getBook', book)
   setStore(book.title, book)
-  let current = {title: info.title}
+  let current = {title: book.title}
   setStore('current', current)
 }
 
@@ -137,9 +153,9 @@ function parseInfo(ipath) {
 }
 
 function getFiles_(bookname) {
-  let bookpath = path.resolve(__dirname, bookname)
-  let dir = bookpath.split('/')[bookpath.split('/').length-1]
-  let fns = glob.sync('**/*', {cwd: bookpath})
+  let bpath = path.resolve(__dirname, bookname)
+  let dir = bpath.split('/')[bpath.split('/').length-1]
+  let fns = glob.sync('**/*', {cwd: bpath})
   let info = _.filter(fns, fn=>{ return path.extname == '.info' })
   fns = _.filter(fns, fn=>{ return path.extname != '.info' })
   let book = {nics: []}
@@ -156,7 +172,7 @@ function getFiles_(bookname) {
     titles.push(title)
     let lang = parts[1]
     let nic = parts[2]
-    let txt = fse.readFileSync(path.resolve(bookpath, fn)).toString()
+    let txt = fse.readFileSync(path.resolve(bpath, fn)).toString()
     // no txt ?
     let rows = txt.split(/\n+/)
     let auth = { lang: lang, title: title, nic: nic, fn: fn, rows: rows }
