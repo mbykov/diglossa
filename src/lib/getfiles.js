@@ -113,7 +113,7 @@ function parseDir(bookname) {
 
   let book = {panes: [], coms: []}
   // let panes = []
-  let titles = []
+  // let titles = []
   fns.forEach(fn => {
     let comment = false
     let com = fn.split('-')[1]
@@ -123,12 +123,15 @@ function parseDir(bookname) {
     let nic = ext.replace(/^\./, '')
     let auth = _.find(info.auths, auth=> { return auth.ext == nic})
     if (!auth) return
-    let txt = fse.readFileSync(path.resolve(bpath, fn)).toString()
-    let rows = txt.split(/\n+/)
+    let txt = fse.readFileSync(path.resolve(bpath, fn), 'utf8') //.toString()
+    let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ')
+    let rows = _.compact(clean.split('\n'))
+    // log('R', rows)
     let pane = { lang: auth.lang, title: info.book.title, nic: nic, fn: fn, rows: rows }
     if (auth.author) book.author = pane
     else if (comment) book.coms.push(pane)
     else book.panes.push(pane)
+    if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   })
   book.title = info.book.title
   book.nics = _.uniq(book.panes.map(auth => { return auth.nic }))
@@ -137,10 +140,24 @@ function parseDir(bookname) {
   let lib = getStore('lib')
   lib[book.title] = info
   setStore('lib', lib)
-  // log('getBook', book)
   setStore(book.title, book)
   let current = {title: book.title}
   setStore('current', current)
+}
+
+function bookWFMap(text, title, fn) {
+  let map = {}
+  let pless = text.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9'"<>\[\]]/g,'')
+  let rows = pless.split('\n')
+  rows.forEach((row, idx)=> {
+    let wfs = _.compact(row.split(' '))
+    wfs.forEach(wf=> {
+      if (!map[wf]) map[wf] = []
+      map[wf].push({title: title, fn: fn, idx: idx})
+    })
+  })
+
+  return map
 }
 
 
