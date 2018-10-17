@@ -46,7 +46,8 @@
     "mustache": "^3.0.0",
     "node-dir": "^0.1.17",
     "split.js": "^1.4.0",
-    "textract": "^2.4.0"
+    "textract": "^2.4.0",
+    "tui-tree": "^3.5.0"
   },
   "devDependencies": {
     "@babel/core": "^7.1.2",

@@ -262,7 +262,11 @@ let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
 let path = __webpack_require__(/*! path */ "path");
 
-const log = console.log;
+const log = console.log; // const TreeView = require('js-treeview')
+// import {Tree} from 'tui-tree'
+
+var Tree = __webpack_require__(/*! tui-tree */ "tui-tree");
+
 function parseTitle() {
   log('========= parse title =============');
   let lib = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])('lib');
@@ -301,6 +305,111 @@ function parseTitle() {
     onicdiv.appendChild(oname);
     obookTitle.appendChild(onicdiv);
   });
+  let obookCont = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
+  obookCont.classList.add('bookTitle');
+  oright.appendChild(obookCont);
+  let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree');
+  obookCont.appendChild(otree); // let tree = new TreeView([
+  //   { name: 'Item 1', children: [] },
+  //   { name: 'Item 2', expanded: true, children: [
+  //     { name: 'Sub Item 1', children: [] },
+  //     { name: 'Sub Item 2', children: [] }
+  //   ]
+  //   }
+  // ], 'tree')
+  // // let tree = new TreeView(info.tree.children, 'tree')
+  // tree.expandAll()
+  // tree.on('select', function (e) {    log('TR', JSON.stringify(e));  })
+  // // tree.on('expand', function (e) {    log('TR', JSON.stringify(e));  })
+  // // tree.on('collapse', function (e) {    log('TR', JSON.stringify(e));  })
+
+  var util = {
+    addEventListener: function (element, eventName, handler) {
+      if (element.addEventListener) {
+        element.addEventListener(eventName, handler, false);
+      } else {
+        element.attachEvent('on' + eventName, handler);
+      }
+    }
+  };
+  var data = [{
+    text: 'rootA',
+    children: [{
+      text: 'sub-A1'
+    }, {
+      text: 'sub-A2'
+    }, {
+      text: 'sub-A3'
+    }, {
+      text: 'sub-A4'
+    }, {
+      text: 'sub-A5',
+      state: 'closed',
+      children: [{
+        text: 'sub-A5A',
+        children: [{
+          text: 'sub-A5A1'
+        }]
+      }, {
+        text: 'sub_A5B'
+      }]
+    }, {
+      text: 'sub-A6'
+    }, {
+      text: 'sub-A7'
+    }, {
+      text: 'sub-A8'
+    }, {
+      text: 'sub-A9',
+      state: 'closed',
+      children: [{
+        text: 'sub-A9A'
+      }, {
+        text: 'sub-A9B'
+      }]
+    }, {
+      text: 'sub-A10'
+    }, {
+      text: 'sub-A11'
+    }, {
+      text: 'sub-A12'
+    }]
+  }, {
+    text: 'rootB',
+    state: 'closed',
+    children: [{
+      text: 'sub-B1'
+    }, {
+      text: 'sub-B2'
+    }, {
+      text: 'sub-B3'
+    }]
+  }]; // var tree = new tui.Tree('tree', {
+
+  var tree = new Tree('tree', {
+    data: data,
+    nodeDefaultState: 'opened'
+  }).enableFeature('Selectable', {
+    selectedClassName: 'tui-tree-selected'
+  });
+  var selectedBtn = document.getElementById('selectedBtn');
+  var deselectedBtn = document.getElementById('deselectedBtn');
+  var rootNodeId = tree.getRootNodeId();
+  var firstChildId = tree.getChildIds(rootNodeId)[0];
+  var selectedValue = document.getElementById('selectedValue');
+  tree.on('select', function (eventData) {
+    var nodeData = tree.getNodeData(eventData.nodeId);
+    selectedValue.value = 'selected : ' + nodeData.text;
+  });
+  tree.on('deselect', function (eventData) {
+    var nodeData = tree.getNodeData(eventData.nodeId);
+    selectedValue.value = 'deselected : ' + nodeData.text;
+  }); // util.addEventListener(selectedBtn, 'click', function() {
+  //     tree.select(firstChildId);
+  // });
+  // util.addEventListener(deselectedBtn, 'click', function() {
+  //     tree.deselect();
+  // });
 }
 function parseBook() {
   var sizes = localStorage.getItem('split-sizes');
@@ -1086,6 +1195,17 @@ module.exports = require("split.js");
 /***/ (function(module, exports) {
 
 module.exports = require("textract");
+
+/***/ }),
+
+/***/ "tui-tree":
+/*!***************************!*\
+  !*** external "tui-tree" ***!
+  \***************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("tui-tree");
 
 /***/ }),
 
