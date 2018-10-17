@@ -193,3 +193,18 @@ input[type='file'] {
   -webkit-margin-end: 0;
   -webkit-padding-start: 0;
 }
+
+.bookTitle {
+  margin-top: 80px;
+  margin-left: 50px;
+}
+
+.author {
+  font-size: 18px;
+}
+
+.title {
+  font-size: 24px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}

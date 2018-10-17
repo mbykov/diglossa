@@ -149,7 +149,7 @@ try {
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["setStore"])('lib', {});
 }
 
-showSection('title');
+showSection('lib');
 
 function showSection(name) {
   let oapp = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#app');
@@ -162,8 +162,8 @@ function showBook(fns) {
   showSection('main');
   let oprg = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#progress');
   oprg.style.display = "inline-block";
-  let fpath = fns[0];
-  log('SHOWBOOK', fpath);
+  let fpath = fns[0]; // log('SHOWBOOK', fpath)
+
   if (/\.ods/.test(fpath)) // это убрать
     Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openODS"])(fpath, res => {
       log('ODS END JSON', res);
@@ -172,10 +172,11 @@ function showBook(fns) {
       oprg.style.display = "none";
     });else {
     // let bookpath = '../../texts/Thrax'
-    let bookpath = '../../texts/Aristotle/deAnima';
-    log('= OTHER THEN ODS =', bookpath);
+    let bookpath = '../../texts/Aristotle/deAnima'; // log('= OTHER THEN ODS =', bookpath)
+
     Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openDir"])(bookpath, res => {
-      if (!res) return; // parseBook()
+      if (!res) return;
+      Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseBook"])(); // showSection('main')
 
       Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseTitle"])();
       oprg.style.display = "none";
@@ -197,8 +198,7 @@ function scrollPanes(ev) {
 }
 
 function go(ev) {
-  let data = ev.target.dataset;
-  log('go DATA', ev.target.dataset);
+  let data = ev.target.dataset; // log('go DATAset', ev.target.dataset)
 
   if (data.section) {
     showSection(data.section);
@@ -271,6 +271,36 @@ function parseTitle() {
   log('LIB', lib);
   log('CUR', cur);
   log('BOOK', book);
+  let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
+  let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
+  let obookTitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
+  obookTitle.classList.add('bookTitle');
+  oleft.appendChild(obookTitle);
+  let oauth = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])(''); // let oauth = q('#author')
+
+  let info = lib[cur.title];
+
+  let auth = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(info.auths, auth => {
+    return auth.author;
+  });
+
+  oauth.textContent = auth.name;
+  oauth.classList.add('author');
+  obookTitle.appendChild(oauth);
+  let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
+  otitle.textContent = info.book.title;
+  otitle.classList.add('title');
+  obookTitle.appendChild(otitle);
+  info.nics.forEach(nic => {
+    let auth = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(info.auths, auth => {
+      return auth.ext == nic;
+    });
+
+    let onicdiv = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
+    let oname = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["span"])(auth.name);
+    onicdiv.appendChild(oname);
+    obookTitle.appendChild(onicdiv);
+  });
 }
 function parseBook() {
   var sizes = localStorage.getItem('split-sizes');
@@ -638,11 +668,7 @@ function openDir(bookname, cb) {
 }
 
 function walk(dname, dtree, tree) {
-  let name = dtree.path.split(dname)[1]; // name = [dname, name].join('')
-
-  log('N--->', name); // if (!name) name = dname
-  // name = name.replace(/^\//, '')
-
+  let name = dtree.path.split(dname)[1];
   tree.name = name;
   if (!dtree.children) return;
   dtree.children.forEach((child, idx) => {
@@ -713,10 +739,10 @@ function parseDir(bookname) {
     if (auth.author) book.map = bookWFMap(clean, info.book.title, fn);
   });
   book.title = info.book.title;
-  book.nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(book.panes.map(auth => {
+  info.nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(book.panes.map(auth => {
     return auth.nic;
   }));
-  book.tree = tree;
+  info.tree = tree;
   let lib = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["getStore"])('lib');
   lib[book.title] = info;
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["setStore"])('lib', lib);

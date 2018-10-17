@@ -81,10 +81,6 @@ export function openDir(bookname, cb) {
 
 function walk(dname, dtree, tree) {
   let name = dtree.path.split(dname)[1]
-  // name = [dname, name].join('')
-  log('N--->', name)
-  // if (!name) name = dname
-  // name = name.replace(/^\//, '')
   tree.name = name
   if (!dtree.children) return
   dtree.children.forEach((child, idx)=> {
@@ -134,8 +130,8 @@ function parseDir(bookname) {
     if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   })
   book.title = info.book.title
-  book.nics = _.uniq(book.panes.map(auth => { return auth.nic }))
-  book.tree = tree
+  info.nics = _.uniq(book.panes.map(auth => { return auth.nic }))
+  info.tree = tree
 
   let lib = getStore('lib')
   lib[book.title] = info

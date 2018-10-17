@@ -43,7 +43,7 @@ try {
   setStore('lib', {})
 }
 
-showSection('title')
+showSection('lib')
 
 function showSection(name) {
   let oapp = q('#app')
@@ -57,7 +57,7 @@ function showBook(fns) {
   let oprg = q('#progress')
   oprg.style.display = "inline-block"
   let fpath = fns[0]
-  log('SHOWBOOK', fpath)
+  // log('SHOWBOOK', fpath)
   if (/\.ods/.test(fpath)) // это убрать
     openODS(fpath, (res) => {
       log('ODS END JSON', res)
@@ -68,10 +68,11 @@ function showBook(fns) {
   else {
     // let bookpath = '../../texts/Thrax'
     let bookpath = '../../texts/Aristotle/deAnima'
-    log('= OTHER THEN ODS =', bookpath)
+    // log('= OTHER THEN ODS =', bookpath)
     openDir(bookpath, (res) => {
       if (!res) return
-      // parseBook()
+      parseBook()
+      // showSection('main')
       parseTitle()
       oprg.style.display = "none"
     })
@@ -93,7 +94,7 @@ function scrollPanes(ev) {
 
 function go(ev) {
   let data = ev.target.dataset
-  log('go DATA', ev.target.dataset)
+  // log('go DATAset', ev.target.dataset)
   if (data.section) {
     showSection(data.section)
   } else if (data.book) {

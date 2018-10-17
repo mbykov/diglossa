@@ -13,6 +13,29 @@ export function parseTitle() {
   log('LIB', lib)
   log('CUR', cur)
   log('BOOK', book)
+  let oleft = q('#source')
+  let oright = q('#trns')
+  let obookTitle = div('')
+  obookTitle.classList.add('bookTitle')
+  oleft.appendChild(obookTitle)
+  let oauth = div('')
+  // let oauth = q('#author')
+  let info = lib[cur.title]
+  let auth = _.find(info.auths, auth=> { return auth.author})
+  oauth.textContent = auth.name
+  oauth.classList.add('author')
+  obookTitle.appendChild(oauth)
+  let otitle = div('')
+  otitle.textContent = info.book.title
+  otitle.classList.add('title')
+  obookTitle.appendChild(otitle)
+  info.nics.forEach(nic=> {
+    let auth = _.find(info.auths, auth=> { return auth.ext == nic})
+    let onicdiv = div()
+    let oname = span(auth.name)
+    onicdiv.appendChild(oname)
+    obookTitle.appendChild(onicdiv)
+  })
 }
 
 export function parseBook() {
