@@ -94,15 +94,7 @@ function setBookText() {
   let info = lib[cur.title]
   log('CUR B==>', cur)
 
-  // let auths = localStorage.getItem('auths')
-  // if (!auths) return
-  // auths = JSON.parse(auths)
-  // log('setBT==>Auths', auths)
 
-  // let author = _.find(auths, auth=> { return auth.author })
-  // let trns = _.filter(auths, auth=> { return !auth.author && !auth.com })
-
-  // let nics = trns.map(auth => { return auth.nic })
   let nics = info.nics
   log('==>NICS', nics)
   let curnic = cur.nic
@@ -151,21 +143,23 @@ function alignPars(idx, oleft, orights) {
 function cyclePar(ev) {
   if (ev.shiftKey != true) return
   let idx = ev.target.getAttribute('idx')
-  let book = localStorage.getItem('book')
-  if (!book) return
-  book = JSON.parse(book)
-  let nics = book.nics
+  let lib = getStore('lib')
+  let cur = getStore('current')
+  let book = getStore(cur.title)
+  let info = lib[cur.title]
+  let nics = info.nics
   if (nics.length < 2) return
 
+  // некузяво
   let selector = '#trns [idx="'+idx+'"]'
   let pars = qs(selector)
-  let cur = _.find(pars, par=> { return !par.classList.contains('hidden') })
-  let nic = cur.getAttribute('nic')
+  let curpar = _.find(pars, par=> { return !par.classList.contains('hidden') })
+  let nic = curpar.getAttribute('nic')
   let nicidx = nics.indexOf(nic)
   let nextnic = (nicidx+1 == nics.length) ? nics[0] : nics[nicidx+1]
   let next = _.find(pars, par=> { return par.getAttribute('nic') == nextnic })
   next.classList.remove('hidden')
-  cur.classList.add('hidden')
+  curpar.classList.add('hidden')
 }
 
 function reSetBook() {
