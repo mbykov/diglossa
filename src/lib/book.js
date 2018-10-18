@@ -46,104 +46,21 @@ export function parseTitle() {
   let otree = q('#tree')
   obookCont.appendChild(otree)
 
-  // let tree = new TreeView([
-  //   { name: 'Item 1', children: [] },
-  //   { name: 'Item 2', expanded: true, children: [
-  //     { name: 'Sub Item 1', children: [] },
-  //     { name: 'Sub Item 2', children: [] }
-  //   ]
-  //   }
-  // ], 'tree')
-  // // let tree = new TreeView(info.tree.children, 'tree')
-  // tree.expandAll()
-  // tree.on('select', function (e) {    log('TR', JSON.stringify(e));  })
-  // // tree.on('expand', function (e) {    log('TR', JSON.stringify(e));  })
-  // // tree.on('collapse', function (e) {    log('TR', JSON.stringify(e));  })
-
-  var util = {
-            addEventListener: function(element, eventName, handler) {
-                if (element.addEventListener) {
-                    element.addEventListener(eventName, handler, false);
-                } else {
-                    element.attachEvent('on' + eventName, handler);
-                }
-            }
-        };
-
-        var data = [
-            {text: 'rootA', children: [
-              {text: 'sub-A1', fn: 'kuku'},
-                {text: 'sub-A2'},
-                {text: 'sub-A3'},
-                {text: 'sub-A4'},
-                {text: 'sub-A5', state: 'closed', children: [
-                    {text:'sub-A5A', children:[
-                        {text:'sub-A5A1'}
-                    ]},
-                    {text:'sub_A5B'}
-                ]},
-                {text: 'sub-A6'},
-                {text: 'sub-A7'},
-                {text: 'sub-A8'},
-                {text: 'sub-A9', state: 'closed', children: [
-                    {text:'sub-A9A'},
-                    {text:'sub-A9B'}
-                ]},
-                {text: 'sub-A10'},
-                {text: 'sub-A11'},
-                {text: 'sub-A12'}
-            ]},
-            {text: 'rootB', state:'closed', children: [
-                {text:'sub-B1'},
-                {text:'sub-B2'},
-                {text:'sub-B3'}
-            ]}
-        ];
-
   log('TREE', info.tree)
 
   let tree = new Tree('tree', {
-    data: info.tree.children,
+    data: info.tree,
     nodeDefaultState: 'opened'
   }).enableFeature('Selectable', {
     selectedClassName: 'tui-tree-selected',
   });
-
-        // var selectedBtn = document.getElementById('selectedBtn');
-        // var deselectedBtn = document.getElementById('deselectedBtn');
-        // var rootNodeId = tree.getRootNodeId();
-        // var firstChildId = tree.getChildIds(rootNodeId)[0];
-        // var selectedValue = document.getElementById('selectedValue');
-
   tree.on('select', function(eventData) {
-    // log('SEL:', eventData.nodeId)
-    // let target = q('#'+eventData.nodeId)
-    // log('T', target)
     let data = tree.getNodeData(eventData.nodeId);
     log('NDATA', data)
-    // #tui-tree-node-1 > div > span
-    // let text = target
-    // log('T', target.textContent)
-    // var nodeData = tree.getNodeData(eventData.nodeId);
-    // selectedValue.value = 'selected : ' + nodeData.text;
-  });
-
-  tree.on('deselect', function(eventData) {
-    log('DES:', eventData)
-    // var nodeData = tree.getNodeData(eventData.nodeId);
-    // selectedValue.value = 'deselected : ' + nodeData.text;
-  });
-
-        // util.addEventListener(selectedBtn, 'click', function() {
-        //     tree.select(firstChildId);
-        // });
-
-        // util.addEventListener(deselectedBtn, 'click', function() {
-        //     tree.deselect();
-        // });
-
-
-
+    cur.fpath = data.fpath
+    setStore('current', cur)
+    setBookText()
+  })
 
 }
 
@@ -166,23 +83,40 @@ export function parseBook() {
 }
 
 function setBookText() {
-  let auths = localStorage.getItem('auths')
-  if (!auths) return
-  auths = JSON.parse(auths)
-  log('setBT==>Auths', auths)
-  let otext = q('#source')
-  let ores = q('#trns')
-  empty(otext)
-  empty(ores)
-  let author = _.find(auths, auth=> { return auth.author })
-  let trns = _.filter(auths, auth=> { return !auth.author && !auth.com })
-  let nics = trns.map(auth => { return auth.nic })
-  log('==>NICS', nics)
-  let current = localStorage.getItem('current')
-  if (!current || !nics.includes(current)) current = nics[0]
-  log('==>CUR', current)
   let osource = q('#source')
   let otrns = q('#trns')
+  empty(osource)
+  empty(otrns)
+
+  let lib = getStore('lib')
+  let cur = getStore('current')
+  let book = getStore(cur.title)
+  let info = lib[cur.title]
+  log('CUR B==>', cur)
+
+  // let auths = localStorage.getItem('auths')
+  // if (!auths) return
+  // auths = JSON.parse(auths)
+  // log('setBT==>Auths', auths)
+
+  // let author = _.find(auths, auth=> { return auth.author })
+  // let trns = _.filter(auths, auth=> { return !auth.author && !auth.com })
+
+  // let nics = trns.map(auth => { return auth.nic })
+  let nics = info.nics
+  log('==>NICS', nics)
+  let curnic = cur.nic
+  if (!cur || !cur.nic || !nics.includes(cur.nic)) {
+    curnic = nics[0]
+    cur.nic = curnic
+    log('==>CUR', curnic)
+    setStore('current', cur)
+  }
+
+  let author = book.author
+  // let trns = book.panes
+  let trns = _.filter(book.panes, auth=> { return auth.fpath == cur.fpath})
+
   author.rows.forEach((astr, idx) => {
     let oleft = p(astr)
     oleft.setAttribute('idx', idx)
@@ -195,8 +129,8 @@ function setBookText() {
       oright.setAttribute('idx', idx)
       oright.setAttribute('nic', auth.nic)
       otrns.appendChild(oright)
-      if (idx == 1) log('AuthNIC', auth.nic, current)
-      if (auth.nic == current) oright.setAttribute('active', true)
+      // if (idx == 1) log('AuthNIC', auth.nic, curnic)
+      if (auth.nic == curnic) oright.setAttribute('active', true)
       orights.push(oright)
     })
     alignPars(idx, oleft, orights)

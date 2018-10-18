@@ -172,8 +172,9 @@ function showBook(fns) {
       oprg.style.display = "none";
     });else {
     // let bookpath = '../../texts/Thrax'
-    let bookpath = '../../texts/Aristotle/deAnima'; // log('= OTHER THEN ODS =', bookpath)
-
+    // let bookpath = '../../texts/Aristotle/deAnima'
+    let bookpath = '../../texts/Plato/Letters';
+    log('= OTHER THEN ODS =', bookpath);
     Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openDir"])(bookpath, res => {
       if (!res) return;
       Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseBook"])(); // showSection('main')
@@ -309,115 +310,21 @@ function parseTitle() {
   obookCont.classList.add('bookTitle');
   oright.appendChild(obookCont);
   let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree');
-  obookCont.appendChild(otree); // let tree = new TreeView([
-  //   { name: 'Item 1', children: [] },
-  //   { name: 'Item 2', expanded: true, children: [
-  //     { name: 'Sub Item 1', children: [] },
-  //     { name: 'Sub Item 2', children: [] }
-  //   ]
-  //   }
-  // ], 'tree')
-  // // let tree = new TreeView(info.tree.children, 'tree')
-  // tree.expandAll()
-  // tree.on('select', function (e) {    log('TR', JSON.stringify(e));  })
-  // // tree.on('expand', function (e) {    log('TR', JSON.stringify(e));  })
-  // // tree.on('collapse', function (e) {    log('TR', JSON.stringify(e));  })
-
-  var util = {
-    addEventListener: function (element, eventName, handler) {
-      if (element.addEventListener) {
-        element.addEventListener(eventName, handler, false);
-      } else {
-        element.attachEvent('on' + eventName, handler);
-      }
-    }
-  };
-  var data = [{
-    text: 'rootA',
-    children: [{
-      text: 'sub-A1',
-      fn: 'kuku'
-    }, {
-      text: 'sub-A2'
-    }, {
-      text: 'sub-A3'
-    }, {
-      text: 'sub-A4'
-    }, {
-      text: 'sub-A5',
-      state: 'closed',
-      children: [{
-        text: 'sub-A5A',
-        children: [{
-          text: 'sub-A5A1'
-        }]
-      }, {
-        text: 'sub_A5B'
-      }]
-    }, {
-      text: 'sub-A6'
-    }, {
-      text: 'sub-A7'
-    }, {
-      text: 'sub-A8'
-    }, {
-      text: 'sub-A9',
-      state: 'closed',
-      children: [{
-        text: 'sub-A9A'
-      }, {
-        text: 'sub-A9B'
-      }]
-    }, {
-      text: 'sub-A10'
-    }, {
-      text: 'sub-A11'
-    }, {
-      text: 'sub-A12'
-    }]
-  }, {
-    text: 'rootB',
-    state: 'closed',
-    children: [{
-      text: 'sub-B1'
-    }, {
-      text: 'sub-B2'
-    }, {
-      text: 'sub-B3'
-    }]
-  }];
+  obookCont.appendChild(otree);
   log('TREE', info.tree);
   let tree = new Tree('tree', {
-    data: info.tree.children,
+    data: info.tree,
     nodeDefaultState: 'opened'
   }).enableFeature('Selectable', {
     selectedClassName: 'tui-tree-selected'
-  }); // var selectedBtn = document.getElementById('selectedBtn');
-  // var deselectedBtn = document.getElementById('deselectedBtn');
-  // var rootNodeId = tree.getRootNodeId();
-  // var firstChildId = tree.getChildIds(rootNodeId)[0];
-  // var selectedValue = document.getElementById('selectedValue');
-
-  tree.on('select', function (eventData) {
-    // log('SEL:', eventData.nodeId)
-    // let target = q('#'+eventData.nodeId)
-    // log('T', target)
-    let data = tree.getNodeData(eventData.nodeId);
-    log('NDATA', data); // #tui-tree-node-1 > div > span
-    // let text = target
-    // log('T', target.textContent)
-    // var nodeData = tree.getNodeData(eventData.nodeId);
-    // selectedValue.value = 'selected : ' + nodeData.text;
   });
-  tree.on('deselect', function (eventData) {
-    log('DES:', eventData); // var nodeData = tree.getNodeData(eventData.nodeId);
-    // selectedValue.value = 'deselected : ' + nodeData.text;
-  }); // util.addEventListener(selectedBtn, 'click', function() {
-  //     tree.select(firstChildId);
-  // });
-  // util.addEventListener(deselectedBtn, 'click', function() {
-  //     tree.deselect();
-  // });
+  tree.on('select', function (eventData) {
+    let data = tree.getNodeData(eventData.nodeId);
+    log('NDATA', data);
+    cur.fpath = data.fpath;
+    Object(_utils__WEBPACK_IMPORTED_MODULE_2__["setStore"])('current', cur);
+    setBookText();
+  });
 }
 function parseBook() {
   var sizes = localStorage.getItem('split-sizes');
@@ -435,32 +342,39 @@ function parseBook() {
 }
 
 function setBookText() {
-  let auths = localStorage.getItem('auths');
-  if (!auths) return;
-  auths = JSON.parse(auths);
-  log('setBT==>Auths', auths);
-  let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
-  let ores = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
-  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otext);
-  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(ores);
-
-  let author = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(auths, auth => {
-    return auth.author;
-  });
-
-  let trns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(auths, auth => {
-    return !auth.author && !auth.com;
-  });
-
-  let nics = trns.map(auth => {
-    return auth.nic;
-  });
-  log('==>NICS', nics);
-  let current = localStorage.getItem('current');
-  if (!current || !nics.includes(current)) current = nics[0];
-  log('==>CUR', current);
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
+  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
+  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns);
+  let lib = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])('lib');
+  let cur = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])('current');
+  let book = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])(cur.title);
+  let info = lib[cur.title];
+  log('CUR B==>', cur); // let auths = localStorage.getItem('auths')
+  // if (!auths) return
+  // auths = JSON.parse(auths)
+  // log('setBT==>Auths', auths)
+  // let author = _.find(auths, auth=> { return auth.author })
+  // let trns = _.filter(auths, auth=> { return !auth.author && !auth.com })
+  // let nics = trns.map(auth => { return auth.nic })
+
+  let nics = info.nics;
+  log('==>NICS', nics);
+  let curnic = cur.nic;
+
+  if (!cur || !cur.nic || !nics.includes(cur.nic)) {
+    curnic = nics[0];
+    cur.nic = curnic;
+    log('==>CUR', curnic);
+    Object(_utils__WEBPACK_IMPORTED_MODULE_2__["setStore"])('current', cur);
+  }
+
+  let author = book.author; // let trns = book.panes
+
+  let trns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(book.panes, auth => {
+    return auth.fpath == cur.fpath;
+  });
+
   author.rows.forEach((astr, idx) => {
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])(astr);
     oleft.setAttribute('idx', idx);
@@ -472,9 +386,9 @@ function setBookText() {
       let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])(rstr);
       oright.setAttribute('idx', idx);
       oright.setAttribute('nic', auth.nic);
-      otrns.appendChild(oright);
-      if (idx == 1) log('AuthNIC', auth.nic, current);
-      if (auth.nic == current) oright.setAttribute('active', true);
+      otrns.appendChild(oright); // if (idx == 1) log('AuthNIC', auth.nic, curnic)
+
+      if (auth.nic == curnic) oright.setAttribute('active', true);
       orights.push(oright);
     });
     alignPars(idx, oleft, orights);
@@ -785,8 +699,9 @@ function openDir(bookname, cb) {
 }
 
 function walk(dname, dtree, tree) {
-  let name = dtree.path.split(dname)[1];
-  tree.text = name;
+  let fpath = dtree.path.split(dname)[1];
+  tree.text = fpath.split('/').slice(-1)[0];
+  tree.fpath = fpath.replace(/^\//, '');
   if (!dtree.children) return;
   dtree.children.forEach((child, idx) => {
     if (child.type != 'directory') return;
@@ -800,18 +715,21 @@ function parseDir(bookname) {
   let bpath = path.resolve(__dirname, bookname);
   let dname = bookname.split('/').slice(-1)[0]; // + '/'
 
-  const dtree = dirTree(bpath);
+  const dtree = dirTree(bpath); // log('=DTR', dtree)
+
   let tree = {};
-  walk(dname, dtree, tree);
+  walk(dname, dtree, tree); // log('=TREE', tree)
+
   let fns = glob.sync('**/*', {
     cwd: bpath
-  });
+  }); // log('FNS', fns)
 
   let ipath = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(fns, fn => {
     return /info.json/.test(fn);
   });
 
-  ipath = path.resolve(bpath, ipath);
+  ipath = path.resolve(bpath, ipath); // log('IPATH', ipath)
+
   if (!ipath) return;
   let info = parseInfo(ipath); // log('INFO', info)
 
@@ -845,11 +763,15 @@ function parseDir(bookname) {
     let rows = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(clean.split('\n')); // log('R', rows)
 
 
+    let fparts = fn.split('/');
+    let fname = fparts.pop();
+    let fpath = fparts.join('/');
     let pane = {
       lang: auth.lang,
       title: info.book.title,
       nic: nic,
-      fn: fn,
+      fpath: fpath,
+      fname: fname,
       rows: rows
     };
     if (auth.author) book.author = pane;else if (comment) book.coms.push(pane);else book.panes.push(pane);
@@ -859,7 +781,7 @@ function parseDir(bookname) {
   info.nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(book.panes.map(auth => {
     return auth.nic;
   }));
-  info.tree = tree;
+  info.tree = tree.children;
   let lib = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["getStore"])('lib');
   lib[book.title] = info;
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["setStore"])('lib', lib);

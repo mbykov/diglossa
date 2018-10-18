@@ -67,8 +67,9 @@ function showBook(fns) {
     })
   else {
     // let bookpath = '../../texts/Thrax'
-    let bookpath = '../../texts/Aristotle/deAnima'
-    // log('= OTHER THEN ODS =', bookpath)
+    // let bookpath = '../../texts/Aristotle/deAnima'
+    let bookpath = '../../texts/Plato/Letters'
+    log('= OTHER THEN ODS =', bookpath)
     openDir(bookpath, (res) => {
       if (!res) return
       parseBook()

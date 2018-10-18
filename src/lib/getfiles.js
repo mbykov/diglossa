@@ -80,8 +80,9 @@ export function openDir(bookname, cb) {
 }
 
 function walk(dname, dtree, tree) {
-  let name = dtree.path.split(dname)[1]
-  tree.text = name
+  let fpath = dtree.path.split(dname)[1]
+  tree.text = fpath.split('/').slice(-1)[0]
+  tree.fpath = fpath.replace(/^\//, '')
   if (!dtree.children) return
   dtree.children.forEach((child, idx)=> {
     if (child.type != 'directory') return
@@ -95,12 +96,16 @@ function parseDir(bookname) {
   let bpath = path.resolve(__dirname, bookname)
   let dname = bookname.split('/').slice(-1)[0] // + '/'
   const dtree = dirTree(bpath)
+  // log('=DTR', dtree)
   let tree = {}
   walk(dname, dtree, tree)
+  // log('=TREE', tree)
 
   let fns = glob.sync('**/*', {cwd: bpath})
+  // log('FNS', fns)
   let ipath = _.find(fns, fn=>{ return /info.json/.test(fn) })
   ipath = path.resolve(bpath, ipath)
+  // log('IPATH', ipath)
   if (!ipath) return
   let info = parseInfo(ipath)
   // log('INFO', info)
@@ -123,7 +128,10 @@ function parseDir(bookname) {
     let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ')
     let rows = _.compact(clean.split('\n'))
     // log('R', rows)
-    let pane = { lang: auth.lang, title: info.book.title, nic: nic, fn: fn, rows: rows }
+    let fparts = fn.split('/')
+    let fname = fparts.pop()
+    let fpath = fparts.join('/')
+    let pane = { lang: auth.lang, title: info.book.title, nic: nic, fpath: fpath, fname: fname, rows: rows }
     if (auth.author) book.author = pane
     else if (comment) book.coms.push(pane)
     else book.panes.push(pane)
@@ -131,7 +139,7 @@ function parseDir(bookname) {
   })
   book.title = info.book.title
   info.nics = _.uniq(book.panes.map(auth => { return auth.nic }))
-  info.tree = tree
+  info.tree = tree.children
 
   let lib = getStore('lib')
   lib[book.title] = info
