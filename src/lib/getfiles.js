@@ -81,7 +81,7 @@ export function openDir(bookname, cb) {
 
 function walk(dname, dtree, tree) {
   let name = dtree.path.split(dname)[1]
-  tree.name = name
+  tree.text = name
   if (!dtree.children) return
   dtree.children.forEach((child, idx)=> {
     if (child.type != 'directory') return

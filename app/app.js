@@ -335,7 +335,8 @@ function parseTitle() {
   var data = [{
     text: 'rootA',
     children: [{
-      text: 'sub-A1'
+      text: 'sub-A1',
+      fn: 'kuku'
     }, {
       text: 'sub-A2'
     }, {
@@ -384,26 +385,33 @@ function parseTitle() {
     }, {
       text: 'sub-B3'
     }]
-  }]; // var tree = new tui.Tree('tree', {
-
-  var tree = new Tree('tree', {
-    data: data,
+  }];
+  log('TREE', info.tree);
+  let tree = new Tree('tree', {
+    data: info.tree.children,
     nodeDefaultState: 'opened'
   }).enableFeature('Selectable', {
     selectedClassName: 'tui-tree-selected'
-  });
-  var selectedBtn = document.getElementById('selectedBtn');
-  var deselectedBtn = document.getElementById('deselectedBtn');
-  var rootNodeId = tree.getRootNodeId();
-  var firstChildId = tree.getChildIds(rootNodeId)[0];
-  var selectedValue = document.getElementById('selectedValue');
+  }); // var selectedBtn = document.getElementById('selectedBtn');
+  // var deselectedBtn = document.getElementById('deselectedBtn');
+  // var rootNodeId = tree.getRootNodeId();
+  // var firstChildId = tree.getChildIds(rootNodeId)[0];
+  // var selectedValue = document.getElementById('selectedValue');
+
   tree.on('select', function (eventData) {
-    var nodeData = tree.getNodeData(eventData.nodeId);
-    selectedValue.value = 'selected : ' + nodeData.text;
+    // log('SEL:', eventData.nodeId)
+    // let target = q('#'+eventData.nodeId)
+    // log('T', target)
+    let data = tree.getNodeData(eventData.nodeId);
+    log('NDATA', data); // #tui-tree-node-1 > div > span
+    // let text = target
+    // log('T', target.textContent)
+    // var nodeData = tree.getNodeData(eventData.nodeId);
+    // selectedValue.value = 'selected : ' + nodeData.text;
   });
   tree.on('deselect', function (eventData) {
-    var nodeData = tree.getNodeData(eventData.nodeId);
-    selectedValue.value = 'deselected : ' + nodeData.text;
+    log('DES:', eventData); // var nodeData = tree.getNodeData(eventData.nodeId);
+    // selectedValue.value = 'deselected : ' + nodeData.text;
   }); // util.addEventListener(selectedBtn, 'click', function() {
   //     tree.select(firstChildId);
   // });
@@ -778,7 +786,7 @@ function openDir(bookname, cb) {
 
 function walk(dname, dtree, tree) {
   let name = dtree.path.split(dname)[1];
-  tree.name = name;
+  tree.text = name;
   if (!dtree.children) return;
   dtree.children.forEach((child, idx) => {
     if (child.type != 'directory') return;
