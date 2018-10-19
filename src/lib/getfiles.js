@@ -138,7 +138,7 @@ function parseDir(bookname) {
     if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   })
   book.title = info.book.title
-  info.nics = _.uniq(book.panes.map(auth => { return auth.nic }))
+  // info.nics = _.uniq(book.panes.map(auth => { return auth.nic }))
   info.tree = tree.children
 
   let lib = getStore('lib')
@@ -160,7 +160,6 @@ function bookWFMap(text, title, fn) {
       map[wf].push({title: title, fn: fn, idx: idx})
     })
   })
-
   return map
 }
 
@@ -173,6 +172,14 @@ function parseInfo(ipath) {
     log('ERR INFO', err)
     throw new Error()
   }
+  let nics = []
+  info.auths.forEach(auth => {
+    if (auth.author) return
+    let nic = {nic: auth.ext, name: auth.name}
+    nics.push(nic)
+  })
+  info.nics = nics
+  info.nic = nics[0]
   return info
 }
 

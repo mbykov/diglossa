@@ -32,12 +32,11 @@ export function parseTitle() {
   otitle.textContent = info.book.title
   otitle.classList.add('title')
   obookTitle.appendChild(otitle)
+  let oname = span(auth.name)
+  obookTitle.appendChild(oname)
   info.nics.forEach(nic=> {
-    let auth = _.find(info.auths, auth=> { return auth.ext == nic})
-    let onicdiv = div()
-    let oname = span(auth.name)
-    onicdiv.appendChild(oname)
-    obookTitle.appendChild(onicdiv)
+    let onic = div(nic.name)
+    obookTitle.appendChild(onic)
   })
 
   let obookCont = div('')
@@ -56,9 +55,12 @@ export function parseTitle() {
   });
   tree.on('select', function(eventData) {
     let data = tree.getNodeData(eventData.nodeId);
-    log('NDATA', data)
+    // log('NDATA', data)
     cur.fpath = data.fpath
+    cur.nic = info.nics[0]
     setStore('current', cur)
+    createRightHeader(cur, info.nics)
+    // let nic = cur.nic.nic
     setBookText()
   })
 
@@ -77,9 +79,6 @@ export function parseBook() {
       reSetBook()
     }
   })
-
-  // createRightHeader()
-  // setBookText()
 }
 
 function setBookText() {
@@ -88,25 +87,18 @@ function setBookText() {
   empty(osource)
   empty(otrns)
 
-  let lib = getStore('lib')
+  // let lib = getStore('lib')
   let cur = getStore('current')
+  // let info = lib[cur.title]
+
+  // let curnic = (cur.nic) ? cur.nic.nic : info.nics[0].nic
+  let nic = cur.nic.nic
+
   let book = getStore(cur.title)
-  let info = lib[cur.title]
-  log('CUR B==>', cur)
+  // log('setBookText cur==>', cur)
 
-
-  let nics = info.nics
-  log('==>NICS', nics)
-  let curnic = cur.nic
-  if (!cur || !cur.nic || !nics.includes(cur.nic)) {
-    curnic = nics[0]
-    cur.nic = curnic
-    log('==>CUR', curnic)
-    setStore('current', cur)
-  }
 
   let author = book.author
-  // let trns = book.panes
   let trns = _.filter(book.panes, auth=> { return auth.fpath == cur.fpath})
 
   author.rows.forEach((astr, idx) => {
@@ -121,8 +113,7 @@ function setBookText() {
       oright.setAttribute('idx', idx)
       oright.setAttribute('nic', auth.nic)
       otrns.appendChild(oright)
-      // if (idx == 1) log('AuthNIC', auth.nic, curnic)
-      if (auth.nic == curnic) oright.setAttribute('active', true)
+      if (auth.nic == nic) oright.setAttribute('active', true)
       orights.push(oright)
     })
     alignPars(idx, oleft, orights)
@@ -147,8 +138,9 @@ function cyclePar(ev) {
   let cur = getStore('current')
   let book = getStore(cur.title)
   let info = lib[cur.title]
-  let nics = info.nics
-  if (nics.length < 2) return
+  let names = info.nics
+  if (names.length < 2) return
+  let nics = names.map(name=> { return name.nic })
 
   // некузяво
   let selector = '#trns [idx="'+idx+'"]'
@@ -163,13 +155,10 @@ function cyclePar(ev) {
 }
 
 function reSetBook() {
-  let auths = localStorage.getItem('auths')
-  if (!auths) return
-  auths = JSON.parse(auths)
   let osource = q('#source')
   let otrns = q('#trns')
   let scrollTop = osource.scrollTop
-  setBookText(auths)
+  setBookText()
   osource.scrollTop = scrollTop
   otrns.scrollTop = scrollTop
 }
@@ -179,66 +168,60 @@ function parseLeftHeader() {
   // oheader.textContent = '========================'
 }
 
-function changeRightHeader(ev) {
+function createRightHeader(cur) {
+  let oapp = q('#book')
+  let arect = oapp.getBoundingClientRect()
+  let ohright = div()
+  ohright.classList.add('hright')
+  ohright.style.left = arect.width*0.70 + 'px'
+
+  let oul = create('ul')
+  oul.setAttribute('id', 'niclist')
+  ohright.appendChild(oul)
+  oapp.appendChild(ohright)
+  let nics = [cur.nic]
+  setRightHeader(nics)
+}
+
+function createNicList(nics) {
+  let oul = q('#niclist')
+  empty(oul)
+  nics.forEach(nic=> {
+    let oli = create('li')
+    if (nics.length == 1) oli.addEventListener("click", expandRightHeader, false)
+    else oli.addEventListener("click", selectCurrent, false)
+    oli.textContent = nic.name
+    oli.setAttribute('nic', nic.nic)
+    oul.appendChild(oli)
+  })
+}
+
+function setRightHeader(nics) {
+  let oright = q('.hright')
+  oright.classList.remove('header')
+  createNicList(nics)
+}
+
+function expandRightHeader(ev) {
   let oright = q('.hright')
   oright.classList.add('header')
-  let json = localStorage.getItem('book')
-  if (!json) return
-  let book = JSON.parse(json)
-  let nics = _.uniq(book.nics)
-  createNicList(nics)
+  let lib = getStore('lib')
+  let cur = getStore('current')
+  let info = lib[cur.title]
+  let oul = q('#niclist')
+  createNicList(info.nics)
 }
 
 function selectCurrent(ev) {
   let oright = q('.hright')
-  let current = ev.target.textContent
-  localStorage.setItem('current', current)
-  let cnics = [current]
-  createNicList(cnics)
   oright.classList.remove('header')
+  let name = ev.target.textContent
+  let nic = ev.target.getAttribute('nic')
+  let cur = getStore('current')
+  cur.nic = {nic: nic, name: name}
+  setStore('current', cur)
+  let nics = [cur.nic]
+  // log('SELECT nics', nics)
+  setRightHeader(nics)
   reSetBook()
-}
-
-function createRightHeader() {
-  let oapp = q('#book')
-  let arect = oapp.getBoundingClientRect()
-  let oright = div()
-  oright.classList.add('hright')
-  oright.style.left = arect.width*0.70 + 'px'
-  let current = localStorage.getItem('current')
-  if (!current) {
-    let json = localStorage.getItem('book')
-    if (!json) return
-    let book = JSON.parse(json)
-    let nics = _.uniq(book.nics)
-    current = nics[0]
-    localStorage.setItem('current', current)
-  }
-  let cnics = [current]
-  let oul = createNicList(cnics)
-  oright.appendChild(oul)
-  oapp.appendChild(oright)
-}
-
-function createNicList(nics) {
-  let oul = q('#oul')
-  if (!oul) {
-    oul = create('ul')
-    oul.id = 'oul'
-  }
-  empty(oul)
-  nics.forEach(nic=> {
-    let oli = create('li')
-    if (nics.length == 1) oli.addEventListener("click", changeRightHeader, false)
-    else oli.addEventListener("click", selectCurrent, false)
-    oli.textContent = nic
-    oul.appendChild(oli)
-  })
-  return oul
-}
-
-function closeHeaders() {
-  // let oright = q('#hright')
-  // oright.classList.remove('header')
-  // oright.dataset.header = 'right'
 }
