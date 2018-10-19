@@ -17,12 +17,32 @@ function createNode(node) {
   let onode = create('div', 'tree-text')
   let osign = create('span', 'tree-branch')
   osign.textContent = '▾'
+  osign.addEventListener('click', toggleNode, false)
   let otext = create('span', 'text')
   otext.textContent = node.text
-  onode.appendChild(osign)
+  otext.addEventListener('click', goNode, false)
+  if (node.children) onode.appendChild(osign)
   onode.appendChild(otext)
+  if (node.children) {
+    node.children.forEach(child=> {
+      let ochild = createNode(child)
+      onode.appendChild(ochild)
+    })
+  }
+  let texts = qs('.tree-text')
   return onode
 }
+
+function goNode(ev) {
+  log('EV', ev.target.textContent)
+}
+
+function toggleNode(ev) {
+  let parent = ev.target.parentNode
+  parent.classList.toggle('tree-collapse')
+}
+
+
 
 
 // id: 'other',

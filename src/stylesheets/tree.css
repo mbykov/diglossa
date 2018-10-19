@@ -5,16 +5,17 @@
 }
 .tree-branch {
   position: relative;
-  margin-left: 20px;
+  /* margin-left: 20px; */
+  margin-left: 5px;
   margin-right: 5px;
 }
-.tree-text::before{
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  font-size: 1em;
-  content: '▾';
-}
+/* .tree-text::before{ */
+/*   position: absolute; */
+/*   top: 0px; */
+/*   left: 0px; */
+/*   font-size: 1em; */
+/*   content: '▾'; */
+/* } */
 ul.tree-list {
   margin: 0px;
   padding: 0px;
@@ -27,6 +28,9 @@ ul.tree-list {
   list-style: none;
 }
 .tree-collapse > ul {
+  display: none;
+}
+.tree-collapse > div {
   display: none;
 }
 .tree-collapse .tree-text::before {
