@@ -6,9 +6,53 @@ let path = require('path')
 const log = console.log
 // const TreeView = require('js-treeview')
 // import {Tree} from 'tui-tree'
-var Tree = require('tui-tree')
+let Tree = require('tui-tree')
+// const tree = require('../../../tree-ui/dist')
+import tree from './tree';
+
+let treedata = [{
+  text: 'o'
+}, {
+  text: 'first title',
+  id: 'first',
+  children:[
+    {text: '2'},
+    {text: '3'},
+    {
+      text: 'other title',
+      id: 'other',
+      children: [
+        {text: '4'},
+        {text: '5'},
+        {
+          text: 'sub title',
+          id: 'sub',
+          children: [
+            {text: '6'},
+            {text: '7', id: 7},
+            {text: '8'}
+          ]
+        }
+      ]
+    }
+  ]
+}, {
+  text: 'end'
+}]
+
 
 export function parseTitle() {
+  let oright = q('#trns')
+  let obookCont = div('')
+  // let otree = q('#tree')
+  obookCont.classList.add('bookTitle')
+  oright.appendChild(obookCont)
+  let otree = tree(treedata);
+  obookCont.appendChild(otree)
+  // otree.textContent = 'TREE CONTENT'
+}
+
+export function parseTitleTui() {
   log('========= parse title =============')
   let lib = getStore('lib')
   let cur = getStore('current')

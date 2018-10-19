@@ -178,6 +178,7 @@ function showBook(fns) {
     Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openDir"])(bookpath, res => {
       if (!res) return;
       Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseBook"])(); // showSection('main')
+      // parseTitleTui()
 
       Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseTitle"])();
       oprg.style.display = "none";
@@ -243,18 +244,20 @@ function keyGo(ev) {
 /*!*************************!*\
   !*** ./src/lib/book.js ***!
   \*************************/
-/*! exports provided: parseTitle, parseBook */
+/*! exports provided: parseTitle, parseTitleTui, parseBook */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseTitle", function() { return parseTitle; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseTitleTui", function() { return parseTitleTui; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseBook", function() { return parseBook; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! split.js */ "split.js");
 /* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(split_js__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
+/* harmony import */ var _tree__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./tree */ "./src/lib/tree.js");
 
 
 
@@ -266,9 +269,52 @@ let path = __webpack_require__(/*! path */ "path");
 const log = console.log; // const TreeView = require('js-treeview')
 // import {Tree} from 'tui-tree'
 
-var Tree = __webpack_require__(/*! tui-tree */ "tui-tree");
+let Tree = __webpack_require__(/*! tui-tree */ "tui-tree"); // const tree = require('../../../tree-ui/dist')
 
+
+
+let treedata = [{
+  text: 'o'
+}, {
+  text: 'first title',
+  id: 'first',
+  children: [{
+    text: '2'
+  }, {
+    text: '3'
+  }, {
+    text: 'other title',
+    id: 'other',
+    children: [{
+      text: '4'
+    }, {
+      text: '5'
+    }, {
+      text: 'sub title',
+      id: 'sub',
+      children: [{
+        text: '6'
+      }, {
+        text: '7',
+        id: 7
+      }, {
+        text: '8'
+      }]
+    }]
+  }]
+}, {
+  text: 'end'
+}];
 function parseTitle() {
+  let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
+  let obookCont = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])(''); // let otree = q('#tree')
+
+  obookCont.classList.add('bookTitle');
+  oright.appendChild(obookCont);
+  let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(treedata);
+  obookCont.appendChild(otree); // otree.textContent = 'TREE CONTENT'
+}
+function parseTitleTui() {
   log('========= parse title =============');
   let lib = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])('lib');
   let cur = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])('current');
@@ -854,6 +900,54 @@ function getFiles_(bookname) {
   localStorage.setItem('book', JSON.stringify(book));
   return auths;
 }
+
+/***/ }),
+
+/***/ "./src/lib/tree.js":
+/*!*************************!*\
+  !*** ./src/lib/tree.js ***!
+  \*************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return tree; });
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
+//
+
+let log = console.log;
+function tree(data) {
+  log('TREEDATA', data);
+  let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree');
+  data.forEach(node => {
+    let onode = createNode(node);
+    otree.appendChild(onode);
+  });
+  return otree;
+}
+
+function createNode(node) {
+  log('NODE', node);
+  let onode = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-text');
+  let osign = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-branch');
+  osign.textContent = '▾';
+  let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'text');
+  otext.textContent = node.text;
+  onode.appendChild(osign);
+  onode.appendChild(otext);
+  return onode;
+} // id: 'other',
+// children: [
+//   {text: '4'},
+//   {text: '5'},
+//   {
+//     text: 'sub title',
+//     id: 'sub',
+//     children: [
+//       {text: '6'},
+//       {text: '7', id: 7},
+//       {text: '8'}
 
 /***/ }),
 

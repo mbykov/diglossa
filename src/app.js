@@ -13,7 +13,7 @@ import { shell } from 'electron'
 // import sband from "./lib/clean-greek";
 import { ipcRenderer } from "electron";
 import { q, qs, empty, create, span, p, div, enclitic, getStore, setStore } from './lib/utils'
-import { parseBook, parseTitle } from './lib/book'
+import { parseBook, parseTitle, parseTitleTui } from './lib/book'
 import { openODS, openDir } from './lib/getfiles'
 
 let fse = require('fs-extra')
@@ -74,6 +74,7 @@ function showBook(fns) {
       if (!res) return
       parseBook()
       // showSection('main')
+      // parseTitleTui()
       parseTitle()
       oprg.style.display = "none"
     })
