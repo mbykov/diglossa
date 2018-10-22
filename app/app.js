@@ -118,6 +118,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+const Store = __webpack_require__(/*! electron-store */ "electron-store");
+
+const store = new Store();
+
 let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
 const log = console.log;
@@ -141,14 +145,8 @@ const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app;
 const appPath = app.getAppPath();
 let userDataPath = app.getPath("userData"); // enableDBs(userDataPath, appPath, isDev)
 
-let lib;
-
-try {
-  lib = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["getStore"])('lib');
-} catch (err) {
-  Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["setStore"])('lib', {});
-}
-
+let lib = store.get('lib');
+if (!lib) store.set('lib', {});
 showSection('lib');
 
 function showSection(name) {
@@ -167,19 +165,18 @@ function showBook(fns) {
   if (/\.ods/.test(fpath)) // это убрать
     Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openODS"])(fpath, res => {
       log('ODS END JSON', res);
-      if (!res) return; // parseBook()
+      if (!res) return; // twoPages()
 
       oprg.style.display = "none";
     });else {
     // let bookpath = '../../texts/Thrax'
     // let bookpath = '../../texts/Aristotle/deAnima'
-    let bookpath = '../../texts/Plato/Letters';
-    log('= OTHER THEN ODS =', bookpath);
+    // let bookpath = '../../texts/Plato/Letters'
+    let bookpath = '../../texts/Plato'; // log('= OTHER THEN ODS =', bookpath)
+
     Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openDir"])(bookpath, res => {
       if (!res) return;
-      Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseBook"])(); // showSection('main')
-      // parseTitleTui()
-
+      Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["twoPages"])();
       Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseTitle"])();
       oprg.style.display = "none";
     });
@@ -244,14 +241,13 @@ function keyGo(ev) {
 /*!*************************!*\
   !*** ./src/lib/book.js ***!
   \*************************/
-/*! exports provided: parseTitle, parseTitleTui, parseBook */
+/*! exports provided: parseTitle, twoPages */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseTitle", function() { return parseTitle; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseTitleTui", function() { return parseTitleTui; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseBook", function() { return parseBook; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "twoPages", function() { return twoPages; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! split.js */ "split.js");
@@ -262,117 +258,56 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
-let path = __webpack_require__(/*! path */ "path");
+const fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
-const log = console.log; // const TreeView = require('js-treeview')
-// import {Tree} from 'tui-tree'
+const path = __webpack_require__(/*! path */ "path");
 
-let Tree = __webpack_require__(/*! tui-tree */ "tui-tree"); // const tree = require('../../../tree-ui/dist')
+const log = console.log;
 
+const Store = __webpack_require__(/*! electron-store */ "electron-store");
 
-
-let treedata = [{
-  text: 'o'
-}, {
-  text: 'first title',
-  id: 'first',
-  children: [{
-    text: '2'
-  }, {
-    text: '3'
-  }, {
-    text: 'other title',
-    id: 'other',
-    children: [{
-      text: '4'
-    }, {
-      text: '5'
-    }, {
-      text: 'sub title',
-      id: 'sub',
-      children: [{
-        text: '6'
-      }, {
-        text: '7',
-        id: 7
-      }, {
-        text: '8'
-      }]
-    }]
-  }]
-}, {
-  text: 'end'
-}];
+const store = new Store();
 function parseTitle() {
-  let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
-  let obookCont = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])(''); // let otree = q('#tree')
-
-  obookCont.classList.add('bookTitle');
-  oright.appendChild(obookCont);
-  let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(treedata);
-  obookCont.appendChild(otree); // otree.textContent = 'TREE CONTENT'
-}
-function parseTitleTui() {
   log('========= parse title =============');
-  let lib = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])('lib');
-  let cur = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])('current');
-  let book = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])(cur.title);
+  let lib = store.get('lib');
+  let cur = store.get('current');
+  let book = store.get(cur.title);
+  let info = lib[cur.title];
   log('LIB', lib);
   log('CUR', cur);
   log('BOOK', book);
+  log('INFO', info);
   let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
-  let obookTitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
-  obookTitle.classList.add('bookTitle');
-  oleft.appendChild(obookTitle);
-  let oauth = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])(''); // let oauth = q('#author')
-
-  let info = lib[cur.title];
-
-  let auth = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(info.auths, auth => {
-    return auth.author;
-  });
-
-  oauth.textContent = auth.name;
-  oauth.classList.add('author');
-  obookTitle.appendChild(oauth);
-  let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
-  otitle.textContent = info.book.title;
-  otitle.classList.add('title');
-  obookTitle.appendChild(otitle);
-  let oname = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["span"])(auth.name);
-  obookTitle.appendChild(oname);
-  info.nics.forEach(nic => {
-    let onic = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])(nic.name);
-    obookTitle.appendChild(onic);
-  });
   let obookCont = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
   obookCont.classList.add('bookTitle');
   oright.appendChild(obookCont);
-  let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree');
+  let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(info.tree, info.dname);
   obookCont.appendChild(otree);
-  log('TREE', info.tree);
-  let tree = new Tree('tree', {
-    data: info.tree,
-    nodeDefaultState: 'opened'
-  }).enableFeature('Selectable', {
-    selectedClassName: 'tui-tree-selected'
-  });
-  tree.on('select', function (eventData) {
-    let data = tree.getNodeData(eventData.nodeId); // log('NDATA', data)
-
-    cur.fpath = data.fpath;
-    cur.nic = info.nics[0];
-    Object(_utils__WEBPACK_IMPORTED_MODULE_2__["setStore"])('current', cur);
-    createRightHeader(cur, info.nics); // let nic = cur.nic.nic
-
-    setBookText();
-  });
+  otree.addEventListener('click', goNode, false); // let writings = store.get('Writings')
+  // log('WRT________________', writings)
+  // kuku()
 }
-function parseBook() {
-  var sizes = localStorage.getItem('split-sizes');
+
+function goNode(ev) {
+  let cur = store.get('current'); // let info = lib[cur.title]
+  // if (!cur.nic) cur.nic = info.nics[0]
+
+  let fpath = ev.target.getAttribute('fpath');
+  cur.fpath = fpath;
+  store.set('current', cur);
+  log('GO CUR_________', cur); // createRightHeader(cur, info.nics)
+  // let json = localStorage.getItem('Writings')
+  // log('WRT________________', json.length)
+  // let writings = store.get('Writings')
+  // log('WRT________________', writings)
+
+  setBookText();
+}
+
+function twoPages() {
+  var sizes = store.get('split-sizes');
   if (sizes) sizes = JSON.parse(sizes);else sizes = [50, 50];
   split_js__WEBPACK_IMPORTED_MODULE_1___default()(['#source', '#trns'], {
     sizes: sizes,
@@ -389,19 +324,28 @@ function setBookText() {
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
-  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns); // let lib = getStore('lib')
+  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns);
+  let cur = store.get('current');
+  let book = store.get(cur.title);
 
-  let cur = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])('current'); // let info = lib[cur.title]
-  // let curnic = (cur.nic) ? cur.nic.nic : info.nics[0].nic
-
-  let nic = cur.nic.nic;
-  let book = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])(cur.title); // log('setBookText cur==>', cur)
-
-  let author = book.author;
+  let author = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(book.panes, auth => {
+    return auth.author && auth.fpath == cur.fpath;
+  })[0];
 
   let trns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(book.panes, auth => {
-    return auth.fpath == cur.fpath;
+    return !auth.author && auth.fpath == cur.fpath;
   });
+
+  log('TRNS', trns);
+  let nic = cur.nic;
+
+  if (!nic) {
+    let nics = trns.map(auth => {
+      return auth.nic;
+    });
+    log('NICS', nics);
+    nic = nics[0];
+  }
 
   author.rows.forEach((astr, idx) => {
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])(astr);
@@ -440,9 +384,9 @@ function alignPars(idx, oleft, orights) {
 function cyclePar(ev) {
   if (ev.shiftKey != true) return;
   let idx = ev.target.getAttribute('idx');
-  let lib = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])('lib');
-  let cur = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])('current');
-  let book = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])(cur.title);
+  let lib = store.get('lib');
+  let cur = store.get('current');
+  let book = store.get(cur.title);
   let info = lib[cur.title];
   let names = info.nics;
   if (names.length < 2) return;
@@ -517,8 +461,8 @@ function setRightHeader(nics) {
 function expandRightHeader(ev) {
   let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('.hright');
   oright.classList.add('header');
-  let lib = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])('lib');
-  let cur = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])('current');
+  let lib = store.get('lib');
+  let cur = store.get('current');
   let info = lib[cur.title];
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#niclist');
   createNicList(info.nics);
@@ -529,12 +473,12 @@ function selectCurrent(ev) {
   oright.classList.remove('header');
   let name = ev.target.textContent;
   let nic = ev.target.getAttribute('nic');
-  let cur = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["getStore"])('current');
+  let cur = store.get('current');
   cur.nic = {
     nic: nic,
     name: name
   };
-  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["setStore"])('current', cur);
+  store.set('current', cur);
   let nics = [cur.nic]; // log('SELECT nics', nics)
 
   setRightHeader(nics);
@@ -636,6 +580,10 @@ const textract = __webpack_require__(/*! textract */ "textract");
 
 const log = console.log;
 
+const Store = __webpack_require__(/*! electron-store */ "electron-store");
+
+const store = new Store();
+
 function extractAllText(str) {
   const re = /"(.*?)"/g;
   const results = [];
@@ -716,16 +664,17 @@ function openDir(bookname, cb) {
   }
 }
 
-function walk(dname, dtree, tree) {
+function walk(fns, dname, dtree, tree) {
   let fpath = dtree.path.split(dname)[1];
   tree.text = fpath.split('/').slice(-1)[0];
   tree.fpath = fpath.replace(/^\//, '');
   if (!dtree.children) return;
   dtree.children.forEach((child, idx) => {
+    fns.push(dtree.path);
     if (child.type != 'directory') return;
     if (!tree.children) tree.children = [];
     tree.children.push({});
-    walk(dname, child, tree.children[idx]);
+    walk(fns, dname, child, tree.children[idx]);
   });
 }
 
@@ -733,33 +682,28 @@ function parseDir(bookname) {
   let bpath = path.resolve(__dirname, bookname);
   let dname = bookname.split('/').slice(-1)[0]; // + '/'
 
-  const dtree = dirTree(bpath); // log('=DTR', dtree)
-
+  const dtree = dirTree(bpath);
+  log('=DTREE', dtree);
+  let fns = [];
   let tree = {};
-  walk(dname, dtree, tree); // log('=TREE', tree)
-
-  let fns = glob.sync('**/*', {
+  walk(fns, dname, dtree, tree);
+  log('=TREE', tree);
+  fns = glob.sync('**/*', {
     cwd: bpath
-  }); // log('FNS', fns)
-
-  let ipath = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(fns, fn => {
-    return /info.json/.test(fn);
   });
+  log('FNS', fns.length);
+  let ipath = path.resolve(bpath, 'info.json');
+  log('IPATH', ipath); // if (!ipath) return
 
-  ipath = path.resolve(bpath, ipath); // log('IPATH', ipath)
-
-  if (!ipath) return;
-  let info = parseInfo(ipath); // log('INFO', info)
-
+  let info = parseInfo(ipath);
+  log('_INFO_', info);
   fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
     return fn != ipath;
-  }); // log('FNS', fns.length)
-
+  });
+  log('FNS', fns.length);
   let book = {
     panes: [],
-    coms: [] // let panes = []
-    // let titles = []
-
+    coms: []
   };
   fns.forEach(fn => {
     let comment = false;
@@ -771,41 +715,45 @@ function parseDir(bookname) {
 
     let auth = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(info.auths, auth => {
       return auth.ext == nic;
-    });
+    }); // if (!auth) return
 
-    if (!auth) return;
-    let txt = fse.readFileSync(path.resolve(bpath, fn), 'utf8'); //.toString()
 
+    let txt = fse.readFileSync(path.resolve(bpath, fn), 'utf8');
     let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ');
 
-    let rows = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(clean.split('\n')); // log('R', rows)
+    let rows = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(clean.split('\n')); // log('R', fn, rows.length)
 
 
     let fparts = fn.split('/');
     let fname = fparts.pop();
     let fpath = fparts.join('/');
+    let lang;
+    if (auth) lang = auth.lang;
     let pane = {
-      lang: auth.lang,
-      title: info.book.title,
+      lang: lang,
       nic: nic,
       fpath: fpath,
-      fname: fname,
-      rows: rows
+      rows: rows // fname: fname,
+
     };
-    if (auth.author) book.author = pane;else if (comment) book.coms.push(pane);else book.panes.push(pane);
-    if (auth.author) book.map = bookWFMap(clean, info.book.title, fn);
+    if (auth && auth.author) pane.author = true; // if (auth.author) book.author = pane
+
+    if (comment) book.coms.push(pane);else book.panes.push(pane); // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   });
   book.title = info.book.title; // info.nics = _.uniq(book.panes.map(auth => { return auth.nic }))
 
-  info.tree = tree.children;
-  let lib = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["getStore"])('lib');
+  info.tree = tree.children; // info.dname = dname
+
+  let lib = store.get('lib');
+  log('_____LIB', lib); // if (!lib) lib = {}
+
   lib[book.title] = info;
-  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["setStore"])('lib', lib);
-  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["setStore"])(book.title, book);
+  store.set('lib', lib);
+  store.set(book.title, book);
   let current = {
     title: book.title
   };
-  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["setStore"])('current', current);
+  store.set('current', current);
 }
 
 function bookWFMap(text, title, fn) {
@@ -851,56 +799,6 @@ function parseInfo(ipath) {
   return info;
 }
 
-function getFiles_(bookname) {
-  let bpath = path.resolve(__dirname, bookname);
-  let dir = bpath.split('/')[bpath.split('/').length - 1];
-  let fns = glob.sync('**/*', {
-    cwd: bpath
-  });
-
-  let info = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
-    return path.extname == '.info';
-  });
-
-  fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
-    return path.extname != '.info';
-  });
-  let book = {
-    nics: []
-  };
-  let auths = [];
-  let author;
-  let titles = [];
-  fns.forEach(fn => {
-    let comment = false;
-    let com = fn.split('-')[1];
-    if (com && com == 'com') comment = true, fn = fn.replace('-com', '');
-    let parts = fn.split('.');
-    if (parts.length != 3) return;
-    let title = parts[0];
-    titles.push(title);
-    let lang = parts[1];
-    let nic = parts[2];
-    let txt = fse.readFileSync(path.resolve(bpath, fn)).toString(); // no txt ?
-
-    let rows = txt.split(/\n+/);
-    let auth = {
-      lang: lang,
-      title: title,
-      nic: nic,
-      fn: fn,
-      rows: rows
-    };
-    if (dir.toLowerCase() == nic.toLowerCase()) auth.author = true, book.author = nic, book.lang = lang;else if (comment) auth.com = true;
-    if (!comment && !auth.author) book.nics.push(nic);
-    auths.push(auth);
-  }); // if (_.uniq(titles).length != 1) return { err: 'different titles' } // тут нужно хитрее, неясно как
-
-  localStorage.setItem('auths', JSON.stringify(auths));
-  localStorage.setItem('book', JSON.stringify(book));
-  return auths;
-}
-
 /***/ }),
 
 /***/ "./src/lib/tree.js":
@@ -917,8 +815,8 @@ __webpack_require__.r(__webpack_exports__);
 //
 
 let log = console.log;
-function tree(data) {
-  log('TREEDATA', data);
+function tree(data, dname) {
+  // log('TREEDATA', data)
   let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree');
   data.forEach(node => {
     let onode = createNode(node);
@@ -928,14 +826,15 @@ function tree(data) {
 }
 
 function createNode(node) {
-  log('NODE', node);
+  // log('NODE', node)
   let onode = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-text');
   let osign = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-branch');
-  osign.textContent = '▾';
-  osign.addEventListener('click', toggleNode, false);
-  let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'text');
+  osign.textContent = '▾'; // osign.addEventListener('click', toggleNode, false)
+
+  let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-node-text');
   otext.textContent = node.text;
-  otext.addEventListener('click', goNode, false);
+  otext.setAttribute('fpath', node.fpath); // otext.addEventListener('click', goNode, false)
+
   if (node.children) onode.appendChild(osign);
   onode.appendChild(otext);
 
@@ -944,30 +843,17 @@ function createNode(node) {
       let ochild = createNode(child);
       onode.appendChild(ochild);
     });
-  }
+  } // let texts = qs('.tree-text')
 
-  let texts = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["qs"])('.tree-text');
+
   return onode;
-}
-
-function goNode(ev) {
-  log('EV', ev.target.textContent);
-}
-
-function toggleNode(ev) {
-  let parent = ev.target.parentNode;
-  parent.classList.toggle('tree-collapse');
-} // id: 'other',
-// children: [
-//   {text: '4'},
-//   {text: '5'},
-//   {
-//     text: 'sub title',
-//     id: 'sub',
-//     children: [
-//       {text: '6'},
-//       {text: '7', id: 7},
-//       {text: '8'}
+} // function goNode(ev) {
+//   log('EV', ev.target.textContent)
+// }
+// function toggleNode(ev) {
+//   let parent = ev.target.parentNode
+//   parent.classList.toggle('tree-collapse')
+// }
 
 /***/ }),
 
@@ -1104,8 +990,16 @@ function enclitic(str) {
   return clean.join('');
 }
 function getStore(name) {
-  let json = localStorage.getItem(name);
-  return JSON.parse(json);
+  let json, obj;
+
+  try {
+    json = localStorage.getItem(name);
+    obj = JSON.parse(json);
+  } catch (err) {
+    log('GET ERR', err);
+  }
+
+  return obj;
 }
 function setStore(name, obj) {
   localStorage.setItem(name, JSON.stringify(obj));
@@ -1143,6 +1037,17 @@ module.exports = require("electron");
 /***/ (function(module, exports) {
 
 module.exports = require("electron-clipboard-extended");
+
+/***/ }),
+
+/***/ "electron-store":
+/*!*********************************!*\
+  !*** external "electron-store" ***!
+  \*********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("electron-store");
 
 /***/ }),
 
@@ -1220,17 +1125,6 @@ module.exports = require("split.js");
 /***/ (function(module, exports) {
 
 module.exports = require("textract");
-
-/***/ }),
-
-/***/ "tui-tree":
-/*!***************************!*\
-  !*** external "tui-tree" ***!
-  \***************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("tui-tree");
 
 /***/ }),
 

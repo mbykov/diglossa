@@ -1,117 +1,59 @@
 import _ from 'lodash'
 import Split from 'split.js'
-import { q, qs, empty, create, span, p, div, remove, getStore, setStore } from './utils'
-let fse = require('fs-extra')
-let path = require('path')
-const log = console.log
-// const TreeView = require('js-treeview')
-// import {Tree} from 'tui-tree'
-let Tree = require('tui-tree')
-// const tree = require('../../../tree-ui/dist')
+import { q, qs, empty, create, span, p, div, remove } from './utils'
 import tree from './tree';
 
-let treedata = [{
-  text: 'o'
-}, {
-  text: 'first title',
-  id: 'first',
-  children:[
-    {text: '2'},
-    {text: '3'},
-    {
-      text: 'other title',
-      id: 'other',
-      children: [
-        {text: '4'},
-        {text: '5'},
-        {
-          text: 'sub title',
-          id: 'sub',
-          children: [
-            {text: '6'},
-            {text: '7', id: 7},
-            {text: '8'}
-          ]
-        }
-      ]
-    }
-  ]
-}, {
-  text: 'end'
-}]
+const fse = require('fs-extra')
+const path = require('path')
+const log = console.log
+const Store = require('electron-store')
+const store = new Store()
 
 
 export function parseTitle() {
-  let oright = q('#trns')
-  let obookCont = div('')
-  // let otree = q('#tree')
-  obookCont.classList.add('bookTitle')
-  oright.appendChild(obookCont)
-  let otree = tree(treedata);
-  obookCont.appendChild(otree)
-  // otree.textContent = 'TREE CONTENT'
-}
-
-export function parseTitleTui() {
   log('========= parse title =============')
-  let lib = getStore('lib')
-  let cur = getStore('current')
-  let book = getStore(cur.title)
+  let lib = store.get('lib')
+  let cur = store.get('current')
+  let book = store.get(cur.title)
+  let info = lib[cur.title]
   log('LIB', lib)
   log('CUR', cur)
   log('BOOK', book)
+  log('INFO', info)
+
   let oleft = q('#source')
   let oright = q('#trns')
-  let obookTitle = div('')
-  obookTitle.classList.add('bookTitle')
-  oleft.appendChild(obookTitle)
-  let oauth = div('')
-  // let oauth = q('#author')
-  let info = lib[cur.title]
-  let auth = _.find(info.auths, auth=> { return auth.author})
-  oauth.textContent = auth.name
-  oauth.classList.add('author')
-  obookTitle.appendChild(oauth)
-  let otitle = div('')
-  otitle.textContent = info.book.title
-  otitle.classList.add('title')
-  obookTitle.appendChild(otitle)
-  let oname = span(auth.name)
-  obookTitle.appendChild(oname)
-  info.nics.forEach(nic=> {
-    let onic = div(nic.name)
-    obookTitle.appendChild(onic)
-  })
 
   let obookCont = div('')
   obookCont.classList.add('bookTitle')
   oright.appendChild(obookCont)
-  let otree = q('#tree')
+  let otree = tree(info.tree, info.dname)
   obookCont.appendChild(otree)
-
-  log('TREE', info.tree)
-
-  let tree = new Tree('tree', {
-    data: info.tree,
-    nodeDefaultState: 'opened'
-  }).enableFeature('Selectable', {
-    selectedClassName: 'tui-tree-selected',
-  });
-  tree.on('select', function(eventData) {
-    let data = tree.getNodeData(eventData.nodeId);
-    // log('NDATA', data)
-    cur.fpath = data.fpath
-    cur.nic = info.nics[0]
-    setStore('current', cur)
-    createRightHeader(cur, info.nics)
-    // let nic = cur.nic.nic
-    setBookText()
-  })
-
+  otree.addEventListener('click', goNode, false)
+  // let writings = store.get('Writings')
+  // log('WRT________________', writings)
+  // kuku()
 }
 
-export function parseBook() {
-  var sizes = localStorage.getItem('split-sizes')
+function goNode(ev) {
+  let cur = store.get('current')
+  // let info = lib[cur.title]
+  // if (!cur.nic) cur.nic = info.nics[0]
+  let fpath = ev.target.getAttribute('fpath')
+  cur.fpath = fpath
+  store.set('current', cur)
+  log('GO CUR_________', cur)
+  // createRightHeader(cur, info.nics)
+  // let json = localStorage.getItem('Writings')
+  // log('WRT________________', json.length)
+  // let writings = store.get('Writings')
+  // log('WRT________________', writings)
+
+  setBookText()
+}
+
+export function twoPages() {
+  var sizes = store.get('split-sizes')
   if (sizes) sizes = JSON.parse(sizes)
   else sizes = [50, 50]
   Split(['#source', '#trns'], {
@@ -131,19 +73,19 @@ function setBookText() {
   empty(osource)
   empty(otrns)
 
-  // let lib = getStore('lib')
-  let cur = getStore('current')
-  // let info = lib[cur.title]
+  let cur = store.get('current')
+  let book = store.get(cur.title)
 
-  // let curnic = (cur.nic) ? cur.nic.nic : info.nics[0].nic
-  let nic = cur.nic.nic
+  let author = _.filter(book.panes, auth=> { return auth.author && auth.fpath == cur.fpath})[0]
+  let trns = _.filter(book.panes, auth=> { return !auth.author && auth.fpath == cur.fpath})
+  log('TRNS', trns)
 
-  let book = getStore(cur.title)
-  // log('setBookText cur==>', cur)
-
-
-  let author = book.author
-  let trns = _.filter(book.panes, auth=> { return auth.fpath == cur.fpath})
+  let nic = cur.nic
+  if (!nic) {
+    let nics = trns.map(auth=> { return auth.nic })
+    log('NICS', nics)
+    nic = nics[0]
+  }
 
   author.rows.forEach((astr, idx) => {
     let oleft = p(astr)
@@ -178,9 +120,9 @@ function alignPars(idx, oleft, orights) {
 function cyclePar(ev) {
   if (ev.shiftKey != true) return
   let idx = ev.target.getAttribute('idx')
-  let lib = getStore('lib')
-  let cur = getStore('current')
-  let book = getStore(cur.title)
+  let lib = store.get('lib')
+  let cur = store.get('current')
+  let book = store.get(cur.title)
   let info = lib[cur.title]
   let names = info.nics
   if (names.length < 2) return
@@ -249,8 +191,8 @@ function setRightHeader(nics) {
 function expandRightHeader(ev) {
   let oright = q('.hright')
   oright.classList.add('header')
-  let lib = getStore('lib')
-  let cur = getStore('current')
+  let lib = store.get('lib')
+  let cur = store.get('current')
   let info = lib[cur.title]
   let oul = q('#niclist')
   createNicList(info.nics)
@@ -261,9 +203,9 @@ function selectCurrent(ev) {
   oright.classList.remove('header')
   let name = ev.target.textContent
   let nic = ev.target.getAttribute('nic')
-  let cur = getStore('current')
+  let cur = store.get('current')
   cur.nic = {nic: nic, name: name}
-  setStore('current', cur)
+  store.set('current', cur)
   let nics = [cur.nic]
   // log('SELECT nics', nics)
   setRightHeader(nics)

@@ -12,10 +12,12 @@ import { remote } from "electron";
 import { shell } from 'electron'
 // import sband from "./lib/clean-greek";
 import { ipcRenderer } from "electron";
-import { q, qs, empty, create, span, p, div, enclitic, getStore, setStore } from './lib/utils'
-import { parseBook, parseTitle, parseTitleTui } from './lib/book'
+import { q, qs, empty, create, span, p, div, enclitic } from './lib/utils'
+import { twoPages, parseTitle, parseTitleTui } from './lib/book'
 import { openODS, openDir } from './lib/getfiles'
 
+const Store = require('electron-store')
+const store = new Store()
 let fse = require('fs-extra')
 const log = console.log
 
@@ -36,12 +38,8 @@ const appPath = app.getAppPath()
 let userDataPath = app.getPath("userData")
 // enableDBs(userDataPath, appPath, isDev)
 
-let lib
-try {
-  lib = getStore('lib')
-} catch (err) {
-  setStore('lib', {})
-}
+let lib = store.get('lib')
+if (!lib) store.set('lib', {})
 
 showSection('lib')
 
@@ -62,19 +60,18 @@ function showBook(fns) {
     openODS(fpath, (res) => {
       log('ODS END JSON', res)
       if (!res) return
-      // parseBook()
+      // twoPages()
       oprg.style.display = "none"
     })
   else {
     // let bookpath = '../../texts/Thrax'
     // let bookpath = '../../texts/Aristotle/deAnima'
-    let bookpath = '../../texts/Plato/Letters'
-    log('= OTHER THEN ODS =', bookpath)
+    // let bookpath = '../../texts/Plato/Letters'
+    let bookpath = '../../texts/Plato'
+    // log('= OTHER THEN ODS =', bookpath)
     openDir(bookpath, (res) => {
       if (!res) return
-      parseBook()
-      // showSection('main')
-      // parseTitleTui()
+      twoPages()
       parseTitle()
       oprg.style.display = "none"
     })

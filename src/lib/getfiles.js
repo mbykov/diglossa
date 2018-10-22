@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { q, qs, empty, create, span, p, div, remove, getStore, setStore } from './utils'
+import { q, qs, empty, create, span, p, div, remove } from './utils'
 
 const fse = require('fs-extra')
 const path = require('path')
@@ -7,6 +7,8 @@ const glob = require('glob')
 const dirTree = require('directory-tree')
 const textract = require('textract')
 const log = console.log
+const Store = require('electron-store')
+const store = new Store()
 
 function extractAllText(str){
   const re = /"(.*?)"/g
@@ -79,42 +81,44 @@ export function openDir(bookname, cb) {
   }
 }
 
-function walk(dname, dtree, tree) {
+
+function walk(fns, dname, dtree, tree) {
   let fpath = dtree.path.split(dname)[1]
   tree.text = fpath.split('/').slice(-1)[0]
   tree.fpath = fpath.replace(/^\//, '')
   if (!dtree.children) return
   dtree.children.forEach((child, idx)=> {
+    fns.push(dtree.path)
     if (child.type != 'directory') return
     if (!tree.children) tree.children = []
     tree.children.push({})
-    walk(dname, child, tree.children[idx])
+    walk(fns, dname, child, tree.children[idx])
   })
 }
+
 
 function parseDir(bookname) {
   let bpath = path.resolve(__dirname, bookname)
   let dname = bookname.split('/').slice(-1)[0] // + '/'
   const dtree = dirTree(bpath)
-  // log('=DTR', dtree)
+  log('=DTREE', dtree)
+  let fns = []
   let tree = {}
-  walk(dname, dtree, tree)
-  // log('=TREE', tree)
+  walk(fns, dname, dtree, tree)
+  log('=TREE', tree)
 
-  let fns = glob.sync('**/*', {cwd: bpath})
-  // log('FNS', fns)
-  let ipath = _.find(fns, fn=>{ return /info.json/.test(fn) })
-  ipath = path.resolve(bpath, ipath)
-  // log('IPATH', ipath)
-  if (!ipath) return
+  fns = glob.sync('**/*', {cwd: bpath})
+  log('FNS', fns.length)
+
+  let ipath = path.resolve(bpath, 'info.json')
+  log('IPATH', ipath)
+  // if (!ipath) return
   let info = parseInfo(ipath)
-  // log('INFO', info)
+  log('_INFO_', info)
   fns = _.filter(fns, fn=>{ return fn != ipath })
-  // log('FNS', fns.length)
+  log('FNS', fns.length)
 
   let book = {panes: [], coms: []}
-  // let panes = []
-  // let titles = []
   fns.forEach(fn => {
     let comment = false
     let com = fn.split('-')[1]
@@ -123,30 +127,37 @@ function parseDir(bookname) {
     if (!ext) return
     let nic = ext.replace(/^\./, '')
     let auth = _.find(info.auths, auth=> { return auth.ext == nic})
-    if (!auth) return
-    let txt = fse.readFileSync(path.resolve(bpath, fn), 'utf8') //.toString()
+    // if (!auth) return
+    let txt = fse.readFileSync(path.resolve(bpath, fn), 'utf8')
     let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ')
     let rows = _.compact(clean.split('\n'))
-    // log('R', rows)
+    // log('R', fn, rows.length)
     let fparts = fn.split('/')
     let fname = fparts.pop()
     let fpath = fparts.join('/')
-    let pane = { lang: auth.lang, title: info.book.title, nic: nic, fpath: fpath, fname: fname, rows: rows }
-    if (auth.author) book.author = pane
-    else if (comment) book.coms.push(pane)
+    let lang
+    if (auth) lang = auth.lang
+    let pane = { lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname,
+    if (auth && auth.author) pane.author = true
+    // if (auth.author) book.author = pane
+    if (comment) book.coms.push(pane)
     else book.panes.push(pane)
-    if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
+    // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   })
   book.title = info.book.title
   // info.nics = _.uniq(book.panes.map(auth => { return auth.nic }))
-  info.tree = tree.children
 
-  let lib = getStore('lib')
+  info.tree = tree.children
+  // info.dname = dname
+
+  let lib = store.get('lib')
+  log('_____LIB', lib)
+  // if (!lib) lib = {}
   lib[book.title] = info
-  setStore('lib', lib)
-  setStore(book.title, book)
+  store.set('lib', lib)
+  store.set(book.title, book)
   let current = {title: book.title}
-  setStore('current', current)
+  store.set('current', current)
 }
 
 function bookWFMap(text, title, fn) {
@@ -181,39 +192,4 @@ function parseInfo(ipath) {
   info.nics = nics
   info.nic = nics[0]
   return info
-}
-
-function getFiles_(bookname) {
-  let bpath = path.resolve(__dirname, bookname)
-  let dir = bpath.split('/')[bpath.split('/').length-1]
-  let fns = glob.sync('**/*', {cwd: bpath})
-  let info = _.filter(fns, fn=>{ return path.extname == '.info' })
-  fns = _.filter(fns, fn=>{ return path.extname != '.info' })
-  let book = {nics: []}
-  let auths = []
-  let author
-  let titles = []
-  fns.forEach(fn => {
-    let comment = false
-    let com = fn.split('-')[1]
-    if (com && com == 'com') comment = true, fn = fn.replace('-com', '')
-    let parts = fn.split('.')
-    if (parts.length != 3) return
-    let title = parts[0]
-    titles.push(title)
-    let lang = parts[1]
-    let nic = parts[2]
-    let txt = fse.readFileSync(path.resolve(bpath, fn)).toString()
-    // no txt ?
-    let rows = txt.split(/\n+/)
-    let auth = { lang: lang, title: title, nic: nic, fn: fn, rows: rows }
-    if (dir.toLowerCase() == nic.toLowerCase()) auth.author = true, book.author = nic, book.lang = lang
-    else if (comment) auth.com = true
-    if (!comment && !auth.author) book.nics.push(nic)
-    auths.push(auth)
-  })
-  // if (_.uniq(titles).length != 1) return { err: 'different titles' } // тут нужно хитрее, неясно как
-  localStorage.setItem('auths', JSON.stringify(auths))
-  localStorage.setItem('book', JSON.stringify(book))
-  return auths
 }

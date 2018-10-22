@@ -113,8 +113,14 @@ export function enclitic(str) {
 }
 
 export function getStore(name) {
-  let json = localStorage.getItem(name)
-  return JSON.parse(json)
+  let json, obj
+  try {
+    json = localStorage.getItem(name)
+    obj = JSON.parse(json)
+  } catch (err) {
+    log('GET ERR', err)
+  }
+  return obj
 }
 
 export function setStore(name, obj) {

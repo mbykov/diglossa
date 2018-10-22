@@ -1,9 +1,9 @@
 //
-import { q, qs, empty, create, span, p, div, remove, getStore, setStore } from './utils'
+import { q, qs, empty, create, span, p, div, remove } from './utils'
 let log = console.log
 
-export default function tree(data) {
-  log('TREEDATA', data)
+export default function tree(data, dname) {
+  // log('TREEDATA', data)
   let otree = create('div', 'tree')
   data.forEach(node=> {
     let onode = createNode(node)
@@ -13,14 +13,15 @@ export default function tree(data) {
 }
 
 function createNode(node) {
-  log('NODE', node)
+  // log('NODE', node)
   let onode = create('div', 'tree-text')
   let osign = create('span', 'tree-branch')
   osign.textContent = '▾'
-  osign.addEventListener('click', toggleNode, false)
-  let otext = create('span', 'text')
+  // osign.addEventListener('click', toggleNode, false)
+  let otext = create('span', 'tree-node-text')
   otext.textContent = node.text
-  otext.addEventListener('click', goNode, false)
+  otext.setAttribute('fpath', node.fpath)
+  // otext.addEventListener('click', goNode, false)
   if (node.children) onode.appendChild(osign)
   onode.appendChild(otext)
   if (node.children) {
@@ -29,30 +30,15 @@ function createNode(node) {
       onode.appendChild(ochild)
     })
   }
-  let texts = qs('.tree-text')
+  // let texts = qs('.tree-text')
   return onode
 }
 
-function goNode(ev) {
-  log('EV', ev.target.textContent)
-}
+// function goNode(ev) {
+//   log('EV', ev.target.textContent)
+// }
 
-function toggleNode(ev) {
-  let parent = ev.target.parentNode
-  parent.classList.toggle('tree-collapse')
-}
-
-
-
-
-// id: 'other',
-// children: [
-//   {text: '4'},
-//   {text: '5'},
-//   {
-//     text: 'sub title',
-//     id: 'sub',
-//     children: [
-//       {text: '6'},
-//       {text: '7', id: 7},
-//       {text: '8'}
+// function toggleNode(ev) {
+//   let parent = ev.target.parentNode
+//   parent.classList.toggle('tree-collapse')
+// }
