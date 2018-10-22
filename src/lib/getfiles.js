@@ -148,11 +148,8 @@ function parseDir(bookname) {
   // info.nics = _.uniq(book.panes.map(auth => { return auth.nic }))
 
   info.tree = tree.children
-  // info.dname = dname
 
   let lib = store.get('lib')
-  // log('_____LIB', lib)
-  // if (!lib) lib = {}
   lib[book.title] = info
   store.set('lib', lib)
   store.set(book.title, book)

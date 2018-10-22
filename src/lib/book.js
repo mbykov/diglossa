@@ -26,7 +26,15 @@ export function twoPages() {
 
 export function parseTitle() {
   // log('========= parse title =============')
-  let lib = store.get('lib')
+  let obook = q('#book')
+  let lib = obook.dataset.lib
+  if (lib) {
+    lib = JSON.parse(obook.dataset.lib)
+  } else {
+    lib = store.get('lib')
+    obook.dataset.lib = JSON.stringify(lib)
+  }
+
   let cur = store.get('current')
   // let book = store.get(cur.title)
   let info = lib[cur.title]
@@ -34,6 +42,7 @@ export function parseTitle() {
   // log('CUR', cur)
   // log('BOOK', book)
   // log('INFO', info)
+  obook.dataset.info = JSON.stringify(info)
 
   let oleft = q('#source')
   let oright = q('#trns')
@@ -51,13 +60,15 @@ function goNode(ev) {
   // let info = lib[cur.title]
   // if (!cur.nic) cur.nic = info.nics[0]
   let fpath = ev.target.getAttribute('fpath')
+  let obook = q('#source')
+  obook.dataset.fpath = JSON.stringify(fpath)
   cur.fpath = fpath
   store.set('current', cur)
-
   setBookText()
 }
 
 function setBookText(nic) {
+  let obook = q('#source')
   let osource = q('#source')
   let otrns = q('#trns')
   empty(osource)
@@ -69,6 +80,7 @@ function setBookText(nic) {
   let info = lib[cur.title]
   let nicnames = info.nicnames
 
+  let fpath = obook.dataset.fpath
   let author = _.filter(book.panes, auth=> { return auth.author && auth.fpath == cur.fpath})[0]
   let trns = _.filter(book.panes, auth=> { return !auth.author && auth.fpath == cur.fpath})
   // log('TRNS', trns)

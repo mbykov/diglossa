@@ -283,7 +283,16 @@ function twoPages() {
 }
 function parseTitle() {
   // log('========= parse title =============')
-  let lib = store.get('lib');
+  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
+  let lib = obook.dataset.lib;
+
+  if (lib) {
+    lib = JSON.parse(obook.dataset.lib);
+  } else {
+    lib = store.get('lib');
+    obook.dataset.lib = JSON.stringify(lib);
+  }
+
   let cur = store.get('current'); // let book = store.get(cur.title)
 
   let info = lib[cur.title]; // log('LIB', lib)
@@ -291,6 +300,7 @@ function parseTitle() {
   // log('BOOK', book)
   // log('INFO', info)
 
+  obook.dataset.info = JSON.stringify(info);
   let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   let obookCont = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
@@ -306,12 +316,15 @@ function goNode(ev) {
   // if (!cur.nic) cur.nic = info.nics[0]
 
   let fpath = ev.target.getAttribute('fpath');
+  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
+  obook.dataset.fpath = JSON.stringify(fpath);
   cur.fpath = fpath;
   store.set('current', cur);
   setBookText();
 }
 
 function setBookText(nic) {
+  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
@@ -321,6 +334,7 @@ function setBookText(nic) {
   let book = store.get(cur.title);
   let info = lib[cur.title];
   let nicnames = info.nicnames;
+  let fpath = obook.dataset.fpath;
 
   let author = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(book.panes, auth => {
     return auth.author && auth.fpath == cur.fpath;
@@ -731,11 +745,8 @@ function parseDir(bookname) {
   });
   book.title = info.book.title; // info.nics = _.uniq(book.panes.map(auth => { return auth.nic }))
 
-  info.tree = tree.children; // info.dname = dname
-
-  let lib = store.get('lib'); // log('_____LIB', lib)
-  // if (!lib) lib = {}
-
+  info.tree = tree.children;
+  let lib = store.get('lib');
   lib[book.title] = info;
   store.set('lib', lib);
   store.set(book.title, book);
