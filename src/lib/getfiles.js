@@ -101,22 +101,22 @@ function parseDir(bookname) {
   let bpath = path.resolve(__dirname, bookname)
   let dname = bookname.split('/').slice(-1)[0] // + '/'
   const dtree = dirTree(bpath)
-  log('=DTREE', dtree)
+  // log('=DTREE', dtree)
   let fns = []
   let tree = {}
   walk(fns, dname, dtree, tree)
-  log('=TREE', tree)
+  // log('=TREE', tree)
 
   fns = glob.sync('**/*', {cwd: bpath})
-  log('FNS', fns.length)
+  // log('FNS', fns.length)
 
   let ipath = path.resolve(bpath, 'info.json')
-  log('IPATH', ipath)
+  // log('IPATH', ipath)
   // if (!ipath) return
   let info = parseInfo(ipath)
-  log('_INFO_', info)
+  // log('_INFO_', info)
   fns = _.filter(fns, fn=>{ return fn != ipath })
-  log('FNS', fns.length)
+  // log('FNS', fns.length)
 
   let book = {panes: [], coms: []}
   fns.forEach(fn => {
@@ -151,7 +151,7 @@ function parseDir(bookname) {
   // info.dname = dname
 
   let lib = store.get('lib')
-  log('_____LIB', lib)
+  // log('_____LIB', lib)
   // if (!lib) lib = {}
   lib[book.title] = info
   store.set('lib', lib)
@@ -183,13 +183,12 @@ function parseInfo(ipath) {
     log('ERR INFO', err)
     throw new Error()
   }
-  let nics = []
+  let nicnames = {}
   info.auths.forEach(auth => {
     if (auth.author) return
-    let nic = {nic: auth.ext, name: auth.name}
-    nics.push(nic)
+    // let nic = {nic: auth.ext, name: auth.name}
+    nicnames[auth.ext] = auth.name
   })
-  info.nics = nics
-  info.nic = nics[0]
+  info.nicnames = nicnames
   return info
 }
