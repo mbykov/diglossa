@@ -61,7 +61,7 @@ function goNode(ev) {
   store.set('current', cur)
   setBookText()
   createRightHeader()
-  createLeftHeader()
+  // createLeftHeader()
 }
 
 function setBookText(nic) {
@@ -86,17 +86,28 @@ function setBookText(nic) {
   let trns = _.filter(panes, auth=> { return !auth.author && auth.fpath == cur.fpath})
   // log('TRNS', author)
 
-  // let nic = cur.nic
   let cnics = trns.map(auth=> { return auth.nic })
   store.set('cnics', cnics)
-  // log('NICS', nics)
   if (!nic) nic = cnics[0]
 
-  // let ohright = q('.hright')
-  // if (!ohright) createRightHeader(cnics, nicnames, nic)
+  // let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ])+'
+  // let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~0-9\'"<> ])+'
+  // let punct = '([^\.,:;0-9 ]+)'
+  let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
+  let rePunct = new RegExp(punct, 'g')
+  let htmls = []
+  author.rows.forEach((str, idx) => {
+    // if (idx != 2) return
+    let html = str.replace(rePunct, " <span class=\"active\">$1</span>")
+    // log('H', html)
+    htmls.push(html)
+  })
 
-  author.rows.forEach((astr, idx) => {
-    let oleft = p(astr)
+  // author.rows.forEach((astr, idx) => {
+  htmls.forEach((html, idx) => {
+    // let oleft = p(astr)
+    let oleft = p()
+    oleft.innerHTML = html
     oleft.setAttribute('idx', idx)
     oleft.setAttribute('nic', author.nic)
     osource.appendChild(oleft)
@@ -112,7 +123,13 @@ function setBookText(nic) {
     })
     alignPars(idx, oleft, orights)
   })
+  osource.addEventListener("mouseover", fireActive, false)
   otrns.addEventListener("wheel", cyclePar, false)
+}
+
+function fireActive(ev) {
+  if (ev.target.nodeName != 'SPAN') return
+  log('A', ev.target.textContent)
 }
 
 function alignPars(idx, oleft, orights) {
@@ -153,13 +170,24 @@ function createLeftHeader() {
   ohleft.style.left = arect.width*0.15 + 'px'
   ohleft.classList.add('header')
   log('LEFT HEADER', ohleft)
+  ohleft.addEventListener("click", clickLeftHeader, false)
 
+  let oact = div()
+  oact.textContent = 'active'
   let cur = store.get('current')
   let otree = tree(cur.info.tree)
+  ohleft.appendChild(oact)
   ohleft.appendChild(otree)
   // ohleft.textContent = 'LEFT HEADER'
 
 }
+
+function clickLeftHeader(ev) {
+  let fpath = ev.target.getAttribute('fpath')
+  let text = ev.target.textContent
+  if (fpath) log('LEFT', text)
+}
+
 
 function createRightHeader() {
   let obook = q('#book')

@@ -213,10 +213,6 @@ input[type='file'] {
   margin-bottom: 20px;
 }
 
-/*!
- * tui-tree.min.js
- * @version 3.5.0
- * @author NHNEnt FE Development Lab <dl_javascript@nhnent.com>
- * @license MIT
- */
-/* url('../../resources/open-book.ico'); */
+span.active {
+  cursor: pointer;
+}
