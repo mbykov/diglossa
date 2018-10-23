@@ -8,6 +8,8 @@ const path = require('path')
 const log = console.log
 const Store = require('electron-store')
 const store = new Store()
+const Apstore = require('./apstore')
+const apstore = new Apstore()
 
 export function twoPages() {
   var sizes = store.get('split-sizes')
@@ -26,23 +28,16 @@ export function twoPages() {
 
 export function parseTitle() {
   // log('========= parse title =============')
-  let obook = q('#book')
-  let lib = obook.dataset.lib
-  if (lib) {
-    lib = JSON.parse(obook.dataset.lib)
-  } else {
-    lib = store.get('lib')
-    obook.dataset.lib = JSON.stringify(lib)
-  }
+  // let lib = store.get('lib')
+  let lib = apstore.get('lib')
+  let cur = apstore.get('current')
+  let info = lib[cur.title].info
 
-  let cur = store.get('current')
-  // let book = store.get(cur.title)
-  let info = lib[cur.title]
-  // log('LIB', lib)
-  // log('CUR', cur)
+  log('LIB', lib)
+  log('CUR', cur)
   // log('BOOK', book)
-  // log('INFO', info)
-  obook.dataset.info = JSON.stringify(info)
+  log('INFO', info)
+
 
   let oleft = q('#source')
   let oright = q('#trns')

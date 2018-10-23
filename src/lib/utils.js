@@ -114,6 +114,17 @@ export function enclitic(str) {
 
 export function getStore(name) {
   let json, obj
+
+  return obj
+}
+
+export function setStore(name, obj) {
+  let oapp = q('#app')
+  q('#app').setAttribute()
+}
+
+export function getStore_(name) {
+  let json, obj
   try {
     json = localStorage.getItem(name)
     obj = JSON.parse(json)
@@ -123,6 +134,6 @@ export function getStore(name) {
   return obj
 }
 
-export function setStore(name, obj) {
+export function setStore_(name, obj) {
   localStorage.setItem(name, JSON.stringify(obj))
 }

@@ -9,6 +9,8 @@ const textract = require('textract')
 const log = console.log
 const Store = require('electron-store')
 const store = new Store()
+const Apstore = require('./apstore')
+const apstore = new Apstore()
 
 function extractAllText(str){
   const re = /"(.*?)"/g
@@ -149,12 +151,22 @@ function parseDir(bookname) {
 
   info.tree = tree.children
 
-  let lib = store.get('lib')
-  lib[book.title] = info
-  store.set('lib', lib)
-  store.set(book.title, book)
   let current = {title: book.title}
-  store.set('current', current)
+  // let lib = store.get('lib')
+  // lib[book.title] = info
+  // store.set('lib', lib)
+  // store.set(book.title, book)
+  // store.set('current', current)
+
+  let aplib = {}
+  let apbook = {}
+  aplib[book.title] = apbook
+  apbook.info = info
+  apbook.panes = book
+
+  apstore.set('lib', aplib)
+  apstore.set('current', current)
+
 }
 
 function bookWFMap(text, title, fn) {

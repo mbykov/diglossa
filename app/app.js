@@ -237,6 +237,38 @@ function keyGo(ev) {
 
 /***/ }),
 
+/***/ "./src/lib/apstore.js":
+/*!****************************!*\
+  !*** ./src/lib/apstore.js ***!
+  \****************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+// import { q, qs, empty, create, span, p, div, remove } from './utils'
+class Apstore {
+  constructor() {
+    this.app = document.querySelector('#app');
+  }
+
+  get(key) {
+    return JSON.parse(this.app.getAttribute(key));
+  }
+
+  set(key, value) {
+    return this.app.setAttribute(key, JSON.stringify(value));
+  }
+
+} // const john = new Apstore()
+// john.set('key', 'JOHN')
+// console.log('APSTORE', john.get('key'))
+// export default Apstore
+// export Apstore
+
+
+module.exports = Apstore;
+
+/***/ }),
+
 /***/ "./src/lib/book.js":
 /*!*************************!*\
   !*** ./src/lib/book.js ***!
@@ -268,6 +300,10 @@ const log = console.log;
 const Store = __webpack_require__(/*! electron-store */ "electron-store");
 
 const store = new Store();
+
+const Apstore = __webpack_require__(/*! ./apstore */ "./src/lib/apstore.js");
+
+const apstore = new Apstore();
 function twoPages() {
   var sizes = store.get('split-sizes');
   if (sizes) sizes = JSON.parse(sizes);else sizes = [50, 50];
@@ -283,24 +319,14 @@ function twoPages() {
 }
 function parseTitle() {
   // log('========= parse title =============')
-  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
-  let lib = obook.dataset.lib;
+  // let lib = store.get('lib')
+  let lib = apstore.get('lib');
+  let cur = apstore.get('current');
+  let info = lib[cur.title].info;
+  log('LIB', lib);
+  log('CUR', cur); // log('BOOK', book)
 
-  if (lib) {
-    lib = JSON.parse(obook.dataset.lib);
-  } else {
-    lib = store.get('lib');
-    obook.dataset.lib = JSON.stringify(lib);
-  }
-
-  let cur = store.get('current'); // let book = store.get(cur.title)
-
-  let info = lib[cur.title]; // log('LIB', lib)
-  // log('CUR', cur)
-  // log('BOOK', book)
-  // log('INFO', info)
-
-  obook.dataset.info = JSON.stringify(info);
+  log('INFO', info);
   let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   let obookCont = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
@@ -587,6 +613,10 @@ const Store = __webpack_require__(/*! electron-store */ "electron-store");
 
 const store = new Store();
 
+const Apstore = __webpack_require__(/*! ./apstore */ "./src/lib/apstore.js");
+
+const apstore = new Apstore();
+
 function extractAllText(str) {
   const re = /"(.*?)"/g;
   const results = [];
@@ -746,14 +776,21 @@ function parseDir(bookname) {
   book.title = info.book.title; // info.nics = _.uniq(book.panes.map(auth => { return auth.nic }))
 
   info.tree = tree.children;
-  let lib = store.get('lib');
-  lib[book.title] = info;
-  store.set('lib', lib);
-  store.set(book.title, book);
   let current = {
-    title: book.title
+    title: book.title // let lib = store.get('lib')
+    // lib[book.title] = info
+    // store.set('lib', lib)
+    // store.set(book.title, book)
+    // store.set('current', current)
+
   };
-  store.set('current', current);
+  let aplib = {};
+  let apbook = {};
+  aplib[book.title] = apbook;
+  apbook.info = info;
+  apbook.panes = book;
+  apstore.set('lib', aplib);
+  apstore.set('current', current);
 }
 
 function bookWFMap(text, title, fn) {
@@ -857,7 +894,7 @@ function createNode(node) {
 /*!**************************!*\
   !*** ./src/lib/utils.js ***!
   \**************************/
-/*! exports provided: q, qs, create, recreateDiv, recreate, span, br, div, p, empty, remove, removeAll, findAncestor, placePopup, log, plog, enclitic, getStore, setStore */
+/*! exports provided: q, qs, create, recreateDiv, recreate, span, br, div, p, empty, remove, removeAll, findAncestor, placePopup, log, plog, enclitic, getStore, setStore, getStore_, setStore_ */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -881,6 +918,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "enclitic", function() { return enclitic; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getStore", function() { return getStore; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "setStore", function() { return setStore; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getStore_", function() { return getStore_; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "setStore_", function() { return setStore_; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 
@@ -987,6 +1026,14 @@ function enclitic(str) {
 }
 function getStore(name) {
   let json, obj;
+  return obj;
+}
+function setStore(name, obj) {
+  let oapp = q('#app');
+  q('#app').setAttribute();
+}
+function getStore_(name) {
+  let json, obj;
 
   try {
     json = localStorage.getItem(name);
@@ -997,7 +1044,7 @@ function getStore(name) {
 
   return obj;
 }
-function setStore(name, obj) {
+function setStore_(name, obj) {
   localStorage.setItem(name, JSON.stringify(obj));
 }
 
