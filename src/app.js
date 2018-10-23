@@ -18,6 +18,8 @@ import { openODS, openDir } from './lib/getfiles'
 
 const Store = require('electron-store')
 const store = new Store()
+const Apstore = require('./lib/apstore')
+const apstore = new Apstore()
 let fse = require('fs-extra')
 const log = console.log
 
@@ -38,8 +40,9 @@ const appPath = app.getAppPath()
 let userDataPath = app.getPath("userData")
 // enableDBs(userDataPath, appPath, isDev)
 
-let lib = store.get('lib')
-if (!lib) store.set('lib', {})
+// тут persisit
+let lib = apstore.get('lib')
+if (!lib) apstore.set('lib', {})
 
 showSection('lib')
 

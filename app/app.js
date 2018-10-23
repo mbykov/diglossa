@@ -122,6 +122,10 @@ const Store = __webpack_require__(/*! electron-store */ "electron-store");
 
 const store = new Store();
 
+const Apstore = __webpack_require__(/*! ./lib/apstore */ "./src/lib/apstore.js");
+
+const apstore = new Apstore();
+
 let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
 const log = console.log;
@@ -144,9 +148,10 @@ const isDev = true;
 const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app;
 const appPath = app.getAppPath();
 let userDataPath = app.getPath("userData"); // enableDBs(userDataPath, appPath, isDev)
+// тут persisit
 
-let lib = store.get('lib');
-if (!lib) store.set('lib', {});
+let lib = apstore.get('lib');
+if (!lib) apstore.set('lib', {});
 showSection('lib');
 
 function showSection(name) {
@@ -295,15 +300,12 @@ const fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
 const path = __webpack_require__(/*! path */ "path");
 
-const log = console.log;
-
-const Store = __webpack_require__(/*! electron-store */ "electron-store");
-
-const store = new Store();
+const log = console.log; // const Store = require('electron-store')
+// const store = new Store()
 
 const Apstore = __webpack_require__(/*! ./apstore */ "./src/lib/apstore.js");
 
-const apstore = new Apstore();
+const store = new Apstore();
 function twoPages() {
   var sizes = store.get('split-sizes');
   if (sizes) sizes = JSON.parse(sizes);else sizes = [50, 50];
@@ -320,13 +322,13 @@ function twoPages() {
 function parseTitle() {
   // log('========= parse title =============')
   // let lib = store.get('lib')
-  let lib = apstore.get('lib');
-  let cur = apstore.get('current');
-  let info = lib[cur.title].info;
-  log('LIB', lib);
-  log('CUR', cur); // log('BOOK', book)
+  // let lib = store.get('lib')
+  let cur = store.get('current');
+  let info = cur.info; // log('LIB', lib)
+  // log('CUR', cur)
+  // log('BOOK', book)
+  // log('INFO', info)
 
-  log('INFO', info);
   let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   let obookCont = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
@@ -347,6 +349,8 @@ function goNode(ev) {
   cur.fpath = fpath;
   store.set('current', cur);
   setBookText();
+  createRightHeader();
+  createLeftHeader();
 }
 
 function setBookText(nic) {
@@ -354,31 +358,36 @@ function setBookText(nic) {
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
-  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns);
-  let lib = store.get('lib');
+  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns); // let lib = store.get('lib')
+
   let cur = store.get('current');
-  let book = store.get(cur.title);
-  let info = lib[cur.title];
-  let nicnames = info.nicnames;
+  let texts = store.get('curtexts'); // let book = lib[cur.title]
+
+  let info = cur.info;
+  let nicnames = info.nicnames; // log('BB', book.panes)
+
+  let panes = texts.panes;
+  let coms = texts.coms;
   let fpath = obook.dataset.fpath;
 
-  let author = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(book.panes, auth => {
+  let author = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(panes, auth => {
     return auth.author && auth.fpath == cur.fpath;
   })[0];
 
-  let trns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(book.panes, auth => {
+  let trns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(panes, auth => {
     return !auth.author && auth.fpath == cur.fpath;
-  }); // log('TRNS', trns)
+  }); // log('TRNS', author)
   // let nic = cur.nic
 
 
-  let nics = trns.map(auth => {
+  let cnics = trns.map(auth => {
     return auth.nic;
-  }); // log('NICS', nics)
+  });
+  store.set('cnics', cnics); // log('NICS', nics)
 
-  if (!nic) nic = nics[0];
-  let ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('.hright');
-  if (!ohright) createRightHeader(nics, nicnames, nic);
+  if (!nic) nic = cnics[0]; // let ohright = q('.hright')
+  // if (!ohright) createRightHeader(cnics, nicnames, nic)
+
   author.rows.forEach((astr, idx) => {
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])(astr);
     oleft.setAttribute('idx', idx);
@@ -441,13 +450,23 @@ function cyclePar(ev) {
   curpar.classList.add('hidden');
 }
 
-function parseLeftHeader() {
-  let anchor = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#hleft'); // oheader.textContent = '========================'
+function createLeftHeader() {
+  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
+  let arect = obook.getBoundingClientRect();
+  let ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
+  obook.appendChild(ohleft);
+  ohleft.classList.add('hright');
+  ohleft.style.left = arect.width * 0.15 + 'px';
+  ohleft.classList.add('header');
+  log('LEFT HEADER', ohleft);
+  let cur = store.get('current');
+  let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(cur.info.tree);
+  ohleft.appendChild(otree); // ohleft.textContent = 'LEFT HEADER'
 }
 
-function createRightHeader(nics, nicnames, nic) {
-  let oapp = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
-  let arect = oapp.getBoundingClientRect();
+function createRightHeader() {
+  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
+  let arect = obook.getBoundingClientRect();
   let ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
   ohright.classList.add('hright');
   ohright.style.left = arect.width * 0.70 + 'px';
@@ -455,15 +474,17 @@ function createRightHeader(nics, nicnames, nic) {
   oul.setAttribute('id', 'namelist');
   oul.addEventListener("click", clickRightHeader, false);
   ohright.appendChild(oul);
-  oapp.appendChild(ohright);
-  createNameList(nics, nicnames);
-  collapseRightHeader(nic);
+  obook.appendChild(ohright);
+  createNameList();
+  collapseRightHeader();
 }
 
-function createNameList(nics, nicnames) {
+function createNameList() {
+  let nics = store.get('cnics');
+  let cur = store.get('current');
+  let nicnames = cur.info.nicnames;
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#namelist');
-  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(oul); // log('NN', nicnames)
-
+  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(oul);
   oul.setAttribute('nics', nics);
   nics.forEach(nic => {
     let oli = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('li');
@@ -485,6 +506,11 @@ function clickRightHeader(ev) {
 }
 
 function collapseRightHeader(nic) {
+  if (!nic) {
+    let nics = store.get('cnics');
+    nic = nics[0];
+  }
+
   let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('.hright');
   oright.classList.remove('header');
   let olis = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#namelist > li');
@@ -607,11 +633,8 @@ const dirTree = __webpack_require__(/*! directory-tree */ "directory-tree");
 
 const textract = __webpack_require__(/*! textract */ "textract");
 
-const log = console.log;
-
-const Store = __webpack_require__(/*! electron-store */ "electron-store");
-
-const store = new Store();
+const log = console.log; // const Store = require('electron-store')
+// const store = new Store()
 
 const Apstore = __webpack_require__(/*! ./apstore */ "./src/lib/apstore.js");
 
@@ -734,7 +757,7 @@ function parseDir(bookname) {
     return fn != ipath;
   }); // log('FNS', fns.length)
 
-  let book = {
+  let cpanes = {
     panes: [],
     coms: []
   };
@@ -771,26 +794,21 @@ function parseDir(bookname) {
     };
     if (auth && auth.author) pane.author = true; // if (auth.author) book.author = pane
 
-    if (comment) book.coms.push(pane);else book.panes.push(pane); // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
+    if (comment) cpanes.coms.push(pane);else cpanes.panes.push(pane); // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   });
-  book.title = info.book.title; // info.nics = _.uniq(book.panes.map(auth => { return auth.nic }))
-
   info.tree = tree.children;
-  let current = {
-    title: book.title // let lib = store.get('lib')
-    // lib[book.title] = info
-    // store.set('lib', lib)
-    // store.set(book.title, book)
-    // store.set('current', current)
-
+  let cur = {
+    title: info.book.title
   };
-  let aplib = {};
-  let apbook = {};
-  aplib[book.title] = apbook;
-  apbook.info = info;
-  apbook.panes = book;
-  apstore.set('lib', aplib);
-  apstore.set('current', current);
+  let lib = apstore.get('lib'); // lib[book.title] = apbook ???
+  // apstore.set('lib', lib)
+  // let book = {}
+
+  cur.info = info; // cur.panes = cpanes
+  // current.book = book
+
+  apstore.set('current', cur);
+  apstore.set('curtexts', cpanes);
 }
 
 function bookWFMap(text, title, fn) {

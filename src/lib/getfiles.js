@@ -7,8 +7,8 @@ const glob = require('glob')
 const dirTree = require('directory-tree')
 const textract = require('textract')
 const log = console.log
-const Store = require('electron-store')
-const store = new Store()
+// const Store = require('electron-store')
+// const store = new Store()
 const Apstore = require('./apstore')
 const apstore = new Apstore()
 
@@ -120,7 +120,7 @@ function parseDir(bookname) {
   fns = _.filter(fns, fn=>{ return fn != ipath })
   // log('FNS', fns.length)
 
-  let book = {panes: [], coms: []}
+  let cpanes = {panes: [], coms: []}
   fns.forEach(fn => {
     let comment = false
     let com = fn.split('-')[1]
@@ -142,30 +142,25 @@ function parseDir(bookname) {
     let pane = { lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname,
     if (auth && auth.author) pane.author = true
     // if (auth.author) book.author = pane
-    if (comment) book.coms.push(pane)
-    else book.panes.push(pane)
+    if (comment) cpanes.coms.push(pane)
+    else cpanes.panes.push(pane)
     // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   })
-  book.title = info.book.title
-  // info.nics = _.uniq(book.panes.map(auth => { return auth.nic }))
 
   info.tree = tree.children
 
-  let current = {title: book.title}
-  // let lib = store.get('lib')
-  // lib[book.title] = info
-  // store.set('lib', lib)
-  // store.set(book.title, book)
-  // store.set('current', current)
+  let cur = {title: info.book.title}
+  let lib = apstore.get('lib')
 
-  let aplib = {}
-  let apbook = {}
-  aplib[book.title] = apbook
-  apbook.info = info
-  apbook.panes = book
+  // lib[book.title] = apbook ???
+  // apstore.set('lib', lib)
 
-  apstore.set('lib', aplib)
-  apstore.set('current', current)
+  // let book = {}
+  cur.info = info
+  // cur.panes = cpanes
+  // current.book = book
+  apstore.set('current', cur)
+  apstore.set('curtexts', cpanes)
 
 }
 
