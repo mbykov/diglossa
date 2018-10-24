@@ -382,10 +382,7 @@ function setBookText(nic) {
     return auth.nic;
   });
   store.set('cnics', cnics);
-  if (!nic) nic = cnics[0]; // let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ])+'
-  // let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~0-9\'"<> ])+'
-  // let punct = '([^\.,:;0-9 ]+)'
-
+  if (!nic) nic = cnics[0];
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
   let rePunct = new RegExp(punct, 'g');
   let htmls = [];
@@ -410,7 +407,8 @@ function setBookText(nic) {
       oright.setAttribute('idx', idx);
       oright.setAttribute('nic', auth.nic);
       otrns.appendChild(oright);
-      if (auth.nic == nic) oright.setAttribute('active', true);
+      if (auth.nic == nic) oright.setAttribute('active', true); // else
+
       orights.push(oright);
     });
     alignPars(idx, oleft, orights);
@@ -664,7 +662,14 @@ const log = console.log; // const Store = require('electron-store')
 
 const Apstore = __webpack_require__(/*! ./apstore */ "./src/lib/apstore.js");
 
-const apstore = new Apstore();
+const apstore = new Apstore(); // const yuno = require('../../../yunodb')
+
+const Datastore = __webpack_require__(/*! nedb */ "nedb");
+
+let textdb = new Datastore({
+  filename: 'nedbs/ne_texts'
+});
+textdb.loadDatabase();
 
 function extractAllText(str) {
   const re = /"(.*?)"/g;
@@ -835,6 +840,16 @@ function parseDir(bookname) {
 
   apstore.set('current', cur);
   apstore.set('curtexts', cpanes);
+  textdb.insert(cpanes, (err, newDocs) => {
+    log('NEDB insert', newDocs.length);
+    textdb.loadDatabase();
+    textdb.persistence.compactDatafile();
+  });
+}
+
+function done(err) {
+  if (err) throw err;
+  console.log('successfully added documents');
 }
 
 function bookWFMap(text, title, fn) {
@@ -1179,6 +1194,17 @@ module.exports = require("lodash");
 /***/ (function(module, exports) {
 
 module.exports = require("mousetrap");
+
+/***/ }),
+
+/***/ "nedb":
+/*!***********************!*\
+  !*** external "nedb" ***!
+  \***********************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("nedb");
 
 /***/ }),
 

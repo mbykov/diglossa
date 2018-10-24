@@ -90,9 +90,6 @@ function setBookText(nic) {
   store.set('cnics', cnics)
   if (!nic) nic = cnics[0]
 
-  // let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ])+'
-  // let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~0-9\'"<> ])+'
-  // let punct = '([^\.,:;0-9 ]+)'
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
   let rePunct = new RegExp(punct, 'g')
   let htmls = []
@@ -119,6 +116,7 @@ function setBookText(nic) {
       oright.setAttribute('nic', auth.nic)
       otrns.appendChild(oright)
       if (auth.nic == nic) oright.setAttribute('active', true)
+      // else
       orights.push(oright)
     })
     alignPars(idx, oleft, orights)

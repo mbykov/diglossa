@@ -11,6 +11,8 @@ const log = console.log
 // const store = new Store()
 const Apstore = require('./apstore')
 const apstore = new Apstore()
+// const yuno = require('../../../yunodb')
+const storage = require('electron-json-storage')
 
 function extractAllText(str){
   const re = /"(.*?)"/g
@@ -162,6 +164,13 @@ function parseDir(bookname) {
   apstore.set('current', cur)
   apstore.set('curtexts', cpanes)
 
+  // XXX
+
+}
+
+function done (err) {
+  if (err) throw err
+  console.log('successfully added documents')
 }
 
 function bookWFMap(text, title, fn) {
