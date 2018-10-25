@@ -116,11 +116,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-
-const Store = __webpack_require__(/*! electron-store */ "electron-store");
-
-const store = new Store();
+ // const Store = require('electron-store')
+// const store = new Store()
 
 const Apstore = __webpack_require__(/*! ./lib/apstore */ "./src/lib/apstore.js");
 
@@ -179,10 +176,10 @@ function showBook(fns) {
     // let bookpath = '../../texts/Plato/Letters'
     let bookpath = '../../texts/Plato'; // log('= OTHER THEN ODS =', bookpath)
 
-    Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openDir"])(bookpath, res => {
-      if (!res) return;
+    Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openDir"])(bookpath, book => {
+      if (!book) return;
       Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["twoPages"])();
-      Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseTitle"])();
+      Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseTitle"])(book);
       oprg.style.display = "none";
     });
   }
@@ -306,6 +303,9 @@ const log = console.log; // const Store = require('electron-store')
 const Apstore = __webpack_require__(/*! ./apstore */ "./src/lib/apstore.js");
 
 const store = new Apstore();
+
+const elasticlunr = __webpack_require__(/*! elasticlunr */ "elasticlunr");
+
 function twoPages() {
   var sizes = store.get('split-sizes');
   if (sizes) sizes = JSON.parse(sizes);else sizes = [50, 50];
@@ -319,18 +319,18 @@ function twoPages() {
     }
   });
 }
-function parseTitle() {
+function parseTitle(book) {
   // log('========= parse title =============')
-  // let lib = store.get('lib')
-  // let lib = store.get('lib')
-  let cur = store.get('current');
-  let info = cur.info; // log('LIB', lib)
+  // let cur = store.get('current')
+  // let info = cur.info
+  let info = book.info; // log('LIB', lib)
   // log('CUR', cur)
   // log('BOOK', book)
   // log('INFO', info)
+  // let oleft = q('#source')
 
-  let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
+  oright.book = book;
   let obookCont = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
   obookCont.classList.add('bookTitle');
   oright.appendChild(obookCont);
@@ -340,49 +340,73 @@ function parseTitle() {
 }
 
 function goNode(ev) {
-  let cur = store.get('current'); // let info = lib[cur.title]
+  let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
+  let book = oright.book; // let cur = store.get('current')
+  // let info = lib[cur.title]
   // if (!cur.nic) cur.nic = info.nics[0]
 
-  let fpath = ev.target.getAttribute('fpath');
-  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
-  obook.dataset.fpath = JSON.stringify(fpath);
-  cur.fpath = fpath;
-  store.set('current', cur);
+  let fpath = ev.target.getAttribute('fpath'); // let obook = q('#source')
+  // obook.dataset.fpath = JSON.stringify(fpath)
+
+  book.fpath = fpath; // store.set('current', cur)
+
   setBookText();
-  createRightHeader(); // createLeftHeader()
+  createRightHeader(book); // createLeftHeader()
 }
 
 function setBookText(nic) {
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
+  let book = otrns.book;
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns); // let lib = store.get('lib')
+  // let cur = store.get('current')
+  // let texts = store.get('curtexts')
 
-  let cur = store.get('current');
-  let texts = store.get('curtexts'); // let book = lib[cur.title]
+  let texts = book.texts; // let book = lib[cur.title]
 
-  let info = cur.info;
+  let info = book.info;
   let nicnames = info.nicnames; // log('BB', book.panes)
 
   let panes = texts.panes;
-  let coms = texts.coms;
-  let fpath = obook.dataset.fpath;
+  let coms = texts.coms; // let oapp = q('#app')
+  // let json = oapp.getAttribute('lunr')
+  // let idxDump = JSON.parse(json)
+  // let lunr = elasticlunr.Index.load(idxDump)
+  // log('_2:', lunr)
+  // // // let lunr = store.get('lunr')
+  // let res = lunr.search("Dialogues/Parmenides", {});
+  // log('LUNR:', res)
+  // let ref = res[0].ref
+  // log('LUNR:', ref)
+  // let lstore = lunr.
+  // lunr.DocumentStore.prototype.getDoc = function (docRef) {
+  //   if (this.hasDoc(docRef) === false) return null;
+  //   log('===============>>', this.docs[docRef])
+  //   return this.docs[docRef];
+  // };
+
+  let fpath = book.fpath;
 
   let author = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(panes, auth => {
-    return auth.author && auth.fpath == cur.fpath;
+    return auth.author && auth.fpath == fpath;
   })[0];
 
   let trns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(panes, auth => {
-    return !auth.author && auth.fpath == cur.fpath;
-  }); // log('TRNS', author)
+    return !auth.author && auth.fpath == fpath;
+  });
 
-
+  log('TRNS', trns);
+  log('ATRNS', author.nic);
   let cnics = trns.map(auth => {
     return auth.nic;
-  });
-  store.set('cnics', cnics);
+  }); // store.set('cnics', cnics)
+
+  book.cnics = cnics;
   if (!nic) nic = cnics[0];
+  book.nic = nic;
+  log('B-NIC', book);
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
   let rePunct = new RegExp(punct, 'g');
   let htmls = [];
@@ -411,7 +435,7 @@ function setBookText(nic) {
 
       orights.push(oright);
     });
-    alignPars(idx, oleft, orights);
+    alignPars(oleft, orights);
   });
   osource.addEventListener("mouseover", fireActive, false);
   otrns.addEventListener("wheel", cyclePar, false);
@@ -422,7 +446,7 @@ function fireActive(ev) {
   log('A', ev.target.textContent);
 }
 
-function alignPars(idx, oleft, orights) {
+function alignPars(oleft, orights) {
   orights.push(oleft);
   let heights = orights.map(par => {
     return par.scrollHeight;
@@ -488,7 +512,7 @@ function clickLeftHeader(ev) {
   if (fpath) log('LEFT', text);
 }
 
-function createRightHeader() {
+function createRightHeader(book) {
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
   let arect = obook.getBoundingClientRect();
   let ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
@@ -499,14 +523,17 @@ function createRightHeader() {
   oul.addEventListener("click", clickRightHeader, false);
   ohright.appendChild(oul);
   obook.appendChild(ohright);
-  createNameList();
-  collapseRightHeader();
+  createNameList(book);
+  let nic = book.nic;
+  collapseRightHeader(nic);
 }
 
-function createNameList() {
-  let nics = store.get('cnics');
-  let cur = store.get('current');
-  let nicnames = cur.info.nicnames;
+function createNameList(book) {
+  // let nics = store.get('cnics')
+  // let cur = store.get('current')
+  let nics = book.cnics; // let cur = store.get('current')
+
+  let nicnames = book.info.nicnames;
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#namelist');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(oul);
   oul.setAttribute('nics', nics);
@@ -530,11 +557,10 @@ function clickRightHeader(ev) {
 }
 
 function collapseRightHeader(nic) {
-  if (!nic) {
-    let nics = store.get('cnics');
-    nic = nics[0];
-  }
-
+  // if (!nic) {
+  //   let nics = store.get('cnics')
+  //   nic = nics[0]
+  // }
   let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('.hright');
   oright.classList.remove('header');
   let olis = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#namelist > li');
@@ -663,13 +689,9 @@ const log = console.log; // const Store = require('electron-store')
 const Apstore = __webpack_require__(/*! ./apstore */ "./src/lib/apstore.js");
 
 const apstore = new Apstore(); // const yuno = require('../../../yunodb')
+// const storage = require('electron-json-storage')
 
-const Datastore = __webpack_require__(/*! nedb */ "nedb");
-
-let textdb = new Datastore({
-  filename: 'nedbs/ne_texts'
-});
-textdb.loadDatabase();
+const elasticlunr = __webpack_require__(/*! elasticlunr */ "elasticlunr");
 
 function extractAllText(str) {
   const re = /"(.*?)"/g;
@@ -743,8 +765,8 @@ function parseCSV(str) {
 
 function openDir(bookname, cb) {
   try {
-    parseDir(bookname);
-    cb(true);
+    let book = parseDir(bookname);
+    cb(book);
   } catch (err) {
     if (err) log('DIR ERR', err);
     cb(false);
@@ -788,6 +810,13 @@ function parseDir(bookname) {
     return fn != ipath;
   }); // log('FNS', fns.length)
 
+  let lunr = elasticlunr(function () {
+    this.addField('nic');
+    this.addField('lang');
+    this.addField('fpath');
+    this.addField('text');
+    this.setRef('id');
+  });
   let cpanes = {
     panes: [],
     coms: []
@@ -816,6 +845,15 @@ function parseDir(bookname) {
     let fpath = fparts.join('/');
     let lang;
     if (auth) lang = auth.lang;
+    let id = [fpath, fname].join('/');
+    let panee = {
+      id: id,
+      lang: lang,
+      nic: nic,
+      fpath: fpath,
+      text: txt
+    };
+    lunr.addDoc(panee);
     let pane = {
       lang: lang,
       nic: nic,
@@ -835,16 +873,23 @@ function parseDir(bookname) {
   // apstore.set('lib', lib)
   // let book = {}
 
-  cur.info = info; // cur.panes = cpanes
+  cur.info = info;
+  let book = {
+    title: info.book.title,
+    info: info,
+    texts: cpanes
+  };
+  return book; // cur.panes = cpanes
   // current.book = book
 
   apstore.set('current', cur);
-  apstore.set('curtexts', cpanes);
-  textdb.insert(cpanes, (err, newDocs) => {
-    log('NEDB insert', newDocs.length);
-    textdb.loadDatabase();
-    textdb.persistence.compactDatafile();
-  });
+  apstore.set('curtexts', cpanes); // apstore.set('lunr', lunr)
+
+  let oapp = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#app');
+  oapp.setAttribute('lunr', JSON.stringify(lunr)); // let res = lunr.search("Dialogues/Parmenides", {});
+  // log('LUNR:', res)
+  // let idxDump = obook.getAttribute('lunr')
+  // log('idxd::', idxDump)
 }
 
 function done(err) {
@@ -1120,6 +1165,17 @@ module.exports = require("directory-tree");
 
 /***/ }),
 
+/***/ "elasticlunr":
+/*!******************************!*\
+  !*** external "elasticlunr" ***!
+  \******************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("elasticlunr");
+
+/***/ }),
+
 /***/ "electron":
 /*!***************************!*\
   !*** external "electron" ***!
@@ -1139,17 +1195,6 @@ module.exports = require("electron");
 /***/ (function(module, exports) {
 
 module.exports = require("electron-clipboard-extended");
-
-/***/ }),
-
-/***/ "electron-store":
-/*!*********************************!*\
-  !*** external "electron-store" ***!
-  \*********************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("electron-store");
 
 /***/ }),
 
@@ -1194,17 +1239,6 @@ module.exports = require("lodash");
 /***/ (function(module, exports) {
 
 module.exports = require("mousetrap");
-
-/***/ }),
-
-/***/ "nedb":
-/*!***********************!*\
-  !*** external "nedb" ***!
-  \***********************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("nedb");
 
 /***/ }),
 

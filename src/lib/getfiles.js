@@ -12,7 +12,8 @@ const log = console.log
 const Apstore = require('./apstore')
 const apstore = new Apstore()
 // const yuno = require('../../../yunodb')
-const storage = require('electron-json-storage')
+// const storage = require('electron-json-storage')
+const elasticlunr = require('elasticlunr')
 
 function extractAllText(str){
   const re = /"(.*?)"/g
@@ -77,8 +78,8 @@ function parseCSV(str) {
 
 export function openDir(bookname, cb) {
   try {
-    parseDir(bookname)
-    cb(true)
+    let book = parseDir(bookname)
+    cb(book)
   } catch (err) {
     if (err) log('DIR ERR', err)
     cb(false)
@@ -122,6 +123,14 @@ function parseDir(bookname) {
   fns = _.filter(fns, fn=>{ return fn != ipath })
   // log('FNS', fns.length)
 
+  let lunr = elasticlunr(function () {
+    this.addField('nic')
+    this.addField('lang')
+    this.addField('fpath')
+    this.addField('text')
+    this.setRef('id')
+  })
+
   let cpanes = {panes: [], coms: []}
   fns.forEach(fn => {
     let comment = false
@@ -141,6 +150,11 @@ function parseDir(bookname) {
     let fpath = fparts.join('/')
     let lang
     if (auth) lang = auth.lang
+
+    let id = [fpath, fname].join('/')
+    let panee = { id: id, lang: lang, nic: nic, fpath: fpath, text: txt }
+    lunr.addDoc(panee)
+
     let pane = { lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname,
     if (auth && auth.author) pane.author = true
     // if (auth.author) book.author = pane
@@ -159,12 +173,22 @@ function parseDir(bookname) {
 
   // let book = {}
   cur.info = info
+
+  let book = {title: info.book.title, info: info, texts: cpanes}
+  return book
+
   // cur.panes = cpanes
   // current.book = book
   apstore.set('current', cur)
   apstore.set('curtexts', cpanes)
+  // apstore.set('lunr', lunr)
 
-  // XXX
+  let oapp = q('#app')
+  oapp.setAttribute('lunr', JSON.stringify(lunr))
+  // let res = lunr.search("Dialogues/Parmenides", {});
+  // log('LUNR:', res)
+  // let idxDump = obook.getAttribute('lunr')
+  // log('idxd::', idxDump)
 
 }
 

@@ -16,8 +16,8 @@ import { q, qs, empty, create, span, p, div, enclitic } from './lib/utils'
 import { twoPages, parseTitle, parseTitleTui } from './lib/book'
 import { openODS, openDir } from './lib/getfiles'
 
-const Store = require('electron-store')
-const store = new Store()
+// const Store = require('electron-store')
+// const store = new Store()
 const Apstore = require('./lib/apstore')
 const apstore = new Apstore()
 let fse = require('fs-extra')
@@ -72,10 +72,10 @@ function showBook(fns) {
     // let bookpath = '../../texts/Plato/Letters'
     let bookpath = '../../texts/Plato'
     // log('= OTHER THEN ODS =', bookpath)
-    openDir(bookpath, (res) => {
-      if (!res) return
+    openDir(bookpath, (book) => {
+      if (!book) return
       twoPages()
-      parseTitle()
+      parseTitle(book)
       oprg.style.display = "none"
     })
   }
