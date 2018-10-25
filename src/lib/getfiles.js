@@ -9,11 +9,13 @@ const textract = require('textract')
 const log = console.log
 // const Store = require('electron-store')
 // const store = new Store()
-const Apstore = require('./apstore')
-const apstore = new Apstore()
+
+// const Apstore = require('./apstore')
+// const apstore = new Apstore()
+
 // const yuno = require('../../../yunodb')
 // const storage = require('electron-json-storage')
-const elasticlunr = require('elasticlunr')
+// const elasticlunr = require('elasticlunr')
 
 function extractAllText(str){
   const re = /"(.*?)"/g
@@ -123,13 +125,13 @@ function parseDir(bookname) {
   fns = _.filter(fns, fn=>{ return fn != ipath })
   // log('FNS', fns.length)
 
-  let lunr = elasticlunr(function () {
-    this.addField('nic')
-    this.addField('lang')
-    this.addField('fpath')
-    this.addField('text')
-    this.setRef('id')
-  })
+  // let lunr = elasticlunr(function () {
+  //   this.addField('nic')
+  //   this.addField('lang')
+  //   this.addField('fpath')
+  //   this.addField('text')
+  //   this.setRef('id')
+  // })
 
   let cpanes = {panes: [], coms: []}
   fns.forEach(fn => {
@@ -144,6 +146,9 @@ function parseDir(bookname) {
     let txt = fse.readFileSync(path.resolve(bpath, fn), 'utf8')
     let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ')
     let rows = _.compact(clean.split('\n'))
+    // rows = rows.slice(0,20)
+
+
     // log('R', fn, rows.length)
     let fparts = fn.split('/')
     let fname = fparts.pop()
@@ -151,9 +156,9 @@ function parseDir(bookname) {
     let lang
     if (auth) lang = auth.lang
 
-    let id = [fpath, fname].join('/')
-    let panee = { id: id, lang: lang, nic: nic, fpath: fpath, text: txt }
-    lunr.addDoc(panee)
+    // let id = [fpath, fname].join('/')
+    // let panee = { id: id, lang: lang, nic: nic, fpath: fpath, text: txt }
+    // lunr.addDoc(panee)
 
     let pane = { lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname,
     if (auth && auth.author) pane.author = true
@@ -166,7 +171,7 @@ function parseDir(bookname) {
   info.tree = tree.children
 
   let cur = {title: info.book.title}
-  let lib = apstore.get('lib')
+  // let lib = apstore.get('lib')
 
   // lib[book.title] = apbook ???
   // apstore.set('lib', lib)
@@ -177,14 +182,11 @@ function parseDir(bookname) {
   let book = {title: info.book.title, info: info, texts: cpanes}
   return book
 
-  // cur.panes = cpanes
-  // current.book = book
-  apstore.set('current', cur)
-  apstore.set('curtexts', cpanes)
-  // apstore.set('lunr', lunr)
+  // apstore.set('current', cur)
+  // apstore.set('curtexts', cpanes)
 
-  let oapp = q('#app')
-  oapp.setAttribute('lunr', JSON.stringify(lunr))
+  // let oapp = q('#app')
+  // oapp.setAttribute('lunr', JSON.stringify(lunr))
   // let res = lunr.search("Dialogues/Parmenides", {});
   // log('LUNR:', res)
   // let idxDump = obook.getAttribute('lunr')

@@ -302,9 +302,7 @@ const log = console.log; // const Store = require('electron-store')
 
 const Apstore = __webpack_require__(/*! ./apstore */ "./src/lib/apstore.js");
 
-const store = new Apstore();
-
-const elasticlunr = __webpack_require__(/*! elasticlunr */ "elasticlunr");
+const store = new Apstore(); // const elasticlunr = require('elasticlunr');
 
 function twoPages() {
   var sizes = store.get('split-sizes');
@@ -370,23 +368,7 @@ function setBookText(nic) {
   let nicnames = info.nicnames; // log('BB', book.panes)
 
   let panes = texts.panes;
-  let coms = texts.coms; // let oapp = q('#app')
-  // let json = oapp.getAttribute('lunr')
-  // let idxDump = JSON.parse(json)
-  // let lunr = elasticlunr.Index.load(idxDump)
-  // log('_2:', lunr)
-  // // // let lunr = store.get('lunr')
-  // let res = lunr.search("Dialogues/Parmenides", {});
-  // log('LUNR:', res)
-  // let ref = res[0].ref
-  // log('LUNR:', ref)
-  // let lstore = lunr.
-  // lunr.DocumentStore.prototype.getDoc = function (docRef) {
-  //   if (this.hasDoc(docRef) === false) return null;
-  //   log('===============>>', this.docs[docRef])
-  //   return this.docs[docRef];
-  // };
-
+  let coms = texts.coms;
   let fpath = book.fpath;
 
   let author = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(panes, auth => {
@@ -395,10 +377,10 @@ function setBookText(nic) {
 
   let trns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(panes, auth => {
     return !auth.author && auth.fpath == fpath;
-  });
+  }); // log('TRNS', trns)
+  // log('ATRNS', author.nic)
 
-  log('TRNS', trns);
-  log('ATRNS', author.nic);
+
   let cnics = trns.map(auth => {
     return auth.nic;
   }); // store.set('cnics', cnics)
@@ -406,7 +388,6 @@ function setBookText(nic) {
   book.cnics = cnics;
   if (!nic) nic = cnics[0];
   book.nic = nic;
-  log('B-NIC', book);
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
   let rePunct = new RegExp(punct, 'g');
   let htmls = [];
@@ -418,7 +399,8 @@ function setBookText(nic) {
   }); // author.rows.forEach((astr, idx) => {
 
   htmls.forEach((html, idx) => {
-    // let oleft = p(astr)
+    if (idx > 20) return; // let oleft = p(astr)
+
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])();
     oleft.innerHTML = html;
     oleft.setAttribute('idx', idx);
@@ -685,13 +667,11 @@ const textract = __webpack_require__(/*! textract */ "textract");
 
 const log = console.log; // const Store = require('electron-store')
 // const store = new Store()
-
-const Apstore = __webpack_require__(/*! ./apstore */ "./src/lib/apstore.js");
-
-const apstore = new Apstore(); // const yuno = require('../../../yunodb')
+// const Apstore = require('./apstore')
+// const apstore = new Apstore()
+// const yuno = require('../../../yunodb')
 // const storage = require('electron-json-storage')
-
-const elasticlunr = __webpack_require__(/*! elasticlunr */ "elasticlunr");
+// const elasticlunr = require('elasticlunr')
 
 function extractAllText(str) {
   const re = /"(.*?)"/g;
@@ -809,14 +789,14 @@ function parseDir(bookname) {
   fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
     return fn != ipath;
   }); // log('FNS', fns.length)
+  // let lunr = elasticlunr(function () {
+  //   this.addField('nic')
+  //   this.addField('lang')
+  //   this.addField('fpath')
+  //   this.addField('text')
+  //   this.setRef('id')
+  // })
 
-  let lunr = elasticlunr(function () {
-    this.addField('nic');
-    this.addField('lang');
-    this.addField('fpath');
-    this.addField('text');
-    this.setRef('id');
-  });
   let cpanes = {
     panes: [],
     coms: []
@@ -837,23 +817,18 @@ function parseDir(bookname) {
     let txt = fse.readFileSync(path.resolve(bpath, fn), 'utf8');
     let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ');
 
-    let rows = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(clean.split('\n')); // log('R', fn, rows.length)
+    let rows = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(clean.split('\n')); // rows = rows.slice(0,20)
+    // log('R', fn, rows.length)
 
 
     let fparts = fn.split('/');
     let fname = fparts.pop();
     let fpath = fparts.join('/');
     let lang;
-    if (auth) lang = auth.lang;
-    let id = [fpath, fname].join('/');
-    let panee = {
-      id: id,
-      lang: lang,
-      nic: nic,
-      fpath: fpath,
-      text: txt
-    };
-    lunr.addDoc(panee);
+    if (auth) lang = auth.lang; // let id = [fpath, fname].join('/')
+    // let panee = { id: id, lang: lang, nic: nic, fpath: fpath, text: txt }
+    // lunr.addDoc(panee)
+
     let pane = {
       lang: lang,
       nic: nic,
@@ -867,26 +842,23 @@ function parseDir(bookname) {
   });
   info.tree = tree.children;
   let cur = {
-    title: info.book.title
-  };
-  let lib = apstore.get('lib'); // lib[book.title] = apbook ???
-  // apstore.set('lib', lib)
-  // let book = {}
+    title: info.book.title // let lib = apstore.get('lib')
+    // lib[book.title] = apbook ???
+    // apstore.set('lib', lib)
+    // let book = {}
 
+  };
   cur.info = info;
   let book = {
     title: info.book.title,
     info: info,
     texts: cpanes
   };
-  return book; // cur.panes = cpanes
-  // current.book = book
-
-  apstore.set('current', cur);
-  apstore.set('curtexts', cpanes); // apstore.set('lunr', lunr)
-
-  let oapp = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#app');
-  oapp.setAttribute('lunr', JSON.stringify(lunr)); // let res = lunr.search("Dialogues/Parmenides", {});
+  return book; // apstore.set('current', cur)
+  // apstore.set('curtexts', cpanes)
+  // let oapp = q('#app')
+  // oapp.setAttribute('lunr', JSON.stringify(lunr))
+  // let res = lunr.search("Dialogues/Parmenides", {});
   // log('LUNR:', res)
   // let idxDump = obook.getAttribute('lunr')
   // log('idxd::', idxDump)
@@ -1162,17 +1134,6 @@ function setStore_(name, obj) {
 /***/ (function(module, exports) {
 
 module.exports = require("directory-tree");
-
-/***/ }),
-
-/***/ "elasticlunr":
-/*!******************************!*\
-  !*** external "elasticlunr" ***!
-  \******************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("elasticlunr");
 
 /***/ }),
 

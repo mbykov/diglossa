@@ -10,7 +10,7 @@ const log = console.log
 // const store = new Store()
 const Apstore = require('./apstore')
 const store = new Apstore()
-const elasticlunr = require('elasticlunr');
+// const elasticlunr = require('elasticlunr');
 
 export function twoPages() {
   var sizes = store.get('split-sizes')
@@ -87,38 +87,17 @@ function setBookText(nic) {
   let panes = texts.panes
   let coms = texts.coms
 
-
-  // let oapp = q('#app')
-  // let json = oapp.getAttribute('lunr')
-  // let idxDump = JSON.parse(json)
-  // let lunr = elasticlunr.Index.load(idxDump)
-  // log('_2:', lunr)
-
-  // // // let lunr = store.get('lunr')
-  // let res = lunr.search("Dialogues/Parmenides", {});
-  // log('LUNR:', res)
-  // let ref = res[0].ref
-  // log('LUNR:', ref)
-
-  // let lstore = lunr.
-  // lunr.DocumentStore.prototype.getDoc = function (docRef) {
-  //   if (this.hasDoc(docRef) === false) return null;
-  //   log('===============>>', this.docs[docRef])
-  //   return this.docs[docRef];
-  // };
-
   let fpath = book.fpath
   let author = _.filter(panes, auth=> { return auth.author && auth.fpath == fpath})[0]
   let trns = _.filter(panes, auth=> { return !auth.author && auth.fpath == fpath})
-  log('TRNS', trns)
-  log('ATRNS', author.nic)
+  // log('TRNS', trns)
+  // log('ATRNS', author.nic)
 
   let cnics = trns.map(auth=> { return auth.nic })
   // store.set('cnics', cnics)
   book.cnics = cnics
   if (!nic) nic = cnics[0]
   book.nic = nic
-  log('B-NIC', book)
 
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
   let rePunct = new RegExp(punct, 'g')
@@ -132,6 +111,7 @@ function setBookText(nic) {
 
   // author.rows.forEach((astr, idx) => {
   htmls.forEach((html, idx) => {
+    if (idx > 20) return
     // let oleft = p(astr)
     let oleft = p()
     oleft.innerHTML = html
