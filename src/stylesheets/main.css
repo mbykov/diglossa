@@ -216,3 +216,26 @@ input[type='file'] {
 span.active {
   cursor: pointer;
 }
+
+#lib {
+  margin-left: 150px;
+  margin-top: 100px;
+  cursor: pointer;
+}
+
+.lib-auth {
+  padding: 10px;
+  font-family: "Helvetica Neue", Helvetica, Arial;
+  font-size: 16px;
+  color: maroon;
+}
+
+.lib-auth::after {
+  content: ':'
+}
+
+.lib-title {
+  padding: 10px;
+  font-family: "Helvetica Neue", Helvetica, Arial;
+  font-size: 16px;
+}

@@ -15,11 +15,13 @@ import { ipcRenderer } from "electron";
 import { q, qs, empty, create, span, p, div, enclitic } from './lib/utils'
 import { twoPages, parseTitle, parseTitleTui } from './lib/book'
 import { openODS, openDir } from './lib/getfiles'
+import tree from './lib/tree';
 
-// const Store = require('electron-store')
-// const store = new Store()
-const Apstore = require('./lib/apstore')
-const apstore = new Apstore()
+
+const Store = require('electron-store')
+const store = new Store()
+// const Apstore = require('./lib/apstore')
+// const apstore = new Apstore()
 let fse = require('fs-extra')
 const log = console.log
 
@@ -40,11 +42,7 @@ const appPath = app.getAppPath()
 let userDataPath = app.getPath("userData")
 // enableDBs(userDataPath, appPath, isDev)
 
-// тут persisit
-let lib = apstore.get('lib')
-if (!lib) apstore.set('lib', {})
-
-showSection('lib')
+showSection('help')
 
 function showSection(name) {
   let oapp = q('#app')
@@ -74,8 +72,10 @@ function showBook(fns) {
     // log('= OTHER THEN ODS =', bookpath)
     openDir(bookpath, (book) => {
       if (!book) return
-      twoPages()
-      parseTitle(book)
+      showSection('lib')
+      // twoPages()
+      // parseTitle(book)
+      parseLib(book)
       oprg.style.display = "none"
     })
   }
@@ -123,4 +123,41 @@ function keyGo(ev) {
     source.scrollTop = source.scrollTop + height - 60
   }
   trns.scrollTop = source.scrollTop
+}
+
+function parseLib(book) {
+  if (!book) return
+  let books = store.get('lib') || []
+  books = []
+  log('B', book)
+  let info = book.info
+  books.push(book)
+  store.set('lib', books)
+
+  let olib = q('#lib')
+  let oul = create('ul')
+  olib.appendChild(oul)
+  books.forEach(book => {
+    let ostr = create('li', 'libauth')
+    ostr.bkey = book.bkey
+    oul.appendChild(ostr)
+    let author = span(info.book.author)
+    let title = span(info.book.title)
+    author.classList.add('lib-auth')
+    title.classList.add('lib-title')
+    ostr.appendChild(author)
+    ostr.appendChild(title)
+  })
+  oul.addEventListener('click', goBook, false)
+}
+
+function goBook(ev) {
+  if (ev.target.parentNode.nodeName != 'LI') return
+  log('GO BOOK', ev.target.parentNode.bkey)
+  let books = store.get('lib')
+  let book = _.find(books, book=> { return book.bkey == ev.target.parentNode.bkey })
+  if (!book) return
+  showSection('main')
+  twoPages()
+  parseTitle(book)
 }

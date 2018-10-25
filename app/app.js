@@ -103,6 +103,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./lib/utils */ "./src/lib/utils.js");
 /* harmony import */ var _lib_book__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./lib/book */ "./src/lib/book.js");
 /* harmony import */ var _lib_getfiles__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/getfiles */ "./src/lib/getfiles.js");
+/* harmony import */ var _lib_tree__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./lib/tree */ "./src/lib/tree.js");
 //
 // import "./stylesheets/app.css";
 // import "./stylesheets/main.css";
@@ -116,12 +117,13 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
- // const Store = require('electron-store')
-// const store = new Store()
 
-const Apstore = __webpack_require__(/*! ./lib/apstore */ "./src/lib/apstore.js");
 
-const apstore = new Apstore();
+
+const Store = __webpack_require__(/*! electron-store */ "electron-store");
+
+const store = new Store(); // const Apstore = require('./lib/apstore')
+// const apstore = new Apstore()
 
 let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
@@ -145,11 +147,8 @@ const isDev = true;
 const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app;
 const appPath = app.getAppPath();
 let userDataPath = app.getPath("userData"); // enableDBs(userDataPath, appPath, isDev)
-// тут persisit
 
-let lib = apstore.get('lib');
-if (!lib) apstore.set('lib', {});
-showSection('lib');
+showSection('help');
 
 function showSection(name) {
   let oapp = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#app');
@@ -178,8 +177,10 @@ function showBook(fns) {
 
     Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openDir"])(bookpath, book => {
       if (!book) return;
-      Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["twoPages"])();
-      Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseTitle"])(book);
+      showSection('lib'); // twoPages()
+      // parseTitle(book)
+
+      parseLib(book);
       oprg.style.display = "none";
     });
   }
@@ -235,6 +236,46 @@ function keyGo(ev) {
   }
 
   trns.scrollTop = source.scrollTop;
+}
+
+function parseLib(book) {
+  if (!book) return;
+  let books = store.get('lib') || [];
+  books = [];
+  log('B', book);
+  let info = book.info;
+  books.push(book);
+  store.set('lib', books);
+  let olib = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#lib');
+  let oul = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["create"])('ul');
+  olib.appendChild(oul);
+  books.forEach(book => {
+    let ostr = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["create"])('li', 'libauth');
+    ostr.bkey = book.bkey;
+    oul.appendChild(ostr);
+    let author = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["span"])(info.book.author);
+    let title = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["span"])(info.book.title);
+    author.classList.add('lib-auth');
+    title.classList.add('lib-title');
+    ostr.appendChild(author);
+    ostr.appendChild(title);
+  });
+  oul.addEventListener('click', goBook, false);
+}
+
+function goBook(ev) {
+  if (ev.target.parentNode.nodeName != 'LI') return;
+  log('GO BOOK', ev.target.parentNode.bkey);
+  let books = store.get('lib');
+
+  let book = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(books, book => {
+    return book.bkey == ev.target.parentNode.bkey;
+  });
+
+  if (!book) return;
+  showSection('main');
+  Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["twoPages"])();
+  Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseTitle"])(book);
 }
 
 /***/ }),
@@ -389,19 +430,20 @@ function setBookText(nic) {
   if (!nic) nic = cnics[0];
   book.nic = nic;
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
-  let rePunct = new RegExp(punct, 'g');
-  let htmls = [];
-  author.rows.forEach((str, idx) => {
-    // if (idx != 2) return
-    let html = str.replace(rePunct, " <span class=\"active\">$1</span>"); // log('H', html)
+  let rePunct = new RegExp(punct, 'g'); // let htmls = []
+  // author.rows.forEach((str, idx) => {
+  //   // if (idx != 2) return
+  //   let html = str.replace(rePunct, " <span class=\"active\">$1</span>")
+  //   // log('H', html)
+  //   htmls.push(html)
+  // })
 
-    htmls.push(html);
-  }); // author.rows.forEach((astr, idx) => {
-
-  htmls.forEach((html, idx) => {
+  author.rows.forEach((astr, idx) => {
+    // htmls.forEach((html, idx) => {
     if (idx > 20) return; // let oleft = p(astr)
 
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])();
+    let html = astr.replace(rePunct, " <span class=\"active\">$1</span>");
     oleft.innerHTML = html;
     oleft.setAttribute('idx', idx);
     oleft.setAttribute('nic', author.nic);
@@ -836,32 +878,19 @@ function parseDir(bookname) {
       rows: rows // fname: fname,
 
     };
-    if (auth && auth.author) pane.author = true; // if (auth.author) book.author = pane
+    if (auth && auth.author) pane.author = true, info.book.author = auth.name; // if (auth.author) book.author = pane
 
     if (comment) cpanes.coms.push(pane);else cpanes.panes.push(pane); // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   });
-  info.tree = tree.children;
-  let cur = {
-    title: info.book.title // let lib = apstore.get('lib')
-    // lib[book.title] = apbook ???
-    // apstore.set('lib', lib)
-    // let book = {}
+  info.tree = tree.children; // info.bpath = bookname
 
-  };
-  cur.info = info;
+  let bkey = [info.book.author, info.book.title].join('-');
   let book = {
-    title: info.book.title,
+    bkey: bkey,
     info: info,
     texts: cpanes
   };
-  return book; // apstore.set('current', cur)
-  // apstore.set('curtexts', cpanes)
-  // let oapp = q('#app')
-  // oapp.setAttribute('lunr', JSON.stringify(lunr))
-  // let res = lunr.search("Dialogues/Parmenides", {});
-  // log('LUNR:', res)
-  // let idxDump = obook.getAttribute('lunr')
-  // log('idxd::', idxDump)
+  return book;
 }
 
 function done(err) {
@@ -1156,6 +1185,17 @@ module.exports = require("electron");
 /***/ (function(module, exports) {
 
 module.exports = require("electron-clipboard-extended");
+
+/***/ }),
+
+/***/ "electron-store":
+/*!*********************************!*\
+  !*** external "electron-store" ***!
+  \*********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("electron-store");
 
 /***/ }),
 

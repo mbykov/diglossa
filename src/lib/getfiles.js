@@ -161,7 +161,7 @@ function parseDir(bookname) {
     // lunr.addDoc(panee)
 
     let pane = { lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname,
-    if (auth && auth.author) pane.author = true
+    if (auth && auth.author) pane.author = true, info.book.author = auth.name
     // if (auth.author) book.author = pane
     if (comment) cpanes.coms.push(pane)
     else cpanes.panes.push(pane)
@@ -169,28 +169,11 @@ function parseDir(bookname) {
   })
 
   info.tree = tree.children
+  // info.bpath = bookname
+  let bkey = [info.book.author, info.book.title].join('-')
 
-  let cur = {title: info.book.title}
-  // let lib = apstore.get('lib')
-
-  // lib[book.title] = apbook ???
-  // apstore.set('lib', lib)
-
-  // let book = {}
-  cur.info = info
-
-  let book = {title: info.book.title, info: info, texts: cpanes}
+  let book = {bkey: bkey, info: info, texts: cpanes}
   return book
-
-  // apstore.set('current', cur)
-  // apstore.set('curtexts', cpanes)
-
-  // let oapp = q('#app')
-  // oapp.setAttribute('lunr', JSON.stringify(lunr))
-  // let res = lunr.search("Dialogues/Parmenides", {});
-  // log('LUNR:', res)
-  // let idxDump = obook.getAttribute('lunr')
-  // log('idxd::', idxDump)
 
 }
 

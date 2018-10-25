@@ -101,19 +101,20 @@ function setBookText(nic) {
 
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
   let rePunct = new RegExp(punct, 'g')
-  let htmls = []
-  author.rows.forEach((str, idx) => {
-    // if (idx != 2) return
-    let html = str.replace(rePunct, " <span class=\"active\">$1</span>")
-    // log('H', html)
-    htmls.push(html)
-  })
+  // let htmls = []
+  // author.rows.forEach((str, idx) => {
+  //   // if (idx != 2) return
+  //   let html = str.replace(rePunct, " <span class=\"active\">$1</span>")
+  //   // log('H', html)
+  //   htmls.push(html)
+  // })
 
-  // author.rows.forEach((astr, idx) => {
-  htmls.forEach((html, idx) => {
+  author.rows.forEach((astr, idx) => {
+  // htmls.forEach((html, idx) => {
     if (idx > 20) return
     // let oleft = p(astr)
     let oleft = p()
+      let html = astr.replace(rePunct, " <span class=\"active\">$1</span>")
     oleft.innerHTML = html
     oleft.setAttribute('idx', idx)
     oleft.setAttribute('nic', author.nic)
