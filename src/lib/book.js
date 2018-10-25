@@ -6,11 +6,12 @@ import tree from './tree';
 const fse = require('fs-extra')
 const path = require('path')
 const log = console.log
-// const Store = require('electron-store')
-// const store = new Store()
-const Apstore = require('./apstore')
-const store = new Apstore()
+const Store = require('electron-store')
+const store = new Store()
+// const Apstore = require('./apstore')
+// const store = new Apstore()
 // const elasticlunr = require('elasticlunr');
+const clipboard = require('electron-clipboard-extended')
 
 export function twoPages() {
   var sizes = store.get('split-sizes')
@@ -25,44 +26,63 @@ export function twoPages() {
       reSetBook()
     }
   })
+  let obook = q('#book')
+  obook.addEventListener("wheel", scrollPanes, false)
+  document.addEventListener("keydown", keyScroll, false)
 }
+
+function scrollPanes(ev) {
+  if (ev.shiftKey == true) return;
+  let delta = (ev.deltaY > 0) ? 24 : -24
+  let source = q('#source')
+  let trns = q('#trns')
+  source.scrollTop += delta
+  trns.scrollTop = source.scrollTop
+  let el = ev.target
+  if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
+    log('___scrolled')
+  }
+}
+
+function keyScroll(ev) {
+  let source = q('#source')
+  let trns = q('#trns')
+  if (!source || !trns) return
+  trns.scrollTop = source.scrollTop
+  if (ev.keyCode == 38) {
+    source.scrollTop = source.scrollTop - 24
+  } else if (ev.keyCode == 40) {
+    source.scrollTop = source.scrollTop + 24
+  } else if (ev.keyCode == 33) {
+    let height = source.clientHeight
+    source.scrollTop = source.scrollTop - height + 60
+  } else if (ev.keyCode == 34) {
+    let height = source.clientHeight
+    source.scrollTop = source.scrollTop + height - 60
+  }
+  trns.scrollTop = source.scrollTop
+  if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) log('___key scrolled')
+}
+
 
 export function parseTitle(book) {
   // log('========= parse title =============')
-  // let cur = store.get('current')
-  // let info = cur.info
+  twoPages()
   let info = book.info
-
-  // log('LIB', lib)
-  // log('CUR', cur)
-  // log('BOOK', book)
-  // log('INFO', info)
-
-
-  // let oleft = q('#source')
   let oright = q('#trns')
-  oright.book = book
-
   let obookCont = div('')
   obookCont.classList.add('bookTitle')
   oright.appendChild(obookCont)
   let otree = tree(info.tree)
   obookCont.appendChild(otree)
-  otree.addEventListener('click', goNode, false)
+  otree.addEventListener('click', goBookSection, false)
 }
 
-function goNode(ev) {
-  let oright = q('#trns')
-  let book = oright.book
-
-  // let cur = store.get('current')
-    // let info = lib[cur.title]
-  // if (!cur.nic) cur.nic = info.nics[0]
+function goBookSection(ev) {
+   let oapp = q('#app')
+  let book = oapp.book
   let fpath = ev.target.getAttribute('fpath')
-  // let obook = q('#source')
-  // obook.dataset.fpath = JSON.stringify(fpath)
   book.fpath = fpath
-  // store.set('current', cur)
   setBookText()
   createRightHeader(book)
   // createLeftHeader()
@@ -72,18 +92,14 @@ function setBookText(nic) {
   let obook = q('#source')
   let osource = q('#source')
   let otrns = q('#trns')
-  let book = otrns.book
   empty(osource)
   empty(otrns)
 
-  // let lib = store.get('lib')
-  // let cur = store.get('current')
-  // let texts = store.get('curtexts')
+  let oapp = q('#app')
+  let book = oapp.book
   let texts = book.texts
-  // let book = lib[cur.title]
   let info = book.info
   let nicnames = info.nicnames
-  // log('BB', book.panes)
   let panes = texts.panes
   let coms = texts.coms
 
@@ -91,30 +107,20 @@ function setBookText(nic) {
   let author = _.filter(panes, auth=> { return auth.author && auth.fpath == fpath})[0]
   let trns = _.filter(panes, auth=> { return !auth.author && auth.fpath == fpath})
   // log('TRNS', trns)
-  // log('ATRNS', author.nic)
+  // log('AUTH', author)
 
   let cnics = trns.map(auth=> { return auth.nic })
-  // store.set('cnics', cnics)
   book.cnics = cnics
   if (!nic) nic = cnics[0]
   book.nic = nic
 
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
   let rePunct = new RegExp(punct, 'g')
-  // let htmls = []
-  // author.rows.forEach((str, idx) => {
-  //   // if (idx != 2) return
-  //   let html = str.replace(rePunct, " <span class=\"active\">$1</span>")
-  //   // log('H', html)
-  //   htmls.push(html)
-  // })
 
   author.rows.forEach((astr, idx) => {
-  // htmls.forEach((html, idx) => {
     if (idx > 20) return
-    // let oleft = p(astr)
     let oleft = p()
-      let html = astr.replace(rePunct, " <span class=\"active\">$1</span>")
+    let html = astr.replace(rePunct, " <span class=\"active\">$1</span>")
     oleft.innerHTML = html
     oleft.setAttribute('idx', idx)
     oleft.setAttribute('nic', author.nic)
@@ -127,7 +133,6 @@ function setBookText(nic) {
       oright.setAttribute('nic', auth.nic)
       otrns.appendChild(oright)
       if (auth.nic == nic) oright.setAttribute('active', true)
-      // else
       orights.push(oright)
     })
     alignPars(oleft, orights)
@@ -157,11 +162,8 @@ function cyclePar(ev) {
 
   let selector = '#trns [idx="'+idx+'"]'
   let pars = qs(selector)
-  // log('PS', pars)
   let nics = _.map(pars, par=> { return par.getAttribute('nic') })
-  // log('nics', nics)
   let curpar = _.find(pars, par=> { return !par.classList.contains('hidden') })
-  // log('CP', curpar)
   let nic = curpar.getAttribute('nic')
   let nicidx = nics.indexOf(nic)
   let nextnic = (nicidx+1 == nics.length) ? nics[0] : nics[nicidx+1]
@@ -183,12 +185,10 @@ function createLeftHeader() {
 
   let oact = div()
   oact.textContent = 'active'
-  let cur = store.get('current')
-  let otree = tree(cur.info.tree)
-  ohleft.appendChild(oact)
-  ohleft.appendChild(otree)
-  // ohleft.textContent = 'LEFT HEADER'
-
+  // let cur = store.get('current')
+  // let otree = tree(cur.info.tree)
+  // ohleft.appendChild(oact)
+  // ohleft.appendChild(otree)
 }
 
 function clickLeftHeader(ev) {
@@ -216,10 +216,7 @@ function createRightHeader(book) {
 }
 
 function createNameList(book) {
-  // let nics = store.get('cnics')
-  // let cur = store.get('current')
   let nics = book.cnics
-  // let cur = store.get('current')
   let nicnames = book.info.nicnames
   let oul = q('#namelist')
   empty(oul)
@@ -238,16 +235,13 @@ function clickRightHeader(ev) {
     expandRightHeader()
   } else {
     let nic = ev.target.getAttribute('nic')
+    if (!nic) return
     collapseRightHeader(nic)
     reSetBook(nic)
   }
 }
 
 function collapseRightHeader(nic) {
-  // if (!nic) {
-  //   let nics = store.get('cnics')
-  //   nic = nics[0]
-  // }
   let oright = q('.hright')
   oright.classList.remove('header')
   let olis = qs('#namelist > li')

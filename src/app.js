@@ -4,32 +4,23 @@
 // import "./stylesheets/main.css";
 
 import "./lib/context_menu.js";
-// import { readCfg, writeCfg, recreateDBs, addDB } from "./lib/databases.js";
-// import { getPos, getMorphs, rDict, rMorph, rTrns } from "./lib/results.js";
 
 import _ from "lodash";
 import { remote } from "electron";
 import { shell } from 'electron'
-// import sband from "./lib/clean-greek";
 import { ipcRenderer } from "electron";
 import { q, qs, empty, create, span, p, div, enclitic } from './lib/utils'
 import { twoPages, parseTitle, parseTitleTui } from './lib/book'
 import { openODS, openDir } from './lib/getfiles'
-import tree from './lib/tree';
-
 
 const Store = require('electron-store')
 const store = new Store()
-// const Apstore = require('./lib/apstore')
-// const apstore = new Apstore()
 let fse = require('fs-extra')
 const log = console.log
 
-const Mousetrap = require('mousetrap')
+// const Mousetrap = require('mousetrap')
 // const axios = require('axios')
 const path = require('path')
-
-// const mustache = require('mustache')
 
 const clipboard = require('electron-clipboard-extended')
 const {dialog} = require('electron').remote
@@ -40,7 +31,6 @@ const isDev = true
 const app = remote.app;
 const appPath = app.getAppPath()
 let userDataPath = app.getPath("userData")
-// enableDBs(userDataPath, appPath, isDev)
 
 showSection('help')
 
@@ -69,12 +59,9 @@ function showBook(fns) {
     // let bookpath = '../../texts/Aristotle/deAnima'
     // let bookpath = '../../texts/Plato/Letters'
     let bookpath = '../../texts/Plato'
-    // log('= OTHER THEN ODS =', bookpath)
     openDir(bookpath, (book) => {
       if (!book) return
       showSection('lib')
-      // twoPages()
-      // parseTitle(book)
       parseLib(book)
       oprg.style.display = "none"
     })
@@ -82,21 +69,9 @@ function showBook(fns) {
 }
 
 document.addEventListener("click", go, false)
-document.addEventListener("wheel", scrollPanes, false)
-document.addEventListener("keydown", keyGo, false)
-
-function scrollPanes(ev) {
-  if (ev.shiftKey == true) return;
-  let delta = (ev.deltaY > 0) ? 24 : -24
-  let source = q('#source')
-  let trns = q('#trns')
-  source.scrollTop += delta
-  trns.scrollTop = source.scrollTop
-}
 
 function go(ev) {
   let data = ev.target.dataset
-  // log('go DATAset', ev.target.dataset)
   if (data.section) {
     showSection(data.section)
   } else if (data.book) {
@@ -106,24 +81,6 @@ function go(ev) {
   }
 }
 
-function keyGo(ev) {
-  let source = q('#source')
-  let trns = q('#trns')
-  if (!source || !trns) return
-  trns.scrollTop = source.scrollTop
-  if (ev.keyCode == 38) {
-    source.scrollTop = source.scrollTop - 24
-  } else if (ev.keyCode == 40) {
-    source.scrollTop = source.scrollTop + 24
-  } else if (ev.keyCode == 33) {
-    let height = source.clientHeight
-    source.scrollTop = source.scrollTop - height + 60
-  } else if (ev.keyCode == 34) {
-    let height = source.clientHeight
-    source.scrollTop = source.scrollTop + height - 60
-  }
-  trns.scrollTop = source.scrollTop
-}
 
 function parseLib(book) {
   if (!book) return
@@ -153,11 +110,11 @@ function parseLib(book) {
 
 function goBook(ev) {
   if (ev.target.parentNode.nodeName != 'LI') return
-  log('GO BOOK', ev.target.parentNode.bkey)
   let books = store.get('lib')
   let book = _.find(books, book=> { return book.bkey == ev.target.parentNode.bkey })
   if (!book) return
+  let oapp = q('#app')
+  oapp.book = book
   showSection('main')
-  twoPages()
   parseTitle(book)
 }
