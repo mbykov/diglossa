@@ -39,8 +39,12 @@ function scrollPanes(ev) {
   source.scrollTop += delta
   trns.scrollTop = source.scrollTop
   let el = ev.target
+  let oapp = q('#app')
+  let book = oapp.book
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
-    log('___scrolled')
+    let start = qs('#source > p').length
+    log('___START', start)
+    setChunk(start, book)
   }
 }
 
@@ -61,7 +65,13 @@ function keyScroll(ev) {
     source.scrollTop = source.scrollTop + height - 60
   }
   trns.scrollTop = source.scrollTop
-  if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) log('___key scrolled')
+  let oapp = q('#app')
+  let book = oapp.book
+  if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
+    let start = qs('#source > p').length
+    log('___KEY START', start)
+    setChunk(start, book)
+  }
 }
 
 
@@ -106,39 +116,50 @@ function setBookText(nic) {
   let fpath = book.fpath
   let author = _.filter(panes, auth=> { return auth.author && auth.fpath == fpath})[0]
   let trns = _.filter(panes, auth=> { return !auth.author && auth.fpath == fpath})
-  // log('TRNS', trns)
-  // log('AUTH', author)
+  book.author = author
+  book.trns = trns
 
   let cnics = trns.map(auth=> { return auth.nic })
   book.cnics = cnics
   if (!nic) nic = cnics[0]
   book.nic = nic
 
+  let start = 0
+  setChunk(start, book)
+
+  osource.addEventListener("mouseover", fireActive, false)
+  otrns.addEventListener("wheel", cyclePar, false)
+}
+
+function setChunk(start, book) {
+  let limit = 20
+  let author = book.author
+  let trns = book.trns
+  let authrows = author.rows.slice(start, start+limit)
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
   let rePunct = new RegExp(punct, 'g')
+  let osource = q('#source')
+  let otrns = q('#trns')
 
-  author.rows.forEach((astr, idx) => {
-    if (idx > 20) return
+  authrows.forEach((astr, idx) => {
     let oleft = p()
     let html = astr.replace(rePunct, " <span class=\"active\">$1</span>")
     oleft.innerHTML = html
-    oleft.setAttribute('idx', idx)
+    oleft.setAttribute('idx', start+idx)
     oleft.setAttribute('nic', author.nic)
     osource.appendChild(oleft)
     let orights = []
     trns.forEach(auth => {
-      let rstr = auth.rows[idx]
+      let rstr = auth.rows[start+idx]
       let oright = p(rstr)
-      oright.setAttribute('idx', idx)
+      oright.setAttribute('idx', start+idx)
       oright.setAttribute('nic', auth.nic)
       otrns.appendChild(oright)
-      if (auth.nic == nic) oright.setAttribute('active', true)
+      if (auth.nic == book.nic) oright.setAttribute('active', true)
       orights.push(oright)
     })
     alignPars(oleft, orights)
   })
-  osource.addEventListener("mouseover", fireActive, false)
-  otrns.addEventListener("wheel", cyclePar, false)
 }
 
 function fireActive(ev) {

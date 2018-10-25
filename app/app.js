@@ -103,16 +103,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./lib/utils */ "./src/lib/utils.js");
 /* harmony import */ var _lib_book__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./lib/book */ "./src/lib/book.js");
 /* harmony import */ var _lib_getfiles__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/getfiles */ "./src/lib/getfiles.js");
-/* harmony import */ var _lib_tree__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./lib/tree */ "./src/lib/tree.js");
 //
 // import "./stylesheets/app.css";
 // import "./stylesheets/main.css";
- // import { readCfg, writeCfg, recreateDBs, addDB } from "./lib/databases.js";
-// import { getPos, getMorphs, rDict, rMorph, rTrns } from "./lib/results.js";
 
 
-
- // import sband from "./lib/clean-greek";
 
 
 
@@ -122,18 +117,14 @@ __webpack_require__.r(__webpack_exports__);
 
 const Store = __webpack_require__(/*! electron-store */ "electron-store");
 
-const store = new Store(); // const Apstore = require('./lib/apstore')
-// const apstore = new Apstore()
+const store = new Store();
 
 let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
-const log = console.log;
+const log = console.log; // const Mousetrap = require('mousetrap')
+// const axios = require('axios')
 
-const Mousetrap = __webpack_require__(/*! mousetrap */ "mousetrap"); // const axios = require('axios')
-
-
-const path = __webpack_require__(/*! path */ "path"); // const mustache = require('mustache')
-
+const path = __webpack_require__(/*! path */ "path");
 
 const clipboard = __webpack_require__(/*! electron-clipboard-extended */ "electron-clipboard-extended");
 
@@ -146,8 +137,7 @@ const {
 const isDev = true;
 const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app;
 const appPath = app.getAppPath();
-let userDataPath = app.getPath("userData"); // enableDBs(userDataPath, appPath, isDev)
-
+let userDataPath = app.getPath("userData");
 showSection('help');
 
 function showSection(name) {
@@ -183,25 +173,10 @@ function showBook(fns) {
   }
 }
 
-document.addEventListener("click", go, false); // document.addEventListener("wheel", scrollPanes, false)
-// document.addEventListener("keydown", keyGo, false)
-
-function scrollPanes(ev) {
-  if (ev.shiftKey == true) return;
-  let delta = ev.deltaY > 0 ? 24 : -24;
-  let source = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#source');
-  let trns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#trns');
-  source.scrollTop += delta;
-  trns.scrollTop = source.scrollTop;
-  let el = ev.target;
-
-  if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
-    log('___scrolled');
-  }
-}
+document.addEventListener("click", go, false);
 
 function go(ev) {
-  let data = ev.target.dataset; // log('go DATAset', ev.target.dataset)
+  let data = ev.target.dataset;
 
   if (data.section) {
     showSection(data.section);
@@ -216,27 +191,6 @@ function go(ev) {
       }]
     }, showBook);
   }
-}
-
-function keyGo(ev) {
-  let source = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#source');
-  let trns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#trns');
-  if (!source || !trns) return;
-  trns.scrollTop = source.scrollTop;
-
-  if (ev.keyCode == 38) {
-    source.scrollTop = source.scrollTop - 24;
-  } else if (ev.keyCode == 40) {
-    source.scrollTop = source.scrollTop + 24;
-  } else if (ev.keyCode == 33) {
-    let height = source.clientHeight;
-    source.scrollTop = source.scrollTop - height + 60;
-  } else if (ev.keyCode == 34) {
-    let height = source.clientHeight;
-    source.scrollTop = source.scrollTop + height - 60;
-  }
-
-  trns.scrollTop = source.scrollTop;
 }
 
 function parseLib(book) {
@@ -281,38 +235,6 @@ function goBook(ev) {
 
 /***/ }),
 
-/***/ "./src/lib/apstore.js":
-/*!****************************!*\
-  !*** ./src/lib/apstore.js ***!
-  \****************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-// import { q, qs, empty, create, span, p, div, remove } from './utils'
-class Apstore {
-  constructor() {
-    this.app = document.querySelector('#app');
-  }
-
-  get(key) {
-    return JSON.parse(this.app.getAttribute(key));
-  }
-
-  set(key, value) {
-    return this.app.setAttribute(key, JSON.stringify(value));
-  }
-
-} // const john = new Apstore()
-// john.set('key', 'JOHN')
-// console.log('APSTORE', john.get('key'))
-// export default Apstore
-// export Apstore
-
-
-module.exports = Apstore;
-
-/***/ }),
-
 /***/ "./src/lib/book.js":
 /*!*************************!*\
   !*** ./src/lib/book.js ***!
@@ -339,12 +261,15 @@ const fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
 const path = __webpack_require__(/*! path */ "path");
 
-const log = console.log; // const Store = require('electron-store')
-// const store = new Store()
+const log = console.log;
 
-const Apstore = __webpack_require__(/*! ./apstore */ "./src/lib/apstore.js");
+const Store = __webpack_require__(/*! electron-store */ "electron-store");
 
-const store = new Apstore(); // const elasticlunr = require('elasticlunr');
+const store = new Store(); // const Apstore = require('./apstore')
+// const store = new Apstore()
+// const elasticlunr = require('elasticlunr');
+
+const clipboard = __webpack_require__(/*! electron-clipboard-extended */ "electron-clipboard-extended");
 
 function twoPages() {
   var sizes = store.get('split-sizes');
@@ -371,9 +296,13 @@ function scrollPanes(ev) {
   source.scrollTop += delta;
   trns.scrollTop = source.scrollTop;
   let el = ev.target;
+  let oapp = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#app');
+  let book = oapp.book;
 
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
-    log('___scrolled');
+    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length;
+    log('___START', start);
+    setChunk(start, book);
   }
 }
 
@@ -396,7 +325,14 @@ function keyScroll(ev) {
   }
 
   trns.scrollTop = source.scrollTop;
-  if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) log('___key scrolled');
+  let oapp = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#app');
+  let book = oapp.book;
+
+  if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
+    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length;
+    log('___KEY START', start);
+    setChunk(start, book);
+  }
 }
 
 function parseTitle(book) {
@@ -442,40 +378,50 @@ function setBookText(nic) {
 
   let trns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(panes, auth => {
     return !auth.author && auth.fpath == fpath;
-  }); // log('TRNS', trns)
-  // log('AUTH', author)
+  });
 
-
+  book.author = author;
+  book.trns = trns;
   let cnics = trns.map(auth => {
     return auth.nic;
   });
   book.cnics = cnics;
   if (!nic) nic = cnics[0];
   book.nic = nic;
+  let start = 0;
+  setChunk(start, book);
+  osource.addEventListener("mouseover", fireActive, false);
+  otrns.addEventListener("wheel", cyclePar, false);
+}
+
+function setChunk(start, book) {
+  let limit = 20;
+  let author = book.author;
+  let trns = book.trns;
+  let authrows = author.rows.slice(start, start + limit);
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
   let rePunct = new RegExp(punct, 'g');
-  author.rows.forEach((astr, idx) => {
-    if (idx > 20) return;
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
+  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
+  authrows.forEach((astr, idx) => {
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])();
     let html = astr.replace(rePunct, " <span class=\"active\">$1</span>");
     oleft.innerHTML = html;
-    oleft.setAttribute('idx', idx);
+    oleft.setAttribute('idx', start + idx);
     oleft.setAttribute('nic', author.nic);
     osource.appendChild(oleft);
     let orights = [];
     trns.forEach(auth => {
-      let rstr = auth.rows[idx];
+      let rstr = auth.rows[start + idx];
       let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])(rstr);
-      oright.setAttribute('idx', idx);
+      oright.setAttribute('idx', start + idx);
       oright.setAttribute('nic', auth.nic);
       otrns.appendChild(oright);
-      if (auth.nic == nic) oright.setAttribute('active', true);
+      if (auth.nic == book.nic) oright.setAttribute('active', true);
       orights.push(oright);
     });
     alignPars(oleft, orights);
   });
-  osource.addEventListener("mouseover", fireActive, false);
-  otrns.addEventListener("wheel", cyclePar, false);
 }
 
 function fireActive(ev) {
@@ -534,11 +480,10 @@ function createLeftHeader() {
   log('LEFT HEADER', ohleft);
   ohleft.addEventListener("click", clickLeftHeader, false);
   let oact = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
-  oact.textContent = 'active';
-  let cur = store.get('current');
-  let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(cur.info.tree);
-  ohleft.appendChild(oact);
-  ohleft.appendChild(otree);
+  oact.textContent = 'active'; // let cur = store.get('current')
+  // let otree = tree(cur.info.tree)
+  // ohleft.appendChild(oact)
+  // ohleft.appendChild(otree)
 }
 
 function clickLeftHeader(ev) {
@@ -1234,17 +1179,6 @@ module.exports = require("glob");
 /***/ (function(module, exports) {
 
 module.exports = require("lodash");
-
-/***/ }),
-
-/***/ "mousetrap":
-/*!****************************!*\
-  !*** external "mousetrap" ***!
-  \****************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("mousetrap");
 
 /***/ }),
 
