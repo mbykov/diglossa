@@ -8,7 +8,9 @@ import url from "url";
 import { app, Menu } from "electron";
 import { devMenuTemplate } from "./menu/dev_menu_template";
 import { editMenuTemplate } from "./menu/edit_menu_template";
-import { bookMenuTemplate } from "./menu/book_menu_template";
+import { libMenuTemplate } from "./menu/lib_menu_template";
+import { fileMenuTemplate } from "./menu/file_menu_template";
+import { helpMenuTemplate } from "./menu/help_menu_template";
 import { leftMenuTemplate } from "./menu/left_menu_template";
 import createWindow from "./lib/window";
 
@@ -17,7 +19,7 @@ import createWindow from "./lib/window";
 import env from "env";
 
 const setApplicationMenu = () => {
-  const menus = [editMenuTemplate, bookMenuTemplate];
+  const menus = [libMenuTemplate, fileMenuTemplate, helpMenuTemplate];
   if (env.name !== "production") {
     menus.push(devMenuTemplate);
   }

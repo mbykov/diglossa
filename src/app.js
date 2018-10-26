@@ -32,6 +32,15 @@ const app = remote.app;
 const appPath = app.getAppPath()
 let userDataPath = app.getPath("userData")
 
+ipcRenderer.on('section', function (event, name) {
+  log('NAME', name)
+  if (name == 'library') parseLib()
+  if (name == 'help') showSection('help')
+  // else if (name == 'cleanup') showCleanup()
+  // else if (name == 'install') showInstall()
+  // else showSection(name)
+})
+
 showSection('help')
 
 function showSection(name) {
@@ -83,13 +92,13 @@ function go(ev) {
 
 
 function parseLib(book) {
-  if (!book) return
+  showSection('lib')
   let books = store.get('lib') || []
-  books = []
+  if (book) {
+    books.push(book)
+    store.set('lib', books)
+  }
   log('B', book)
-  let info = book.info
-  books.push(book)
-  store.set('lib', books)
 
   let olib = q('#lib')
   let oul = create('ul')
@@ -98,8 +107,8 @@ function parseLib(book) {
     let ostr = create('li', 'libauth')
     ostr.bkey = book.bkey
     oul.appendChild(ostr)
-    let author = span(info.book.author)
-    let title = span(info.book.title)
+    let author = span(book.info.book.author)
+    let title = span(book.info.book.title)
     author.classList.add('lib-auth')
     title.classList.add('lib-title')
     ostr.appendChild(author)

@@ -138,6 +138,13 @@ const isDev = true;
 const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app;
 const appPath = app.getAppPath();
 let userDataPath = app.getPath("userData");
+electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('section', function (event, name) {
+  log('NAME', name);
+  if (name == 'library') parseLib();
+  if (name == 'help') showSection('help'); // else if (name == 'cleanup') showCleanup()
+  // else if (name == 'install') showInstall()
+  // else showSection(name)
+});
 showSection('help');
 
 function showSection(name) {
@@ -194,13 +201,15 @@ function go(ev) {
 }
 
 function parseLib(book) {
-  if (!book) return;
+  showSection('lib');
   let books = store.get('lib') || [];
-  books = [];
+
+  if (book) {
+    books.push(book);
+    store.set('lib', books);
+  }
+
   log('B', book);
-  let info = book.info;
-  books.push(book);
-  store.set('lib', books);
   let olib = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#lib');
   let oul = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["create"])('ul');
   olib.appendChild(oul);
@@ -208,8 +217,8 @@ function parseLib(book) {
     let ostr = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["create"])('li', 'libauth');
     ostr.bkey = book.bkey;
     oul.appendChild(ostr);
-    let author = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["span"])(info.book.author);
-    let title = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["span"])(info.book.title);
+    let author = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["span"])(book.info.book.author);
+    let title = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["span"])(book.info.book.title);
     author.classList.add('lib-auth');
     title.classList.add('lib-title');
     ostr.appendChild(author);
