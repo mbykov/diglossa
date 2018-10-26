@@ -10,8 +10,11 @@ import { devMenuTemplate } from "./menu/dev_menu_template";
 import { editMenuTemplate } from "./menu/edit_menu_template";
 import { libMenuTemplate } from "./menu/lib_menu_template";
 import { fileMenuTemplate } from "./menu/file_menu_template";
+import { aboutMenuTemplate } from "./menu/about_menu_template";
 import { helpMenuTemplate } from "./menu/help_menu_template";
+import { authMenuTemplate } from "./menu/auth_menu_template";
 import { leftMenuTemplate } from "./menu/left_menu_template";
+import { rightMenuTemplate } from "./menu/right_menu_template";
 import createWindow from "./lib/window";
 
 // Special module holding environment variables which you declared
@@ -19,11 +22,10 @@ import createWindow from "./lib/window";
 import env from "env";
 
 const setApplicationMenu = () => {
-  const menus = [libMenuTemplate, fileMenuTemplate, helpMenuTemplate];
+  const menus = [leftMenuTemplate, rightMenuTemplate, libMenuTemplate, fileMenuTemplate, aboutMenuTemplate, authMenuTemplate, helpMenuTemplate];
   if (env.name !== "production") {
     menus.push(devMenuTemplate);
   }
-  menus.push(leftMenuTemplate);
   Menu.setApplicationMenu(Menu.buildFromTemplate(menus));
 };
 
