@@ -37,6 +37,7 @@ let userDataPath = app.getPath("userData")
 // let hterms = {}
 let hstate = -1
 let hstates = []
+let hstakey = {}
 
 
 ipcRenderer.on('section', function (event, name) {
@@ -156,8 +157,14 @@ export function nav(navpath) {
   if (sec == 'lib') parseLib()
   else if (sec == 'title') parseTitle()
   else if (sec == 'book') parseBook()
-  hstates.push(navpath)
-  hstate = hstates.length-1
+  let hkey = JSON.stringify(navpath)
+  log('HKEY', hkey)
+  if (!hstakey[hkey]) {
+    hstates.push(navpath)
+    hstate = hstates.length-1
+    hstakey[hkey] = true
+    log('ADD', navpath.section)
+  }
   log('NAV', navpath, hstate, hstates.length)
 }
 

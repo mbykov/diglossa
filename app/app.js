@@ -148,6 +148,7 @@ let userDataPath = app.getPath("userData"); // let hterms = {}
 
 let hstate = -1;
 let hstates = [];
+let hstakey = {};
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('section', function (event, name) {
   log('SECTION NAME', name);
   if (name == 'library') parseLib();
@@ -274,8 +275,16 @@ function nav(navpath) {
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(otrns);
   let sec = navpath.section;
   if (sec == 'lib') parseLib();else if (sec == 'title') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])();else if (sec == 'book') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])();
-  hstates.push(navpath);
-  hstate = hstates.length - 1;
+  let hkey = JSON.stringify(navpath);
+  log('HKEY', hkey);
+
+  if (!hstakey[hkey]) {
+    hstates.push(navpath);
+    hstate = hstates.length - 1;
+    hstakey[hkey] = true;
+    log('ADD', navpath.section);
+  }
+
   log('NAV', navpath, hstate, hstates.length);
 }
 Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
