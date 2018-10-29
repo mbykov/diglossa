@@ -159,9 +159,14 @@ input[type='file'] {
   display: none;
 }
 
-/* .hleft { */
-/*   float: left; */
-/* } */
+.hleft {
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  /* padding-left: 15px; */
+  padding-right: 15px;
+  color: maroon;
+}
 
 .hright {
   cursor: pointer;

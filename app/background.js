@@ -280,9 +280,9 @@ __webpack_require__.r(__webpack_exports__);
   const saveHistory = () => {
     // userDataDir.write(stateStoreFile, state, { atomic: true });
     console.log('__KUKU__');
-  };
+  }; // win.on("close", saveHistory);
 
-  win.on("close", saveHistory);
+
   return win;
 });
 

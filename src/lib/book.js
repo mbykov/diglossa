@@ -79,7 +79,6 @@ function keyScroll(ev) {
 
 export function parseTitle() {
   // log('========= parse title =============')
-  // twoPages()
   window.split.setSizes([50,50])
   let book = window.book
   let info = book.info
@@ -98,17 +97,14 @@ function goBookEvent(ev) {
   let book = window.book
   let fpath = ev.target.getAttribute('fpath')
   book.fpath = fpath
-  let navpath = {section: 'book'}
+  let navpath = {section: 'book', fpath: fpath}
   nav(navpath)
-  // setBookText()
-  // createRightHeader(book)
-  // createLeftHeader()
 }
 
 export function parseBook() {
   setBookText()
   createRightHeader()
-  // createLeftHeader()
+  createLeftHeader()
 }
 
 function setBookText(nic) {
@@ -141,7 +137,7 @@ function setBookText(nic) {
   let start = 0
   setChunk(start, book)
 
-  osource.addEventListener("mouseover", fireActive, false)
+  osource.addEventListener("mouseover", copyToClipboard, false)
   otrns.addEventListener("wheel", cyclePar, false)
 }
 
@@ -176,9 +172,10 @@ function setChunk(start, book) {
   })
 }
 
-function fireActive(ev) {
+function copyToClipboard(ev) {
   if (ev.target.nodeName != 'SPAN') return
-  log('A', ev.target.textContent)
+  let wf = ev.target.textContent
+  clipboard.writeText(wf)
 }
 
 function alignPars(oleft, orights) {
@@ -212,24 +209,28 @@ function createLeftHeader() {
   let arect = obook.getBoundingClientRect()
   let ohleft = div()
   obook.appendChild(ohleft)
-  ohleft.classList.add('hright')
+  ohleft.classList.add('hleft')
   ohleft.style.left = arect.width*0.15 + 'px'
   ohleft.classList.add('header')
   log('LEFT HEADER', ohleft)
   ohleft.addEventListener("click", clickLeftHeader, false)
 
-  let oact = div()
-  oact.textContent = 'active'
-  // let cur = store.get('current')
-  // let otree = tree(cur.info.tree)
+  // let oact = div()
+  // oact.textContent = 'active'
+  let book = window.book
+  let otree = tree(book.info.tree)
   // ohleft.appendChild(oact)
-  // ohleft.appendChild(otree)
+  ohleft.appendChild(otree)
 }
 
 function clickLeftHeader(ev) {
   let fpath = ev.target.getAttribute('fpath')
   let text = ev.target.textContent
-  if (fpath) log('LEFT', text)
+  if (fpath) log('LEFT', text, fpath)
+  let book = window.book
+  book.fpath = fpath
+  let navpath = {section: 'book', fpath: fpath}
+  nav(navpath)
 }
 
 

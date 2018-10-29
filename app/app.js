@@ -145,15 +145,15 @@ const {
 const isDev = true;
 const app = electron__WEBPACK_IMPORTED_MODULE_0__["remote"].app;
 const appPath = app.getAppPath();
-let userDataPath = app.getPath("userData"); // let hterms = {}
+let userDataPath = app.getPath("userData"); // let hstates =   store.get('hstates') || []
+// let hstate = hstates.length - 1
 
-let hstate = -1;
 let hstates = [];
+let hstate = -1;
 let hstakey = {};
 electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('section', function (event, name) {
   log('SECTION NAME', name); // if (name == 'library') parseLib()
   // if (name == 'help') showSection('help')
-  // else if (name == 'cleanup') showCleanup()
   // else if (name == 'install') showInstall()
   // else showSection(name)
 
@@ -163,6 +163,8 @@ electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('section', function (eve
 }); // showSection('help')
 
 window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])(); // window.split.collapse(1)
+
+log('HSTATE', hstates[hstate]); // nav(hstates[hstate])
 
 nav({
   section: 'lib'
@@ -274,8 +276,9 @@ function nav(navpath) {
     hstate = hstates.length - 1;
     hstakey[hkey] = true;
     log('ADD', navpath.section);
-  } // log('NAV', navpath, hstate, hstates.length)
+  }
 
+  store.set('hstates', hstates); // log('NAV', navpath, hstate, hstates.length)
 }
 Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   // log('EV', ev.which, hstate, hstate - 1 > -1, hstates[hstate])
@@ -419,7 +422,6 @@ function keyScroll(ev) {
 
 function parseTitle() {
   // log('========= parse title =============')
-  // twoPages()
   window.split.setSizes([50, 50]);
   let book = window.book;
   let info = book.info;
@@ -439,16 +441,16 @@ function goBookEvent(ev) {
   let fpath = ev.target.getAttribute('fpath');
   book.fpath = fpath;
   let navpath = {
-    section: 'book'
+    section: 'book',
+    fpath: fpath
   };
-  Object(_app__WEBPACK_IMPORTED_MODULE_4__["nav"])(navpath); // setBookText()
-  // createRightHeader(book)
-  // createLeftHeader()
+  Object(_app__WEBPACK_IMPORTED_MODULE_4__["nav"])(navpath);
 }
 
 function parseBook() {
   setBookText();
-  createRightHeader(); // createLeftHeader()
+  createRightHeader();
+  createLeftHeader();
 }
 
 function setBookText(nic) {
@@ -485,7 +487,7 @@ function setBookText(nic) {
   book.nic = nic;
   let start = 0;
   setChunk(start, book);
-  osource.addEventListener("mouseover", fireActive, false);
+  osource.addEventListener("mouseover", copyToClipboard, false);
   otrns.addEventListener("wheel", cyclePar, false);
 }
 
@@ -519,9 +521,10 @@ function setChunk(start, book) {
   });
 }
 
-function fireActive(ev) {
+function copyToClipboard(ev) {
   if (ev.target.nodeName != 'SPAN') return;
-  log('A', ev.target.textContent);
+  let wf = ev.target.textContent;
+  clipboard.writeText(wf);
 }
 
 function alignPars(oleft, orights) {
@@ -569,22 +572,30 @@ function createLeftHeader() {
   let arect = obook.getBoundingClientRect();
   let ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
   obook.appendChild(ohleft);
-  ohleft.classList.add('hright');
+  ohleft.classList.add('hleft');
   ohleft.style.left = arect.width * 0.15 + 'px';
   ohleft.classList.add('header');
   log('LEFT HEADER', ohleft);
-  ohleft.addEventListener("click", clickLeftHeader, false);
-  let oact = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
-  oact.textContent = 'active'; // let cur = store.get('current')
-  // let otree = tree(cur.info.tree)
-  // ohleft.appendChild(oact)
-  // ohleft.appendChild(otree)
+  ohleft.addEventListener("click", clickLeftHeader, false); // let oact = div()
+  // oact.textContent = 'active'
+
+  let book = window.book;
+  let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(book.info.tree); // ohleft.appendChild(oact)
+
+  ohleft.appendChild(otree);
 }
 
 function clickLeftHeader(ev) {
   let fpath = ev.target.getAttribute('fpath');
   let text = ev.target.textContent;
-  if (fpath) log('LEFT', text);
+  if (fpath) log('LEFT', text, fpath);
+  let book = window.book;
+  book.fpath = fpath;
+  let navpath = {
+    section: 'book',
+    fpath: fpath
+  };
+  Object(_app__WEBPACK_IMPORTED_MODULE_4__["nav"])(navpath);
 }
 
 function createRightHeader() {

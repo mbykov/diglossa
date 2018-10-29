@@ -36,17 +36,16 @@ const app = remote.app;
 const appPath = app.getAppPath()
 let userDataPath = app.getPath("userData")
 
-// let hterms = {}
-let hstate = -1
+// let hstates =   store.get('hstates') || []
+// let hstate = hstates.length - 1
 let hstates = []
+let hstate =  -1
 let hstakey = {}
-
 
 ipcRenderer.on('section', function (event, name) {
   log('SECTION NAME', name)
   // if (name == 'library') parseLib()
   // if (name == 'help') showSection('help')
-  // else if (name == 'cleanup') showCleanup()
   // else if (name == 'install') showInstall()
   // else showSection(name)
 
@@ -57,6 +56,8 @@ ipcRenderer.on('section', function (event, name) {
 window.split = twoPages()
 // window.split.collapse(1)
 
+log('HSTATE', hstates[hstate])
+// nav(hstates[hstate])
 nav({section: 'lib'})
 
 function showBook(fns) {
@@ -158,6 +159,7 @@ export function nav(navpath) {
     hstakey[hkey] = true
     log('ADD', navpath.section)
   }
+  store.set('hstates', hstates)
   // log('NAV', navpath, hstate, hstates.length)
 }
 
