@@ -80,5 +80,12 @@ export default (name, options) => {
 
   win.on("close", saveState);
 
+
+  const saveHistory = () => {
+    // userDataDir.write(stateStoreFile, state, { atomic: true });
+    console.log('__KUKU__')
+  };
+  win.on("close", saveHistory);
+
   return win;
 };

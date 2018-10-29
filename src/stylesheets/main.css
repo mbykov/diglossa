@@ -1,5 +1,9 @@
 /* @import "./treeview.min.css" */
 
+h4 {
+  color: maroon;
+}
+
 #main {
     margin: 0;
     padding: 10px;
@@ -242,4 +246,8 @@ span.active {
   padding: 10px;
   font-family: "Helvetica Neue", Helvetica, Arial;
   font-size: 16px;
+}
+
+.section {
+  margin-left: 100px;
 }

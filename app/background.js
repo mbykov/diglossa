@@ -276,6 +276,13 @@ __webpack_require__.r(__webpack_exports__);
   state = ensureVisibleOnSomeDisplay(restore());
   win = new electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"](Object.assign({}, options, state));
   win.on("close", saveState);
+
+  const saveHistory = () => {
+    // userDataDir.write(stateStoreFile, state, { atomic: true });
+    console.log('__KUKU__');
+  };
+
+  win.on("close", saveHistory);
   return win;
 });
 
@@ -299,7 +306,7 @@ const aboutMenuTemplate = {
   submenu: [{
     label: "What does this program do?",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('about');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'about');
     }
   }, {
     label: "Code and Download",
@@ -339,7 +346,7 @@ const authMenuTemplate = {
   submenu: [{
     label: "sign in",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('signin');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'signin');
     }
   }, {
     label: "sign up",
@@ -524,17 +531,22 @@ const helpMenuTemplate = {
   submenu: [{
     label: "how to create a book",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('help');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'howto-create');
     }
   }, {
     label: "how to publish the result",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'help');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'howto-publish');
+    }
+  }, {
+    label: "how to create a dictionary",
+    click: () => {
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'howto-dict');
     }
   }, {
     label: "hot keys",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'help');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'hotkeys');
     }
   }, {
     label: "Toggle DevTools",

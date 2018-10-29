@@ -96,19 +96,20 @@
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "nav", function() { return nav; });
-/* harmony import */ var _lib_context_menu_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./lib/context_menu.js */ "./src/lib/context_menu.js");
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "lodash");
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! split.js */ "split.js");
-/* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(split_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! electron */ "electron");
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! electron */ "electron");
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _lib_context_menu_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./lib/context_menu.js */ "./src/lib/context_menu.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! lodash */ "lodash");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! split.js */ "split.js");
+/* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(split_js__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./lib/utils */ "./src/lib/utils.js");
 /* harmony import */ var _lib_book__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/book */ "./src/lib/book.js");
 /* harmony import */ var _lib_getfiles__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./lib/getfiles */ "./src/lib/getfiles.js");
 //
 // import "./stylesheets/app.css";
 // import "./stylesheets/main.css";
+
 
 
 
@@ -142,34 +143,30 @@ const {
 
 
 const isDev = true;
-const app = electron__WEBPACK_IMPORTED_MODULE_3__["remote"].app;
+const app = electron__WEBPACK_IMPORTED_MODULE_0__["remote"].app;
 const appPath = app.getAppPath();
 let userDataPath = app.getPath("userData"); // let hterms = {}
 
 let hstate = -1;
 let hstates = [];
 let hstakey = {};
-electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('section', function (event, name) {
-  log('SECTION NAME', name);
-  if (name == 'library') parseLib();
-  if (name == 'help') showSection('help'); // else if (name == 'cleanup') showCleanup()
+electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('section', function (event, name) {
+  log('SECTION NAME', name); // if (name == 'library') parseLib()
+  // if (name == 'help') showSection('help')
+  // else if (name == 'cleanup') showCleanup()
   // else if (name == 'install') showInstall()
   // else showSection(name)
+
+  nav({
+    section: name
+  });
 }); // showSection('help')
 
-window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])(); // split.setSizes = [90, 10]
+window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])(); // window.split.collapse(1)
 
-window.split.collapse(1);
 nav({
   section: 'lib'
 });
-
-function showSection(name) {
-  let oapp = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#app');
-  let secpath = path.resolve(appPath, 'src/sections', [name, 'html'].join('.'));
-  const section = fse.readFileSync(secpath);
-  oapp.innerHTML = section;
-}
 
 function showBook(fns) {
   showSection('main');
@@ -180,8 +177,7 @@ function showBook(fns) {
   if (/\.ods/.test(fpath)) // это убрать
     Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openODS"])(fpath, res => {
       log('ODS END JSON', res);
-      if (!res) return; // twoPages()
-
+      if (!res) return;
       oprg.style.display = "none";
     });else {
     // let bookpath = '../../texts/Thrax'
@@ -217,7 +213,7 @@ function go(ev) {
 }
 
 function parseLib(book) {
-  // showSection('lib')
+  window.split.setSizes([100, 0]);
   let books = store.get('lib') || [];
 
   if (book) {
@@ -225,7 +221,8 @@ function parseLib(book) {
     store.set('lib', books);
   }
 
-  log('LIB: addBook', book);
+  log('LIB: addBook', book); // add в отдельную функцию
+
   let olib = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
   let oul = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["create"])('ul');
   olib.appendChild(oul);
@@ -247,24 +244,19 @@ function goBook(ev) {
   if (ev.target.parentNode.nodeName != 'LI') return;
   let books = store.get('lib');
 
-  let book = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(books, book => {
+  let book = lodash__WEBPACK_IMPORTED_MODULE_2___default.a.find(books, book => {
     return book.bkey == ev.target.parentNode.bkey;
   });
 
-  if (!book) return; // let oapp = q('#app')
-  // oapp.book = book
-
-  window.book = book; // showSection('main')
-  // split.setSizes = [50, 50]
-  // window.split.setSizes([50,50])
-
-  log('GO TITLE');
+  if (!book) return;
+  window.book = book;
+  log('GO TITLE', book);
   let navpath = {
     section: 'title'
   };
   nav({
     section: 'title'
-  }); // parseTitle(book)
+  });
 }
 
 function nav(navpath) {
@@ -274,28 +266,33 @@ function nav(navpath) {
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(osource);
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(otrns);
   let sec = navpath.section;
-  if (sec == 'lib') parseLib();else if (sec == 'title') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])();else if (sec == 'book') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])();
-  let hkey = JSON.stringify(navpath);
-  log('HKEY', hkey);
+  if (sec == 'lib') parseLib();else if (sec == 'title') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])();else if (sec == 'book') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])();else showSection(sec);
+  let hkey = JSON.stringify(navpath); // log('HKEY', hkey)
 
   if (!hstakey[hkey]) {
     hstates.push(navpath);
     hstate = hstates.length - 1;
     hstakey[hkey] = true;
     log('ADD', navpath.section);
-  }
+  } // log('NAV', navpath, hstate, hstates.length)
 
-  log('NAV', navpath, hstate, hstates.length);
 }
 Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   // log('EV', ev.which, hstate, hstate - 1 > -1, hstates[hstate])
-  if (ev.which == 37 && hstate - 1 > -1) log('LEFT', hstate, hstates[hstate - 1]);
-  if (ev.which == 39 && hstate + 1 < hstates.length) log('RIGHT', hstate, hstates[hstate + 1]);
+  // if (ev.which == 37 && hstate - 1 > -1) log('LEFT', hstate, hstates[hstate-1])
+  // if (ev.which == 39 && hstate + 1 < hstates.length) log('RIGHT', hstate, hstates[hstate+1])
   if (ev.which == 37 && hstate - 1 > -1) hstate--;
   if (ev.which == 39 && hstate + 1 < hstates.length) hstate++;
   nav(hstates[hstate]);
-  return false;
 });
+
+function showSection(name) {
+  window.split.setSizes([100, 0]);
+  let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
+  let secpath = path.resolve(appPath, 'src/sections', [name, 'html'].join('.'));
+  const section = fse.readFileSync(secpath);
+  osource.innerHTML = section;
+}
 
 const historyMode = event => {
   const checkArrow = element => {
@@ -312,6 +309,8 @@ const historyMode = event => {
 
   checkArrow(event.target);
 }; // document.addEventListener("click", historyMode, false)
+// let win = BrowserWindow.getFocusedWindow()
+// app.on("close", log('================================================'));
 
 /***/ }),
 
@@ -365,12 +364,10 @@ function twoPages() {
     onDragEnd: function (sizes) {
       reSetBook();
     }
-  }); // let obook = q('#book')
-  // obook.addEventListener("wheel", scrollPanes, false)
-  // document.addEventListener("keydown", keyScroll, false)
-  // split.setSizes = [90, 10]
-  // split.collapse(1)
-
+  });
+  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
+  obook.addEventListener("wheel", scrollPanes, false);
+  document.addEventListener("keydown", keyScroll, false);
   return split;
 }
 
@@ -411,13 +408,12 @@ function keyScroll(ev) {
   }
 
   trns.scrollTop = source.scrollTop;
-  let oapp = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#app');
-  let book = oapp.book;
+  let book = window.book;
 
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
-    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length;
-    log('___KEY START', start);
-    setChunk(start, book);
+    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length; // log('___KEY START', start)
+    // ошибка при прокрутке всегда
+    // setChunk(start, book)
   }
 }
 

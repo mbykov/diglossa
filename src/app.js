@@ -2,6 +2,8 @@
 
 // import "./stylesheets/app.css";
 // import "./stylesheets/main.css";
+import { BrowserWindow } from "electron";
+
 
 import "./lib/context_menu.js";
 import _ from "lodash";
@@ -42,26 +44,20 @@ let hstakey = {}
 
 ipcRenderer.on('section', function (event, name) {
   log('SECTION NAME', name)
-  if (name == 'library') parseLib()
-  if (name == 'help') showSection('help')
+  // if (name == 'library') parseLib()
+  // if (name == 'help') showSection('help')
   // else if (name == 'cleanup') showCleanup()
   // else if (name == 'install') showInstall()
   // else showSection(name)
+
+  nav({section: name})
 })
 
 // showSection('help')
 window.split = twoPages()
-// split.setSizes = [90, 10]
-window.split.collapse(1)
+// window.split.collapse(1)
 
 nav({section: 'lib'})
-
-function showSection(name) {
-  let oapp = q('#app')
-  let secpath = path.resolve(appPath, 'src/sections', [name, 'html'].join('.'))
-  const section = fse.readFileSync(secpath)
-  oapp.innerHTML = section
-}
 
 function showBook(fns) {
   showSection('main')
@@ -73,7 +69,6 @@ function showBook(fns) {
     openODS(fpath, (res) => {
       log('ODS END JSON', res)
       if (!res) return
-      // twoPages()
       oprg.style.display = "none"
     })
   else {
@@ -105,13 +100,14 @@ function go(ev) {
 
 
 function parseLib(book) {
-  // showSection('lib')
+  window.split.setSizes([100,0])
   let books = store.get('lib') || []
   if (book) {
     books.push(book)
     store.set('lib', books)
   }
   log('LIB: addBook', book)
+  // add в отдельную функцию
 
   let olib = q('#source')
   let oul = create('ul')
@@ -135,16 +131,10 @@ function goBook(ev) {
   let books = store.get('lib')
   let book = _.find(books, book=> { return book.bkey == ev.target.parentNode.bkey })
   if (!book) return
-  // let oapp = q('#app')
-  // oapp.book = book
   window.book = book
-  // showSection('main')
-  // split.setSizes = [50, 50]
-  // window.split.setSizes([50,50])
-  log('GO TITLE')
+  log('GO TITLE', book)
   let navpath = {section: 'title'}
   nav({section: 'title'})
-  // parseTitle(book)
 }
 
 export function nav(navpath) {
@@ -153,30 +143,42 @@ export function nav(navpath) {
   let otrns = q('#trns')
   empty(osource)
   empty(otrns)
+
   let sec = navpath.section
   if (sec == 'lib') parseLib()
   else if (sec == 'title') parseTitle()
   else if (sec == 'book') parseBook()
+  else showSection(sec)
+
   let hkey = JSON.stringify(navpath)
-  log('HKEY', hkey)
+  // log('HKEY', hkey)
   if (!hstakey[hkey]) {
     hstates.push(navpath)
     hstate = hstates.length-1
     hstakey[hkey] = true
     log('ADD', navpath.section)
   }
-  log('NAV', navpath, hstate, hstates.length)
+  // log('NAV', navpath, hstate, hstates.length)
 }
 
 Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
   // log('EV', ev.which, hstate, hstate - 1 > -1, hstates[hstate])
-  if (ev.which == 37 && hstate - 1 > -1) log('LEFT', hstate, hstates[hstate-1])
-  if (ev.which == 39 && hstate + 1 < hstates.length) log('RIGHT', hstate, hstates[hstate+1])
+  // if (ev.which == 37 && hstate - 1 > -1) log('LEFT', hstate, hstates[hstate-1])
+  // if (ev.which == 39 && hstate + 1 < hstates.length) log('RIGHT', hstate, hstates[hstate+1])
   if (ev.which == 37 && hstate - 1 > -1) hstate--
   if (ev.which == 39 && hstate + 1 < hstates.length) hstate++
   nav(hstates[hstate])
-  return false
 })
+
+function showSection(name) {
+  window.split.setSizes([100,0])
+  let osource = q('#source')
+  let secpath = path.resolve(appPath, 'src/sections', [name, 'html'].join('.'))
+  const section = fse.readFileSync(secpath)
+  osource.innerHTML = section
+}
+
+
 
 const historyMode = event => {
   const checkArrow = element => {
@@ -196,3 +198,6 @@ const historyMode = event => {
 }
 
 // document.addEventListener("click", historyMode, false)
+
+// let win = BrowserWindow.getFocusedWindow()
+// app.on("close", log('================================================'));

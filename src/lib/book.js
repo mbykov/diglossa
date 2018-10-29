@@ -27,11 +27,9 @@ export function twoPages() {
       reSetBook()
     }
   })
-  // let obook = q('#book')
-  // obook.addEventListener("wheel", scrollPanes, false)
-  // document.addEventListener("keydown", keyScroll, false)
-  // split.setSizes = [90, 10]
-  // split.collapse(1)
+  let obook = q('#book')
+  obook.addEventListener("wheel", scrollPanes, false)
+  document.addEventListener("keydown", keyScroll, false)
   return split
 }
 
@@ -69,12 +67,12 @@ function keyScroll(ev) {
     source.scrollTop = source.scrollTop + height - 60
   }
   trns.scrollTop = source.scrollTop
-  let oapp = q('#app')
-  let book = oapp.book
+  let book = window.book
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
     let start = qs('#source > p').length
-    log('___KEY START', start)
-    setChunk(start, book)
+    // log('___KEY START', start)
+    // ошибка при прокрутке всегда
+    // setChunk(start, book)
   }
 }
 
