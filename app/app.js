@@ -90,19 +90,22 @@
 /*!********************!*\
   !*** ./src/app.js ***!
   \********************/
-/*! no exports provided */
+/*! exports provided: nav */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "nav", function() { return nav; });
 /* harmony import */ var _lib_context_menu_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./lib/context_menu.js */ "./src/lib/context_menu.js");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! electron */ "electron");
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./lib/utils */ "./src/lib/utils.js");
-/* harmony import */ var _lib_book__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./lib/book */ "./src/lib/book.js");
-/* harmony import */ var _lib_getfiles__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/getfiles */ "./src/lib/getfiles.js");
+/* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! split.js */ "split.js");
+/* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(split_js__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! electron */ "electron");
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./lib/utils */ "./src/lib/utils.js");
+/* harmony import */ var _lib_book__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/book */ "./src/lib/book.js");
+/* harmony import */ var _lib_getfiles__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./lib/getfiles */ "./src/lib/getfiles.js");
 //
 // import "./stylesheets/app.css";
 // import "./stylesheets/main.css";
@@ -113,7 +116,11 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+ // import { nav } from './lib/nav'
 
+
+
+const Mousetrap = __webpack_require__(/*! mousetrap */ "mousetrap");
 
 const Store = __webpack_require__(/*! electron-store */ "electron-store");
 
@@ -135,20 +142,29 @@ const {
 
 
 const isDev = true;
-const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app;
+const app = electron__WEBPACK_IMPORTED_MODULE_3__["remote"].app;
 const appPath = app.getAppPath();
-let userDataPath = app.getPath("userData");
-electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('section', function (event, name) {
-  log('NAME', name);
+let userDataPath = app.getPath("userData"); // let hterms = {}
+
+let hstate = -1;
+let hstates = [];
+electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('section', function (event, name) {
+  log('SECTION NAME', name);
   if (name == 'library') parseLib();
   if (name == 'help') showSection('help'); // else if (name == 'cleanup') showCleanup()
   // else if (name == 'install') showInstall()
   // else showSection(name)
+}); // showSection('help')
+
+window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])(); // split.setSizes = [90, 10]
+
+window.split.collapse(1);
+nav({
+  section: 'lib'
 });
-showSection('help');
 
 function showSection(name) {
-  let oapp = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#app');
+  let oapp = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#app');
   let secpath = path.resolve(appPath, 'src/sections', [name, 'html'].join('.'));
   const section = fse.readFileSync(secpath);
   oapp.innerHTML = section;
@@ -156,12 +172,12 @@ function showSection(name) {
 
 function showBook(fns) {
   showSection('main');
-  let oprg = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#progress');
+  let oprg = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#progress');
   oprg.style.display = "inline-block";
   let fpath = fns[0]; // log('SHOWBOOK', fpath)
 
   if (/\.ods/.test(fpath)) // это убрать
-    Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openODS"])(fpath, res => {
+    Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openODS"])(fpath, res => {
       log('ODS END JSON', res);
       if (!res) return; // twoPages()
 
@@ -171,16 +187,15 @@ function showBook(fns) {
     // let bookpath = '../../texts/Aristotle/deAnima'
     // let bookpath = '../../texts/Plato/Letters'
     let bookpath = '../../texts/Plato';
-    Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["openDir"])(bookpath, book => {
+    Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bookpath, book => {
       if (!book) return;
       showSection('lib');
       parseLib(book);
       oprg.style.display = "none";
     });
   }
-}
+} // document.addEventListener("click", go, false)
 
-document.addEventListener("click", go, false);
 
 function go(ev) {
   let data = ev.target.dataset;
@@ -201,7 +216,7 @@ function go(ev) {
 }
 
 function parseLib(book) {
-  showSection('lib');
+  // showSection('lib')
   let books = store.get('lib') || [];
 
   if (book) {
@@ -209,16 +224,16 @@ function parseLib(book) {
     store.set('lib', books);
   }
 
-  log('B', book);
-  let olib = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#lib');
-  let oul = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["create"])('ul');
+  log('LIB: addBook', book);
+  let olib = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
+  let oul = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["create"])('ul');
   olib.appendChild(oul);
   books.forEach(book => {
-    let ostr = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["create"])('li', 'libauth');
+    let ostr = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["create"])('li', 'libauth');
     ostr.bkey = book.bkey;
     oul.appendChild(ostr);
-    let author = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["span"])(book.info.book.author);
-    let title = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["span"])(book.info.book.title);
+    let author = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])(book.info.book.author);
+    let title = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])(book.info.book.title);
     author.classList.add('lib-auth');
     title.classList.add('lib-title');
     ostr.appendChild(author);
@@ -235,12 +250,59 @@ function goBook(ev) {
     return book.bkey == ev.target.parentNode.bkey;
   });
 
-  if (!book) return;
-  let oapp = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#app');
-  oapp.book = book;
-  showSection('main');
-  Object(_lib_book__WEBPACK_IMPORTED_MODULE_4__["parseTitle"])(book);
+  if (!book) return; // let oapp = q('#app')
+  // oapp.book = book
+
+  window.book = book; // showSection('main')
+  // split.setSizes = [50, 50]
+  // window.split.setSizes([50,50])
+
+  log('GO TITLE');
+  let navpath = {
+    section: 'title'
+  };
+  nav({
+    section: 'title'
+  }); // parseTitle(book)
 }
+
+function nav(navpath) {
+  let obook = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
+  let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
+  let otrns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#trns');
+  Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(osource);
+  Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(otrns);
+  let sec = navpath.section;
+  if (sec == 'lib') parseLib();else if (sec == 'title') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])();else if (sec == 'book') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])();
+  hstates.push(navpath);
+  hstate = hstates.length - 1;
+  log('NAV', navpath, hstate, hstates.length);
+}
+Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
+  // log('EV', ev.which, hstate, hstate - 1 > -1, hstates[hstate])
+  if (ev.which == 37 && hstate - 1 > -1) log('LEFT', hstate, hstates[hstate - 1]);
+  if (ev.which == 39 && hstate + 1 < hstates.length) log('RIGHT', hstate, hstates[hstate + 1]);
+  if (ev.which == 37 && hstate - 1 > -1) hstate--;
+  if (ev.which == 39 && hstate + 1 < hstates.length) hstate++;
+  nav(hstates[hstate]);
+  return false;
+});
+
+const historyMode = event => {
+  const checkArrow = element => {
+    // if (!element.classList.contains("arrow")) return
+    if (element.id === "new-version") {// log('NEW VERS CLICKED')
+    }
+
+    if (element.id === "arrow-left") {
+      if (hstate - 1 > -1) hstate--; // showText(hstates[hstate])
+    } else if (element.id === "arrow-right") {
+      if (hstate + 1 < hstates.length) hstate++; // showText(hstates[hstate])
+    }
+  };
+
+  checkArrow(event.target);
+}; // document.addEventListener("click", historyMode, false)
 
 /***/ }),
 
@@ -248,19 +310,22 @@ function goBook(ev) {
 /*!*************************!*\
   !*** ./src/lib/book.js ***!
   \*************************/
-/*! exports provided: twoPages, parseTitle */
+/*! exports provided: twoPages, parseTitle, parseBook */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "twoPages", function() { return twoPages; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseTitle", function() { return parseTitle; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseBook", function() { return parseBook; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! split.js */ "split.js");
 /* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(split_js__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
 /* harmony import */ var _tree__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./tree */ "./src/lib/tree.js");
+/* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../app */ "./src/app.js");
+
 
 
 
@@ -283,7 +348,7 @@ const clipboard = __webpack_require__(/*! electron-clipboard-extended */ "electr
 function twoPages() {
   var sizes = store.get('split-sizes');
   if (sizes) sizes = JSON.parse(sizes);else sizes = [50, 50];
-  split_js__WEBPACK_IMPORTED_MODULE_1___default()(['#source', '#trns'], {
+  let split = split_js__WEBPACK_IMPORTED_MODULE_1___default()(['#source', '#trns'], {
     sizes: sizes,
     gutterSize: 5,
     cursor: 'col-resize',
@@ -291,10 +356,13 @@ function twoPages() {
     onDragEnd: function (sizes) {
       reSetBook();
     }
-  });
-  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
-  obook.addEventListener("wheel", scrollPanes, false);
-  document.addEventListener("keydown", keyScroll, false);
+  }); // let obook = q('#book')
+  // obook.addEventListener("wheel", scrollPanes, false)
+  // document.addEventListener("keydown", keyScroll, false)
+  // split.setSizes = [90, 10]
+  // split.collapse(1)
+
+  return split;
 }
 
 function scrollPanes(ev) {
@@ -344,9 +412,11 @@ function keyScroll(ev) {
   }
 }
 
-function parseTitle(book) {
+function parseTitle() {
   // log('========= parse title =============')
-  twoPages();
+  // twoPages()
+  window.split.setSizes([50, 50]);
+  let book = window.book;
   let info = book.info;
   let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   let obookCont = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
@@ -354,16 +424,26 @@ function parseTitle(book) {
   oright.appendChild(obookCont);
   let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(info.tree);
   obookCont.appendChild(otree);
-  otree.addEventListener('click', goBookSection, false);
+  otree.addEventListener('click', goBookEvent, false);
 }
 
-function goBookSection(ev) {
-  let oapp = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#app');
-  let book = oapp.book;
+function goBookEvent(ev) {
+  // let oapp = q('#app')
+  // let book = oapp.book
+  let book = window.book;
   let fpath = ev.target.getAttribute('fpath');
   book.fpath = fpath;
+  let navpath = {
+    section: 'book'
+  };
+  Object(_app__WEBPACK_IMPORTED_MODULE_4__["nav"])(navpath); // setBookText()
+  // createRightHeader(book)
+  // createLeftHeader()
+}
+
+function parseBook() {
   setBookText();
-  createRightHeader(book); // createLeftHeader()
+  createRightHeader(); // createLeftHeader()
 }
 
 function setBookText(nic) {
@@ -371,9 +451,10 @@ function setBookText(nic) {
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
-  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns);
-  let oapp = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#app');
-  let book = oapp.book;
+  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns); // let oapp = q('#app')
+  // let book = oapp.book
+
+  let book = window.book;
   let texts = book.texts;
   let info = book.info;
   let nicnames = info.nicnames;
@@ -501,7 +582,8 @@ function clickLeftHeader(ev) {
   if (fpath) log('LEFT', text);
 }
 
-function createRightHeader(book) {
+function createRightHeader() {
+  let book = window.book;
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
   let arect = obook.getBoundingClientRect();
   let ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
@@ -1188,6 +1270,17 @@ module.exports = require("glob");
 /***/ (function(module, exports) {
 
 module.exports = require("lodash");
+
+/***/ }),
+
+/***/ "mousetrap":
+/*!****************************!*\
+  !*** external "mousetrap" ***!
+  \****************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("mousetrap");
 
 /***/ }),
 

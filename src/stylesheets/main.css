@@ -217,9 +217,13 @@ span.active {
   cursor: pointer;
 }
 
-#lib {
-  margin-left: 150px;
-  margin-top: 100px;
+/* #lib { */
+/*   margin-left: 150px; */
+/*   margin-top: 100px; */
+/*   cursor: pointer; */
+/* } */
+
+.libauth {
   cursor: pointer;
 }
 

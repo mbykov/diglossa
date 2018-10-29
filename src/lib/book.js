@@ -2,6 +2,7 @@ import _ from 'lodash'
 import Split from 'split.js'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
 import tree from './tree';
+import {nav} from '../app';
 
 const fse = require('fs-extra')
 const path = require('path')
@@ -17,7 +18,7 @@ export function twoPages() {
   var sizes = store.get('split-sizes')
   if (sizes) sizes = JSON.parse(sizes)
   else sizes = [50, 50]
-  Split(['#source', '#trns'], {
+  let split = Split(['#source', '#trns'], {
     sizes: sizes,
     gutterSize: 5,
     cursor: 'col-resize',
@@ -26,9 +27,12 @@ export function twoPages() {
       reSetBook()
     }
   })
-  let obook = q('#book')
-  obook.addEventListener("wheel", scrollPanes, false)
-  document.addEventListener("keydown", keyScroll, false)
+  // let obook = q('#book')
+  // obook.addEventListener("wheel", scrollPanes, false)
+  // document.addEventListener("keydown", keyScroll, false)
+  // split.setSizes = [90, 10]
+  // split.collapse(1)
+  return split
 }
 
 function scrollPanes(ev) {
@@ -75,9 +79,11 @@ function keyScroll(ev) {
 }
 
 
-export function parseTitle(book) {
+export function parseTitle() {
   // log('========= parse title =============')
-  twoPages()
+  // twoPages()
+  window.split.setSizes([50,50])
+  let book = window.book
   let info = book.info
   let oright = q('#trns')
   let obookCont = div('')
@@ -85,16 +91,25 @@ export function parseTitle(book) {
   oright.appendChild(obookCont)
   let otree = tree(info.tree)
   obookCont.appendChild(otree)
-  otree.addEventListener('click', goBookSection, false)
+  otree.addEventListener('click', goBookEvent, false)
 }
 
-function goBookSection(ev) {
-   let oapp = q('#app')
-  let book = oapp.book
+function goBookEvent(ev) {
+  // let oapp = q('#app')
+  // let book = oapp.book
+  let book = window.book
   let fpath = ev.target.getAttribute('fpath')
   book.fpath = fpath
+  let navpath = {section: 'book'}
+  nav(navpath)
+  // setBookText()
+  // createRightHeader(book)
+  // createLeftHeader()
+}
+
+export function parseBook() {
   setBookText()
-  createRightHeader(book)
+  createRightHeader()
   // createLeftHeader()
 }
 
@@ -105,8 +120,9 @@ function setBookText(nic) {
   empty(osource)
   empty(otrns)
 
-  let oapp = q('#app')
-  let book = oapp.book
+  // let oapp = q('#app')
+  // let book = oapp.book
+  let book = window.book
   let texts = book.texts
   let info = book.info
   let nicnames = info.nicnames
@@ -219,7 +235,8 @@ function clickLeftHeader(ev) {
 }
 
 
-function createRightHeader(book) {
+function createRightHeader() {
+  let book = window.book
   let obook = q('#book')
   let arect = obook.getBoundingClientRect()
   let ohright = div()

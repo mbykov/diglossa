@@ -4,15 +4,17 @@
 // import "./stylesheets/main.css";
 
 import "./lib/context_menu.js";
-
 import _ from "lodash";
+import Split from 'split.js'
 import { remote } from "electron";
 import { shell } from 'electron'
 import { ipcRenderer } from "electron";
 import { q, qs, empty, create, span, p, div, enclitic } from './lib/utils'
-import { twoPages, parseTitle, parseTitleTui } from './lib/book'
+import { twoPages, parseTitle, parseBook } from './lib/book'
+// import { nav } from './lib/nav'
 import { openODS, openDir } from './lib/getfiles'
 
+const Mousetrap = require('mousetrap')
 const Store = require('electron-store')
 const store = new Store()
 let fse = require('fs-extra')
@@ -32,8 +34,13 @@ const app = remote.app;
 const appPath = app.getAppPath()
 let userDataPath = app.getPath("userData")
 
+// let hterms = {}
+let hstate = -1
+let hstates = []
+
+
 ipcRenderer.on('section', function (event, name) {
-  log('NAME', name)
+  log('SECTION NAME', name)
   if (name == 'library') parseLib()
   if (name == 'help') showSection('help')
   // else if (name == 'cleanup') showCleanup()
@@ -41,7 +48,12 @@ ipcRenderer.on('section', function (event, name) {
   // else showSection(name)
 })
 
-showSection('help')
+// showSection('help')
+window.split = twoPages()
+// split.setSizes = [90, 10]
+window.split.collapse(1)
+
+nav({section: 'lib'})
 
 function showSection(name) {
   let oapp = q('#app')
@@ -77,7 +89,7 @@ function showBook(fns) {
   }
 }
 
-document.addEventListener("click", go, false)
+// document.addEventListener("click", go, false)
 
 function go(ev) {
   let data = ev.target.dataset
@@ -92,15 +104,15 @@ function go(ev) {
 
 
 function parseLib(book) {
-  showSection('lib')
+  // showSection('lib')
   let books = store.get('lib') || []
   if (book) {
     books.push(book)
     store.set('lib', books)
   }
-  log('B', book)
+  log('LIB: addBook', book)
 
-  let olib = q('#lib')
+  let olib = q('#source')
   let oul = create('ul')
   olib.appendChild(oul)
   books.forEach(book => {
@@ -122,8 +134,58 @@ function goBook(ev) {
   let books = store.get('lib')
   let book = _.find(books, book=> { return book.bkey == ev.target.parentNode.bkey })
   if (!book) return
-  let oapp = q('#app')
-  oapp.book = book
-  showSection('main')
-  parseTitle(book)
+  // let oapp = q('#app')
+  // oapp.book = book
+  window.book = book
+  // showSection('main')
+  // split.setSizes = [50, 50]
+  // window.split.setSizes([50,50])
+  log('GO TITLE')
+  let navpath = {section: 'title'}
+  nav({section: 'title'})
+  // parseTitle(book)
 }
+
+export function nav(navpath) {
+  let obook = q('#source')
+  let osource = q('#source')
+  let otrns = q('#trns')
+  empty(osource)
+  empty(otrns)
+  let sec = navpath.section
+  if (sec == 'lib') parseLib()
+  else if (sec == 'title') parseTitle()
+  else if (sec == 'book') parseBook()
+  hstates.push(navpath)
+  hstate = hstates.length-1
+  log('NAV', navpath, hstate, hstates.length)
+}
+
+Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
+  // log('EV', ev.which, hstate, hstate - 1 > -1, hstates[hstate])
+  if (ev.which == 37 && hstate - 1 > -1) log('LEFT', hstate, hstates[hstate-1])
+  if (ev.which == 39 && hstate + 1 < hstates.length) log('RIGHT', hstate, hstates[hstate+1])
+  if (ev.which == 37 && hstate - 1 > -1) hstate--
+  if (ev.which == 39 && hstate + 1 < hstates.length) hstate++
+  nav(hstates[hstate])
+  return false
+})
+
+const historyMode = event => {
+  const checkArrow = element => {
+    // if (!element.classList.contains("arrow")) return
+    if (element.id === "new-version") {
+      // log('NEW VERS CLICKED')
+    }
+    if (element.id === "arrow-left") {
+      if (hstate - 1 > -1) hstate--
+      // showText(hstates[hstate])
+    } else if (element.id === "arrow-right") {
+      if (hstate + 1 < hstates.length) hstate++
+      // showText(hstates[hstate])
+    }
+  };
+  checkArrow(event.target);
+}
+
+// document.addEventListener("click", historyMode, false)
