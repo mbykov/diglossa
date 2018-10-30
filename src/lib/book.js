@@ -108,6 +108,7 @@ export function parseBook() {
 }
 
 function setBookText(nic) {
+  window.split.setSizes([50,50])
   let obook = q('#source')
   let osource = q('#source')
   let otrns = q('#trns')

@@ -121,9 +121,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _menu_auth_menu_template__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./menu/auth_menu_template */ "./src/menu/auth_menu_template.js");
 /* harmony import */ var _menu_left_menu_template__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./menu/left_menu_template */ "./src/menu/left_menu_template.js");
 /* harmony import */ var _menu_right_menu_template__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./menu/right_menu_template */ "./src/menu/right_menu_template.js");
-/* harmony import */ var _lib_window__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./lib/window */ "./src/lib/window.js");
-/* harmony import */ var env__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! env */ "./config/env_development.json");
-var env__WEBPACK_IMPORTED_MODULE_13___namespace = /*#__PURE__*/__webpack_require__.t(/*! env */ "./config/env_development.json", 1);
+/* harmony import */ var env__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! env */ "./config/env_development.json");
+var env__WEBPACK_IMPORTED_MODULE_12___namespace = /*#__PURE__*/__webpack_require__.t(/*! env */ "./config/env_development.json", 1);
 // This is main process of Electron, started as first thing when your
 // app starts. It runs through entire life of your application.
 // It doesn't have any windows which you can see on screen, but we can open
@@ -139,16 +138,18 @@ var env__WEBPACK_IMPORTED_MODULE_13___namespace = /*#__PURE__*/__webpack_require
 
 
 
+ // import createWindow from "./lib/window";
 
- // Special module holding environment variables which you declared
+const windowStateKeeper = __webpack_require__(/*! electron-window-state */ "electron-window-state"); // Special module holding environment variables which you declared
 // in config/env_xxx.json file.
+
 
 
 
 const setApplicationMenu = () => {
   const menus = [_menu_left_menu_template__WEBPACK_IMPORTED_MODULE_10__["leftMenuTemplate"], _menu_right_menu_template__WEBPACK_IMPORTED_MODULE_11__["rightMenuTemplate"], _menu_lib_menu_template__WEBPACK_IMPORTED_MODULE_5__["libMenuTemplate"], _menu_file_menu_template__WEBPACK_IMPORTED_MODULE_6__["fileMenuTemplate"], _menu_about_menu_template__WEBPACK_IMPORTED_MODULE_7__["aboutMenuTemplate"], _menu_auth_menu_template__WEBPACK_IMPORTED_MODULE_9__["authMenuTemplate"], _menu_help_menu_template__WEBPACK_IMPORTED_MODULE_8__["helpMenuTemplate"]];
 
-  if (env__WEBPACK_IMPORTED_MODULE_13__.name !== "production") {
+  if (env__WEBPACK_IMPORTED_MODULE_12__.name !== "production") {
     menus.push(_menu_dev_menu_template__WEBPACK_IMPORTED_MODULE_3__["devMenuTemplate"]);
   }
 
@@ -158,132 +159,45 @@ const setApplicationMenu = () => {
 // on same machine like those are two separate apps.
 
 
-if (env__WEBPACK_IMPORTED_MODULE_13__.name !== "production") {
+if (env__WEBPACK_IMPORTED_MODULE_12__.name !== "production") {
   const userDataPath = electron__WEBPACK_IMPORTED_MODULE_2__["app"].getPath("userData");
-  electron__WEBPACK_IMPORTED_MODULE_2__["app"].setPath("userData", `${userDataPath} (${env__WEBPACK_IMPORTED_MODULE_13__.name})`);
+  electron__WEBPACK_IMPORTED_MODULE_2__["app"].setPath("userData", `${userDataPath} (${env__WEBPACK_IMPORTED_MODULE_12__.name})`);
 }
 
 electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("ready", () => {
-  setApplicationMenu();
-  const mainWindow = Object(_lib_window__WEBPACK_IMPORTED_MODULE_12__["default"])("main", {
-    width: 1000,
-    height: 600
-  });
-  mainWindow.loadURL(url__WEBPACK_IMPORTED_MODULE_1___default.a.format({
+  setApplicationMenu(); // Load the previous state with fallback to defaults
+
+  let mainWindowState = windowStateKeeper({
+    defaultWidth: 1000,
+    defaultHeight: 800
+  }); // Create the window using the state information
+
+  const win = new electron__WEBPACK_IMPORTED_MODULE_2__["BrowserWindow"]({
+    'x': mainWindowState.x,
+    'y': mainWindowState.y,
+    'width': mainWindowState.width,
+    'height': mainWindowState.height
+  }); // Let us register listeners on the window, so we can update the state
+  // automatically (the listeners will be removed when the window is closed)
+  // and restore the maximized or full screen state
+
+  mainWindowState.manage(win); // const mainWindow = createWindow("main", {
+  //   width: 1000,
+  //   height: 600
+  // });
+
+  win.loadURL(url__WEBPACK_IMPORTED_MODULE_1___default.a.format({
     pathname: path__WEBPACK_IMPORTED_MODULE_0___default.a.join(__dirname, "app.html"),
     protocol: "file:",
     slashes: true
   }));
 
-  if (env__WEBPACK_IMPORTED_MODULE_13__.name === "development") {
-    mainWindow.openDevTools();
+  if (env__WEBPACK_IMPORTED_MODULE_12__.name === "development") {
+    win.openDevTools();
   }
 });
 electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("window-all-closed", () => {
   electron__WEBPACK_IMPORTED_MODULE_2__["app"].quit();
-});
-
-/***/ }),
-
-/***/ "./src/lib/window.js":
-/*!***************************!*\
-  !*** ./src/lib/window.js ***!
-  \***************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! electron */ "electron");
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var fs_jetpack__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! fs-jetpack */ "fs-jetpack");
-/* harmony import */ var fs_jetpack__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(fs_jetpack__WEBPACK_IMPORTED_MODULE_1__);
-// This helper remembers the size and position of your windows (and restores
-// them in that place after app relaunch).
-// Can be used for more than one window, just construct many
-// instances of it and give each different name.
-
-
-/* harmony default export */ __webpack_exports__["default"] = ((name, options) => {
-  const userDataDir = fs_jetpack__WEBPACK_IMPORTED_MODULE_1___default.a.cwd(electron__WEBPACK_IMPORTED_MODULE_0__["app"].getPath("userData"));
-  const stateStoreFile = `window-state-${name}.json`;
-  const defaultSize = {
-    width: options.width,
-    height: options.height
-  };
-  let state = {};
-  let win;
-
-  const restore = () => {
-    let restoredState = {};
-
-    try {
-      restoredState = userDataDir.read(stateStoreFile, "json");
-    } catch (err) {// For some reason json can't be read (might be corrupted).
-      // No worries, we have defaults.
-    }
-
-    return Object.assign({}, defaultSize, restoredState);
-  };
-
-  const getCurrentPosition = () => {
-    const position = win.getPosition();
-    const size = win.getSize();
-    return {
-      x: position[0],
-      y: position[1],
-      width: size[0],
-      height: size[1]
-    };
-  };
-
-  const windowWithinBounds = (windowState, bounds) => {
-    return windowState.x >= bounds.x && windowState.y >= bounds.y && windowState.x + windowState.width <= bounds.x + bounds.width && windowState.y + windowState.height <= bounds.y + bounds.height;
-  };
-
-  const resetToDefaults = () => {
-    const bounds = electron__WEBPACK_IMPORTED_MODULE_0__["screen"].getPrimaryDisplay().bounds;
-    return Object.assign({}, defaultSize, {
-      x: (bounds.width - defaultSize.width) / 2,
-      y: (bounds.height - defaultSize.height) / 2
-    });
-  };
-
-  const ensureVisibleOnSomeDisplay = windowState => {
-    const visible = electron__WEBPACK_IMPORTED_MODULE_0__["screen"].getAllDisplays().some(display => {
-      return windowWithinBounds(windowState, display.bounds);
-    });
-
-    if (!visible) {
-      // Window is partially or fully not visible now.
-      // Reset it to safe defaults.
-      return resetToDefaults();
-    }
-
-    return windowState;
-  };
-
-  const saveState = () => {
-    if (!win.isMinimized() && !win.isMaximized()) {
-      Object.assign(state, getCurrentPosition());
-    }
-
-    userDataDir.write(stateStoreFile, state, {
-      atomic: true
-    });
-  };
-
-  state = ensureVisibleOnSomeDisplay(restore());
-  win = new electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"](Object.assign({}, options, state));
-  win.on("close", saveState);
-
-  const saveHistory = () => {
-    // userDataDir.write(stateStoreFile, state, { atomic: true });
-    console.log('__KUKU__');
-  }; // win.on("close", saveHistory);
-
-
-  return win;
 });
 
 /***/ }),
@@ -639,14 +553,14 @@ module.exports = require("electron");
 
 /***/ }),
 
-/***/ "fs-jetpack":
-/*!*****************************!*\
-  !*** external "fs-jetpack" ***!
-  \*****************************/
+/***/ "electron-window-state":
+/*!****************************************!*\
+  !*** external "electron-window-state" ***!
+  \****************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = require("fs-jetpack");
+module.exports = require("electron-window-state");
 
 /***/ }),
 

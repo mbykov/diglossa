@@ -5,7 +5,7 @@
 
 import path from "path";
 import url from "url";
-import { app, Menu } from "electron";
+import { app, BrowserWindow, Menu, ipcMain } from "electron";
 import { devMenuTemplate } from "./menu/dev_menu_template";
 import { editMenuTemplate } from "./menu/edit_menu_template";
 import { libMenuTemplate } from "./menu/lib_menu_template";
@@ -15,7 +15,8 @@ import { helpMenuTemplate } from "./menu/help_menu_template";
 import { authMenuTemplate } from "./menu/auth_menu_template";
 import { leftMenuTemplate } from "./menu/left_menu_template";
 import { rightMenuTemplate } from "./menu/right_menu_template";
-import createWindow from "./lib/window";
+// import createWindow from "./lib/window";
+const windowStateKeeper = require('electron-window-state');
 
 // Special module holding environment variables which you declared
 // in config/env_xxx.json file.
@@ -40,12 +41,31 @@ if (env.name !== "production") {
 app.on("ready", () => {
   setApplicationMenu();
 
-  const mainWindow = createWindow("main", {
-    width: 1000,
-    height: 600
+  // Load the previous state with fallback to defaults
+  let mainWindowState = windowStateKeeper({
+    defaultWidth: 1000,
+    defaultHeight: 800
   });
 
-  mainWindow.loadURL(
+  // Create the window using the state information
+  const win = new BrowserWindow({
+    'x': mainWindowState.x,
+    'y': mainWindowState.y,
+    'width': mainWindowState.width,
+    'height': mainWindowState.height
+  });
+
+  // Let us register listeners on the window, so we can update the state
+  // automatically (the listeners will be removed when the window is closed)
+  // and restore the maximized or full screen state
+  mainWindowState.manage(win);
+
+  // const mainWindow = createWindow("main", {
+  //   width: 1000,
+  //   height: 600
+  // });
+
+  win.loadURL(
     url.format({
       pathname: path.join(__dirname, "app.html"),
       protocol: "file:",
@@ -54,8 +74,9 @@ app.on("ready", () => {
   );
 
   if (env.name === "development") {
-    mainWindow.openDevTools();
+    win.openDevTools();
   }
+
 });
 
 app.on("window-all-closed", () => {

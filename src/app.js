@@ -37,28 +37,40 @@ const appPath = app.getAppPath()
 let userDataPath = app.getPath("userData")
 
 // let hstates =   store.get('hstates') || []
-// let hstate = hstates.length - 1
+// let hstate = store.get('hstate') || -1
 let hstates = []
 let hstate =  -1
 let hstakey = {}
 
-ipcRenderer.on('section', function (event, name) {
-  log('SECTION NAME', name)
-  // if (name == 'library') parseLib()
-  // if (name == 'help') showSection('help')
-  // else if (name == 'install') showInstall()
-  // else showSection(name)
-
-  nav({section: name})
-})
+// log('HSTATE=>', hstate)
+// log('HSTATES=>', hstates)
+// let position = hstates[hstate] || {section: 'lib'}
+// log('HSTATES=>POS', position)
 
 // showSection('help')
 window.split = twoPages()
 // window.split.collapse(1)
+window.split.setSizes([100,0])
 
-log('HSTATE', hstates[hstate])
+window.book = store.get('book')
+let hpos = store.get('hpos') || {section: 'lib'}
+log('LOAD-HPOS', hpos)
 // nav(hstates[hstate])
-nav({section: 'lib'})
+// nav({section: 'lib'})
+nav(hpos)
+
+ipcRenderer.on('section', function (event, name) {
+  log('SECTION NAME', name)
+  nav({section: name})
+})
+
+app.on('before-quit', () => {
+  // store.set('hstate', hstate)
+  // store.set('hstates', hstates)
+  // store.set('hpos', hstates[hstate])
+  // store.set('book', window.book)
+})
+
 
 function showBook(fns) {
   showSection('main')
@@ -101,7 +113,7 @@ function go(ev) {
 
 
 function parseLib(book) {
-  window.split.setSizes([100,0])
+  // window.split.setSizes([100,0])
   let books = store.get('lib') || []
   if (book) {
     books.push(book)
@@ -159,8 +171,10 @@ export function nav(navpath) {
     hstakey[hkey] = true
     log('ADD', navpath.section)
   }
-  store.set('hstates', hstates)
-  // log('NAV', navpath, hstate, hstates.length)
+  // store.set('hstates', hstates)
+  if (window.book) store.set('book', window.book)
+  if (hpos) store.set('hpos', hpos)
+  log('NAV-hpos', hpos)
 }
 
 Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
@@ -169,7 +183,10 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
   // if (ev.which == 39 && hstate + 1 < hstates.length) log('RIGHT', hstate, hstates[hstate+1])
   if (ev.which == 37 && hstate - 1 > -1) hstate--
   if (ev.which == 39 && hstate + 1 < hstates.length) hstate++
-  nav(hstates[hstate])
+  hpos = hstates[hstate]
+  log('_hpos_', hpos)
+  // store.set('hstate', hstate)
+  nav(hpos)
 })
 
 function showSection(name) {
