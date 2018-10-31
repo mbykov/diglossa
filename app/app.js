@@ -163,8 +163,7 @@ window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])(); // 
 let hpos = store.get('hpos') || {
   section: 'lib'
 };
-log('LOAD-HPOS', hpos);
-log('no-book-book_0', window.book);
+log('LOAD-hpos', hpos);
 navigate({
   section: 'lib'
 }); // navigate(hpos)
@@ -205,51 +204,43 @@ function getDir(fns) {
 // store.set('hpos', hpos)
 // store.set('book', window.book)
 // })
+// function showBook(fns) {
+//   showSection('main')
+//   let oprg = q('#progress')
+//   oprg.style.display = "inline-block"
+//   let fpath = fns[0]
+//   // log('SHOWBOOK', fpath)
+//   if (/\.ods/.test(fpath)) // это убрать
+//     openODS(fpath, (res) => {
+//       log('ODS END JSON', res)
+//       if (!res) return
+//       oprg.style.display = "none"
+//     })
+//   else {
+//     // let bookpath = '../../texts/Thrax'
+//     // let bookpath = '../../texts/Aristotle/deAnima'
+//     // let bookpath = '../../texts/Plato/Letters'
+//     let bookpath = '../../texts/Plato'
+//     openDir(bookpath, (book) => {
+//       if (!book) return
+//       showSection('lib')
+//       parseLib(book)
+//       oprg.style.display = "none"
+//     })
+//   }
+// }
+// document.addEventListener("click", go, false)
+// function go_(ev) {
+//   let data = ev.target.dataset
+//   if (data.section) {
+//     showSection(data.section)
+//   } else if (data.book) {
+//     showBook(data.book)
+//   } else if (data.ods) {
+//     dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'book', extensions: ['ods'] }]}, showBook)
+//   }
+// }
 
-
-function showBook(fns) {
-  showSection('main');
-  let oprg = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#progress');
-  oprg.style.display = "inline-block";
-  let fpath = fns[0]; // log('SHOWBOOK', fpath)
-
-  if (/\.ods/.test(fpath)) // это убрать
-    Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openODS"])(fpath, res => {
-      log('ODS END JSON', res);
-      if (!res) return;
-      oprg.style.display = "none";
-    });else {
-    // let bookpath = '../../texts/Thrax'
-    // let bookpath = '../../texts/Aristotle/deAnima'
-    // let bookpath = '../../texts/Plato/Letters'
-    let bookpath = '../../texts/Plato';
-    Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bookpath, book => {
-      if (!book) return;
-      showSection('lib');
-      parseLib(book);
-      oprg.style.display = "none";
-    });
-  }
-} // document.addEventListener("click", go, false)
-
-
-function go_(ev) {
-  let data = ev.target.dataset;
-
-  if (data.section) {
-    showSection(data.section);
-  } else if (data.book) {
-    showBook(data.book);
-  } else if (data.ods) {
-    dialog.showOpenDialog({
-      properties: ['openFile'],
-      filters: [{
-        name: 'book',
-        extensions: ['ods']
-      }]
-    }, showBook);
-  }
-}
 
 function book2lib(book) {
   let books = store.get('lib') || [];
@@ -259,7 +250,6 @@ function book2lib(book) {
 }
 
 function parseLib() {
-  log('PARSE LIB');
   window.split.setSizes([100, 0]);
   let lib = store.get('lib') || [];
 
@@ -286,47 +276,40 @@ function parseLib() {
 }
 
 function goBook(ev) {
-  if (ev.target.parentNode.nodeName != 'LI') return;
-  let books = store.get('lib');
+  if (ev.target.parentNode.nodeName != 'LI') return; // log('___', ev.target.parentNode.bkey)
 
-  let book = lodash__WEBPACK_IMPORTED_MODULE_2___default.a.find(books, book => {
-    return book.bkey == ev.target.parentNode.bkey;
-  });
+  let bkey = ev.target.parentNode.bkey; // let books = store.get('lib')
+  // let book = _.find(books, book=> { return book.bkey == ev.target.parentNode.bkey })
+  // if (!book) return
+  // window.book = book
+  // store.set('book', book)
+  // log('GO TITLE-info', window.book.info)
 
-  if (!book) return;
-  window.book = book;
-  store.set('book', book);
-  log('GO TITLE-info', window.book.info);
-  let navpath = {
-    section: 'title'
-  };
   navigate({
-    section: 'title'
+    section: 'title',
+    bkey: bkey
   });
 }
 
 function navigate(navpath) {
-  log('_start nav_', navpath);
   let obook = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
   let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
   let otrns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#trns');
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(osource);
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(otrns);
-  log('GO-NAV', navpath);
+  log('Navigate:', navpath);
   let sec = navpath.section;
-  if (sec == 'lib') parseLib();else if (sec == 'title') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])();else if (sec == 'book') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(navpath);else showSection(sec);
+  if (sec == 'lib') parseLib();else if (sec == 'title') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])(navpath);else if (sec == 'book') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(navpath);else showSection(sec);
   let hkey = JSON.stringify(navpath); // log('HKEY', hkey)
 
   if (!hstakey[hkey]) {
     hstates.push(navpath);
     hstate = hstates.length - 1;
-    hstakey[hkey] = true;
-    log('ADD-SEC', navpath.section);
+    hstakey[hkey] = true; // log('ADD-SEC', navpath.section)
   }
 
   hpos = hstates[hstate];
-  store.set('hpos', hpos);
-  log('STORE-NAV-hpos', hpos);
+  store.set('hpos', hpos); // log('STORE-hpos', hpos)
 }
 Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   // log('EV', ev.which, hstate, hstate - 1 > -1, hstates[hstate])
@@ -471,11 +454,12 @@ function keyScroll(ev) {
   }
 }
 
-function parseTitle() {
+function parseTitle(navpath) {
   // log('========= parse title =============')
   window.split.setSizes([50, 50]);
-  let book = window.book;
-  let info = book.info;
+  let lib = store.get('lib') || [];
+  let info = lib[navpath.bkey];
+  window.navpath = navpath;
   let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   let obookCont = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
   obookCont.classList.add('bookTitle');
@@ -488,48 +472,45 @@ function parseTitle() {
 function goBookEvent(ev) {
   // let oapp = q('#app')
   // let book = oapp.book
-  let book = window.book;
+  let navpath = window.navpath;
   let fpath = ev.target.getAttribute('fpath');
-  book.fpath = fpath;
-  let navpath = {
-    section: 'book',
-    bkey: book.bkey,
-    fpath: fpath
-  };
+  navpath.fpath = fpath;
+  navpath.section = 'book';
   Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(navpath);
 }
 
 function parseBook(navpath) {
-  setBookText(navpath);
-  createRightHeader();
-  createLeftHeader();
+  setBookText(navpath); // createRightHeader()
+  // createLeftHeader()
 }
 
 function setBookText(navpath) {
+  log('___setBookText');
   window.split.setSizes([50, 50]);
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns);
-  let book = window.book;
+  log('BOOK-NPATH', navpath);
+  let lib = store.get('lib');
+  let info = lib[navpath.bkey];
+  let libtext = store.get('libtext');
+  let texts = libtext[navpath.bkey];
+  log('INFO', info);
+  log('TEXTS', texts); // let book = window.book
+  // if (!book || !book.info) {
+  //   let books = store.get('lib')
+  //   book = _.find(books, book=> { return book.bkey == navpath.bkey})
+  //   if (!book) return
+  // }
+  // let texts = book.texts
+  // let info = book.info
 
-  if (!book || !book.info) {
-    let books = store.get('lib');
-    book = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(books, book => {
-      return book.bkey == navpath.bkey;
-    });
-    if (!book) return; // log('NO BOOK INFO', navpath)
-  } // log('no-book-npath', navpath)
-  // log('no-book-book', window.book)
-
-
-  let texts = book.texts;
-  let info = book.info;
   let nicnames = info.nicnames;
   let panes = texts.panes;
   let coms = texts.coms;
-  let fpath = book.fpath;
+  let fpath = navpath.fpath;
 
   let author = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(panes, auth => {
     return auth.author && auth.fpath == fpath;
@@ -539,6 +520,7 @@ function setBookText(navpath) {
     return !auth.author && auth.fpath == fpath;
   });
 
+  let book = {};
   book.author = author;
   book.trns = trns;
   let cnics = trns.map(auth => {
@@ -963,9 +945,6 @@ function parseDir(bookpath) {
   //   this.setRef('id')
   // })
 
-  let bkey = [info.book.author, info.book.title].join('-');
-  info.tree = tree.children;
-  info.bkey = bkey;
   let cpanes = {
     panes: [],
     coms: []
@@ -1009,6 +988,9 @@ function parseDir(bookpath) {
 
     if (comment) cpanes.coms.push(pane);else cpanes.panes.push(pane); // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   });
+  let bkey = [info.book.author, info.book.title].join('-');
+  info.tree = tree.children;
+  info.bkey = bkey;
   let book = {
     bkey: bkey,
     info: info,

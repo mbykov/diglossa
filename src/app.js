@@ -54,9 +54,7 @@ window.split = twoPages()
 
 // window.book = store.get('book')
 let hpos = store.get('hpos') || {section: 'lib'}
-log('LOAD-HPOS', hpos)
-log('no-book-book_0', window.book)
-
+log('LOAD-hpos', hpos)
 
 navigate({section: 'lib'})
 // navigate(hpos)
@@ -103,44 +101,44 @@ function getDir(fns) {
 // })
 
 
-function showBook(fns) {
-  showSection('main')
-  let oprg = q('#progress')
-  oprg.style.display = "inline-block"
-  let fpath = fns[0]
-  // log('SHOWBOOK', fpath)
-  if (/\.ods/.test(fpath)) // это убрать
-    openODS(fpath, (res) => {
-      log('ODS END JSON', res)
-      if (!res) return
-      oprg.style.display = "none"
-    })
-  else {
-    // let bookpath = '../../texts/Thrax'
-    // let bookpath = '../../texts/Aristotle/deAnima'
-    // let bookpath = '../../texts/Plato/Letters'
-    let bookpath = '../../texts/Plato'
-    openDir(bookpath, (book) => {
-      if (!book) return
-      showSection('lib')
-      parseLib(book)
-      oprg.style.display = "none"
-    })
-  }
-}
+// function showBook(fns) {
+//   showSection('main')
+//   let oprg = q('#progress')
+//   oprg.style.display = "inline-block"
+//   let fpath = fns[0]
+//   // log('SHOWBOOK', fpath)
+//   if (/\.ods/.test(fpath)) // это убрать
+//     openODS(fpath, (res) => {
+//       log('ODS END JSON', res)
+//       if (!res) return
+//       oprg.style.display = "none"
+//     })
+//   else {
+//     // let bookpath = '../../texts/Thrax'
+//     // let bookpath = '../../texts/Aristotle/deAnima'
+//     // let bookpath = '../../texts/Plato/Letters'
+//     let bookpath = '../../texts/Plato'
+//     openDir(bookpath, (book) => {
+//       if (!book) return
+//       showSection('lib')
+//       parseLib(book)
+//       oprg.style.display = "none"
+//     })
+//   }
+// }
 
 // document.addEventListener("click", go, false)
 
-function go_(ev) {
-  let data = ev.target.dataset
-  if (data.section) {
-    showSection(data.section)
-  } else if (data.book) {
-    showBook(data.book)
-  } else if (data.ods) {
-    dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'book', extensions: ['ods'] }]}, showBook)
-  }
-}
+// function go_(ev) {
+//   let data = ev.target.dataset
+//   if (data.section) {
+//     showSection(data.section)
+//   } else if (data.book) {
+//     showBook(data.book)
+//   } else if (data.ods) {
+//     dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'book', extensions: ['ods'] }]}, showBook)
+//   }
+// }
 
 function book2lib(book) {
   let books = store.get('lib') || []
@@ -151,7 +149,6 @@ function book2lib(book) {
 
 
 function parseLib() {
-  log('PARSE LIB')
   window.split.setSizes([100,0])
   let lib = store.get('lib') || []
   let infos = _.values(lib)
@@ -179,28 +176,28 @@ function parseLib() {
 
 function goBook(ev) {
   if (ev.target.parentNode.nodeName != 'LI') return
-  let books = store.get('lib')
-  let book = _.find(books, book=> { return book.bkey == ev.target.parentNode.bkey })
-  if (!book) return
-  window.book = book
-  store.set('book', book)
-  log('GO TITLE-info', window.book.info)
-  let navpath = {section: 'title'}
-  navigate({section: 'title'})
+  // log('___', ev.target.parentNode.bkey)
+  let bkey = ev.target.parentNode.bkey
+  // let books = store.get('lib')
+  // let book = _.find(books, book=> { return book.bkey == ev.target.parentNode.bkey })
+  // if (!book) return
+  // window.book = book
+  // store.set('book', book)
+  // log('GO TITLE-info', window.book.info)
+  navigate({section: 'title', bkey: bkey})
 }
 
 export function navigate(navpath) {
-  log('_start nav_', navpath)
   let obook = q('#source')
   let osource = q('#source')
   let otrns = q('#trns')
   empty(osource)
   empty(otrns)
 
-  log('GO-NAV', navpath)
+  log('Navigate:', navpath)
   let sec = navpath.section
   if (sec == 'lib') parseLib()
-  else if (sec == 'title') parseTitle()
+  else if (sec == 'title') parseTitle(navpath)
   else if (sec == 'book') parseBook(navpath)
   else showSection(sec)
 
@@ -210,11 +207,11 @@ export function navigate(navpath) {
     hstates.push(navpath)
     hstate = hstates.length-1
     hstakey[hkey] = true
-    log('ADD-SEC', navpath.section)
+    // log('ADD-SEC', navpath.section)
   }
   hpos = hstates[hstate]
   store.set('hpos', hpos)
-  log('STORE-NAV-hpos', hpos)
+  // log('STORE-hpos', hpos)
 }
 
 Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {

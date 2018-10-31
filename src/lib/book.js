@@ -77,11 +77,13 @@ function keyScroll(ev) {
 }
 
 
-export function parseTitle() {
+export function parseTitle(navpath) {
   // log('========= parse title =============')
   window.split.setSizes([50,50])
-  let book = window.book
-  let info = book.info
+  let lib = store.get('lib') || []
+  let info = lib[navpath.bkey]
+  window.navpath = navpath
+
   let oright = q('#trns')
   let obookCont = div('')
   obookCont.classList.add('bookTitle')
@@ -94,20 +96,21 @@ export function parseTitle() {
 function goBookEvent(ev) {
   // let oapp = q('#app')
   // let book = oapp.book
-  let book = window.book
+  let navpath = window.navpath
   let fpath = ev.target.getAttribute('fpath')
-  book.fpath = fpath
-  let navpath = {section: 'book', bkey: book.bkey, fpath: fpath}
+  navpath.fpath = fpath
+  navpath.section = 'book'
   navigate(navpath)
 }
 
 export function parseBook(navpath) {
   setBookText(navpath)
-  createRightHeader()
-  createLeftHeader()
+  // createRightHeader()
+  // createLeftHeader()
 }
 
 function setBookText(navpath) {
+  log('___setBookText')
   window.split.setSizes([50,50])
   let obook = q('#source')
   let osource = q('#source')
@@ -115,24 +118,31 @@ function setBookText(navpath) {
   empty(osource)
   empty(otrns)
 
-  let book = window.book
-  if (!book || !book.info) {
-    let books = store.get('lib')
-    book = _.find(books, book=> { return book.bkey == navpath.bkey})
-    if (!book) return
-    // log('NO BOOK INFO', navpath)
-  }
-  // log('no-book-npath', navpath)
-  // log('no-book-book', window.book)
-  let texts = book.texts
-  let info = book.info
+  log('BOOK-NPATH', navpath)
+  let lib = store.get('lib')
+  let info = lib[navpath.bkey]
+  let libtext = store.get('libtext')
+  let texts = libtext[navpath.bkey]
+
+  log('INFO', info)
+  log('TEXTS', texts)
+  // let book = window.book
+  // if (!book || !book.info) {
+  //   let books = store.get('lib')
+  //   book = _.find(books, book=> { return book.bkey == navpath.bkey})
+  //   if (!book) return
+  // }
+  // let texts = book.texts
+  // let info = book.info
+
   let nicnames = info.nicnames
   let panes = texts.panes
   let coms = texts.coms
 
-  let fpath = book.fpath
+  let fpath = navpath.fpath
   let author = _.filter(panes, auth=> { return auth.author && auth.fpath == fpath})[0]
   let trns = _.filter(panes, auth=> { return !auth.author && auth.fpath == fpath})
+  let book = {}
   book.author = author
   book.trns = trns
 

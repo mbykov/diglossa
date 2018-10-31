@@ -135,10 +135,6 @@ function parseDir(bookpath) {
   //   this.setRef('id')
   // })
 
-  let bkey = [info.book.author, info.book.title].join('-')
-  info.tree = tree.children
-  info.bkey = bkey
-
   let cpanes = {panes: [], coms: []}
   fns.forEach(fn => {
     let comment = false
@@ -173,6 +169,10 @@ function parseDir(bookpath) {
     else cpanes.panes.push(pane)
     // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   })
+
+  let bkey = [info.book.author, info.book.title].join('-')
+  info.tree = tree.children
+  info.bkey = bkey
 
   let book = {bkey: bkey, info: info, texts: cpanes}
   return book
