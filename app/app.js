@@ -477,14 +477,15 @@ function goBookEvent(ev) {
   navpath.fpath = fpath;
   navpath.section = 'book';
   Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(navpath);
-}
+} // export function parseBook(navpath) {
+//   setBookText(navpath)
+//   // createRightHeader()
+//   // createLeftHeader()
+// }
+// function setBookText(navpath) {
+
 
 function parseBook(navpath) {
-  setBookText(navpath); // createRightHeader()
-  // createLeftHeader()
-}
-
-function setBookText(navpath) {
   log('___setBookText');
   window.split.setSizes([50, 50]);
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
@@ -498,43 +499,50 @@ function setBookText(navpath) {
   let libtext = store.get('libtext');
   let texts = libtext[navpath.bkey];
   log('INFO', info);
-  log('TEXTS', texts); // let book = window.book
-  // if (!book || !book.info) {
-  //   let books = store.get('lib')
-  //   book = _.find(books, book=> { return book.bkey == navpath.bkey})
-  //   if (!book) return
-  // }
-  // let texts = book.texts
-  // let info = book.info
+  log('TEXTS', texts); // let nicnames = info.nicnames
+  // let panes = texts.panes
+  // let coms = texts.coms
 
-  let nicnames = info.nicnames;
-  let panes = texts.panes;
-  let coms = texts.coms;
+  let start = 0;
   let fpath = navpath.fpath;
+  let book = {};
+  book.info = info;
+  book.texts = texts; // let author = _.filter(panes, auth=> { return auth.author && auth.fpath == fpath})[0]
+  // let trns = _.filter(panes, auth=> { return !auth.author && auth.fpath == fpath})
+  // book.author = author
+  // book.trns = trns
+  // let cnics = trns.map(auth=> { return auth.nic })
+  // book.cnics = cnics
 
-  let author = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(panes, auth => {
+  let nic; // if (!nic) nic = cnics[0]
+  // book.nic = nic
+  // log('NO BOOK INFO', book)
+  // setChunk(start, book)
+
+  setBookText(book, fpath, nic, start);
+  osource.addEventListener("mouseover", copyToClipboard, false);
+  otrns.addEventListener("wheel", cyclePar, false);
+}
+
+function setBookText(book, fpath, nic, start) {
+  let author = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(book.texts.panes, auth => {
     return auth.author && auth.fpath == fpath;
   })[0];
 
-  let trns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(panes, auth => {
+  let trns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(book.texts.panes, auth => {
     return !auth.author && auth.fpath == fpath;
   });
 
-  let book = {};
   book.author = author;
   book.trns = trns;
   let cnics = trns.map(auth => {
     return auth.nic;
   });
   book.cnics = cnics;
-  let nic;
   if (!nic) nic = cnics[0];
-  book.nic = nic;
-  log('NO BOOK INFO', book);
-  let start = 0;
+  book.nic = nic; // log('BEFORE CHUNK book', book)
+
   setChunk(start, book);
-  osource.addEventListener("mouseover", copyToClipboard, false);
-  otrns.addEventListener("wheel", cyclePar, false);
 }
 
 function setChunk(start, book) {
