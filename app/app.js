@@ -90,12 +90,12 @@
 /*!********************!*\
   !*** ./src/app.js ***!
   \********************/
-/*! exports provided: nav */
+/*! exports provided: navigate */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "nav", function() { return nav; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "navigate", function() { return navigate; });
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! electron */ "electron");
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _lib_context_menu_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./lib/context_menu.js */ "./src/lib/context_menu.js");
@@ -157,27 +157,55 @@ let hstakey = {}; // log('HSTATE=>', hstate)
 // showSection('help')
 
 window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])(); // window.split.collapse(1)
+// window.split.setSizes([100,0])
+// window.book = store.get('book')
 
-window.split.setSizes([100, 0]);
-window.book = store.get('book');
 let hpos = store.get('hpos') || {
   section: 'lib'
 };
-log('LOAD-HPOS', hpos); // nav(hstates[hstate])
-// nav({section: 'lib'})
+log('LOAD-HPOS', hpos);
+log('no-book-book_0', window.book);
+navigate({
+  section: 'lib'
+}); // navigate(hpos)
 
-nav(hpos);
 electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('section', function (event, name) {
   log('SECTION NAME', name);
-  nav({
+  navigate({
     section: name
   });
 });
-app.on('before-quit', () => {// store.set('hstate', hstate)
-  // store.set('hstates', hstates)
-  // store.set('hpos', hstates[hstate])
-  // store.set('book', window.book)
+electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('parseDir', function (event, name) {
+  log('PARSE DIR', name); // dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'book', extensions: ['ods'] }]}, showBook)
+
+  dialog.showOpenDialog({
+    properties: ['openDirectory']
+  }, getDir);
 });
+
+function getDir(fns) {
+  if (!fns) return;
+  let bpath = fns[0];
+  Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
+    log('FUT BOOK', book); // let book = {bkey: bkey, info: info, texts: cpanes}
+
+    let lib = store.get('lib') || {};
+    lib = {};
+    lib[book.bkey] = book.info;
+    store.set('lib', lib);
+    let libtext = store.get('libtexts') || {};
+    libtext = {};
+    libtext[book.bkey] = book.texts;
+    store.set('libtext', libtext); // book2lib(book)
+    // parseLib()
+  });
+} // app.on('before-quit', () => {
+// store.set('hstate', hstate)
+// store.set('hstates', hstates)
+// store.set('hpos', hpos)
+// store.set('book', window.book)
+// })
+
 
 function showBook(fns) {
   showSection('main');
@@ -205,7 +233,7 @@ function showBook(fns) {
 } // document.addEventListener("click", go, false)
 
 
-function go(ev) {
+function go_(ev) {
   let data = ev.target.dataset;
 
   if (data.section) {
@@ -223,26 +251,32 @@ function go(ev) {
   }
 }
 
-function parseLib(book) {
-  // window.split.setSizes([100,0])
+function book2lib(book) {
   let books = store.get('lib') || [];
+  books.push(book);
+  store.set('lib', books);
+  log('LIB: book added', book);
+}
 
-  if (book) {
-    books.push(book);
-    store.set('lib', books);
-  }
+function parseLib() {
+  log('PARSE LIB');
+  window.split.setSizes([100, 0]);
+  let lib = store.get('lib') || [];
 
-  log('LIB: addBook', book); // add в отдельную функцию
+  let infos = lodash__WEBPACK_IMPORTED_MODULE_2___default.a.values(lib);
 
+  log('LIB INFOS', infos);
   let olib = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
+  Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(olib);
   let oul = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["create"])('ul');
   olib.appendChild(oul);
-  books.forEach(book => {
+  if (!infos.length) oul.textContent = 'no book in lib';
+  infos.forEach(info => {
     let ostr = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["create"])('li', 'libauth');
-    ostr.bkey = book.bkey;
+    ostr.bkey = info.bkey;
     oul.appendChild(ostr);
-    let author = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])(book.info.book.author);
-    let title = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])(book.info.book.title);
+    let author = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])(info.book.author);
+    let title = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])(info.book.title);
     author.classList.add('lib-auth');
     title.classList.add('lib-title');
     ostr.appendChild(author);
@@ -261,47 +295,49 @@ function goBook(ev) {
 
   if (!book) return;
   window.book = book;
-  log('GO TITLE', book);
+  store.set('book', book);
+  log('GO TITLE-info', window.book.info);
   let navpath = {
     section: 'title'
   };
-  nav({
+  navigate({
     section: 'title'
   });
 }
 
-function nav(navpath) {
+function navigate(navpath) {
+  log('_start nav_', navpath);
   let obook = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
   let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
   let otrns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#trns');
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(osource);
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(otrns);
+  log('GO-NAV', navpath);
   let sec = navpath.section;
-  if (sec == 'lib') parseLib();else if (sec == 'title') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])();else if (sec == 'book') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])();else showSection(sec);
+  if (sec == 'lib') parseLib();else if (sec == 'title') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])();else if (sec == 'book') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(navpath);else showSection(sec);
   let hkey = JSON.stringify(navpath); // log('HKEY', hkey)
 
   if (!hstakey[hkey]) {
     hstates.push(navpath);
     hstate = hstates.length - 1;
     hstakey[hkey] = true;
-    log('ADD', navpath.section);
-  } // store.set('hstates', hstates)
+    log('ADD-SEC', navpath.section);
+  }
 
-
-  if (window.book) store.set('book', window.book);
-  if (hpos) store.set('hpos', hpos);
-  log('NAV-hpos', hpos);
+  hpos = hstates[hstate];
+  store.set('hpos', hpos);
+  log('STORE-NAV-hpos', hpos);
 }
 Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   // log('EV', ev.which, hstate, hstate - 1 > -1, hstates[hstate])
   // if (ev.which == 37 && hstate - 1 > -1) log('LEFT', hstate, hstates[hstate-1])
   // if (ev.which == 39 && hstate + 1 < hstates.length) log('RIGHT', hstate, hstates[hstate+1])
   if (ev.which == 37 && hstate - 1 > -1) hstate--;
-  if (ev.which == 39 && hstate + 1 < hstates.length) hstate++;
-  hpos = hstates[hstate];
-  log('_hpos_', hpos); // store.set('hstate', hstate)
+  if (ev.which == 39 && hstate + 1 < hstates.length) hstate++; // hpos = hstates[hstate]
+  // log('_arrow_hpos_', hpos)
+  // store.set('hstate', hstate)
 
-  nav(hpos);
+  navigate(hpos);
 });
 
 function showSection(name) {
@@ -383,9 +419,9 @@ function twoPages() {
       reSetBook();
     }
   });
-  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
-  obook.addEventListener("wheel", scrollPanes, false);
-  document.addEventListener("keydown", keyScroll, false);
+  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book'); // obook.addEventListener("wheel", scrollPanes, false)
+  // document.addEventListener("keydown", keyScroll, false)
+
   return split;
 }
 
@@ -457,27 +493,37 @@ function goBookEvent(ev) {
   book.fpath = fpath;
   let navpath = {
     section: 'book',
+    bkey: book.bkey,
     fpath: fpath
   };
-  Object(_app__WEBPACK_IMPORTED_MODULE_4__["nav"])(navpath);
+  Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(navpath);
 }
 
-function parseBook() {
-  setBookText();
+function parseBook(navpath) {
+  setBookText(navpath);
   createRightHeader();
   createLeftHeader();
 }
 
-function setBookText(nic) {
+function setBookText(navpath) {
   window.split.setSizes([50, 50]);
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
-  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns); // let oapp = q('#app')
-  // let book = oapp.book
-
+  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns);
   let book = window.book;
+
+  if (!book || !book.info) {
+    let books = store.get('lib');
+    book = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(books, book => {
+      return book.bkey == navpath.bkey;
+    });
+    if (!book) return; // log('NO BOOK INFO', navpath)
+  } // log('no-book-npath', navpath)
+  // log('no-book-book', window.book)
+
+
   let texts = book.texts;
   let info = book.info;
   let nicnames = info.nicnames;
@@ -499,8 +545,10 @@ function setBookText(nic) {
     return auth.nic;
   });
   book.cnics = cnics;
+  let nic;
   if (!nic) nic = cnics[0];
   book.nic = nic;
+  log('NO BOOK INFO', book);
   let start = 0;
   setChunk(start, book);
   osource.addEventListener("mouseover", copyToClipboard, false);
@@ -590,8 +638,8 @@ function createLeftHeader() {
   obook.appendChild(ohleft);
   ohleft.classList.add('hleft');
   ohleft.style.left = arect.width * 0.15 + 'px';
-  ohleft.classList.add('header');
-  log('LEFT HEADER', ohleft);
+  ohleft.classList.add('header'); // log('LEFT HEADER', ohleft)
+
   ohleft.addEventListener("click", clickLeftHeader, false); // let oact = div()
   // oact.textContent = 'active'
 
@@ -611,7 +659,7 @@ function clickLeftHeader(ev) {
     section: 'book',
     fpath: fpath
   };
-  Object(_app__WEBPACK_IMPORTED_MODULE_4__["nav"])(navpath);
+  Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(navpath);
 }
 
 function createRightHeader() {
@@ -767,6 +815,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
+/* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../app */ "./src/app.js");
+
 
 
 
@@ -793,7 +843,7 @@ function extractAllText(str) {
   const results = [];
   let current;
 
-  while (current = re.exec(str)) {
+  while (current == re.exec(str)) {
     results.push(current.pop());
   }
 
@@ -853,14 +903,15 @@ function parseCSV(str) {
 
       auths[idy].rows.push(col);
     });
-  });
-  localStorage.setItem('auths', JSON.stringify(auths));
-  localStorage.setItem('book', JSON.stringify(book));
+  }); // localStorage.setItem('auths', JSON.stringify(auths))
+  // localStorage.setItem('book', JSON.stringify(book))
 }
 
-function openDir(bookname, cb) {
+function openDir(bookpath, cb) {
+  if (!bookpath) return;
+
   try {
-    let book = parseDir(bookname);
+    let book = parseDir(bookpath);
     cb(book);
   } catch (err) {
     if (err) log('DIR ERR', err);
@@ -882,9 +933,9 @@ function walk(fns, dname, dtree, tree) {
   });
 }
 
-function parseDir(bookname) {
-  let bpath = path.resolve(__dirname, bookname);
-  let dname = bookname.split('/').slice(-1)[0]; // + '/'
+function parseDir(bookpath) {
+  let bpath = path.resolve(__dirname, bookpath);
+  let dname = bookpath.split('/').slice(-1)[0]; // + '/'
 
   const dtree = dirTree(bpath); // log('=DTREE', dtree)
 
@@ -912,6 +963,9 @@ function parseDir(bookname) {
   //   this.setRef('id')
   // })
 
+  let bkey = [info.book.author, info.book.title].join('-');
+  info.tree = tree.children;
+  info.bkey = bkey;
   let cpanes = {
     panes: [],
     coms: []
@@ -955,9 +1009,6 @@ function parseDir(bookname) {
 
     if (comment) cpanes.coms.push(pane);else cpanes.panes.push(pane); // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   });
-  info.tree = tree.children; // info.bpath = bookname
-
-  let bkey = [info.book.author, info.book.title].join('-');
   let book = {
     bkey: bkey,
     info: info,

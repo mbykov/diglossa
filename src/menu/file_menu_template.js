@@ -4,7 +4,7 @@ export const fileMenuTemplate = {
   label: "File",
   submenu: [
     { label: "Import from ODS", click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'readODS') } },
-    { label: "Import from TXT", click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'readTXT') } },
+    { label: "Import from TXT", click: () => { BrowserWindow.getFocusedWindow().webContents.send('parseDir', 'readTXT') } },
     { label: "Clone from Github", click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'cloneGithub') } },
     { type: "separator" },
     { label: "Publish", click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'publish') } },

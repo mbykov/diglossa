@@ -50,26 +50,57 @@ let hstakey = {}
 // showSection('help')
 window.split = twoPages()
 // window.split.collapse(1)
-window.split.setSizes([100,0])
+// window.split.setSizes([100,0])
 
-window.book = store.get('book')
+// window.book = store.get('book')
 let hpos = store.get('hpos') || {section: 'lib'}
 log('LOAD-HPOS', hpos)
-// nav(hstates[hstate])
-// nav({section: 'lib'})
-nav(hpos)
+log('no-book-book_0', window.book)
+
+
+navigate({section: 'lib'})
+// navigate(hpos)
+
 
 ipcRenderer.on('section', function (event, name) {
   log('SECTION NAME', name)
-  nav({section: name})
+  navigate({section: name})
 })
 
-app.on('before-quit', () => {
+ipcRenderer.on('parseDir', function (event, name) {
+  log('PARSE DIR', name)
+  // dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'book', extensions: ['ods'] }]}, showBook)
+  dialog.showOpenDialog({properties: ['openDirectory'] }, getDir)
+
+ })
+
+function getDir(fns) {
+  if (!fns) return
+  let bpath = fns[0]
+  openDir(bpath, (book) => {
+    log('FUT BOOK', book)
+    // let book = {bkey: bkey, info: info, texts: cpanes}
+    let lib = store.get('lib') || {}
+    lib = {}
+    lib[book.bkey] = book.info
+    store.set('lib', lib)
+    let libtext = store.get('libtexts') || {}
+    libtext = {}
+    libtext[book.bkey] = book.texts
+    store.set('libtext', libtext)
+
+    // book2lib(book)
+    // parseLib()
+  })
+}
+
+
+// app.on('before-quit', () => {
   // store.set('hstate', hstate)
   // store.set('hstates', hstates)
-  // store.set('hpos', hstates[hstate])
+  // store.set('hpos', hpos)
   // store.set('book', window.book)
-})
+// })
 
 
 function showBook(fns) {
@@ -100,7 +131,7 @@ function showBook(fns) {
 
 // document.addEventListener("click", go, false)
 
-function go(ev) {
+function go_(ev) {
   let data = ev.target.dataset
   if (data.section) {
     showSection(data.section)
@@ -111,26 +142,33 @@ function go(ev) {
   }
 }
 
-
-function parseLib(book) {
-  // window.split.setSizes([100,0])
+function book2lib(book) {
   let books = store.get('lib') || []
-  if (book) {
-    books.push(book)
-    store.set('lib', books)
-  }
-  log('LIB: addBook', book)
-  // add в отдельную функцию
+  books.push(book)
+  store.set('lib', books)
+  log('LIB: book added', book)
+}
+
+
+function parseLib() {
+  log('PARSE LIB')
+  window.split.setSizes([100,0])
+  let lib = store.get('lib') || []
+  let infos = _.values(lib)
+  log('LIB INFOS', infos)
 
   let olib = q('#source')
+  empty(olib)
   let oul = create('ul')
   olib.appendChild(oul)
-  books.forEach(book => {
+
+  if (!infos.length) oul.textContent = 'no book in lib'
+  infos.forEach(info => {
     let ostr = create('li', 'libauth')
-    ostr.bkey = book.bkey
+    ostr.bkey = info.bkey
     oul.appendChild(ostr)
-    let author = span(book.info.book.author)
-    let title = span(book.info.book.title)
+    let author = span(info.book.author)
+    let title = span(info.book.title)
     author.classList.add('lib-auth')
     title.classList.add('lib-title')
     ostr.appendChild(author)
@@ -145,22 +183,25 @@ function goBook(ev) {
   let book = _.find(books, book=> { return book.bkey == ev.target.parentNode.bkey })
   if (!book) return
   window.book = book
-  log('GO TITLE', book)
+  store.set('book', book)
+  log('GO TITLE-info', window.book.info)
   let navpath = {section: 'title'}
-  nav({section: 'title'})
+  navigate({section: 'title'})
 }
 
-export function nav(navpath) {
+export function navigate(navpath) {
+  log('_start nav_', navpath)
   let obook = q('#source')
   let osource = q('#source')
   let otrns = q('#trns')
   empty(osource)
   empty(otrns)
 
+  log('GO-NAV', navpath)
   let sec = navpath.section
   if (sec == 'lib') parseLib()
   else if (sec == 'title') parseTitle()
-  else if (sec == 'book') parseBook()
+  else if (sec == 'book') parseBook(navpath)
   else showSection(sec)
 
   let hkey = JSON.stringify(navpath)
@@ -169,12 +210,11 @@ export function nav(navpath) {
     hstates.push(navpath)
     hstate = hstates.length-1
     hstakey[hkey] = true
-    log('ADD', navpath.section)
+    log('ADD-SEC', navpath.section)
   }
-  // store.set('hstates', hstates)
-  if (window.book) store.set('book', window.book)
-  if (hpos) store.set('hpos', hpos)
-  log('NAV-hpos', hpos)
+  hpos = hstates[hstate]
+  store.set('hpos', hpos)
+  log('STORE-NAV-hpos', hpos)
 }
 
 Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
@@ -183,10 +223,10 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
   // if (ev.which == 39 && hstate + 1 < hstates.length) log('RIGHT', hstate, hstates[hstate+1])
   if (ev.which == 37 && hstate - 1 > -1) hstate--
   if (ev.which == 39 && hstate + 1 < hstates.length) hstate++
-  hpos = hstates[hstate]
-  log('_hpos_', hpos)
+  // hpos = hstates[hstate]
+  // log('_arrow_hpos_', hpos)
   // store.set('hstate', hstate)
-  nav(hpos)
+  navigate(hpos)
 })
 
 function showSection(name) {

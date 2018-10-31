@@ -376,7 +376,7 @@ const fileMenuTemplate = {
   }, {
     label: "Import from TXT",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'readTXT');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('parseDir', 'readTXT');
     }
   }, {
     label: "Clone from Github",

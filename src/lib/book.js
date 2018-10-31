@@ -2,7 +2,7 @@ import _ from 'lodash'
 import Split from 'split.js'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
 import tree from './tree';
-import {nav} from '../app';
+import {navigate} from '../app';
 
 const fse = require('fs-extra')
 const path = require('path')
@@ -28,8 +28,8 @@ export function twoPages() {
     }
   })
   let obook = q('#book')
-  obook.addEventListener("wheel", scrollPanes, false)
-  document.addEventListener("keydown", keyScroll, false)
+  // obook.addEventListener("wheel", scrollPanes, false)
+  // document.addEventListener("keydown", keyScroll, false)
   return split
 }
 
@@ -97,17 +97,17 @@ function goBookEvent(ev) {
   let book = window.book
   let fpath = ev.target.getAttribute('fpath')
   book.fpath = fpath
-  let navpath = {section: 'book', fpath: fpath}
-  nav(navpath)
+  let navpath = {section: 'book', bkey: book.bkey, fpath: fpath}
+  navigate(navpath)
 }
 
-export function parseBook() {
-  setBookText()
+export function parseBook(navpath) {
+  setBookText(navpath)
   createRightHeader()
   createLeftHeader()
 }
 
-function setBookText(nic) {
+function setBookText(navpath) {
   window.split.setSizes([50,50])
   let obook = q('#source')
   let osource = q('#source')
@@ -115,9 +115,15 @@ function setBookText(nic) {
   empty(osource)
   empty(otrns)
 
-  // let oapp = q('#app')
-  // let book = oapp.book
   let book = window.book
+  if (!book || !book.info) {
+    let books = store.get('lib')
+    book = _.find(books, book=> { return book.bkey == navpath.bkey})
+    if (!book) return
+    // log('NO BOOK INFO', navpath)
+  }
+  // log('no-book-npath', navpath)
+  // log('no-book-book', window.book)
   let texts = book.texts
   let info = book.info
   let nicnames = info.nicnames
@@ -132,9 +138,11 @@ function setBookText(nic) {
 
   let cnics = trns.map(auth=> { return auth.nic })
   book.cnics = cnics
+  let nic
   if (!nic) nic = cnics[0]
   book.nic = nic
 
+  log('NO BOOK INFO', book)
   let start = 0
   setChunk(start, book)
 
@@ -213,7 +221,7 @@ function createLeftHeader() {
   ohleft.classList.add('hleft')
   ohleft.style.left = arect.width*0.15 + 'px'
   ohleft.classList.add('header')
-  log('LEFT HEADER', ohleft)
+  // log('LEFT HEADER', ohleft)
   ohleft.addEventListener("click", clickLeftHeader, false)
 
   // let oact = div()
@@ -231,7 +239,7 @@ function clickLeftHeader(ev) {
   let book = window.book
   book.fpath = fpath
   let navpath = {section: 'book', fpath: fpath}
-  nav(navpath)
+  navigate(navpath)
 }
 
 

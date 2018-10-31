@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
+import {nav} from '../app';
 
 const fse = require('fs-extra')
 const path = require('path')
@@ -21,7 +22,7 @@ function extractAllText(str){
   const re = /"(.*?)"/g
   const results = []
   let current
-  while (current = re.exec(str)) {
+  while (current == re.exec(str)) {
     results.push(current.pop())
   }
   return results
@@ -74,13 +75,14 @@ function parseCSV(str) {
       auths[idy].rows.push(col)
     })
   })
-  localStorage.setItem('auths', JSON.stringify(auths))
-  localStorage.setItem('book', JSON.stringify(book))
+  // localStorage.setItem('auths', JSON.stringify(auths))
+  // localStorage.setItem('book', JSON.stringify(book))
 }
 
-export function openDir(bookname, cb) {
+export function openDir(bookpath, cb) {
+  if (!bookpath) return
   try {
-    let book = parseDir(bookname)
+    let book = parseDir(bookpath)
     cb(book)
   } catch (err) {
     if (err) log('DIR ERR', err)
@@ -104,9 +106,9 @@ function walk(fns, dname, dtree, tree) {
 }
 
 
-function parseDir(bookname) {
-  let bpath = path.resolve(__dirname, bookname)
-  let dname = bookname.split('/').slice(-1)[0] // + '/'
+function parseDir(bookpath) {
+  let bpath = path.resolve(__dirname, bookpath)
+  let dname = bookpath.split('/').slice(-1)[0] // + '/'
   const dtree = dirTree(bpath)
   // log('=DTREE', dtree)
   let fns = []
@@ -132,6 +134,10 @@ function parseDir(bookname) {
   //   this.addField('text')
   //   this.setRef('id')
   // })
+
+  let bkey = [info.book.author, info.book.title].join('-')
+  info.tree = tree.children
+  info.bkey = bkey
 
   let cpanes = {panes: [], coms: []}
   fns.forEach(fn => {
@@ -167,10 +173,6 @@ function parseDir(bookname) {
     else cpanes.panes.push(pane)
     // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   })
-
-  info.tree = tree.children
-  // info.bpath = bookname
-  let bkey = [info.book.author, info.book.title].join('-')
 
   let book = {bkey: bkey, info: info, texts: cpanes}
   return book

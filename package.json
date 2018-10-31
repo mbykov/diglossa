@@ -1,6 +1,6 @@
 {
-  "name": "electron-boilerplate",
-  "productName": "Electron Boilerplate",
+  "name": "diglossa.js",
+  "productName": "Diglossa.js",
   "description": "Starter for your Electron application",
   "version": "0.3.0",
   "private": true,
