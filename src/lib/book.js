@@ -171,6 +171,7 @@ function setBookText(book, fpath, nic, start) {
 
   // log('BEFORE CHUNK book', book)
   setChunk(start, book)
+  createRightHeader(book)
 }
 
 function setChunk(start, book) {
@@ -266,8 +267,8 @@ function clickLeftHeader(ev) {
 }
 
 
-function createRightHeader() {
-  let book = window.book
+function createRightHeader(book) {
+  // let book = window.book
   let obook = q('#book')
   let arect = obook.getBoundingClientRect()
   let ohright = div()
@@ -306,8 +307,17 @@ function clickRightHeader(ev) {
     let nic = ev.target.getAttribute('nic')
     if (!nic) return
     collapseRightHeader(nic)
-    reSetBook(nic)
+    otherNic(nic)
   }
+}
+
+function otherNic(nic) {
+  let pars = qs('#trns > p')
+  pars.forEach((par, idx) => {
+    // if (idx == 1) log('PAR', par, par.getAttribute('nic'))
+    if (par.getAttribute('nic') == nic) par.setAttribute('active', true), par.classList.remove('hidden')
+    else par.classList.add('hidden')
+  })
 }
 
 function collapseRightHeader(nic) {
@@ -330,7 +340,7 @@ function expandRightHeader() {
   })
 }
 
-function reSetBook(nic) {
+function reSetBook_(nic) {
   let osource = q('#source')
   let otrns = q('#trns')
   let scrollTop = osource.scrollTop

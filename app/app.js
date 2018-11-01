@@ -543,6 +543,7 @@ function setBookText(book, fpath, nic, start) {
   book.nic = nic; // log('BEFORE CHUNK book', book)
 
   setChunk(start, book);
+  createRightHeader(book);
 }
 
 function setChunk(start, book) {
@@ -652,8 +653,8 @@ function clickLeftHeader(ev) {
   Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(navpath);
 }
 
-function createRightHeader() {
-  let book = window.book;
+function createRightHeader(book) {
+  // let book = window.book
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
   let arect = obook.getBoundingClientRect();
   let ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
@@ -691,8 +692,16 @@ function clickRightHeader(ev) {
     let nic = ev.target.getAttribute('nic');
     if (!nic) return;
     collapseRightHeader(nic);
-    reSetBook(nic);
+    otherNic(nic);
   }
+}
+
+function otherNic(nic) {
+  let pars = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#trns > p');
+  pars.forEach((par, idx) => {
+    // if (idx == 1) log('PAR', par, par.getAttribute('nic'))
+    if (par.getAttribute('nic') == nic) par.setAttribute('active', true), par.classList.remove('hidden');else par.classList.add('hidden');
+  });
 }
 
 function collapseRightHeader(nic) {
@@ -716,7 +725,7 @@ function expandRightHeader() {
   });
 }
 
-function reSetBook(nic) {
+function reSetBook_(nic) {
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   let scrollTop = osource.scrollTop;
