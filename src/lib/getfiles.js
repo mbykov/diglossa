@@ -177,7 +177,8 @@ function parseDir(bookpath) {
   info.tree = tree.children
   info.bkey = bkey
 
-  let book = {bkey: bkey, info: info, texts: cpanes}
+  let book = {bkey: bkey, info: info, texts: cpanes, bpath: bpath}
+  log('BOOK FROM GET', book)
   return book
 
 }

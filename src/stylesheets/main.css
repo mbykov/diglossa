@@ -124,7 +124,7 @@ li.hidden {
 }
 
 .hidden {
-  display: 'none';  /* !important */;
+  display: 'none' /* !important */;
 }
 
 input[type='file'] {
@@ -259,4 +259,9 @@ span.active {
 
 .tree-title {
   padding-left: 10px;
+}
+
+/* #book > div.hleft.header > div > div:nth-child(2) */
+div.hleft.header > div.tree {
+  /* display: none; */
 }

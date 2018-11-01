@@ -35,6 +35,7 @@ const isDev = true
 const app = remote.app;
 const appPath = app.getAppPath()
 let userDataPath = app.getPath("userData")
+const watch = require('node-watch')
 
 // let hstates =   store.get('hstates') || []
 // let hstate = store.get('hstate') || -1
@@ -72,15 +73,21 @@ ipcRenderer.on('section', function (event, name) {
 ipcRenderer.on('parseDir', function (event, name) {
   log('PARSE DIR', name)
   // dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'book', extensions: ['ods'] }]}, showBook)
-  dialog.showOpenDialog({properties: ['openDirectory'] }, getDir)
+  dialog.showOpenDialog({properties: ['openDirectory'] }, getFNS)
  })
 
-function getDir(fns) {
+// унести в getFile, и грязно пока
+function getFNS(fns) {
   if (!fns) return
   let bpath = fns[0]
+  log('Watch:', bpath)
+  getDir(bpath)
+}
+
+function getDir(bpath) {
   openDir(bpath, (book) => {
     log('FUT BOOK', book)
-    // let book = {bkey: bkey, info: info, texts: cpanes}
+    if (!book) return
     let lib = store.get('lib') || {}
     lib = {}
     lib[book.bkey] = book.info
@@ -89,12 +96,19 @@ function getDir(fns) {
     libtext = {}
     libtext[book.bkey] = book.texts
     store.set('libtext', libtext)
-    // book2lib(book)
-    // parseLib()
+    startWatcher(book.bpath)
     navigate({section: 'lib'})
   })
 }
 
+// не работает - почему?
+function startWatcher(bpath) {
+  watch(bpath, { recursive: true }, function(evt, name) {
+    log('%s changed.', name);
+    // navigate(hpos)
+    navigate({section: 'lib'})
+  })
+}
 
 // app.on('before-quit', () => {
   // store.set('hstate', hstate)
@@ -143,12 +157,6 @@ function getDir(fns) {
 //   }
 // }
 
-function book2lib(book) {
-  let books = store.get('lib') || []
-  books.push(book)
-  store.set('lib', books)
-  log('LIB: book added', book)
-}
 
 
 function parseLib() {

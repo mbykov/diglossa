@@ -49,6 +49,7 @@
     "mousetrap": "^1.6.2",
     "mustache": "^3.0.0",
     "node-dir": "^0.1.17",
+    "node-watch": "^0.5.8",
     "split.js": "^1.4.0",
     "textract": "^2.4.0"
   },

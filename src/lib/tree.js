@@ -9,9 +9,12 @@ export default function tree(data) {
   otitle.id = 'tree-title'
   otitle.textContent = 'content'
   otree.appendChild(otitle)
+  let otbody = create('div', 'tree-body')
+  otbody.id = 'tree-body'
+  otree.appendChild(otbody)
   data.forEach(node=> {
     let onode = createNode(node)
-    otree.appendChild(onode)
+    otbody.appendChild(onode)
   })
   return otree
 }

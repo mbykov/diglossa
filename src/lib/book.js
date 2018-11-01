@@ -117,8 +117,8 @@ export function parseBook(navpath) {
   let info = lib[navpath.bkey]
   let libtext = store.get('libtext')
   let texts = libtext[navpath.bkey]
-  log('INFO', info)
-  log('TEXTS', texts)
+  // log('INFO', info)
+  // log('TEXTS', texts)
 
   // let nicnames = info.nicnames
   // let panes = texts.panes
@@ -239,23 +239,36 @@ function createLeftHeader(book) {
   obook.appendChild(ohleft)
   ohleft.classList.add('hleft')
   ohleft.style.left = arect.width*0.15 + 'px'
-  ohleft.classList.add('header')
   ohleft.addEventListener("click", clickLeftHeader, false)
 
   let otree = tree(book.info.tree)
   ohleft.appendChild(otree)
   let navpath = book.navpath
-  log('N', navpath)
+  // log('N', navpath)
+  // log('T', otree)
+  let otitle = q('#tree-title')
+  otitle.textContent = navpath.fpath
+  let otbody = q('#tree-body')
+  otbody.classList.add('tree-collapse')
 }
 
 function clickLeftHeader(ev) {
   let fpath = ev.target.getAttribute('fpath')
-  log('LEFT', ev.target)
-  // let book = window.book
-  // book.fpath = fpath
-  let navpath = window.navpath
-  navpath.fpath = fpath
-  // navigate(navpath)
+  // log('LEFT', ev.target)
+  let otbody = q('#tree-body')
+  if (fpath) {
+    if (ev.target.classList.contains('tree-node-empty')) return
+    let otitle = q('#tree-title')
+    let navpath = window.navpath
+    navpath.fpath = fpath
+    otitle.textContent = navpath.fpath
+    otbody.classList.add('tree-collapse')
+    navigate(navpath)
+  } else {
+    otbody.classList.remove('tree-collapse')
+    let ohleft = q('.hleft')
+    ohleft.classList.add('header')
+  }
 }
 
 

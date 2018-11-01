@@ -145,8 +145,11 @@ const {
 const isDev = true;
 const app = electron__WEBPACK_IMPORTED_MODULE_0__["remote"].app;
 const appPath = app.getAppPath();
-let userDataPath = app.getPath("userData"); // let hstates =   store.get('hstates') || []
+let userDataPath = app.getPath("userData");
+
+const watch = __webpack_require__(/*! node-watch */ "node-watch"); // let hstates =   store.get('hstates') || []
 // let hstate = store.get('hstate') || -1
+
 
 let hstates = [];
 let hstate = -1;
@@ -183,15 +186,20 @@ electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('parseDir', function (ev
 
   dialog.showOpenDialog({
     properties: ['openDirectory']
-  }, getDir);
-});
+  }, getFNS);
+}); // унести в getFile, и грязно пока
 
-function getDir(fns) {
+function getFNS(fns) {
   if (!fns) return;
   let bpath = fns[0];
-  Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
-    log('FUT BOOK', book); // let book = {bkey: bkey, info: info, texts: cpanes}
+  log('Watch:', bpath);
+  getDir(bpath);
+}
 
+function getDir(bpath) {
+  Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
+    log('FUT BOOK', book);
+    if (!book) return;
     let lib = store.get('lib') || {};
     lib = {};
     lib[book.bkey] = book.info;
@@ -199,8 +207,20 @@ function getDir(fns) {
     let libtext = store.get('libtexts') || {};
     libtext = {};
     libtext[book.bkey] = book.texts;
-    store.set('libtext', libtext); // book2lib(book)
-    // parseLib()
+    store.set('libtext', libtext);
+    startWatcher(book.bpath);
+    navigate({
+      section: 'lib'
+    });
+  });
+} // не работает - почему?
+
+
+function startWatcher(bpath) {
+  watch(bpath, {
+    recursive: true
+  }, function (evt, name) {
+    log('%s changed.', name); // navigate(hpos)
 
     navigate({
       section: 'lib'
@@ -249,13 +269,6 @@ function getDir(fns) {
 //   }
 // }
 
-
-function book2lib(book) {
-  let books = store.get('lib') || [];
-  books.push(book);
-  store.set('lib', books);
-  log('LIB: book added', book);
-}
 
 function parseLib() {
   window.split.setSizes([100, 0]);
@@ -503,9 +516,9 @@ function parseBook(navpath) {
 
   let info = lib[navpath.bkey];
   let libtext = store.get('libtext');
-  let texts = libtext[navpath.bkey];
-  log('INFO', info);
-  log('TEXTS', texts); // let nicnames = info.nicnames
+  let texts = libtext[navpath.bkey]; // log('INFO', info)
+  // log('TEXTS', texts)
+  // let nicnames = info.nicnames
   // let panes = texts.panes
   // let coms = texts.coms
 
@@ -638,21 +651,36 @@ function createLeftHeader(book) {
   obook.appendChild(ohleft);
   ohleft.classList.add('hleft');
   ohleft.style.left = arect.width * 0.15 + 'px';
-  ohleft.classList.add('header');
   ohleft.addEventListener("click", clickLeftHeader, false);
   let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(book.info.tree);
   ohleft.appendChild(otree);
-  let navpath = book.navpath;
-  log('N', navpath);
+  let navpath = book.navpath; // log('N', navpath)
+  // log('T', otree)
+
+  let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree-title');
+  otitle.textContent = navpath.fpath;
+  let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree-body');
+  otbody.classList.add('tree-collapse');
 }
 
 function clickLeftHeader(ev) {
-  let fpath = ev.target.getAttribute('fpath');
-  log('LEFT', ev.target); // let book = window.book
-  // book.fpath = fpath
+  let fpath = ev.target.getAttribute('fpath'); // log('LEFT', ev.target)
 
-  let navpath = window.navpath;
-  navpath.fpath = fpath; // navigate(navpath)
+  let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree-body');
+
+  if (fpath) {
+    if (ev.target.classList.contains('tree-node-empty')) return;
+    let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree-title');
+    let navpath = window.navpath;
+    navpath.fpath = fpath;
+    otitle.textContent = navpath.fpath;
+    otbody.classList.add('tree-collapse');
+    Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(navpath);
+  } else {
+    otbody.classList.remove('tree-collapse');
+    let ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('.hleft');
+    ohleft.classList.add('header');
+  }
 }
 
 function createRightHeader(book) {
@@ -1018,8 +1046,10 @@ function parseDir(bookpath) {
   let book = {
     bkey: bkey,
     info: info,
-    texts: cpanes
+    texts: cpanes,
+    bpath: bpath
   };
+  log('BOOK FROM GET', book);
   return book;
 }
 
@@ -1090,9 +1120,12 @@ function tree(data) {
   otitle.id = 'tree-title';
   otitle.textContent = 'content';
   otree.appendChild(otitle);
+  let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-body');
+  otbody.id = 'tree-body';
+  otree.appendChild(otbody);
   data.forEach(node => {
     let onode = createNode(node);
-    otree.appendChild(onode);
+    otbody.appendChild(onode);
   });
   return otree;
 }
@@ -1380,6 +1413,17 @@ module.exports = require("lodash");
 /***/ (function(module, exports) {
 
 module.exports = require("mousetrap");
+
+/***/ }),
+
+/***/ "node-watch":
+/*!*****************************!*\
+  !*** external "node-watch" ***!
+  \*****************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("node-watch");
 
 /***/ }),
 
