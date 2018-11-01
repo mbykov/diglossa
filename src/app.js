@@ -11,7 +11,7 @@ import Split from 'split.js'
 import { remote } from "electron";
 import { shell } from 'electron'
 import { ipcRenderer } from "electron";
-import { q, qs, empty, create, span, p, div, enclitic } from './lib/utils'
+import { q, qs, empty, create, remove, span, p, div, enclitic } from './lib/utils'
 import { twoPages, parseTitle, parseBook } from './lib/book'
 // import { nav } from './lib/nav'
 import { openODS, openDir } from './lib/getfiles'
@@ -56,8 +56,8 @@ window.split = twoPages()
 let hpos = store.get('hpos') || {section: 'lib'}
 log('LOAD-hpos', hpos)
 
-navigate({section: 'lib'})
-// navigate(hpos)
+// navigate({section: 'lib'})
+navigate(hpos)
 
 
 ipcRenderer.on('section', function (event, name) {
@@ -69,8 +69,11 @@ ipcRenderer.on('parseDir', function (event, name) {
   log('PARSE DIR', name)
   // dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'book', extensions: ['ods'] }]}, showBook)
   dialog.showOpenDialog({properties: ['openDirectory'] }, getDir)
-
  })
+
+ipcRenderer.on('home', function (event) {
+  navigate({section: 'lib'})
+})
 
 function getDir(fns) {
   if (!fns) return
@@ -152,7 +155,7 @@ function parseLib() {
   window.split.setSizes([100,0])
   let lib = store.get('lib') || []
   let infos = _.values(lib)
-  log('LIB INFOS', infos)
+  // log('LIB INFOS', infos)
 
   let olib = q('#source')
   empty(olib)
@@ -188,13 +191,15 @@ function goBook(ev) {
 }
 
 export function navigate(navpath) {
-  let obook = q('#source')
   let osource = q('#source')
   let otrns = q('#trns')
   empty(osource)
   empty(otrns)
+  let ohleft = q('.hleft')
+  let ohright = q('.hright')
+  remove(ohleft)
+  remove(ohright)
 
-  log('Navigate:', navpath)
   let sec = navpath.section
   if (sec == 'lib') parseLib()
   else if (sec == 'title') parseTitle(navpath)
@@ -212,6 +217,8 @@ export function navigate(navpath) {
   hpos = hstates[hstate]
   store.set('hpos', hpos)
   // log('STORE-hpos', hpos)
+  log('Navigate:', navpath)
+  window.navpath = navpath
 }
 
 Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {

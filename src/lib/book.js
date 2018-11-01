@@ -24,7 +24,7 @@ export function twoPages() {
     cursor: 'col-resize',
     minSize: [0, 0],
     onDragEnd: function (sizes) {
-      reSetBook()
+      // reSetBook()
     }
   })
   let obook = q('#book')
@@ -82,7 +82,6 @@ export function parseTitle(navpath) {
   window.split.setSizes([50,50])
   let lib = store.get('lib') || []
   let info = lib[navpath.bkey]
-  window.navpath = navpath
 
   let oright = q('#trns')
   let obookCont = div('')
@@ -94,8 +93,6 @@ export function parseTitle(navpath) {
 }
 
 function goBookEvent(ev) {
-  // let oapp = q('#app')
-  // let book = oapp.book
   let navpath = window.navpath
   let fpath = ev.target.getAttribute('fpath')
   navpath.fpath = fpath
@@ -103,15 +100,8 @@ function goBookEvent(ev) {
   navigate(navpath)
 }
 
-// export function parseBook(navpath) {
-//   setBookText(navpath)
-//   // createRightHeader()
-//   // createLeftHeader()
-// }
-
-// function setBookText(navpath) {
 export function parseBook(navpath) {
-  log('___setBookText')
+  // log('___parseBook_start')
   window.split.setSizes([50,50])
   let obook = q('#source')
   let osource = q('#source')
@@ -119,8 +109,9 @@ export function parseBook(navpath) {
   empty(osource)
   empty(otrns)
 
-  log('BOOK-NPATH', navpath)
+  log('parse-BOOK-npath:', navpath)
   let lib = store.get('lib')
+  // log('LIB', lib)
   let info = lib[navpath.bkey]
   let libtext = store.get('libtext')
   let texts = libtext[navpath.bkey]
@@ -172,6 +163,7 @@ function setBookText(book, fpath, nic, start) {
   // log('BEFORE CHUNK book', book)
   setChunk(start, book)
   createRightHeader(book)
+  createLeftHeader(book)
 }
 
 function setChunk(start, book) {
@@ -237,7 +229,7 @@ function cyclePar(ev) {
   curpar.classList.add('hidden')
 }
 
-function createLeftHeader() {
+function createLeftHeader(book) {
   let obook = q('#book')
   let arect = obook.getBoundingClientRect()
   let ohleft = div()
@@ -250,7 +242,6 @@ function createLeftHeader() {
 
   // let oact = div()
   // oact.textContent = 'active'
-  let book = window.book
   let otree = tree(book.info.tree)
   // ohleft.appendChild(oact)
   ohleft.appendChild(otree)
@@ -258,11 +249,12 @@ function createLeftHeader() {
 
 function clickLeftHeader(ev) {
   let fpath = ev.target.getAttribute('fpath')
-  let text = ev.target.textContent
-  if (fpath) log('LEFT', text, fpath)
-  let book = window.book
-  book.fpath = fpath
-  let navpath = {section: 'book', fpath: fpath}
+  // let text = ev.target.textContent
+  if (fpath) log('LEFT', fpath)
+  // let book = window.book
+  // book.fpath = fpath
+  let navpath = window.navpath
+  navpath.fpath = fpath
   navigate(navpath)
 }
 

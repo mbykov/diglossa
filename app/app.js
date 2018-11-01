@@ -163,11 +163,9 @@ window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])(); // 
 let hpos = store.get('hpos') || {
   section: 'lib'
 };
-log('LOAD-hpos', hpos);
-navigate({
-  section: 'lib'
-}); // navigate(hpos)
+log('LOAD-hpos', hpos); // navigate({section: 'lib'})
 
+navigate(hpos);
 electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('section', function (event, name) {
   log('SECTION NAME', name);
   navigate({
@@ -180,6 +178,11 @@ electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('parseDir', function (ev
   dialog.showOpenDialog({
     properties: ['openDirectory']
   }, getDir);
+});
+electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('home', function (event) {
+  navigate({
+    section: 'lib'
+  });
 });
 
 function getDir(fns) {
@@ -253,9 +256,9 @@ function parseLib() {
   window.split.setSizes([100, 0]);
   let lib = store.get('lib') || [];
 
-  let infos = lodash__WEBPACK_IMPORTED_MODULE_2___default.a.values(lib);
+  let infos = lodash__WEBPACK_IMPORTED_MODULE_2___default.a.values(lib); // log('LIB INFOS', infos)
 
-  log('LIB INFOS', infos);
+
   let olib = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(olib);
   let oul = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["create"])('ul');
@@ -292,12 +295,14 @@ function goBook(ev) {
 }
 
 function navigate(navpath) {
-  let obook = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
   let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
   let otrns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#trns');
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(osource);
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(otrns);
-  log('Navigate:', navpath);
+  let ohleft = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('.hleft');
+  let ohright = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('.hright');
+  Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["remove"])(ohleft);
+  Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["remove"])(ohright);
   let sec = navpath.section;
   if (sec == 'lib') parseLib();else if (sec == 'title') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])(navpath);else if (sec == 'book') Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(navpath);else showSection(sec);
   let hkey = JSON.stringify(navpath); // log('HKEY', hkey)
@@ -310,6 +315,9 @@ function navigate(navpath) {
 
   hpos = hstates[hstate];
   store.set('hpos', hpos); // log('STORE-hpos', hpos)
+
+  log('Navigate:', navpath);
+  window.navpath = navpath;
 }
 Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   // log('EV', ev.which, hstate, hstate - 1 > -1, hstates[hstate])
@@ -398,8 +406,7 @@ function twoPages() {
     gutterSize: 5,
     cursor: 'col-resize',
     minSize: [0, 0],
-    onDragEnd: function (sizes) {
-      reSetBook();
+    onDragEnd: function (sizes) {// reSetBook()
     }
   });
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book'); // obook.addEventListener("wheel", scrollPanes, false)
@@ -459,7 +466,6 @@ function parseTitle(navpath) {
   window.split.setSizes([50, 50]);
   let lib = store.get('lib') || [];
   let info = lib[navpath.bkey];
-  window.navpath = navpath;
   let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   let obookCont = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
   obookCont.classList.add('bookTitle');
@@ -470,31 +476,24 @@ function parseTitle(navpath) {
 }
 
 function goBookEvent(ev) {
-  // let oapp = q('#app')
-  // let book = oapp.book
   let navpath = window.navpath;
   let fpath = ev.target.getAttribute('fpath');
   navpath.fpath = fpath;
   navpath.section = 'book';
   Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(navpath);
-} // export function parseBook(navpath) {
-//   setBookText(navpath)
-//   // createRightHeader()
-//   // createLeftHeader()
-// }
-// function setBookText(navpath) {
-
+}
 
 function parseBook(navpath) {
-  log('___setBookText');
+  // log('___parseBook_start')
   window.split.setSizes([50, 50]);
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns);
-  log('BOOK-NPATH', navpath);
-  let lib = store.get('lib');
+  log('parse-BOOK-npath:', navpath);
+  let lib = store.get('lib'); // log('LIB', lib)
+
   let info = lib[navpath.bkey];
   let libtext = store.get('libtext');
   let texts = libtext[navpath.bkey];
@@ -544,6 +543,7 @@ function setBookText(book, fpath, nic, start) {
 
   setChunk(start, book);
   createRightHeader(book);
+  createLeftHeader(book);
 }
 
 function setChunk(start, book) {
@@ -622,7 +622,7 @@ function cyclePar(ev) {
   curpar.classList.add('hidden');
 }
 
-function createLeftHeader() {
+function createLeftHeader(book) {
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
   let arect = obook.getBoundingClientRect();
   let ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
@@ -634,22 +634,19 @@ function createLeftHeader() {
   ohleft.addEventListener("click", clickLeftHeader, false); // let oact = div()
   // oact.textContent = 'active'
 
-  let book = window.book;
   let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(book.info.tree); // ohleft.appendChild(oact)
 
   ohleft.appendChild(otree);
 }
 
 function clickLeftHeader(ev) {
-  let fpath = ev.target.getAttribute('fpath');
-  let text = ev.target.textContent;
-  if (fpath) log('LEFT', text, fpath);
-  let book = window.book;
-  book.fpath = fpath;
-  let navpath = {
-    section: 'book',
-    fpath: fpath
-  };
+  let fpath = ev.target.getAttribute('fpath'); // let text = ev.target.textContent
+
+  if (fpath) log('LEFT', fpath); // let book = window.book
+  // book.fpath = fpath
+
+  let navpath = window.navpath;
+  navpath.fpath = fpath;
   Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(navpath);
 }
 
@@ -1077,7 +1074,7 @@ __webpack_require__.r(__webpack_exports__);
 
 let log = console.log;
 function tree(data) {
-  // log('TREEDATA', data)
+  log('TREEDATA', data);
   let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree');
   data.forEach(node => {
     let onode = createNode(node);
@@ -1200,11 +1197,14 @@ function p(str) {
   return oDiv;
 }
 function empty(el) {
+  if (!el) return;
+
   while (el.hasChildNodes()) {
     el.removeChild(el.lastChild);
   }
 }
 function remove(el) {
+  if (!el) return;
   el.parentElement.removeChild(el);
 }
 function removeAll(sel) {

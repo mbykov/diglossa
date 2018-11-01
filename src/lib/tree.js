@@ -3,7 +3,7 @@ import { q, qs, empty, create, span, p, div, remove } from './utils'
 let log = console.log
 
 export default function tree(data) {
-  // log('TREEDATA', data)
+  log('TREEDATA', data)
   let otree = create('div', 'tree')
   data.forEach(node=> {
     let onode = createNode(node)

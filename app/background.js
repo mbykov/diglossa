@@ -507,15 +507,19 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "libMenuTemplate", function() { return libMenuTemplate; });
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! electron */ "electron");
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_0__);
+ // export const libMenuTemplate = {
+//   label: "Home",
+//   submenu: [
+//     { label: "Library", click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'library') } }
+//   ]
+// };
 
 const libMenuTemplate = {
   label: "Home",
-  submenu: [{
-    label: "Library",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'library');
-    }
-  }]
+  accelerator: "CmdOrCtrl+L",
+  click: () => {
+    electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('home');
+  }
 };
 
 /***/ }),

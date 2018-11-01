@@ -58,12 +58,14 @@ export function p (str) {
 }
 
 export function empty (el) {
+  if (!el) return
   while (el.hasChildNodes()) {
     el.removeChild(el.lastChild)
   }
 }
 
 export function remove (el) {
+  if (!el) return
   el.parentElement.removeChild(el)
 }
 
