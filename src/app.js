@@ -59,6 +59,9 @@ log('LOAD-hpos', hpos)
 // navigate({section: 'lib'})
 navigate(hpos)
 
+ipcRenderer.on('home', function (event) {
+  navigate({section: 'lib'})
+})
 
 ipcRenderer.on('section', function (event, name) {
   log('SECTION NAME', name)
@@ -70,10 +73,6 @@ ipcRenderer.on('parseDir', function (event, name) {
   // dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'book', extensions: ['ods'] }]}, showBook)
   dialog.showOpenDialog({properties: ['openDirectory'] }, getDir)
  })
-
-ipcRenderer.on('home', function (event) {
-  navigate({section: 'lib'})
-})
 
 function getDir(fns) {
   if (!fns) return
@@ -89,9 +88,9 @@ function getDir(fns) {
     libtext = {}
     libtext[book.bkey] = book.texts
     store.set('libtext', libtext)
-
     // book2lib(book)
     // parseLib()
+    navigate({section: 'lib'})
   })
 }
 

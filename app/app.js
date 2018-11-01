@@ -166,6 +166,11 @@ let hpos = store.get('hpos') || {
 log('LOAD-hpos', hpos); // navigate({section: 'lib'})
 
 navigate(hpos);
+electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('home', function (event) {
+  navigate({
+    section: 'lib'
+  });
+});
 electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('section', function (event, name) {
   log('SECTION NAME', name);
   navigate({
@@ -178,11 +183,6 @@ electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('parseDir', function (ev
   dialog.showOpenDialog({
     properties: ['openDirectory']
   }, getDir);
-});
-electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('home', function (event) {
-  navigate({
-    section: 'lib'
-  });
 });
 
 function getDir(fns) {
@@ -200,6 +200,10 @@ function getDir(fns) {
     libtext[book.bkey] = book.texts;
     store.set('libtext', libtext); // book2lib(book)
     // parseLib()
+
+    navigate({
+      section: 'lib'
+    });
   });
 } // app.on('before-quit', () => {
 // store.set('hstate', hstate)
@@ -476,10 +480,12 @@ function parseTitle(navpath) {
 }
 
 function goBookEvent(ev) {
+  if (!ev.target.classList.contains('tree-node-text')) return;
   let navpath = window.navpath;
   let fpath = ev.target.getAttribute('fpath');
   navpath.fpath = fpath;
-  navpath.section = 'book';
+  navpath.section = 'book'; // log('EV', ev.target)
+
   Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(navpath);
 }
 
@@ -550,6 +556,7 @@ function setChunk(start, book) {
   let limit = 20;
   let author = book.author;
   let trns = book.trns;
+  if (!author || !author.rows) return;
   let authrows = author.rows.slice(start, start + limit);
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
   let rePunct = new RegExp(punct, 'g');
@@ -642,12 +649,11 @@ function createLeftHeader(book) {
 function clickLeftHeader(ev) {
   let fpath = ev.target.getAttribute('fpath'); // let text = ev.target.textContent
 
-  if (fpath) log('LEFT', fpath); // let book = window.book
+  log('LEFT', ev.target); // let book = window.book
   // book.fpath = fpath
 
   let navpath = window.navpath;
-  navpath.fpath = fpath;
-  Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(navpath);
+  navpath.fpath = fpath; // navigate(navpath)
 }
 
 function createRightHeader(book) {
@@ -920,6 +926,11 @@ function walk(fns, dname, dtree, tree) {
   tree.text = fpath.split('/').slice(-1)[0];
   tree.fpath = fpath.replace(/^\//, '');
   if (!dtree.children) return;
+  let hasFiles = false;
+  dtree.children.forEach(child => {
+    if (child.type == 'file') hasFiles = true;
+  });
+  tree.hasFiles = hasFiles;
   dtree.children.forEach((child, idx) => {
     fns.push(dtree.path);
     if (child.type != 'directory') return;
@@ -941,7 +952,7 @@ function parseDir(bookpath) {
 
   fns = glob.sync('**/*', {
     cwd: bpath
-  }); // log('FNS', fns.length)
+  }); // log('FNS', fns)
 
   let ipath = path.resolve(bpath, 'info.json'); // log('IPATH', ipath)
   // if (!ipath) return
@@ -1074,8 +1085,12 @@ __webpack_require__.r(__webpack_exports__);
 
 let log = console.log;
 function tree(data) {
-  log('TREEDATA', data);
+  // log('TREEDATA', data)
   let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree');
+  let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-title');
+  otitle.id = 'tree-title';
+  otitle.textContent = 'content';
+  otree.appendChild(otitle);
   data.forEach(node => {
     let onode = createNode(node);
     otree.appendChild(onode);
@@ -1087,9 +1102,10 @@ function createNode(node) {
   // log('NODE', node)
   let onode = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-text');
   let osign = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-branch');
-  osign.textContent = '▾'; // osign.addEventListener('click', toggleNode, false)
-
-  let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-node-text');
+  osign.textContent = '▾';
+  osign.addEventListener('click', toggleNode, false);
+  let navclass = node.hasFiles ? 'tree-node-text' : 'tree-node-empty';
+  let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', navclass);
   otext.textContent = node.text;
   otext.setAttribute('fpath', node.fpath); // otext.addEventListener('click', goNode, false)
 
@@ -1108,10 +1124,12 @@ function createNode(node) {
 } // function goNode(ev) {
 //   log('EV', ev.target.textContent)
 // }
-// function toggleNode(ev) {
-//   let parent = ev.target.parentNode
-//   parent.classList.toggle('tree-collapse')
-// }
+
+
+function toggleNode(ev) {
+  let parent = ev.target.parentNode;
+  parent.classList.toggle('tree-collapse');
+}
 
 /***/ }),
 

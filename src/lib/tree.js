@@ -3,8 +3,12 @@ import { q, qs, empty, create, span, p, div, remove } from './utils'
 let log = console.log
 
 export default function tree(data) {
-  log('TREEDATA', data)
+  // log('TREEDATA', data)
   let otree = create('div', 'tree')
+  let otitle = create('div', 'tree-title')
+  otitle.id = 'tree-title'
+  otitle.textContent = 'content'
+  otree.appendChild(otitle)
   data.forEach(node=> {
     let onode = createNode(node)
     otree.appendChild(onode)
@@ -17,8 +21,9 @@ function createNode(node) {
   let onode = create('div', 'tree-text')
   let osign = create('span', 'tree-branch')
   osign.textContent = '▾'
-  // osign.addEventListener('click', toggleNode, false)
-  let otext = create('span', 'tree-node-text')
+  osign.addEventListener('click', toggleNode, false)
+  let navclass = (node.hasFiles) ? 'tree-node-text' : 'tree-node-empty'
+  let otext = create('span', navclass)
   otext.textContent = node.text
   otext.setAttribute('fpath', node.fpath)
   // otext.addEventListener('click', goNode, false)
@@ -38,7 +43,7 @@ function createNode(node) {
 //   log('EV', ev.target.textContent)
 // }
 
-// function toggleNode(ev) {
-//   let parent = ev.target.parentNode
-//   parent.classList.toggle('tree-collapse')
-// }
+function toggleNode(ev) {
+  let parent = ev.target.parentNode
+  parent.classList.toggle('tree-collapse')
+}

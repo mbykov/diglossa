@@ -90,12 +90,16 @@ export function openDir(bookpath, cb) {
   }
 }
 
-
 function walk(fns, dname, dtree, tree) {
   let fpath = dtree.path.split(dname)[1]
   tree.text = fpath.split('/').slice(-1)[0]
   tree.fpath = fpath.replace(/^\//, '')
   if (!dtree.children) return
+  let hasFiles = false
+  dtree.children.forEach(child=> {
+    if (child.type == 'file') hasFiles = true
+  })
+  tree.hasFiles = hasFiles
   dtree.children.forEach((child, idx)=> {
     fns.push(dtree.path)
     if (child.type != 'directory') return
@@ -104,7 +108,6 @@ function walk(fns, dname, dtree, tree) {
     walk(fns, dname, child, tree.children[idx])
   })
 }
-
 
 function parseDir(bookpath) {
   let bpath = path.resolve(__dirname, bookpath)
@@ -117,7 +120,7 @@ function parseDir(bookpath) {
   // log('=TREE', tree)
 
   fns = glob.sync('**/*', {cwd: bpath})
-  // log('FNS', fns.length)
+  // log('FNS', fns)
 
   let ipath = path.resolve(bpath, 'info.json')
   // log('IPATH', ipath)

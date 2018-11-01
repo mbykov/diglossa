@@ -93,10 +93,12 @@ export function parseTitle(navpath) {
 }
 
 function goBookEvent(ev) {
+  if (!ev.target.classList.contains('tree-node-text')) return
   let navpath = window.navpath
   let fpath = ev.target.getAttribute('fpath')
   navpath.fpath = fpath
   navpath.section = 'book'
+  // log('EV', ev.target)
   navigate(navpath)
 }
 
@@ -170,6 +172,7 @@ function setChunk(start, book) {
   let limit = 20
   let author = book.author
   let trns = book.trns
+  if (!author || !author.rows) return
   let authrows = author.rows.slice(start, start+limit)
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
   let rePunct = new RegExp(punct, 'g')
@@ -250,12 +253,12 @@ function createLeftHeader(book) {
 function clickLeftHeader(ev) {
   let fpath = ev.target.getAttribute('fpath')
   // let text = ev.target.textContent
-  if (fpath) log('LEFT', fpath)
+  log('LEFT', ev.target)
   // let book = window.book
   // book.fpath = fpath
   let navpath = window.navpath
   navpath.fpath = fpath
-  navigate(navpath)
+  // navigate(navpath)
 }
 
 
