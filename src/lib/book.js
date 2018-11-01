@@ -129,7 +129,7 @@ export function parseBook(navpath) {
   let book = {}
   book.info = info
   book.texts = texts
-
+  book.navpath = navpath
   // let author = _.filter(panes, auth=> { return auth.author && auth.fpath == fpath})[0]
   // let trns = _.filter(panes, auth=> { return !auth.author && auth.fpath == fpath})
 
@@ -240,19 +240,16 @@ function createLeftHeader(book) {
   ohleft.classList.add('hleft')
   ohleft.style.left = arect.width*0.15 + 'px'
   ohleft.classList.add('header')
-  // log('LEFT HEADER', ohleft)
   ohleft.addEventListener("click", clickLeftHeader, false)
 
-  // let oact = div()
-  // oact.textContent = 'active'
   let otree = tree(book.info.tree)
-  // ohleft.appendChild(oact)
   ohleft.appendChild(otree)
+  let navpath = book.navpath
+  log('N', navpath)
 }
 
 function clickLeftHeader(ev) {
   let fpath = ev.target.getAttribute('fpath')
-  // let text = ev.target.textContent
   log('LEFT', ev.target)
   // let book = window.book
   // book.fpath = fpath

@@ -58,6 +58,7 @@ log('LOAD-hpos', hpos)
 
 // navigate({section: 'lib'})
 navigate(hpos)
+window.navpath = hpos
 
 ipcRenderer.on('home', function (event) {
   navigate({section: 'lib'})

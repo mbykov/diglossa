@@ -166,6 +166,7 @@ let hpos = store.get('hpos') || {
 log('LOAD-hpos', hpos); // navigate({section: 'lib'})
 
 navigate(hpos);
+window.navpath = hpos;
 electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('home', function (event) {
   navigate({
     section: 'lib'
@@ -512,7 +513,8 @@ function parseBook(navpath) {
   let fpath = navpath.fpath;
   let book = {};
   book.info = info;
-  book.texts = texts; // let author = _.filter(panes, auth=> { return auth.author && auth.fpath == fpath})[0]
+  book.texts = texts;
+  book.navpath = navpath; // let author = _.filter(panes, auth=> { return auth.author && auth.fpath == fpath})[0]
   // let trns = _.filter(panes, auth=> { return !auth.author && auth.fpath == fpath})
   // book.author = author
   // book.trns = trns
@@ -636,19 +638,16 @@ function createLeftHeader(book) {
   obook.appendChild(ohleft);
   ohleft.classList.add('hleft');
   ohleft.style.left = arect.width * 0.15 + 'px';
-  ohleft.classList.add('header'); // log('LEFT HEADER', ohleft)
-
-  ohleft.addEventListener("click", clickLeftHeader, false); // let oact = div()
-  // oact.textContent = 'active'
-
-  let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(book.info.tree); // ohleft.appendChild(oact)
-
+  ohleft.classList.add('header');
+  ohleft.addEventListener("click", clickLeftHeader, false);
+  let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(book.info.tree);
   ohleft.appendChild(otree);
+  let navpath = book.navpath;
+  log('N', navpath);
 }
 
 function clickLeftHeader(ev) {
-  let fpath = ev.target.getAttribute('fpath'); // let text = ev.target.textContent
-
+  let fpath = ev.target.getAttribute('fpath');
   log('LEFT', ev.target); // let book = window.book
   // book.fpath = fpath
 

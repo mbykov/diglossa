@@ -256,3 +256,7 @@ span.active {
 .section {
   margin-left: 100px;
 }
+
+.tree-title {
+  padding-left: 10px;
+}
