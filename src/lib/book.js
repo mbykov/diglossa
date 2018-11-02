@@ -40,6 +40,12 @@ function scrollPanes(ev) {
   let trns = q('#trns')
   source.scrollTop += delta
   trns.scrollTop = source.scrollTop
+
+  let navpath = window.navpath
+  navpath.scrollTop = source.scrollTop
+  store.set('navpath', window.navpath)
+  // log('___NP', navpath)
+
   let el = ev.target
   let oapp = q('#app')
   let book = oapp.book
@@ -132,6 +138,7 @@ function goBookEvent(ev) {
 export function parseBook(navpath) {
   // log('___parseBook_start')
   window.split.setSizes([50,50])
+  window.navpath = navpath // reload !
   // let obook = q('#source')
   let osource = q('#source')
   let otrns = q('#trns')

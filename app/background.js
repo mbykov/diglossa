@@ -140,9 +140,12 @@ var env__WEBPACK_IMPORTED_MODULE_12___namespace = /*#__PURE__*/__webpack_require
 
  // import createWindow from "./lib/window";
 
-const windowStateKeeper = __webpack_require__(/*! electron-window-state */ "electron-window-state"); // Special module holding environment variables which you declared
-// in config/env_xxx.json file.
+const windowStateKeeper = __webpack_require__(/*! electron-window-state */ "electron-window-state");
 
+const Store = __webpack_require__(/*! electron-store */ "electron-store");
+
+const store = new Store(); // Special module holding environment variables which you declared
+// in config/env_xxx.json file.
 
 
 
@@ -194,11 +197,33 @@ electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("ready", () => {
 
   if (env__WEBPACK_IMPORTED_MODULE_12__.name === "development") {
     win.openDevTools();
-  }
+  } // win.onbeforeunload = (ev) => {
+  //   console.log('I do not want to be closed')
+  //   ev.returnValue = true
+  //   // ev.returnValue = false
+  // }
+
+
+  let evt;
+  win.on('close', ev => {
+    console.log('APP BEFORE QUIT');
+    ev.preventDefault();
+    evt = ev;
+    win.webContents.send('save-state', 'xxx');
+  });
+  electron__WEBPACK_IMPORTED_MODULE_2__["ipcMain"].on('state-saved', (event, navpath) => {
+    console.log('DATA-SAVED', navpath);
+    evt.defaultPrevented = false;
+    win.destroy();
+  });
 });
 electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("window-all-closed", () => {
   electron__WEBPACK_IMPORTED_MODULE_2__["app"].quit();
-});
+}); // app.on('before-quit', (ev) => {
+//   console.log('APP BEFORE QUIT')
+//   win.webContents.send('save-state', 'whoooooooh!')
+//   ev.preventDefault()
+// })
 
 /***/ }),
 
@@ -554,6 +579,17 @@ const rightMenuTemplate = {
 /***/ (function(module, exports) {
 
 module.exports = require("electron");
+
+/***/ }),
+
+/***/ "electron-store":
+/*!*********************************!*\
+  !*** external "electron-store" ***!
+  \*********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("electron-store");
 
 /***/ }),
 

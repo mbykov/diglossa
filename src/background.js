@@ -18,6 +18,9 @@ import { rightMenuTemplate } from "./menu/right_menu_template";
 // import createWindow from "./lib/window";
 const windowStateKeeper = require('electron-window-state');
 
+const Store = require('electron-store')
+const store = new Store()
+
 // Special module holding environment variables which you declared
 // in config/env_xxx.json file.
 import env from "env";
@@ -77,8 +80,34 @@ app.on("ready", () => {
     win.openDevTools();
   }
 
+  // win.onbeforeunload = (ev) => {
+  //   console.log('I do not want to be closed')
+  //   ev.returnValue = true
+  //   // ev.returnValue = false
+  // }
+
+  let evt
+  win.on('close', (ev) => {
+    console.log('APP BEFORE QUIT')
+    ev.preventDefault()
+    evt = ev
+    win.webContents.send('save-state', 'xxx')
+  })
+  ipcMain.on('state-saved', (event, navpath) => {
+    console.log('DATA-SAVED', navpath)
+    evt.defaultPrevented = false
+    win.destroy();
+  })
+
 });
 
 app.on("window-all-closed", () => {
   app.quit();
 });
+
+
+// app.on('before-quit', (ev) => {
+//   console.log('APP BEFORE QUIT')
+//   win.webContents.send('save-state', 'whoooooooh!')
+//   ev.preventDefault()
+// })
