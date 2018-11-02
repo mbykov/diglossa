@@ -147,7 +147,7 @@ input[type='file'] {
 
 #headers {
   margin: 0;
-  height: 25px;
+  height: 30px;
 }
 
 #headers > p {
@@ -182,10 +182,10 @@ input[type='file'] {
   background: white;
 }
 
-#headers {
-  height: 16px;
-  padding-bottom: 10px;
-}
+/* #headers { */
+/*   height: 16px; */
+/*   padding-bottom: 10px; */
+/* } */
 
 #book > div.hright > ul  {
   margin: 0;

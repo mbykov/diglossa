@@ -28,8 +28,8 @@ export function twoPages() {
     }
   })
   let obook = q('#book')
-  // obook.addEventListener("wheel", scrollPanes, false)
-  // document.addEventListener("keydown", keyScroll, false)
+  obook.addEventListener("wheel", scrollPanes, false)
+  document.addEventListener("keydown", keyScroll, false)
   return split
 }
 
@@ -72,7 +72,7 @@ function keyScroll(ev) {
     let start = qs('#source > p').length
     // log('___KEY START', start)
     // ошибка при прокрутке всегда
-    // setChunk(start, book)
+    setChunk(start, book)
   }
 }
 
@@ -82,7 +82,7 @@ export function parseTitle(navpath) {
   window.split.setSizes([50,50])
   let lib = store.get('lib') || []
   let info = lib[navpath.bkey]
-  log('I', info)
+  // log('I', info)
 
   let osource = q('#source')
   let otrns = q('#trns')
@@ -110,7 +110,6 @@ export function parseTitle(navpath) {
     onics.appendChild(onicli)
   }
   obookTitle.appendChild(onics)
-
 
   let obookCont = div('')
   obookCont.classList.add('bookTitle')
@@ -153,9 +152,8 @@ export function parseBook(navpath) {
   let book = {}
   book.info = info
   book.texts = texts
-  book.navpath = navpath
 
-  let nic
+  let nic = navpath.nic
   setBookText(book, fpath, nic, start)
 
   osource.addEventListener("mouseover", copyToClipboard, false)
@@ -172,16 +170,18 @@ function setBookText(book, fpath, nic, start) {
   let cnics = trns.map(auth=> { return auth.nic })
   book.cnics = cnics
   if (!nic) nic = cnics[0]
-  book.nic = nic
+  window.navpath.nic = nic
 
-  // log('BEFORE CHUNK book', book)
-  setChunk(start, book)
-  createRightHeader(book)
-  createLeftHeader(book)
+  // log('BEFORE CHUNK nic', nic)
+  window.book = book
+  setChunk(start)
+  createRightHeader()
+  createLeftHeader()
 }
 
-function setChunk(start, book) {
+function setChunk(start) {
   let limit = 20
+  let book = window.book
   let author = book.author
   let trns = book.trns
   if (!author || !author.rows) return
@@ -190,6 +190,7 @@ function setChunk(start, book) {
   let rePunct = new RegExp(punct, 'g')
   let osource = q('#source')
   let otrns = q('#trns')
+  let nic = window.navpath.nic
 
   authrows.forEach((astr, idx) => {
     let oleft = p()
@@ -205,7 +206,7 @@ function setChunk(start, book) {
       oright.setAttribute('idx', start+idx)
       oright.setAttribute('nic', auth.nic)
       otrns.appendChild(oright)
-      if (auth.nic == book.nic) oright.setAttribute('active', true)
+      if (auth.nic == nic) oright.setAttribute('active', true)
       orights.push(oright)
     })
     alignPars(oleft, orights)
@@ -244,7 +245,8 @@ function cyclePar(ev) {
   curpar.classList.add('hidden')
 }
 
-function createLeftHeader(book) {
+function createLeftHeader() {
+  let book = window.book
   let obook = q('#book')
   let arect = obook.getBoundingClientRect()
   let ohleft = div()
@@ -255,7 +257,7 @@ function createLeftHeader(book) {
 
   let otree = tree(book.info.tree)
   ohleft.appendChild(otree)
-  let navpath = book.navpath
+  let navpath = window.navpath
   // log('N', navpath)
   // log('T', otree)
   let otitle = q('#tree-title')
@@ -284,8 +286,8 @@ function clickLeftHeader(ev) {
 }
 
 
-function createRightHeader(book) {
-  // let book = window.book
+function createRightHeader() {
+  let book = window.book
   let obook = q('#book')
   let arect = obook.getBoundingClientRect()
   let ohright = div()
@@ -298,7 +300,8 @@ function createRightHeader(book) {
   ohright.appendChild(oul)
   obook.appendChild(ohright)
   createNameList(book)
-  let nic = book.nic
+  let navpath = window.navpath
+  let nic = navpath.nic
   collapseRightHeader(nic)
 }
 
@@ -322,6 +325,9 @@ function clickRightHeader(ev) {
     expandRightHeader()
   } else {
     let nic = ev.target.getAttribute('nic')
+    let navpath = window.navpath
+    navpath.nic = nic
+    store.set('hpos', navpath)
     if (!nic) return
     collapseRightHeader(nic)
     otherNic(nic)
@@ -331,7 +337,6 @@ function clickRightHeader(ev) {
 function otherNic(nic) {
   let pars = qs('#trns > p')
   pars.forEach((par, idx) => {
-    // if (idx == 1) log('PAR', par, par.getAttribute('nic'))
     if (par.getAttribute('nic') == nic) par.setAttribute('active', true), par.classList.remove('hidden')
     else par.classList.add('hidden')
   })
@@ -357,11 +362,11 @@ function expandRightHeader() {
   })
 }
 
-function reSetBook_(nic) {
-  let osource = q('#source')
-  let otrns = q('#trns')
-  let scrollTop = osource.scrollTop
-  setBookText(nic)
-  osource.scrollTop = scrollTop
-  otrns.scrollTop = scrollTop
-}
+// function reSetBook_(nic) {
+//   let osource = q('#source')
+//   let otrns = q('#trns')
+//   let scrollTop = osource.scrollTop
+//   setBookText(nic)
+//   osource.scrollTop = scrollTop
+//   otrns.scrollTop = scrollTop
+// }

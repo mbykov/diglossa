@@ -168,8 +168,8 @@ let hpos = store.get('hpos') || {
 };
 log('LOAD-hpos', hpos); // navigate({section: 'lib'})
 
-navigate(hpos);
 window.navpath = hpos;
+navigate(hpos);
 electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('home', function (event) {
   navigate({
     section: 'lib'
@@ -427,9 +427,9 @@ function twoPages() {
     onDragEnd: function (sizes) {// reSetBook()
     }
   });
-  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book'); // obook.addEventListener("wheel", scrollPanes, false)
-  // document.addEventListener("keydown", keyScroll, false)
-
+  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
+  obook.addEventListener("wheel", scrollPanes, false);
+  document.addEventListener("keydown", keyScroll, false);
   return split;
 }
 
@@ -475,7 +475,8 @@ function keyScroll(ev) {
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
     let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length; // log('___KEY START', start)
     // ошибка при прокрутке всегда
-    // setChunk(start, book)
+
+    setChunk(start, book);
   }
 }
 
@@ -483,8 +484,8 @@ function parseTitle(navpath) {
   // log('========= parse title =============')
   window.split.setSizes([50, 50]);
   let lib = store.get('lib') || [];
-  let info = lib[navpath.bkey];
-  log('I', info);
+  let info = lib[navpath.bkey]; // log('I', info)
+
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   let obookTitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
@@ -550,8 +551,7 @@ function parseBook(navpath) {
   let book = {};
   book.info = info;
   book.texts = texts;
-  book.navpath = navpath;
-  let nic;
+  let nic = navpath.nic;
   setBookText(book, fpath, nic, start);
   osource.addEventListener("mouseover", copyToClipboard, false);
   otrns.addEventListener("wheel", cyclePar, false);
@@ -573,15 +573,17 @@ function setBookText(book, fpath, nic, start) {
   });
   book.cnics = cnics;
   if (!nic) nic = cnics[0];
-  book.nic = nic; // log('BEFORE CHUNK book', book)
+  window.navpath.nic = nic; // log('BEFORE CHUNK nic', nic)
 
-  setChunk(start, book);
-  createRightHeader(book);
-  createLeftHeader(book);
+  window.book = book;
+  setChunk(start);
+  createRightHeader();
+  createLeftHeader();
 }
 
-function setChunk(start, book) {
+function setChunk(start) {
   let limit = 20;
+  let book = window.book;
   let author = book.author;
   let trns = book.trns;
   if (!author || !author.rows) return;
@@ -590,6 +592,7 @@ function setChunk(start, book) {
   let rePunct = new RegExp(punct, 'g');
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
+  let nic = window.navpath.nic;
   authrows.forEach((astr, idx) => {
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])();
     let html = astr.replace(rePunct, " <span class=\"active\">$1</span>");
@@ -604,7 +607,7 @@ function setChunk(start, book) {
       oright.setAttribute('idx', start + idx);
       oright.setAttribute('nic', auth.nic);
       otrns.appendChild(oright);
-      if (auth.nic == book.nic) oright.setAttribute('active', true);
+      if (auth.nic == nic) oright.setAttribute('active', true);
       orights.push(oright);
     });
     alignPars(oleft, orights);
@@ -657,7 +660,8 @@ function cyclePar(ev) {
   curpar.classList.add('hidden');
 }
 
-function createLeftHeader(book) {
+function createLeftHeader() {
+  let book = window.book;
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
   let arect = obook.getBoundingClientRect();
   let ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
@@ -667,7 +671,7 @@ function createLeftHeader(book) {
   ohleft.addEventListener("click", clickLeftHeader, false);
   let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(book.info.tree);
   ohleft.appendChild(otree);
-  let navpath = book.navpath; // log('N', navpath)
+  let navpath = window.navpath; // log('N', navpath)
   // log('T', otree)
 
   let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree-title');
@@ -696,8 +700,8 @@ function clickLeftHeader(ev) {
   }
 }
 
-function createRightHeader(book) {
-  // let book = window.book
+function createRightHeader() {
+  let book = window.book;
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
   let arect = obook.getBoundingClientRect();
   let ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
@@ -709,7 +713,8 @@ function createRightHeader(book) {
   ohright.appendChild(oul);
   obook.appendChild(ohright);
   createNameList(book);
-  let nic = book.nic;
+  let navpath = window.navpath;
+  let nic = navpath.nic;
   collapseRightHeader(nic);
 }
 
@@ -733,6 +738,9 @@ function clickRightHeader(ev) {
     expandRightHeader();
   } else {
     let nic = ev.target.getAttribute('nic');
+    let navpath = window.navpath;
+    navpath.nic = nic;
+    store.set('hpos', navpath);
     if (!nic) return;
     collapseRightHeader(nic);
     otherNic(nic);
@@ -742,7 +750,6 @@ function clickRightHeader(ev) {
 function otherNic(nic) {
   let pars = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#trns > p');
   pars.forEach((par, idx) => {
-    // if (idx == 1) log('PAR', par, par.getAttribute('nic'))
     if (par.getAttribute('nic') == nic) par.setAttribute('active', true), par.classList.remove('hidden');else par.classList.add('hidden');
   });
 }
@@ -766,16 +773,14 @@ function expandRightHeader() {
     oli.classList.remove('hidden');
     oli.classList.remove('active');
   });
-}
-
-function reSetBook_(nic) {
-  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
-  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
-  let scrollTop = osource.scrollTop;
-  setBookText(nic);
-  osource.scrollTop = scrollTop;
-  otrns.scrollTop = scrollTop;
-}
+} // function reSetBook_(nic) {
+//   let osource = q('#source')
+//   let otrns = q('#trns')
+//   let scrollTop = osource.scrollTop
+//   setBookText(nic)
+//   osource.scrollTop = scrollTop
+//   otrns.scrollTop = scrollTop
+// }
 
 /***/ }),
 

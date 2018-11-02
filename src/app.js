@@ -58,8 +58,8 @@ let hpos = store.get('hpos') || {section: 'lib'}
 log('LOAD-hpos', hpos)
 
 // navigate({section: 'lib'})
-navigate(hpos)
 window.navpath = hpos
+navigate(hpos)
 
 ipcRenderer.on('home', function (event) {
   navigate({section: 'lib'})
