@@ -95,8 +95,8 @@ app.on("ready", () => {
   })
   ipcMain.on('state-saved', (event, navpath) => {
     console.log('DATA-SAVED', navpath)
-    evt.defaultPrevented = false
-    win.destroy();
+    // evt.defaultPrevented = false
+    win.destroy()
   })
 
 });

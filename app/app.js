@@ -158,21 +158,16 @@ let hstakey = {}; // log('HSTATE=>', hstate)
 // let position = hstates[hstate] || {section: 'lib'}
 // log('HSTATES=>POS', position)
 
-window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])();
+window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])(); // window.split.setSizes([50,50])
+
 let navpath = store.get('navpath') || {
   section: 'lib'
 };
 log('LOAD-navpath', navpath);
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('save-state', function (event) {
-  // navigate({section: 'lib'})
-  electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].send('state-saved', 'kuku');
-}); // app.on('before-quit', (ev) => {
-//   // store.set('navpath', window.navpath)
-//   // console.log('APP BEFORE QUIT')
-//   ipcRenderer.send('save-data', window.navpath)
-//   // ipcRenderer.send('save-data', 'KUKU')
-// })
-// navigate({section: 'lib'})
+  store.set('navpath', window.navpath);
+  electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].send('state-saved', window.navpath);
+}); // navigate({section: 'lib'})
 
 navigate(navpath);
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('home', function (event) {
@@ -203,7 +198,7 @@ function getFNS(fns) {
 
 function getDir(bpath) {
   Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
-    log('FUT BOOK', book);
+    // log('FUT BOOK', book)
     if (!book) return;
     let lib = store.get('lib') || {};
     lib = {};
@@ -397,10 +392,6 @@ function scrollPanes(ev) {
   let trns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   source.scrollTop += delta;
   trns.scrollTop = source.scrollTop;
-  let navpath = window.navpath;
-  navpath.scrollTop = source.scrollTop;
-  store.set('navpath', window.navpath); // log('___NP', navpath)
-
   let el = ev.target;
   let oapp = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#app');
   let book = oapp.book;

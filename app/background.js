@@ -212,8 +212,8 @@ electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("ready", () => {
     win.webContents.send('save-state', 'xxx');
   });
   electron__WEBPACK_IMPORTED_MODULE_2__["ipcMain"].on('state-saved', (event, navpath) => {
-    console.log('DATA-SAVED', navpath);
-    evt.defaultPrevented = false;
+    console.log('DATA-SAVED', navpath); // evt.defaultPrevented = false
+
     win.destroy();
   });
 });

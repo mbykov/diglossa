@@ -41,11 +41,6 @@ function scrollPanes(ev) {
   source.scrollTop += delta
   trns.scrollTop = source.scrollTop
 
-  let navpath = window.navpath
-  navpath.scrollTop = source.scrollTop
-  store.set('navpath', window.navpath)
-  // log('___NP', navpath)
-
   let el = ev.target
   let oapp = q('#app')
   let book = oapp.book

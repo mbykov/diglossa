@@ -49,21 +49,15 @@ let hstakey = {}
 // log('HSTATES=>POS', position)
 
 window.split = twoPages()
+// window.split.setSizes([50,50])
 
 let navpath = store.get('navpath') || {section: 'lib'}
 log('LOAD-navpath', navpath)
 
 ipcRenderer.on('save-state', function (event) {
-  // navigate({section: 'lib'})
-  ipcRenderer.send('state-saved', 'kuku')
+  store.set('navpath', window.navpath)
+  ipcRenderer.send('state-saved', window.navpath)
 })
-
-// app.on('before-quit', (ev) => {
-//   // store.set('navpath', window.navpath)
-//   // console.log('APP BEFORE QUIT')
-//   ipcRenderer.send('save-data', window.navpath)
-//   // ipcRenderer.send('save-data', 'KUKU')
-// })
 
 // navigate({section: 'lib'})
 navigate(navpath)
@@ -93,7 +87,7 @@ function getFNS(fns) {
 
 function getDir(bpath) {
   openDir(bpath, (book) => {
-    log('FUT BOOK', book)
+    // log('FUT BOOK', book)
     if (!book) return
     let lib = store.get('lib') || {}
     lib = {}
