@@ -217,9 +217,14 @@ input[type='file'] {
 }
 
 .title {
+  color: maroon;
   font-size: 24px;
   margin-top: 20px;
   margin-bottom: 20px;
+}
+
+.check-name {
+  padding-left: 5px;
 }
 
 span.active {

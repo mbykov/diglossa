@@ -82,11 +82,39 @@ export function parseTitle(navpath) {
   window.split.setSizes([50,50])
   let lib = store.get('lib') || []
   let info = lib[navpath.bkey]
+  log('I', info)
 
-  let oright = q('#trns')
+  let osource = q('#source')
+  let otrns = q('#trns')
+  let obookTitle = div('')
+  obookTitle.classList.add('bookTitle')
+  osource.appendChild(obookTitle)
+
+  let oauthor = div(info.book.author, 'author')
+  let otitle = div(info.book.title, 'title')
+  obookTitle.appendChild(oauthor)
+  obookTitle.appendChild(otitle)
+
+  // problem if not all names in nics list ?
+  let onics = create('ul')
+  for (let nic in info.nicnames) {
+    let name = info.nicnames[nic]
+    let onicli = create('li')
+    let ocheck = create('input')
+    ocheck.type = 'checkbox'
+    ocheck.checked = true
+    let oname = span(name)
+    oname.classList.add('check-name')
+    onicli.appendChild(ocheck)
+    onicli.appendChild(oname)
+    onics.appendChild(onicli)
+  }
+  obookTitle.appendChild(onics)
+
+
   let obookCont = div('')
   obookCont.classList.add('bookTitle')
-  oright.appendChild(obookCont)
+  otrns.appendChild(obookCont)
   let otree = tree(info.tree)
   obookCont.appendChild(otree)
   otree.addEventListener('click', goBookEvent, false)
@@ -105,7 +133,7 @@ function goBookEvent(ev) {
 export function parseBook(navpath) {
   // log('___parseBook_start')
   window.split.setSizes([50,50])
-  let obook = q('#source')
+  // let obook = q('#source')
   let osource = q('#source')
   let otrns = q('#trns')
   empty(osource)
@@ -120,30 +148,14 @@ export function parseBook(navpath) {
   // log('INFO', info)
   // log('TEXTS', texts)
 
-  // let nicnames = info.nicnames
-  // let panes = texts.panes
-  // let coms = texts.coms
-
   let start = 0
   let fpath = navpath.fpath
   let book = {}
   book.info = info
   book.texts = texts
   book.navpath = navpath
-  // let author = _.filter(panes, auth=> { return auth.author && auth.fpath == fpath})[0]
-  // let trns = _.filter(panes, auth=> { return !auth.author && auth.fpath == fpath})
 
-  // book.author = author
-  // book.trns = trns
-
-  // let cnics = trns.map(auth=> { return auth.nic })
-  // book.cnics = cnics
   let nic
-  // if (!nic) nic = cnics[0]
-  // book.nic = nic
-
-  // log('NO BOOK INFO', book)
-  // setChunk(start, book)
   setBookText(book, fpath, nic, start)
 
   osource.addEventListener("mouseover", copyToClipboard, false)

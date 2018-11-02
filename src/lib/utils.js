@@ -13,6 +13,7 @@ export function qs (sel) {
 export function create (tag, style) {
   let el = document.createElement(tag)
   if (style) el.classList.add(style)
+  if (style) el.id = style
   return el
 }
 
@@ -41,14 +42,16 @@ export function span (str) {
 }
 
 export function br () {
-  var oBR = document.createElement('br')
+  let oBR = document.createElement('br')
   return oBR
 }
 
-export function div (str) {
-  var oDiv = document.createElement('div')
-  oDiv.textContent = str
-  return oDiv
+export function div (str, style) {
+  let el = document.createElement('div')
+  el.textContent = str
+  if (style) el.classList.add(style)
+  if (style) el.id = style
+  return el
 }
 
 export function p (str) {

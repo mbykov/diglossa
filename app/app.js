@@ -484,10 +484,36 @@ function parseTitle(navpath) {
   window.split.setSizes([50, 50]);
   let lib = store.get('lib') || [];
   let info = lib[navpath.bkey];
-  let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
+  log('I', info);
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
+  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
+  let obookTitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
+  obookTitle.classList.add('bookTitle');
+  osource.appendChild(obookTitle);
+  let oauthor = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])(info.book.author, 'author');
+  let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])(info.book.title, 'title');
+  obookTitle.appendChild(oauthor);
+  obookTitle.appendChild(otitle); // problem if not all names in nics list ?
+
+  let onics = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('ul');
+
+  for (let nic in info.nicnames) {
+    let name = info.nicnames[nic];
+    let onicli = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('li');
+    let ocheck = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('input');
+    ocheck.type = 'checkbox';
+    ocheck.checked = true;
+    let oname = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["span"])(name);
+    oname.classList.add('check-name');
+    onicli.appendChild(ocheck);
+    onicli.appendChild(oname);
+    onics.appendChild(onicli);
+  }
+
+  obookTitle.appendChild(onics);
   let obookCont = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
   obookCont.classList.add('bookTitle');
-  oright.appendChild(obookCont);
+  otrns.appendChild(obookCont);
   let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(info.tree);
   obookCont.appendChild(otree);
   otree.addEventListener('click', goBookEvent, false);
@@ -505,8 +531,8 @@ function goBookEvent(ev) {
 
 function parseBook(navpath) {
   // log('___parseBook_start')
-  window.split.setSizes([50, 50]);
-  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
+  window.split.setSizes([50, 50]); // let obook = q('#source')
+
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
@@ -518,27 +544,14 @@ function parseBook(navpath) {
   let libtext = store.get('libtext');
   let texts = libtext[navpath.bkey]; // log('INFO', info)
   // log('TEXTS', texts)
-  // let nicnames = info.nicnames
-  // let panes = texts.panes
-  // let coms = texts.coms
 
   let start = 0;
   let fpath = navpath.fpath;
   let book = {};
   book.info = info;
   book.texts = texts;
-  book.navpath = navpath; // let author = _.filter(panes, auth=> { return auth.author && auth.fpath == fpath})[0]
-  // let trns = _.filter(panes, auth=> { return !auth.author && auth.fpath == fpath})
-  // book.author = author
-  // book.trns = trns
-  // let cnics = trns.map(auth=> { return auth.nic })
-  // book.cnics = cnics
-
-  let nic; // if (!nic) nic = cnics[0]
-  // book.nic = nic
-  // log('NO BOOK INFO', book)
-  // setChunk(start, book)
-
+  book.navpath = navpath;
+  let nic;
   setBookText(book, fpath, nic, start);
   osource.addEventListener("mouseover", copyToClipboard, false);
   otrns.addEventListener("wheel", cyclePar, false);
@@ -1210,6 +1223,7 @@ function qs(sel) {
 function create(tag, style) {
   let el = document.createElement(tag);
   if (style) el.classList.add(style);
+  if (style) el.id = style;
   return el;
 }
 function recreateDiv(sel) {
@@ -1233,13 +1247,15 @@ function span(str) {
   return oSpan;
 }
 function br() {
-  var oBR = document.createElement('br');
+  let oBR = document.createElement('br');
   return oBR;
 }
-function div(str) {
-  var oDiv = document.createElement('div');
-  oDiv.textContent = str;
-  return oDiv;
+function div(str, style) {
+  let el = document.createElement('div');
+  el.textContent = str;
+  if (style) el.classList.add(style);
+  if (style) el.id = style;
+  return el;
 }
 function p(str) {
   var oDiv = document.createElement('p');
