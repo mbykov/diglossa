@@ -41,8 +41,9 @@ function scrollPanes(ev) {
   source.scrollTop += delta
   trns.scrollTop = source.scrollTop
 
-  let start = qs('#source > p').length
-  if (!start) return
+  // let start = qs('#source > p').length
+  // if (!start) return
+  if (window.navpath.section != 'book') return
 
   let el = ev.target
   let oapp = q('#app')
@@ -72,8 +73,9 @@ function keyScroll(ev) {
   }
   trns.scrollTop = source.scrollTop
 
-  let start = qs('#source > p').length
-  if (!start) return
+  // let start = qs('#source > p').length
+  // if (!start) return
+  if (window.navpath.section != 'book') return
 
   let book = window.book
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {

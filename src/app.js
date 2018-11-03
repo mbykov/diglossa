@@ -37,30 +37,11 @@ const appPath = app.getAppPath()
 let userDataPath = app.getPath("userData")
 // const watch = require('node-watch')
 
-// let hstates =   store.get('hstates') || []
-// let hstate = store.get('hstate') || -1
-let hstates = []
-let hstate =  -1
-let hstakey = {}
-
-// log('HSTATE=>', hstate)
-// log('HSTATES=>', hstates)
-// let position = hstates[hstate] || {section: 'lib'}
-// log('HSTATES=>POS', position)
-
-window.split = twoPages()
-// window.split.setSizes([50,50])
-
-let navpath = store.get('navpath') || {section: 'lib'}
-log('LOAD-navpath', navpath)
 
 ipcRenderer.on('save-state', function (event) {
   store.set('navpath', window.navpath)
   ipcRenderer.send('state-saved', window.navpath)
 })
-
-navigate({section: 'lib'})
-// navigate(navpath)
 
 ipcRenderer.on('home', function (event) {
   navigate({section: 'lib'})
@@ -77,41 +58,33 @@ ipcRenderer.on('parseDir', function (event, name) {
   dialog.showOpenDialog({properties: ['openDirectory'] }, getFNS)
 })
 
-// унести в getFile, и грязно пока
-function getFNS(fns) {
-  if (!fns) return
-  let bpath = fns[0]
-  // log('Bpath:', bpath)
-  getDir(bpath)
+// let hstates =   store.get('hstates') || []
+// let hstate = store.get('hstate') || -1
+let hstates = []
+let hstate =  -1
+// let hstakey = {}
+
+// log('HSTATE=>', hstate)
+// log('HSTATES=>', hstates)
+// let position = hstates[hstate] || {section: 'lib'}
+// log('HSTATES=>POS', position)
+
+window.split = twoPages()
+// window.split.setSizes([50,50])
+
+let navpath = store.get('navpath') || {section: 'lib'}
+log('LOAD-navpath', navpath)
+
+if (navpath.section == 'lib') navigate({section: 'lib'})
+else {
+  let lib = store.get('lib') || []
+  log('npath=>', navpath)
+  log('lib=>', lib)
+  let bpath = lib[navpath.bkey].bpath
+  log('bpath=>', bpath)
+  getDir(bpath, navpath)
 }
-
-function getDir(bpath) {
-  openDir(bpath, (book) => {
-    if (!book) return
-    let lib = store.get('lib') || {}
-    // lib = {}
-    lib[book.bkey] = book.info
-    store.set('lib', lib)
-    let libtext = store.get('libtext') || {}
-    // libtext = {}
-    libtext[book.bkey] = book.texts
-    store.set('libtext', libtext)
-    // log('LIB', lib)
-    // log('LIBTEXT', libtext)
-    // startWatcher(book.bpath)
-    navigate({section: 'lib'})
-  })
-}
-
-// не работает - почему?
-// function startWatcher(bpath) {
-//   watch(bpath, { recursive: true }, function(evt, name) {
-//     log('%s changed.', name);
-//     // navigate(navpath)
-//     navigate({section: 'lib'})
-//   })
-// }
-
+// navigate({section: 'lib'})
 
 function parseLib() {
   window.split.setSizes([100,0])
@@ -169,7 +142,6 @@ export function navigate(navpath) {
   //   hstakey[hkey] = true
   //   // log('ADD-SEC', navpath.section)
   // }
-  // navpath = hstates[hstate]
 
   store.set('navpath', navpath)
   // log('STORE-navpath', navpath)
@@ -197,6 +169,34 @@ function showSection(name) {
   osource.innerHTML = section
 }
 
+// унести в getFile, и грязно пока
+function getFNS(fns) {
+  if (!fns) return
+  let bpath = fns[0]
+  // log('Bpath:', bpath)
+  getDir(bpath)
+}
+
+function getDir(bpath, navpath) {
+  openDir(bpath, (book) => {
+    if (!book) return
+    let lib = store.get('lib') || {}
+    // lib = {}
+    lib[book.bkey] = book.info
+    store.set('lib', lib)
+    let libtext = store.get('libtext') || {}
+    // libtext = {}
+    libtext[book.bkey] = book.texts
+    store.set('libtext', libtext)
+    log('GET-DIR LIB', lib)
+    // log('LIBTEXT', libtext)
+    // startWatcher(book.bpath)
+
+    if (navpath) navigate(navpath)
+    else navigate({section: 'lib'})
+  })
+}
+
 
 
 const historyMode = event => {
@@ -222,3 +222,12 @@ const historyMode = event => {
 // win.navpath = navpath
 
 // app.on("close", log('================================================'));
+
+// не работает - почему?
+// function startWatcher(bpath) {
+//   watch(bpath, { recursive: true }, function(evt, name) {
+//     log('%s changed.', name);
+//     // navigate(navpath)
+//     navigate({section: 'lib'})
+//   })
+// }

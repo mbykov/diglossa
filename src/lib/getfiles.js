@@ -118,7 +118,6 @@ function parseDir(bookpath) {
   let tree = {}
   walk(fns, dname, dtree, tree)
   // log('=TREE', tree)
-
   fns = glob.sync('**/*', {cwd: bpath})
   // log('FNS', fns)
 
@@ -180,8 +179,9 @@ function parseDir(bookpath) {
   // info.tree = tree.children
   info.tree = tree
   info.bkey = bkey
+  info.bpath = bpath
 
-  let book = {bkey: bkey, info: info, texts: cpanes, bpath: bpath}
+  let book = {bkey: bkey, info: info, texts: cpanes} // , bpath: bpath
   log('BOOK FROM GET', book)
   return book
 
