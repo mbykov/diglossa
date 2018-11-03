@@ -145,6 +145,7 @@ function parseDir(bookpath) {
     if (com && com == 'com') comment = true, fn = fn.replace('-com', '')
     let ext = path.extname(fn)
     if (!ext) return
+    if (ext == '.info') return
     let nic = ext.replace(/^\./, '')
     let auth = _.find(info.auths, auth=> { return auth.ext == nic})
     // if (!auth) return
@@ -173,8 +174,11 @@ function parseDir(bookpath) {
     // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   })
 
+  log('GET TREE', tree)
+
   let bkey = [info.book.author, info.book.title].join('-')
-  info.tree = tree.children
+  // info.tree = tree.children
+  info.tree = tree
   info.bkey = bkey
 
   let book = {bkey: bkey, info: info, texts: cpanes, bpath: bpath}

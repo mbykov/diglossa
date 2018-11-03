@@ -59,8 +59,8 @@ ipcRenderer.on('save-state', function (event) {
   ipcRenderer.send('state-saved', window.navpath)
 })
 
-// navigate({section: 'lib'})
-navigate(navpath)
+navigate({section: 'lib'})
+// navigate(navpath)
 
 ipcRenderer.on('home', function (event) {
   navigate({section: 'lib'})
@@ -87,7 +87,7 @@ function getFNS(fns) {
 
 function getDir(bpath) {
   openDir(bpath, (book) => {
-    // log('FUT BOOK', book)
+    log('FUT BOOK', book)
     if (!book) return
     let lib = store.get('lib') || {}
     lib = {}

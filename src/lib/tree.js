@@ -2,7 +2,7 @@
 import { q, qs, empty, create, span, p, div, remove } from './utils'
 let log = console.log
 
-export default function tree(data) {
+export default function tree(data, deftitle) {
   // log('TREEDATA', data)
   let otree = create('div', 'tree')
   let otitle = create('div', 'tree-title')
@@ -12,7 +12,20 @@ export default function tree(data) {
   let otbody = create('div', 'tree-body')
   otbody.id = 'tree-body'
   otree.appendChild(otbody)
-  data.forEach(node=> {
+  let children = data.children
+  if (!children) {
+    let onode = create('div', 'tree-text')
+    let osign = create('span', 'tree-branch')
+    osign.textContent = '▾'
+    onode.appendChild(osign)
+    let otext = create('span', 'tree-node-text')
+    otext.textContent = deftitle
+    otext.setAttribute('fpath', '')
+    onode.appendChild(otext)
+    otbody.appendChild(onode)
+    return otree
+  }
+  children.forEach(node=> {
     let onode = createNode(node)
     otbody.appendChild(onode)
   })
@@ -42,9 +55,6 @@ function createNode(node) {
   return onode
 }
 
-// function goNode(ev) {
-//   log('EV', ev.target.textContent)
-// }
 
 function toggleNode(ev) {
   let parent = ev.target.parentNode

@@ -115,8 +115,9 @@ export function parseTitle(navpath) {
   let obookCont = div('')
   obookCont.classList.add('bookTitle')
   otrns.appendChild(obookCont)
-  let otree = tree(info.tree)
+  let otree = tree(info.tree, info.book.title)
   obookCont.appendChild(otree)
+  let otbody = q('#tree-body')
   otree.addEventListener('click', goBookEvent, false)
 }
 
@@ -142,12 +143,13 @@ export function parseBook(navpath) {
 
   log('parse-BOOK-npath:', navpath)
   let lib = store.get('lib')
-  // log('LIB', lib)
+  log('LIB', lib)
   let info = lib[navpath.bkey]
   let libtext = store.get('libtext')
+  log('LIBTEXTS', libtext)
   let texts = libtext[navpath.bkey]
-  // log('INFO', info)
-  // log('TEXTS', texts)
+  log('INFO', info)
+  log('TEXTS', texts)
 
   let start = 0
   let fpath = navpath.fpath
@@ -257,7 +259,8 @@ function createLeftHeader() {
   ohleft.style.left = arect.width*0.15 + 'px'
   ohleft.addEventListener("click", clickLeftHeader, false)
 
-  let otree = tree(book.info.tree)
+  let info = book.info
+  let otree = tree(info.tree, info.book.title)
   ohleft.appendChild(otree)
   let navpath = window.navpath
   // log('N', navpath)
