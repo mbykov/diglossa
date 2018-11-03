@@ -41,6 +41,9 @@ function scrollPanes(ev) {
   source.scrollTop += delta
   trns.scrollTop = source.scrollTop
 
+  let start = qs('#source > p').length
+  if (!start) return
+
   let el = ev.target
   let oapp = q('#app')
   let book = oapp.book
@@ -68,6 +71,10 @@ function keyScroll(ev) {
     source.scrollTop = source.scrollTop + height - 60
   }
   trns.scrollTop = source.scrollTop
+
+  let start = qs('#source > p').length
+  if (!start) return
+
   let book = window.book
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
     let start = qs('#source > p').length
@@ -143,13 +150,15 @@ export function parseBook(navpath) {
 
   log('parse-BOOK-npath:', navpath)
   let lib = store.get('lib')
-  log('LIB', lib)
+  // log('LIB', lib)
   let info = lib[navpath.bkey]
   let libtext = store.get('libtext')
-  log('LIBTEXTS', libtext)
+  // log('LIBTEXTS', libtext)
   let texts = libtext[navpath.bkey]
-  log('INFO', info)
-  log('TEXTS', texts)
+  // log('INFO', info)
+  // log('TEXTS', texts)
+  if (!info) return
+  if (!texts) return
 
   let start = 0
   let fpath = navpath.fpath

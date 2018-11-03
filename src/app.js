@@ -35,7 +35,7 @@ const isDev = true
 const app = remote.app;
 const appPath = app.getAppPath()
 let userDataPath = app.getPath("userData")
-const watch = require('node-watch')
+// const watch = require('node-watch')
 
 // let hstates =   store.get('hstates') || []
 // let hstate = store.get('hstate') || -1
@@ -81,35 +81,36 @@ ipcRenderer.on('parseDir', function (event, name) {
 function getFNS(fns) {
   if (!fns) return
   let bpath = fns[0]
-  log('Watch:', bpath)
+  // log('Bpath:', bpath)
   getDir(bpath)
 }
 
 function getDir(bpath) {
   openDir(bpath, (book) => {
-    log('FUT BOOK', book)
     if (!book) return
     let lib = store.get('lib') || {}
-    lib = {}
+    // lib = {}
     lib[book.bkey] = book.info
     store.set('lib', lib)
-    let libtext = store.get('libtexts') || {}
-    libtext = {}
+    let libtext = store.get('libtext') || {}
+    // libtext = {}
     libtext[book.bkey] = book.texts
     store.set('libtext', libtext)
+    // log('LIB', lib)
+    // log('LIBTEXT', libtext)
     // startWatcher(book.bpath)
     navigate({section: 'lib'})
   })
 }
 
 // не работает - почему?
-function startWatcher(bpath) {
-  watch(bpath, { recursive: true }, function(evt, name) {
-    log('%s changed.', name);
-    // navigate(navpath)
-    navigate({section: 'lib'})
-  })
-}
+// function startWatcher(bpath) {
+//   watch(bpath, { recursive: true }, function(evt, name) {
+//     log('%s changed.', name);
+//     // navigate(navpath)
+//     navigate({section: 'lib'})
+//   })
+// }
 
 
 function parseLib() {
@@ -118,10 +119,10 @@ function parseLib() {
   let infos = _.values(lib)
   // log('LIB INFOS', infos)
 
-  let olib = q('#source')
-  empty(olib)
+  let osource = q('#source')
+  empty(osource)
   let oul = create('ul')
-  olib.appendChild(oul)
+  osource.appendChild(oul)
 
   if (!infos.length) oul.textContent = 'no book in lib'
   infos.forEach(info => {

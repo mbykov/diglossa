@@ -145,11 +145,9 @@ const {
 const isDev = true;
 const app = electron__WEBPACK_IMPORTED_MODULE_3__["remote"].app;
 const appPath = app.getAppPath();
-let userDataPath = app.getPath("userData");
-
-const watch = __webpack_require__(/*! node-watch */ "node-watch"); // let hstates =   store.get('hstates') || []
+let userDataPath = app.getPath("userData"); // const watch = require('node-watch')
+// let hstates =   store.get('hstates') || []
 // let hstate = store.get('hstate') || -1
-
 
 let hstates = [];
 let hstate = -1;
@@ -193,42 +191,38 @@ electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('parseDir', function (ev
 
 function getFNS(fns) {
   if (!fns) return;
-  let bpath = fns[0];
-  log('Watch:', bpath);
+  let bpath = fns[0]; // log('Bpath:', bpath)
+
   getDir(bpath);
 }
 
 function getDir(bpath) {
   Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
-    log('FUT BOOK', book);
     if (!book) return;
-    let lib = store.get('lib') || {};
-    lib = {};
+    let lib = store.get('lib') || {}; // lib = {}
+
     lib[book.bkey] = book.info;
     store.set('lib', lib);
-    let libtext = store.get('libtexts') || {};
-    libtext = {};
+    let libtext = store.get('libtext') || {}; // libtext = {}
+
     libtext[book.bkey] = book.texts;
-    store.set('libtext', libtext); // startWatcher(book.bpath)
+    store.set('libtext', libtext); // log('LIB', lib)
+    // log('LIBTEXT', libtext)
+    // startWatcher(book.bpath)
 
     navigate({
       section: 'lib'
     });
   });
 } // не работает - почему?
+// function startWatcher(bpath) {
+//   watch(bpath, { recursive: true }, function(evt, name) {
+//     log('%s changed.', name);
+//     // navigate(navpath)
+//     navigate({section: 'lib'})
+//   })
+// }
 
-
-function startWatcher(bpath) {
-  watch(bpath, {
-    recursive: true
-  }, function (evt, name) {
-    log('%s changed.', name); // navigate(navpath)
-
-    navigate({
-      section: 'lib'
-    });
-  });
-}
 
 function parseLib() {
   window.split.setSizes([100, 0]);
@@ -237,10 +231,10 @@ function parseLib() {
   let infos = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.values(lib); // log('LIB INFOS', infos)
 
 
-  let olib = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
-  Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(olib);
+  let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
+  Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(osource);
   let oul = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["create"])('ul');
-  olib.appendChild(oul);
+  osource.appendChild(oul);
   if (!infos.length) oul.textContent = 'no book in lib';
   infos.forEach(info => {
     let ostr = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["create"])('li', 'libauth');
@@ -394,6 +388,8 @@ function scrollPanes(ev) {
   let trns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   source.scrollTop += delta;
   trns.scrollTop = source.scrollTop;
+  let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length;
+  if (!start) return;
   let el = ev.target;
   let oapp = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#app');
   let book = oapp.book;
@@ -424,6 +420,8 @@ function keyScroll(ev) {
   }
 
   trns.scrollTop = source.scrollTop;
+  let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length;
+  if (!start) return;
   let book = window.book;
 
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
@@ -496,14 +494,16 @@ function parseBook(navpath) {
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns);
   log('parse-BOOK-npath:', navpath);
-  let lib = store.get('lib');
-  log('LIB', lib);
+  let lib = store.get('lib'); // log('LIB', lib)
+
   let info = lib[navpath.bkey];
-  let libtext = store.get('libtext');
-  log('LIBTEXTS', libtext);
-  let texts = libtext[navpath.bkey];
-  log('INFO', info);
-  log('TEXTS', texts);
+  let libtext = store.get('libtext'); // log('LIBTEXTS', libtext)
+
+  let texts = libtext[navpath.bkey]; // log('INFO', info)
+  // log('TEXTS', texts)
+
+  if (!info) return;
+  if (!texts) return;
   let start = 0;
   let fpath = navpath.fpath;
   let book = {};
@@ -1017,8 +1017,8 @@ function parseDir(bookpath) {
     if (auth && auth.author) pane.author = true, info.book.author = auth.name; // if (auth.author) book.author = pane
 
     if (comment) cpanes.coms.push(pane);else cpanes.panes.push(pane); // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
-  });
-  log('GET TREE', tree);
+  }); // log('GET TREE', tree)
+
   let bkey = [info.book.author, info.book.title].join('-'); // info.tree = tree.children
 
   info.tree = tree;
@@ -1408,17 +1408,6 @@ module.exports = require("lodash");
 /***/ (function(module, exports) {
 
 module.exports = require("mousetrap");
-
-/***/ }),
-
-/***/ "node-watch":
-/*!*****************************!*\
-  !*** external "node-watch" ***!
-  \*****************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("node-watch");
 
 /***/ }),
 

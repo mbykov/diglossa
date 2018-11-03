@@ -174,7 +174,7 @@ function parseDir(bookpath) {
     // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   })
 
-  log('GET TREE', tree)
+  // log('GET TREE', tree)
 
   let bkey = [info.book.author, info.book.title].join('-')
   // info.tree = tree.children
