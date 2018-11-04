@@ -150,13 +150,11 @@ export function parseBook(navpath) {
   empty(osource)
   empty(otrns)
 
-  log('parse-BOOK-npath:', navpath)
+  // log('parse-BOOK-npath:', navpath)
   let lib = store.get('lib')
-  // log('LIB', lib)
   let info = lib[navpath.bkey]
-  let libtext = store.get('libtext')
-  // log('LIBTEXTS', libtext)
-  let texts = libtext[navpath.bkey]
+  let texts = store.get(info.bkey)
+  // log('BOOK-LIB', lib)
   // log('INFO', info)
   // log('TEXTS', texts)
   if (!info) return
@@ -185,7 +183,9 @@ function setBookText(book, fpath, nic, start) {
   let cnics = trns.map(auth=> { return auth.nic })
   book.cnics = cnics
   if (!nic) nic = cnics[0]
+  if (!cnics.includes(nic)) nic = cnics[0]
   window.navpath.nic = nic
+  store.set('navpath', window.navpath)
 
   // log('BEFORE CHUNK nic', nic)
   window.book = book
@@ -229,6 +229,9 @@ function setChunk(start) {
 }
 
 function copyToClipboard(ev) {
+  if (ev.shiftKey == true) return
+  if (ev.ctrlKey == true) return
+
   if (ev.target.nodeName != 'SPAN') return
   let wf = ev.target.textContent
   clipboard.writeText(wf)
@@ -343,7 +346,7 @@ function clickRightHeader(ev) {
     let nic = ev.target.getAttribute('nic')
     let navpath = window.navpath
     navpath.nic = nic
-    store.set('hpos', navpath)
+    store.set('navpath', window.navpath)
     if (!nic) return
     collapseRightHeader(nic)
     otherNic(nic)

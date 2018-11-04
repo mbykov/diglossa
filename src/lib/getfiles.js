@@ -16,7 +16,7 @@ const log = console.log
 
 // const yuno = require('../../../yunodb')
 // const storage = require('electron-json-storage')
-// const elasticlunr = require('elasticlunr')
+const elasticlunr = require('elasticlunr')
 
 function extractAllText(str){
   const re = /"(.*?)"/g
@@ -119,23 +119,21 @@ function parseDir(bookpath) {
   walk(fns, dname, dtree, tree)
   // log('=TREE', tree)
   fns = glob.sync('**/*', {cwd: bpath})
-  // log('FNS', fns)
 
   let ipath = path.resolve(bpath, 'info.json')
   // log('IPATH', ipath)
-  // if (!ipath) return
   let info = parseInfo(ipath)
   // log('_INFO_', info)
   fns = _.filter(fns, fn=>{ return fn != ipath })
   // log('FNS', fns.length)
 
-  // let lunr = elasticlunr(function () {
-  //   this.addField('nic')
-  //   this.addField('lang')
-  //   this.addField('fpath')
-  //   this.addField('text')
-  //   this.setRef('id')
-  // })
+  let lunr = elasticlunr(function () {
+    this.addField('nic')
+    this.addField('lang')
+    this.addField('fpath')
+    this.addField('text')
+    this.setRef('id')
+  })
 
   let cpanes = {panes: [], coms: []}
   fns.forEach(fn => {
@@ -145,29 +143,29 @@ function parseDir(bookpath) {
     let ext = path.extname(fn)
     if (!ext) return
     if (ext == '.info') return
+    if (ext == '.json') return
     let nic = ext.replace(/^\./, '')
     let auth = _.find(info.auths, auth=> { return auth.ext == nic})
-    // if (!auth) return
+
     let txt = fse.readFileSync(path.resolve(bpath, fn), 'utf8')
     let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ')
     let rows = _.compact(clean.split('\n'))
-    // rows = rows.slice(0,20)
 
-
-    // log('R', fn, rows.length)
     let fparts = fn.split('/')
     let fname = fparts.pop()
     let fpath = fparts.join('/')
     let lang
     if (auth) lang = auth.lang
 
-    // let id = [fpath, fname].join('/')
-    // let panee = { id: id, lang: lang, nic: nic, fpath: fpath, text: txt }
-    // lunr.addDoc(panee)
-
     let pane = { lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname,
     if (auth && auth.author) pane.author = true, info.book.author = auth.name
-    // if (auth.author) book.author = pane
+    if (auth && auth.author) {
+      let id = [fpath, fname].join('/')
+      let panee = { id: id, lang: lang, nic: nic, fpath: fpath, text: txt }
+      lunr.addDoc(panee)
+    }
+
+
     if (comment) cpanes.coms.push(pane)
     else cpanes.panes.push(pane)
     // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)

@@ -78,10 +78,10 @@ log('LOAD-navpath', navpath)
 if (navpath.section == 'lib') navigate({section: 'lib'})
 else {
   let lib = store.get('lib') || []
-  log('npath=>', navpath)
-  log('lib=>', lib)
+  // log('npath=>', navpath)
+  // log('lib=>', lib)
   let bpath = lib[navpath.bkey].bpath
-  log('bpath=>', bpath)
+  // log('bpath=>', bpath)
   getDir(bpath, navpath)
 }
 // navigate({section: 'lib'})
@@ -184,12 +184,9 @@ function getDir(bpath, navpath) {
     // lib = {}
     lib[book.bkey] = book.info
     store.set('lib', lib)
-    let libtext = store.get('libtext') || {}
-    // libtext = {}
-    libtext[book.bkey] = book.texts
-    store.set('libtext', libtext)
-    log('GET-DIR LIB', lib)
-    // log('LIBTEXT', libtext)
+
+    store.set(book.bkey, book.texts)
+    // log('BKEY', book.texts)
     // startWatcher(book.bpath)
 
     if (navpath) navigate(navpath)
