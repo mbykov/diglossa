@@ -128,8 +128,7 @@ function parseDir(bookpath) {
   fns = _.filter(fns, fn=>{ return fn != ipath })
   // log('FNS', fns.length)
 
-
-  // let cpanes = {texts: [], coms: []}
+  info.fns = []
   let texts = []
   let coms = []
   fns.forEach(fn => {
@@ -153,30 +152,26 @@ function parseDir(bookpath) {
     let lang
     if (auth) lang = auth.lang
 
-    // проблема - автора-то сначала нет?
-    // info.book.author,
-    let id = md5([info.book.title, fpath, nic].join('-'))
-    // let pane = { lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname,
-    let pane = { _id: id, lang: lang, nic: nic, fpath: fpath, text: clean }
-    if (auth && auth.author) pane.author = true, info.book.author = auth.name
+    let id = md5([info.book.author, info.book.title, fpath, nic].join(''))
+    info.fns.push(id)
+
+    let pane = { _id: id, lang: lang, nic: nic, fpath: fpath, text: clean } // fname: fname,
+    if (auth && auth.author) pane.author = true // , info.book.author = auth.name
 
     if (comment) coms.push(pane)
     else texts.push(pane)
     // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   })
 
-  // log('GET TREE', tree)
-
-  let bkey = [info.book.author, info.book.title].join('-')
-  // info.tree = tree.children
+  let bkey = md5([info.book.author, info.book.title].join('-'))
+  info._id = bkey
   info.tree = tree
-  info.bkey = bkey
+  // info.bkey = bkey
   info.bpath = bpath
 
   let book = {bkey: bkey, info: info, texts: texts, coms: coms} // , bpath: bpath
   log('BOOK FROM GET', book)
   return book
-
 }
 
 function done (err) {
@@ -209,8 +204,10 @@ function parseInfo(ipath) {
   }
   let nicnames = {}
   info.auths.forEach(auth => {
-    if (auth.author) return
-    // let nic = {nic: auth.ext, name: auth.name}
+    if (auth.author) {
+      info.book.author = auth.name
+      return
+    }
     nicnames[auth.ext] = auth.name
   })
   info.nicnames = nicnames

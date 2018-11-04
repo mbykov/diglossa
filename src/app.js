@@ -170,7 +170,7 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
   // if (ev.which == 39 && hstate + 1 < hstates.length) log('RIGHT', hstate, hstates[hstate+1])
   if (ev.which == 37 && hstate - 1 > -1) hstate--
   if (ev.which == 39 && hstate + 1 < hstates.length) hstate++
-  // navpath = hstates[hstate]
+  let navpath = hstates[hstate]
   // log('_arrow_navpath_', navpath)
   // store.set('hstate', hstate)
   navigate(navpath)
@@ -228,6 +228,7 @@ function pushTexts(newdocs) {
   pouch.allDocs({include_docs: true})
     .then(function(res) {
       let docs = res.rows.map(row=>{ return row.doc})
+
       let cleandocs = []
       let hdoc = {}
       docs.forEach(doc=> { hdoc[doc._id] = doc })

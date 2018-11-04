@@ -92,7 +92,8 @@ export function parseTitle(navpath) {
   window.split.setSizes([50,50])
   let lib = store.get('lib') || []
   let info = lib[navpath.bkey]
-  // log('I', info)
+
+
 
   let osource = q('#source')
   let otrns = q('#trns')
@@ -136,7 +137,6 @@ function goBookEvent(ev) {
   let fpath = ev.target.getAttribute('fpath')
   navpath.fpath = fpath
   navpath.section = 'book'
-  // log('EV', ev.target)
   navigate(navpath)
 }
 
