@@ -129,7 +129,8 @@ const log = console.log;
 
 const Store = __webpack_require__(/*! electron-store */ "electron-store");
 
-const store = new Store(); // const Mousetrap = require('mousetrap')
+const store = new Store(); // const elasticlunr = require('elasticlunr')
+// const Mousetrap = require('mousetrap')
 // const axios = require('axios')
 
 const path = __webpack_require__(/*! path */ "path");
@@ -144,8 +145,34 @@ const {
 
 const isDev = true;
 const app = electron__WEBPACK_IMPORTED_MODULE_3__["remote"].app;
-const appPath = app.getAppPath();
-let userDataPath = app.getPath("userData"); // const watch = require('node-watch')
+const apath = app.getAppPath();
+let upath = app.getPath("userData"); // const watch = require('node-watch')
+
+const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
+
+let libPath = path.resolve(upath, 'pouch', 'lib');
+log('LIBPATH', libPath);
+let pouch = new PouchDB(libPath);
+let db = new PouchDB(libPath + '_a');
+let keys = [];
+pouch.allDocs({
+  include_docs: true
+}).then(function (res) {
+  log('P-RES', res);
+  let docs = res.rows.map(row => {
+    return row.doc;
+  });
+  log('P-DOCS', docs);
+}).catch(function (err) {
+  console.log('ERR GET DBs', err);
+}); // db.allDocs({include_docs: true})
+//   .then(function(res) {
+//     log('DB-RES', res)
+//     let docs = res.rows.map(row=>{ return row.doc})
+//     log('DB-DOCS', docs)
+//   }).catch(function (err) {
+//     console.log('ERR GET DBs', err)
+//   })
 
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('save-state', function (event) {
   store.set('navpath', window.navpath);
@@ -269,10 +296,17 @@ Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
 function showSection(name) {
   window.split.setSizes([100, 0]);
   let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
-  let secpath = path.resolve(appPath, 'src/sections', [name, 'html'].join('.'));
+  let secpath = path.resolve(apath, 'src/sections', [name, 'html'].join('.'));
   const section = fse.readFileSync(secpath);
   osource.innerHTML = section;
-} // унести в getFile, и грязно пока
+} // let lunr = elasticlunr(function () {
+//   this.addField('nic')
+//   this.addField('lang')
+//   this.addField('fpath')
+//   this.addField('text')
+//   this.setRef('id')
+// })
+// унести в getFile, и грязно пока
 
 
 function getFNS(fns) {
@@ -284,13 +318,15 @@ function getFNS(fns) {
 
 function getDir(bpath, navpath) {
   Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
-    if (!book) return;
+    if (!book) return; // log('BKEY', book.texts)
+
     let lib = store.get('lib') || {}; // lib = {}
 
     lib[book.bkey] = book.info;
     store.set('lib', lib);
-    store.set(book.bkey, book.texts); // log('BKEY', book.texts)
-    // startWatcher(book.bpath)
+    store.set(book.bkey, book.texts); // startWatcher(book.bpath)
+
+    pushTexts(book.texts); // pushKuku()
 
     if (navpath) navigate(navpath);else navigate({
       section: 'lib'
@@ -298,7 +334,113 @@ function getDir(bpath, navpath) {
   });
 }
 
-const historyMode = event => {
+let kittens = [{
+  _id: 'mittens',
+  occupation: 'kitten',
+  cuteness: 9.0
+}, {
+  _id: 'katie',
+  occupation: 'kitten',
+  cuteness: 7.0
+}, {
+  _id: 'felix',
+  occupation: 'kitten',
+  cuteness: 8.0
+}];
+
+function pushTexts(newdocs) {
+  log('PUSH-NEW-TEXTS', newdocs);
+  log('PUSH-NEW-KITT', kittens);
+  let pouch = new PouchDB(libPath);
+  pouch.bulkDocs(newdocs).then(function (result) {
+    log('SAVED RES', result);
+    return pouch.allDocs({
+      include_docs: true
+    });
+  }).then(function (response) {
+    log('GETTING SAVED', response);
+  }).catch(function (err) {
+    console.log('ERR GET DBs', err);
+  }); // pouch.allDocs({include_docs: true})
+  //   .then(function(res) {
+  //     log('P-RES', res)
+  //     // let docs = res.rows.map(row=>{ return row.doc})
+  //     // let cleandocs = []
+  //     // let hdoc = {}
+  //     // docs.forEach(doc=> {
+  //     //   hdoc[doc._id] = doc
+  //     // })
+  //     // log('HDOC', hdoc)
+  //     // newdocs.forEach(newdoc=> {
+  //     //   let doc = hdoc[newdoc._id]
+  //     //   if (doc) {
+  //     //     if (newdoc.text == doc.text) return
+  //     //     else doc.text = newdoc.text, cleandocs.push(doc)
+  //     //   } else {
+  //     //     cleandocs.push(newdoc)
+  //     //   }
+  //     // })
+  //     // log('CLEAN-DOCS', cleandocs)
+  //     pouch.bulkDocs(newdocs).then(function (result) {
+  //       log('SAVED RES', result)
+  //       return pouch.allDocs({include_docs: true})
+  //     }).then(function(response) {
+  //       log('GETTING SAVED', response)
+  //     }).catch(function (err) {
+  //       console.log('ERR GET DBs', err)
+  //     })
+  //   }).catch(function (err) {
+  //     console.log('ERR GET DBs', err)
+  //   })
+}
+
+function pushKuku() {
+  db.put({
+    _id: new Date().toJSON(),
+    name: 'Mittens',
+    occupation: 'kitten',
+    cuteness: 9.0
+  }).then(function () {
+    return db.put({
+      _id: new Date().toJSON(),
+      name: 'Katie',
+      occupation: 'kitten',
+      cuteness: 7.0
+    });
+  }).then(function () {
+    return db.put({
+      _id: new Date().toJSON(),
+      name: 'Felix',
+      occupation: 'kitten',
+      cuteness: 8.0
+    });
+  }).then(function () {
+    return db.allDocs({
+      include_docs: true
+    });
+  }).then(function (response) {
+    console.log(response);
+  }).catch(function (err) {
+    console.log(err);
+  });
+}
+
+function setSearch_(bkey, texts) {
+  texts.forEach(text => {
+    if (!text.author) return;
+    let id = [bkey, text.fpath].join('/');
+    let panee = {
+      id: id,
+      lang: text.lang,
+      nic: text.nic,
+      fpath: text.fpath,
+      text: lodash__WEBPACK_IMPORTED_MODULE_1___default.a.flatten(text.rows)[0] // lunr.addDoc(panee)
+
+    };
+  });
+}
+
+const historyMode_ = event => {
   const checkArrow = element => {
     // if (!element.classList.contains("arrow")) return
     if (element.id === "new-version") {// log('NEW VERS CLICKED')
@@ -313,9 +455,6 @@ const historyMode = event => {
 
   checkArrow(event.target);
 }; // document.addEventListener("click", historyMode, false)
-// let win = BrowserWindow.getFocusedWindow()
-// win.navpath = navpath
-// app.on("close", log('================================================'));
 // не работает - почему?
 // function startWatcher(bpath) {
 //   watch(bpath, { recursive: true }, function(evt, name) {
@@ -849,8 +988,6 @@ const log = console.log; // const Store = require('electron-store')
 // const yuno = require('../../../yunodb')
 // const storage = require('electron-json-storage')
 
-const elasticlunr = __webpack_require__(/*! elasticlunr */ "elasticlunr");
-
 function extractAllText(str) {
   const re = /"(.*?)"/g;
   const results = [];
@@ -971,18 +1108,10 @@ function parseDir(bookpath) {
   fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
     return fn != ipath;
   }); // log('FNS', fns.length)
+  // let cpanes = {texts: [], coms: []}
 
-  let lunr = elasticlunr(function () {
-    this.addField('nic');
-    this.addField('lang');
-    this.addField('fpath');
-    this.addField('text');
-    this.setRef('id');
-  });
-  let cpanes = {
-    panes: [],
-    coms: []
-  };
+  let texts = [];
+  let coms = [];
   fns.forEach(fn => {
     let comment = false;
     let com = fn.split('-')[1];
@@ -1006,29 +1135,20 @@ function parseDir(bookpath) {
     let fname = fparts.pop();
     let fpath = fparts.join('/');
     let lang;
-    if (auth) lang = auth.lang;
+    if (auth) lang = auth.lang; // проблема - автора-то сначала нет?
+    // info.book.author,
+
+    let id = [info.book.title, fpath, nic].join('-'); // let pane = { lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname,
+
     let pane = {
+      _id: id,
       lang: lang,
       nic: nic,
       fpath: fpath,
-      rows: rows // fname: fname,
-
+      text: clean
     };
     if (auth && auth.author) pane.author = true, info.book.author = auth.name;
-
-    if (auth && auth.author) {
-      let id = [fpath, fname].join('/');
-      let panee = {
-        id: id,
-        lang: lang,
-        nic: nic,
-        fpath: fpath,
-        text: txt
-      };
-      lunr.addDoc(panee);
-    }
-
-    if (comment) cpanes.coms.push(pane);else cpanes.panes.push(pane); // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
+    if (comment) coms.push(pane);else texts.push(pane); // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   }); // log('GET TREE', tree)
 
   let bkey = [info.book.author, info.book.title].join('-'); // info.tree = tree.children
@@ -1039,7 +1159,8 @@ function parseDir(bookpath) {
   let book = {
     bkey: bkey,
     info: info,
-    texts: cpanes // , bpath: bpath
+    texts: texts,
+    coms: coms // , bpath: bpath
 
   };
   log('BOOK FROM GET', book);
@@ -1347,17 +1468,6 @@ module.exports = require("directory-tree");
 
 /***/ }),
 
-/***/ "elasticlunr":
-/*!******************************!*\
-  !*** external "elasticlunr" ***!
-  \******************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("elasticlunr");
-
-/***/ }),
-
 /***/ "electron":
 /*!***************************!*\
   !*** external "electron" ***!
@@ -1443,6 +1553,17 @@ module.exports = require("mousetrap");
 /***/ (function(module, exports) {
 
 module.exports = require("path");
+
+/***/ }),
+
+/***/ "pouchdb":
+/*!**************************!*\
+  !*** external "pouchdb" ***!
+  \**************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("pouchdb");
 
 /***/ }),
 

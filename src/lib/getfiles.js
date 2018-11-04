@@ -8,6 +8,7 @@ const glob = require('glob')
 const dirTree = require('directory-tree')
 const textract = require('textract')
 const log = console.log
+
 // const Store = require('electron-store')
 // const store = new Store()
 
@@ -127,7 +128,9 @@ function parseDir(bookpath) {
   // log('FNS', fns.length)
 
 
-  let cpanes = {panes: [], coms: []}
+  // let cpanes = {texts: [], coms: []}
+  let texts = []
+  let coms = []
   fns.forEach(fn => {
     let comment = false
     let com = fn.split('-')[1]
@@ -149,11 +152,15 @@ function parseDir(bookpath) {
     let lang
     if (auth) lang = auth.lang
 
-    let pane = { lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname,
+    // проблема - автора-то сначала нет?
+    // info.book.author,
+    let id = [info.book.title, fpath, nic].join('-')
+    // let pane = { lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname,
+    let pane = { _id: id, lang: lang, nic: nic, fpath: fpath, text: clean }
     if (auth && auth.author) pane.author = true, info.book.author = auth.name
 
-    if (comment) cpanes.coms.push(pane)
-    else cpanes.panes.push(pane)
+    if (comment) coms.push(pane)
+    else texts.push(pane)
     // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   })
 
@@ -165,7 +172,7 @@ function parseDir(bookpath) {
   info.bkey = bkey
   info.bpath = bpath
 
-  let book = {bkey: bkey, info: info, texts: cpanes} // , bpath: bpath
+  let book = {bkey: bkey, info: info, texts: texts, coms: coms} // , bpath: bpath
   log('BOOK FROM GET', book)
   return book
 

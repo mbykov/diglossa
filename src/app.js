@@ -21,7 +21,7 @@ let fse = require('fs-extra')
 const log = console.log
 const Store = require('electron-store')
 const store = new Store()
-const elasticlunr = require('elasticlunr')
+// const elasticlunr = require('elasticlunr')
 
 // const Mousetrap = require('mousetrap')
 // const axios = require('axios')
@@ -34,9 +34,34 @@ const {dialog} = require('electron').remote
 // const isDev = false
 const isDev = true
 const app = remote.app;
-const appPath = app.getAppPath()
-let userDataPath = app.getPath("userData")
+const apath = app.getAppPath()
+let upath = app.getPath("userData")
 // const watch = require('node-watch')
+
+const PouchDB = require('pouchdb')
+let libPath = path.resolve(upath, 'pouch', 'lib')
+log('LIBPATH', libPath)
+let pouch = new PouchDB(libPath)
+let db = new PouchDB(libPath+'_a')
+
+let keys = []
+pouch.allDocs({include_docs: true})
+  .then(function(res) {
+    log('P-RES', res)
+    let docs = res.rows.map(row=>{ return row.doc})
+    log('P-DOCS', docs)
+  }).catch(function (err) {
+    console.log('ERR GET DBs', err)
+  })
+
+// db.allDocs({include_docs: true})
+//   .then(function(res) {
+//     log('DB-RES', res)
+//     let docs = res.rows.map(row=>{ return row.doc})
+//     log('DB-DOCS', docs)
+//   }).catch(function (err) {
+//     console.log('ERR GET DBs', err)
+//   })
 
 
 ipcRenderer.on('save-state', function (event) {
@@ -165,18 +190,18 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
 function showSection(name) {
   window.split.setSizes([100,0])
   let osource = q('#source')
-  let secpath = path.resolve(appPath, 'src/sections', [name, 'html'].join('.'))
+  let secpath = path.resolve(apath, 'src/sections', [name, 'html'].join('.'))
   const section = fse.readFileSync(secpath)
   osource.innerHTML = section
 }
 
-let lunr = elasticlunr(function () {
-  this.addField('nic')
-  this.addField('lang')
-  this.addField('fpath')
-  this.addField('text')
-  this.setRef('id')
-})
+// let lunr = elasticlunr(function () {
+//   this.addField('nic')
+//   this.addField('lang')
+//   this.addField('fpath')
+//   this.addField('text')
+//   this.setRef('id')
+// })
 
 
 // унести в getFile, и грязно пока
@@ -199,24 +224,123 @@ function getDir(bpath, navpath) {
     store.set(book.bkey, book.texts)
     // startWatcher(book.bpath)
 
+    pushTexts(book.texts)
+    // pushKuku()
+
     if (navpath) navigate(navpath)
     else navigate({section: 'lib'})
   })
 }
 
-function setSearch(bkey, texts) {
-  texts.forEach(text => {
-    if (!text.author) return
-    let id = [bkey, text.fpath].join('/')
-    let panee = { id: id, lang: text.lang, nic: text.nic, fpath: text.fpath, text: _.flatten(text.rows)[0] }
-    lunr.addDoc(panee)
+let kittens = [
+  {
+    _id: 'mittens',
+    occupation: 'kitten',
+    cuteness: 9.0
+  },
+  {
+    _id: 'katie',
+    occupation: 'kitten',
+    cuteness: 7.0
+  },
+  {
+    _id: 'felix',
+    occupation: 'kitten',
+    cuteness: 8.0
+  }]
+
+
+function pushTexts(newdocs) {
+  log('PUSH-NEW-TEXTS', newdocs)
+  log('PUSH-NEW-KITT', kittens)
+
+  let pouch = new PouchDB(libPath)
+  pouch.bulkDocs(newdocs).then(function (result) {
+    log('SAVED RES', result)
+    return pouch.allDocs({include_docs: true})
+  }).then(function(response) {
+    log('GETTING SAVED', response)
+  }).catch(function (err) {
+    console.log('ERR GET DBs', err)
   })
+
+  // pouch.allDocs({include_docs: true})
+  //   .then(function(res) {
+  //     log('P-RES', res)
+  //     // let docs = res.rows.map(row=>{ return row.doc})
+  //     // let cleandocs = []
+  //     // let hdoc = {}
+  //     // docs.forEach(doc=> {
+  //     //   hdoc[doc._id] = doc
+  //     // })
+  //     // log('HDOC', hdoc)
+  //     // newdocs.forEach(newdoc=> {
+  //     //   let doc = hdoc[newdoc._id]
+  //     //   if (doc) {
+  //     //     if (newdoc.text == doc.text) return
+  //     //     else doc.text = newdoc.text, cleandocs.push(doc)
+  //     //   } else {
+  //     //     cleandocs.push(newdoc)
+  //     //   }
+  //     // })
+
+  //     // log('CLEAN-DOCS', cleandocs)
+
+  //     pouch.bulkDocs(newdocs).then(function (result) {
+  //       log('SAVED RES', result)
+  //       return pouch.allDocs({include_docs: true})
+  //     }).then(function(response) {
+  //       log('GETTING SAVED', response)
+  //     }).catch(function (err) {
+  //       console.log('ERR GET DBs', err)
+  //     })
+
+  //   }).catch(function (err) {
+  //     console.log('ERR GET DBs', err)
+  //   })
+}
+
+function pushKuku() {
+  db.put({
+    _id: new Date().toJSON(),
+    name: 'Mittens',
+    occupation: 'kitten',
+    cuteness: 9.0
+  }).then(function () {
+    return db.put({
+      _id: new Date().toJSON(),
+      name: 'Katie',
+      occupation: 'kitten',
+      cuteness: 7.0
+    });
+  }).then(function () {
+    return db.put({
+      _id: new Date().toJSON(),
+      name: 'Felix',
+      occupation: 'kitten',
+      cuteness: 8.0
+    });
+  }).then(function () {
+    return db.allDocs({include_docs: true});
+  }).then(function (response) {
+    console.log(response);
+  }).catch(function (err) {
+    console.log(err);
+  });
 }
 
 
 
+function setSearch_(bkey, texts) {
+  texts.forEach(text => {
+    if (!text.author) return
+    let id = [bkey, text.fpath].join('/')
+    let panee = { id: id, lang: text.lang, nic: text.nic, fpath: text.fpath, text: _.flatten(text.rows)[0] }
+    // lunr.addDoc(panee)
+  })
+}
 
-const historyMode = event => {
+const historyMode_ = event => {
   const checkArrow = element => {
     // if (!element.classList.contains("arrow")) return
     if (element.id === "new-version") {
@@ -234,11 +358,6 @@ const historyMode = event => {
 }
 
 // document.addEventListener("click", historyMode, false)
-
-// let win = BrowserWindow.getFocusedWindow()
-// win.navpath = navpath
-
-// app.on("close", log('================================================'));
 
 // не работает - почему?
 // function startWatcher(bpath) {
