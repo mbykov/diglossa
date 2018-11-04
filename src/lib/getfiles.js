@@ -2,6 +2,7 @@ import _ from 'lodash'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
 import {nav} from '../app';
 
+const md5 = require('md5');
 const fse = require('fs-extra')
 const path = require('path')
 const glob = require('glob')
@@ -154,7 +155,7 @@ function parseDir(bookpath) {
 
     // проблема - автора-то сначала нет?
     // info.book.author,
-    let id = [info.book.title, fpath, nic].join('-')
+    let id = md5([info.book.title, fpath, nic].join('-'))
     // let pane = { lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname,
     let pane = { _id: id, lang: lang, nic: nic, fpath: fpath, text: clean }
     if (auth && auth.author) pane.author = true, info.book.author = auth.name

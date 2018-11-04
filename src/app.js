@@ -40,29 +40,7 @@ let upath = app.getPath("userData")
 
 const PouchDB = require('pouchdb')
 let libPath = path.resolve(upath, 'pouch', 'lib')
-log('LIBPATH', libPath)
 let pouch = new PouchDB(libPath)
-let db = new PouchDB(libPath+'_a')
-
-let keys = []
-pouch.allDocs({include_docs: true})
-  .then(function(res) {
-    log('P-RES', res)
-    let docs = res.rows.map(row=>{ return row.doc})
-    log('P-DOCS', docs)
-  }).catch(function (err) {
-    console.log('ERR GET DBs', err)
-  })
-
-// db.allDocs({include_docs: true})
-//   .then(function(res) {
-//     log('DB-RES', res)
-//     let docs = res.rows.map(row=>{ return row.doc})
-//     log('DB-DOCS', docs)
-//   }).catch(function (err) {
-//     console.log('ERR GET DBs', err)
-//   })
-
 
 ipcRenderer.on('save-state', function (event) {
   store.set('navpath', window.navpath)
@@ -98,19 +76,30 @@ let hstate =  -1
 window.split = twoPages()
 // window.split.setSizes([50,50])
 
-let navpath = store.get('navpath') || {section: 'lib'}
-log('LOAD-navpath', navpath)
+pouch.get('_local/current').then(function (current) {
+  log('CURRENT:', current)
+  if (current.section == 'lib') navigate({section: 'lib'})
+  else getDir(current)
+}).catch(function (err) {
+  // log('CURERR', err)
+  pouch.put({ _id: '_local/current', section: 'lib'}).then(function() {
+    navigate({section: 'lib'})
+  })
+})
 
-if (navpath.section == 'lib') navigate({section: 'lib'})
-else {
-  let lib = store.get('lib') || []
-  // log('npath=>', navpath)
-  // log('lib=>', lib)
-  let bpath = lib[navpath.bkey].bpath
-  // log('bpath=>', bpath)
-  getDir(bpath, navpath)
-}
-// navigate({section: 'lib'})
+// let navpath = store.get('navpath') || {section: 'lib'}
+// log('LOAD-navpath', navpath)
+
+// if (navpath.section == 'lib') navigate({section: 'lib'})
+// else {
+//   let lib = store.get('lib') || []
+//   // log('npath=>', navpath)
+//   // log('lib=>', lib)
+//   let bpath = lib[navpath.bkey].bpath
+//   // log('bpath=>', bpath)
+//   getDir(bpath, navpath)
+// }
+// // navigate({section: 'lib'})
 
 function parseLib() {
   window.split.setSizes([100,0])
@@ -227,106 +216,37 @@ function getDir(bpath, navpath) {
     pushTexts(book.texts)
     // pushKuku()
 
-    if (navpath) navigate(navpath)
-    else navigate({section: 'lib'})
+    // if (navpath) navigate(navpath)
+    // else navigate({section: 'lib'})
   })
 }
-
-let kittens = [
-  {
-    _id: 'mittens',
-    occupation: 'kitten',
-    cuteness: 9.0
-  },
-  {
-    _id: 'katie',
-    occupation: 'kitten',
-    cuteness: 7.0
-  },
-  {
-    _id: 'felix',
-    occupation: 'kitten',
-    cuteness: 8.0
-  }]
 
 
 function pushTexts(newdocs) {
-  log('PUSH-NEW-TEXTS', newdocs)
-  log('PUSH-NEW-KITT', kittens)
+  // log('PUSH-NEW-TEXTS', newdocs)
 
-  let pouch = new PouchDB(libPath)
-  pouch.bulkDocs(newdocs).then(function (result) {
-    log('SAVED RES', result)
-    return pouch.allDocs({include_docs: true})
-  }).then(function(response) {
-    log('GETTING SAVED', response)
-  }).catch(function (err) {
-    console.log('ERR GET DBs', err)
-  })
+  pouch.allDocs({include_docs: true})
+    .then(function(res) {
+      let docs = res.rows.map(row=>{ return row.doc})
+      let cleandocs = []
+      let hdoc = {}
+      docs.forEach(doc=> { hdoc[doc._id] = doc })
+      newdocs.forEach(newdoc=> {
+        let doc = hdoc[newdoc._id]
+        if (doc) {
+          if (newdoc.text == doc.text) return
+          else doc.text = newdoc.text, cleandocs.push(doc)
+        } else {
+          cleandocs.push(newdoc)
+        }
+      })
 
-  // pouch.allDocs({include_docs: true})
-  //   .then(function(res) {
-  //     log('P-RES', res)
-  //     // let docs = res.rows.map(row=>{ return row.doc})
-  //     // let cleandocs = []
-  //     // let hdoc = {}
-  //     // docs.forEach(doc=> {
-  //     //   hdoc[doc._id] = doc
-  //     // })
-  //     // log('HDOC', hdoc)
-  //     // newdocs.forEach(newdoc=> {
-  //     //   let doc = hdoc[newdoc._id]
-  //     //   if (doc) {
-  //     //     if (newdoc.text == doc.text) return
-  //     //     else doc.text = newdoc.text, cleandocs.push(doc)
-  //     //   } else {
-  //     //     cleandocs.push(newdoc)
-  //     //   }
-  //     // })
-
-  //     // log('CLEAN-DOCS', cleandocs)
-
-  //     pouch.bulkDocs(newdocs).then(function (result) {
-  //       log('SAVED RES', result)
-  //       return pouch.allDocs({include_docs: true})
-  //     }).then(function(response) {
-  //       log('GETTING SAVED', response)
-  //     }).catch(function (err) {
-  //       console.log('ERR GET DBs', err)
-  //     })
-
-  //   }).catch(function (err) {
-  //     console.log('ERR GET DBs', err)
-  //   })
-}
-
-function pushKuku() {
-  db.put({
-    _id: new Date().toJSON(),
-    name: 'Mittens',
-    occupation: 'kitten',
-    cuteness: 9.0
-  }).then(function () {
-    return db.put({
-      _id: new Date().toJSON(),
-      name: 'Katie',
-      occupation: 'kitten',
-      cuteness: 7.0
-    });
-  }).then(function () {
-    return db.put({
-      _id: new Date().toJSON(),
-      name: 'Felix',
-      occupation: 'kitten',
-      cuteness: 8.0
-    });
-  }).then(function () {
-    return db.allDocs({include_docs: true});
-  }).then(function (response) {
-    console.log(response);
-  }).catch(function (err) {
-    console.log(err);
-  });
+      pouch.bulkDocs(cleandocs).then(function (result) {
+        navigate({section: 'lib'})
+      })
+    }).catch(function (err) {
+      console.log('ERR GET DBs', err)
+    })
 }
 
 
