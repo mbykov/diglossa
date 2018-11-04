@@ -16,7 +16,6 @@ const log = console.log
 
 // const yuno = require('../../../yunodb')
 // const storage = require('electron-json-storage')
-const elasticlunr = require('elasticlunr')
 
 function extractAllText(str){
   const re = /"(.*?)"/g
@@ -127,13 +126,6 @@ function parseDir(bookpath) {
   fns = _.filter(fns, fn=>{ return fn != ipath })
   // log('FNS', fns.length)
 
-  let lunr = elasticlunr(function () {
-    this.addField('nic')
-    this.addField('lang')
-    this.addField('fpath')
-    this.addField('text')
-    this.setRef('id')
-  })
 
   let cpanes = {panes: [], coms: []}
   fns.forEach(fn => {
@@ -159,12 +151,6 @@ function parseDir(bookpath) {
 
     let pane = { lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname,
     if (auth && auth.author) pane.author = true, info.book.author = auth.name
-    if (auth && auth.author) {
-      let id = [fpath, fname].join('/')
-      let panee = { id: id, lang: lang, nic: nic, fpath: fpath, text: txt }
-      lunr.addDoc(panee)
-    }
-
 
     if (comment) cpanes.coms.push(pane)
     else cpanes.panes.push(pane)

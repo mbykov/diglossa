@@ -21,6 +21,7 @@ let fse = require('fs-extra')
 const log = console.log
 const Store = require('electron-store')
 const store = new Store()
+const elasticlunr = require('elasticlunr')
 
 // const Mousetrap = require('mousetrap')
 // const axios = require('axios')
@@ -169,6 +170,15 @@ function showSection(name) {
   osource.innerHTML = section
 }
 
+let lunr = elasticlunr(function () {
+  this.addField('nic')
+  this.addField('lang')
+  this.addField('fpath')
+  this.addField('text')
+  this.setRef('id')
+})
+
+
 // унести в getFile, и грязно пока
 function getFNS(fns) {
   if (!fns) return
@@ -180,19 +190,29 @@ function getFNS(fns) {
 function getDir(bpath, navpath) {
   openDir(bpath, (book) => {
     if (!book) return
+    // log('BKEY', book.texts)
     let lib = store.get('lib') || {}
     // lib = {}
     lib[book.bkey] = book.info
     store.set('lib', lib)
 
     store.set(book.bkey, book.texts)
-    // log('BKEY', book.texts)
     // startWatcher(book.bpath)
 
     if (navpath) navigate(navpath)
     else navigate({section: 'lib'})
   })
 }
+
+function setSearch(bkey, texts) {
+  texts.forEach(text => {
+    if (!text.author) return
+    let id = [bkey, text.fpath].join('/')
+    let panee = { id: id, lang: text.lang, nic: text.nic, fpath: text.fpath, text: _.flatten(text.rows)[0] }
+    lunr.addDoc(panee)
+  })
+}
+
 
 
 
