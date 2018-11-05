@@ -152,7 +152,8 @@ function parseDir(bookpath) {
     let lang
     if (auth) lang = auth.lang
 
-    let id = md5([info.book.author, info.book.title, fpath, nic].join(''))
+    // let id = md5([info.book.author, info.book.title, fpath].join(''))
+    let id = fname
     info.fns.push(id)
 
     let pane = { _id: id, lang: lang, nic: nic, fpath: fpath, text: clean } // fname: fname,
@@ -163,8 +164,10 @@ function parseDir(bookpath) {
     // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
   })
 
+  info.fns = _.uniq(info.fns)
   let bkey = md5([info.book.author, info.book.title].join('-'))
-  info._id = bkey
+  let id = ['info', bkey].join('-')
+  info._id = id
   info.tree = tree
   // info.bkey = bkey
   info.bpath = bpath

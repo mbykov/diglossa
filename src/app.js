@@ -39,7 +39,7 @@ let upath = app.getPath("userData")
 // const watch = require('node-watch')
 
 const PouchDB = require('pouchdb')
-let libPath = path.resolve(upath, 'pouch', 'lib')
+let libPath = path.resolve(upath, 'library')
 let pouch = new PouchDB(libPath)
 
 ipcRenderer.on('save-state', function (event) {
@@ -101,6 +101,20 @@ pouch.get('_local/current').then(function (current) {
 // }
 // // navigate({section: 'lib'})
 
+function getLib() {
+  let options = {
+    include_docs: true,
+    startkey: 'info',
+    endkey: 'info\ufff0'
+  }
+  pouch.allDocs(options).then(function (result) {
+    log('GETLIB', result)
+  }).catch(function (err) {
+    log('getLib', err);
+  });
+
+}
+
 function parseLib() {
   window.split.setSizes([100,0])
   let lib = store.get('lib') || []
@@ -144,7 +158,8 @@ export function navigate(navpath) {
   remove(ohright)
 
   let sec = navpath.section
-  if (sec == 'lib') parseLib()
+  // if (sec == 'lib') parseLib()
+  if (sec == 'lib') getLib()
   else if (sec == 'title') parseTitle(navpath)
   else if (sec == 'book') parseBook(navpath)
   else showSection(sec)
@@ -204,28 +219,58 @@ function getFNS(fns) {
 function getDir(bpath, navpath) {
   openDir(bpath, (book) => {
     if (!book) return
-    // log('BKEY', book.texts)
-    let lib = store.get('lib') || {}
-    // lib = {}
-    lib[book.bkey] = book.info
-    store.set('lib', lib)
 
-    store.set(book.bkey, book.texts)
+    // // log('BKEY', book.texts)
+    // let lib = store.get('lib') || {}
+    // // lib = {}
+    // lib[book.bkey] = book.info
+    // store.set('lib', lib)
+    // store.set(book.bkey, book.texts)
+
     // startWatcher(book.bpath)
 
-    pushTexts(book.texts)
-    // pushKuku()
+    log('INFO::', book.info)
+    // pushTexts(book.texts)
+    // pushInfo(book.info)
+
+    Promise.all([
+      pushInfo(book.info),
+      pushTexts(book.texts)
+    ]).then(function(res) {
+      // log('ALL RES', res)
+      navigate({section: 'lib'})
+    }).catch(function(err) {
+      log('ALL RES ERR', err)
+    })
 
     // if (navpath) navigate(navpath)
     // else navigate({section: 'lib'})
   })
 }
 
+function pushInfo(ndoc) {
+  // log('NDOCinfo', ndoc)
+  return pouch.get(ndoc._id).catch(function (err) {
+    if (err.name === 'not_found') return
+    else throw err
+  }).then(function (doc) {
+    if (doc) {
+      let testdoc = _.clone(doc)
+      delete testdoc._rev
+      if (_.isEqual(ndoc, testdoc)) return
+      // if (JSON.stringify(ndoc) == JSON.stringify(testdoc)) return
+      else {
+        ndoc._rev = doc._rev
+        // log('NDOC-rev', ndoc)
+        return pouch.put(ndoc)
+      }
+    }
+  })
+}
 
 function pushTexts(newdocs) {
   // log('PUSH-NEW-TEXTS', newdocs)
-
-  pouch.allDocs({include_docs: true})
+  return pouch.allDocs({include_docs: true})
     .then(function(res) {
       let docs = res.rows.map(row=>{ return row.doc})
 
@@ -241,12 +286,8 @@ function pushTexts(newdocs) {
           cleandocs.push(newdoc)
         }
       })
-
-      pouch.bulkDocs(cleandocs).then(function (result) {
-        navigate({section: 'lib'})
-      })
-    }).catch(function (err) {
-      console.log('ERR GET DBs', err)
+      log('CLD', cleandocs)
+      return pouch.bulkDocs(cleandocs)
     })
 }
 
