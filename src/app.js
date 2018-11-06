@@ -125,7 +125,7 @@ function getTitle(navpath) {
     window.info = docs[0]
     parseTitle(docs[0])
   }).catch(function (err) {
-    log('getLib', err);
+    log('getTitle', err);
   })
 }
 
@@ -140,7 +140,7 @@ function getBook(navpath) {
     // log('GET TEXTS', texts)
     parseBook(texts)
   }).catch(function (err) {
-    log('getLib', err);
+    log('getBook', err);
   })
 }
 

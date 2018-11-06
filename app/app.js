@@ -249,7 +249,7 @@ function getTitle(navpath) {
     window.info = docs[0];
     Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])(docs[0]);
   }).catch(function (err) {
-    log('getLib', err);
+    log('getTitle', err);
   });
 }
 
@@ -266,7 +266,7 @@ function getBook(navpath) {
 
     Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(texts);
   }).catch(function (err) {
-    log('getLib', err);
+    log('getBook', err);
   });
 }
 
