@@ -87,13 +87,10 @@ function keyScroll(ev) {
 }
 
 
-export function parseTitle(navpath) {
+export function parseTitle(info) {
   // log('========= parse title =============')
   window.split.setSizes([50,50])
-  let lib = store.get('lib') || []
-  let info = lib[navpath.bkey]
-
-
+  log('TITLE', info)
 
   let osource = q('#source')
   let otrns = q('#trns')

@@ -39,7 +39,8 @@ let upath = app.getPath("userData")
 // const watch = require('node-watch')
 
 const PouchDB = require('pouchdb')
-let libPath = path.resolve(upath, 'library')
+let libPath = path.resolve(upath, 'pouch/lib')
+// let libPath = path.resolve(upath, 'library')
 let pouch = new PouchDB(libPath)
 
 ipcRenderer.on('save-state', function (event) {
@@ -108,17 +109,33 @@ function getLib() {
     endkey: 'info\ufff0'
   }
   pouch.allDocs(options).then(function (result) {
-    log('GETLIB', result)
+    let docs = result.rows.map(row=> { return row.doc})
+    log('GETLIB', docs)
+    parseLib(docs)
   }).catch(function (err) {
     log('getLib', err);
-  });
-
+  })
 }
 
-function parseLib() {
+function getTitle(navpath) {
+  let options = {
+    include_docs: true,
+    key: navpath.titleid
+  }
+  pouch.allDocs(options).then(function (result) {
+    let docs = result.rows.map(row=> { return row.doc})
+    // log('GETTITLE', docs)
+    parseTitle(docs[0])
+  }).catch(function (err) {
+    log('getLib', err);
+  })
+}
+
+
+function parseLib(infos) {
   window.split.setSizes([100,0])
-  let lib = store.get('lib') || []
-  let infos = _.values(lib)
+  // let lib = store.get('lib') || []
+  // let infos = _.values(lib)
   // log('LIB INFOS', infos)
 
   let osource = q('#source')
@@ -129,7 +146,7 @@ function parseLib() {
   if (!infos.length) oul.textContent = 'no book in lib'
   infos.forEach(info => {
     let ostr = create('li', 'libauth')
-    ostr.bkey = info.bkey
+    ostr.titleid = info._id
     oul.appendChild(ostr)
     let author = span(info.book.author)
     let title = span(info.book.title)
@@ -143,8 +160,8 @@ function parseLib() {
 
 function goBook(ev) {
   if (ev.target.parentNode.nodeName != 'LI') return
-  let bkey = ev.target.parentNode.bkey
-  navigate({section: 'title', bkey: bkey})
+  let titleid = ev.target.parentNode.titleid
+  navigate({section: 'title', titleid: titleid})
 }
 
 export function navigate(navpath) {
@@ -160,7 +177,7 @@ export function navigate(navpath) {
   let sec = navpath.section
   // if (sec == 'lib') parseLib()
   if (sec == 'lib') getLib()
-  else if (sec == 'title') parseTitle(navpath)
+  else if (sec == 'title') getTitle(navpath)
   else if (sec == 'book') parseBook(navpath)
   else showSection(sec)
 
@@ -237,7 +254,7 @@ function getDir(bpath, navpath) {
       pushInfo(book.info),
       pushTexts(book.texts)
     ]).then(function(res) {
-      // log('ALL RES', res)
+      log('PUSH ALL RES', res)
       navigate({section: 'lib'})
     }).catch(function(err) {
       log('ALL RES ERR', err)
@@ -254,16 +271,20 @@ function pushInfo(ndoc) {
     if (err.name === 'not_found') return
     else throw err
   }).then(function (doc) {
+    // log('DOC-old', doc)
     if (doc) {
+      // log('DOC-old', doc)
       let testdoc = _.clone(doc)
       delete testdoc._rev
       if (_.isEqual(ndoc, testdoc)) return
-      // if (JSON.stringify(ndoc) == JSON.stringify(testdoc)) return
       else {
         ndoc._rev = doc._rev
         // log('NDOC-rev', ndoc)
         return pouch.put(ndoc)
       }
+      // if (JSON.stringify(ndoc) == JSON.stringify(testdoc)) return
+    } else {
+      return pouch.put(ndoc)
     }
   })
 }
