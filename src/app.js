@@ -39,13 +39,24 @@ let upath = app.getPath("userData")
 // const watch = require('node-watch')
 
 const PouchDB = require('pouchdb')
-let libPath = path.resolve(upath, 'pouch/lib')
-// let libPath = path.resolve(upath, 'library')
+// let libPath = path.resolve(upath, 'pouch/lib')
+let libPath = path.resolve(upath, 'library')
 let pouch = new PouchDB(libPath)
 
 ipcRenderer.on('save-state', function (event) {
-  store.set('navpath', window.navpath)
-  ipcRenderer.send('state-saved', window.navpath)
+  pouch.get('_local/current').then(function(doc) {
+    let current = window.navpath
+    current._id = '_local/current'
+    current._rev = doc._rev
+    pouch.put(current).then(function() {
+      ipcRenderer.send('state-saved', current)
+    })
+  }).catch(function (err) {
+    // log('CURERR', err)
+    pouch.put({ _id: '_local/current', section: 'lib'}).then(function() {
+      navigate({section: 'lib'})
+    })
+  })
 })
 
 ipcRenderer.on('home', function (event) {
@@ -141,7 +152,6 @@ function getBook(navpath) {
   pouch.allDocs(options).then(function (result) {
     let texts = result.rows.map(row=> { return row.doc})
     log('GET TEXTS', texts)
-    // window.info.texts = texts
     parseBook(texts)
   }).catch(function (err) {
     log('getLib', err);
@@ -151,10 +161,6 @@ function getBook(navpath) {
 
 function parseLib(infos) {
   window.split.setSizes([100,0])
-  // let lib = store.get('lib') || []
-  // let infos = _.values(lib)
-  // log('LIB INFOS', infos)
-
   let osource = q('#source')
   empty(osource)
   let oul = create('ul')
@@ -172,10 +178,10 @@ function parseLib(infos) {
     ostr.appendChild(author)
     ostr.appendChild(title)
   })
-  oul.addEventListener('click', goBook, false)
+  oul.addEventListener('click', goTitleEvent, false)
 }
 
-function goBook(ev) {
+function goTitleEvent(ev) {
   if (ev.target.parentNode.nodeName != 'LI') return
   let titleid = ev.target.parentNode.titleid
   navigate({section: 'title', titleid: titleid})
@@ -247,38 +253,30 @@ function getFNS(fns) {
   if (!fns) return
   let bpath = fns[0]
   // log('Bpath:', bpath)
-  getDir(bpath)
+  // current
+  // getDir(bpath)
 }
 
-function getDir(bpath, navpath) {
+function getDir(navpath) {
+  let bpath = navpath.titleid.split('-')[1]
+  if (!bpath) return
   openDir(bpath, (book) => {
     if (!book) return
-
-    // // log('BKEY', book.texts)
-    // let lib = store.get('lib') || {}
-    // // lib = {}
-    // lib[book.bkey] = book.info
-    // store.set('lib', lib)
-    // store.set(book.bkey, book.texts)
-
     // startWatcher(book.bpath)
-
-    log('INFO::', book.info)
-    // pushTexts(book.texts)
-    // pushInfo(book.info)
+    // log('INFO::', book.info)
 
     Promise.all([
       pushInfo(book.info),
       pushTexts(book.texts)
     ]).then(function(res) {
       log('PUSH ALL RES', res)
-      navigate({section: 'lib'})
+      if (navpath) window.info = book.info, navigate(navpath)
+      else navigate({section: 'lib'})
+      // navigate({section: 'lib'})
     }).catch(function(err) {
       log('ALL RES ERR', err)
     })
 
-    // if (navpath) navigate(navpath)
-    // else navigate({section: 'lib'})
   })
 }
 

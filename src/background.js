@@ -93,8 +93,8 @@ app.on("ready", () => {
     evt = ev
     win.webContents.send('save-state', 'xxx')
   })
-  ipcMain.on('state-saved', (event, navpath) => {
-    console.log('DATA-SAVED', navpath)
+  ipcMain.on('state-saved', (event, current) => {
+    console.log('STATE-SAVED', current)
     // evt.defaultPrevented = false
     win.destroy()
   })

@@ -148,14 +148,30 @@ const app = electron__WEBPACK_IMPORTED_MODULE_3__["remote"].app;
 const apath = app.getAppPath();
 let upath = app.getPath("userData"); // const watch = require('node-watch')
 
-const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
+const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb"); // let libPath = path.resolve(upath, 'pouch/lib')
 
-let libPath = path.resolve(upath, 'pouch/lib'); // let libPath = path.resolve(upath, 'library')
 
+let libPath = path.resolve(upath, 'library');
 let pouch = new PouchDB(libPath);
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('save-state', function (event) {
-  store.set('navpath', window.navpath);
-  electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].send('state-saved', window.navpath);
+  pouch.get('_local/current').then(function (doc) {
+    let current = window.navpath;
+    current._id = '_local/current';
+    current._rev = doc._rev;
+    pouch.put(current).then(function () {
+      electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].send('state-saved', current);
+    });
+  }).catch(function (err) {
+    // log('CURERR', err)
+    pouch.put({
+      _id: '_local/current',
+      section: 'lib'
+    }).then(function () {
+      navigate({
+        section: 'lib'
+      });
+    });
+  });
 });
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('home', function (event) {
   navigate({
@@ -258,8 +274,7 @@ function getBook(navpath) {
     let texts = result.rows.map(row => {
       return row.doc;
     });
-    log('GET TEXTS', texts); // window.info.texts = texts
-
+    log('GET TEXTS', texts);
     Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(texts);
   }).catch(function (err) {
     log('getLib', err);
@@ -267,10 +282,7 @@ function getBook(navpath) {
 }
 
 function parseLib(infos) {
-  window.split.setSizes([100, 0]); // let lib = store.get('lib') || []
-  // let infos = _.values(lib)
-  // log('LIB INFOS', infos)
-
+  window.split.setSizes([100, 0]);
   let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(osource);
   let oul = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["create"])('ul');
@@ -287,10 +299,10 @@ function parseLib(infos) {
     ostr.appendChild(author);
     ostr.appendChild(title);
   });
-  oul.addEventListener('click', goBook, false);
+  oul.addEventListener('click', goTitleEvent, false);
 }
 
-function goBook(ev) {
+function goTitleEvent(ev) {
   if (ev.target.parentNode.nodeName != 'LI') return;
   let titleid = ev.target.parentNode.titleid;
   navigate({
@@ -355,32 +367,25 @@ function showSection(name) {
 function getFNS(fns) {
   if (!fns) return;
   let bpath = fns[0]; // log('Bpath:', bpath)
-
-  getDir(bpath);
+  // current
+  // getDir(bpath)
 }
 
-function getDir(bpath, navpath) {
+function getDir(navpath) {
+  let bpath = navpath.titleid.split('-')[1];
+  if (!bpath) return;
   Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
-    if (!book) return; // // log('BKEY', book.texts)
-    // let lib = store.get('lib') || {}
-    // // lib = {}
-    // lib[book.bkey] = book.info
-    // store.set('lib', lib)
-    // store.set(book.bkey, book.texts)
-    // startWatcher(book.bpath)
-
-    log('INFO::', book.info); // pushTexts(book.texts)
-    // pushInfo(book.info)
+    if (!book) return; // startWatcher(book.bpath)
+    // log('INFO::', book.info)
 
     Promise.all([pushInfo(book.info), pushTexts(book.texts)]).then(function (res) {
       log('PUSH ALL RES', res);
-      navigate({
+      if (navpath) window.info = book.info, navigate(navpath);else navigate({
         section: 'lib'
-      });
+      }); // navigate({section: 'lib'})
     }).catch(function (err) {
       log('ALL RES ERR', err);
-    }); // if (navpath) navigate(navpath)
-    // else navigate({section: 'lib'})
+    });
   });
 }
 
@@ -677,8 +682,7 @@ function setBookText(texts, start) {
   let nic = window.currentNic;
   if (!nic) nic = cnics[0];
   if (!cnics.includes(nic)) nic = cnics[0];
-  window.currentNic = nic; // store.set('navpath', window.navpath)
-  // log('BEFORE CHUNK nic', nic)
+  window.currentNic = nic; // log('BEFORE CHUNK nic', nic)
   // window.book = book
 
   setChunk(start); // createRightHeader()

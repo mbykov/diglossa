@@ -178,7 +178,6 @@ function setBookText(texts, start) {
   if (!nic) nic = cnics[0]
   if (!cnics.includes(nic)) nic = cnics[0]
   window.currentNic = nic
-  // store.set('navpath', window.navpath)
 
   // log('BEFORE CHUNK nic', nic)
   // window.book = book
