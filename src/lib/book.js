@@ -177,22 +177,23 @@ function setBookText(texts, start) {
   let nic = window.currentNic
   if (!nic) nic = cnics[0]
   if (!cnics.includes(nic)) nic = cnics[0]
+  // window.nics = cnics
   window.currentNic = nic
 
   // log('BEFORE CHUNK nic', nic)
   // window.book = book
 
   setChunk(start)
-  // createRightHeader()
-  // createLeftHeader()
+  createRightHeader(cnics)
+  createLeftHeader()
 }
 
 function setChunk(start) {
   let limit = 20
   let author = window.author
   let trns = window.trns
-  log('HERE auth', author)
-  log('HERE trns', trns)
+  // log('HERE auth', author)
+  // log('HERE trns', trns)
   if (!author) return
 
   let authrows = author.rows.slice(start, start+limit)
@@ -259,7 +260,6 @@ function cyclePar(ev) {
 }
 
 function createLeftHeader() {
-  let book = window.book
   let obook = q('#book')
   let arect = obook.getBoundingClientRect()
   let ohleft = div()
@@ -268,22 +268,26 @@ function createLeftHeader() {
   ohleft.style.left = arect.width*0.15 + 'px'
   ohleft.addEventListener("click", clickLeftHeader, false)
 
-  let info = book.info
+  let info = window.info
   let otree = tree(info.tree, info.book.title)
   ohleft.appendChild(otree)
   let navpath = window.navpath
-  // log('N', navpath)
-  // log('T', otree)
   let otitle = q('#tree-title')
-  otitle.textContent = navpath.fpath
   let otbody = q('#tree-body')
-  otbody.classList.add('tree-collapse')
+  if (navpath.fpath) {
+    otitle.textContent = navpath.fpath
+    otbody.classList.add('tree-collapse')
+  } else {
+    otitle.textContent = info.book.title
+    remove(otbody)
+  }
 }
 
 function clickLeftHeader(ev) {
   let fpath = ev.target.getAttribute('fpath')
   // log('LEFT', ev.target)
   let otbody = q('#tree-body')
+  if (!otbody) return
   if (fpath) {
     if (ev.target.classList.contains('tree-node-empty')) return
     let otitle = q('#tree-title')
@@ -299,9 +303,8 @@ function clickLeftHeader(ev) {
   }
 }
 
-
-function createRightHeader() {
-  let book = window.book
+function createRightHeader(nics) {
+  // let book = window.book
   let obook = q('#book')
   let arect = obook.getBoundingClientRect()
   let ohright = div()
@@ -313,15 +316,15 @@ function createRightHeader() {
   oul.addEventListener("click", clickRightHeader, false)
   ohright.appendChild(oul)
   obook.appendChild(ohright)
-  createNameList(book)
-  let navpath = window.navpath
-  let nic = navpath.nic
+  createNameList(nics)
+  // let navpath = window.navpath
+  let nic = window.currentNic
   collapseRightHeader(nic)
 }
 
-function createNameList(book) {
-  let nics = book.cnics
-  let nicnames = book.info.nicnames
+function createNameList(nics) {
+  let info = window.info
+  let nicnames = window.info.nicnames
   let oul = q('#namelist')
   empty(oul)
   oul.setAttribute('nics', nics)
@@ -339,9 +342,10 @@ function clickRightHeader(ev) {
     expandRightHeader()
   } else {
     let nic = ev.target.getAttribute('nic')
-    let navpath = window.navpath
-    navpath.nic = nic
-    store.set('navpath', window.navpath)
+    // let navpath = window.navpath
+    // navpath.nic = nic
+    // store.set('navpath', window.navpath)
+    window.navpath.nic = nic
     if (!nic) return
     collapseRightHeader(nic)
     otherNic(nic)

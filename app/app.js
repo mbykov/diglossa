@@ -217,18 +217,7 @@ pouch.get('_local/current').then(function (current) {
       section: 'lib'
     });
   });
-}); // let navpath = store.get('navpath') || {section: 'lib'}
-// log('LOAD-navpath', navpath)
-// if (navpath.section == 'lib') navigate({section: 'lib'})
-// else {
-//   let lib = store.get('lib') || []
-//   // log('npath=>', navpath)
-//   // log('lib=>', lib)
-//   let bpath = lib[navpath.bkey].bpath
-//   // log('bpath=>', bpath)
-//   getDir(bpath, navpath)
-// }
-// // navigate({section: 'lib'})
+});
 
 function getLib() {
   let options = {
@@ -273,8 +262,8 @@ function getBook(navpath) {
   pouch.allDocs(options).then(function (result) {
     let texts = result.rows.map(row => {
       return row.doc;
-    });
-    log('GET TEXTS', texts);
+    }); // log('GET TEXTS', texts)
+
     Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(texts);
   }).catch(function (err) {
     log('getLib', err);
@@ -330,8 +319,8 @@ function navigate(navpath) {
   //   hstakey[hkey] = true
   //   // log('ADD-SEC', navpath.section)
   // }
-
-  store.set('navpath', navpath); // log('STORE-navpath', navpath)
+  // store.set('navpath', navpath)
+  // log('STORE-navpath', navpath)
 
   log('Navigate:', navpath);
   window.navpath = navpath;
@@ -681,20 +670,22 @@ function setBookText(texts, start) {
   });
   let nic = window.currentNic;
   if (!nic) nic = cnics[0];
-  if (!cnics.includes(nic)) nic = cnics[0];
+  if (!cnics.includes(nic)) nic = cnics[0]; // window.nics = cnics
+
   window.currentNic = nic; // log('BEFORE CHUNK nic', nic)
   // window.book = book
 
-  setChunk(start); // createRightHeader()
-  // createLeftHeader()
+  setChunk(start);
+  createRightHeader(cnics);
+  createLeftHeader();
 }
 
 function setChunk(start) {
   let limit = 20;
   let author = window.author;
-  let trns = window.trns;
-  log('HERE auth', author);
-  log('HERE trns', trns);
+  let trns = window.trns; // log('HERE auth', author)
+  // log('HERE trns', trns)
+
   if (!author) return;
   let authrows = author.rows.slice(start, start + limit);
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
@@ -772,7 +763,6 @@ function cyclePar(ev) {
 }
 
 function createLeftHeader() {
-  let book = window.book;
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
   let arect = obook.getBoundingClientRect();
   let ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
@@ -780,22 +770,27 @@ function createLeftHeader() {
   ohleft.classList.add('hleft');
   ohleft.style.left = arect.width * 0.15 + 'px';
   ohleft.addEventListener("click", clickLeftHeader, false);
-  let info = book.info;
+  let info = window.info;
   let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(info.tree, info.book.title);
   ohleft.appendChild(otree);
-  let navpath = window.navpath; // log('N', navpath)
-  // log('T', otree)
-
+  let navpath = window.navpath;
   let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree-title');
-  otitle.textContent = navpath.fpath;
   let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree-body');
-  otbody.classList.add('tree-collapse');
+
+  if (navpath.fpath) {
+    otitle.textContent = navpath.fpath;
+    otbody.classList.add('tree-collapse');
+  } else {
+    otitle.textContent = info.book.title;
+    Object(_utils__WEBPACK_IMPORTED_MODULE_2__["remove"])(otbody);
+  }
 }
 
 function clickLeftHeader(ev) {
   let fpath = ev.target.getAttribute('fpath'); // log('LEFT', ev.target)
 
   let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree-body');
+  if (!otbody) return;
 
   if (fpath) {
     if (ev.target.classList.contains('tree-node-empty')) return;
@@ -812,8 +807,8 @@ function clickLeftHeader(ev) {
   }
 }
 
-function createRightHeader() {
-  let book = window.book;
+function createRightHeader(nics) {
+  // let book = window.book
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
   let arect = obook.getBoundingClientRect();
   let ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])();
@@ -824,15 +819,15 @@ function createRightHeader() {
   oul.addEventListener("click", clickRightHeader, false);
   ohright.appendChild(oul);
   obook.appendChild(ohright);
-  createNameList(book);
-  let navpath = window.navpath;
-  let nic = navpath.nic;
+  createNameList(nics); // let navpath = window.navpath
+
+  let nic = window.currentNic;
   collapseRightHeader(nic);
 }
 
-function createNameList(book) {
-  let nics = book.cnics;
-  let nicnames = book.info.nicnames;
+function createNameList(nics) {
+  let info = window.info;
+  let nicnames = window.info.nicnames;
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#namelist');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(oul);
   oul.setAttribute('nics', nics);
@@ -849,10 +844,11 @@ function clickRightHeader(ev) {
   if (ev.target.classList.contains('active')) {
     expandRightHeader();
   } else {
-    let nic = ev.target.getAttribute('nic');
-    let navpath = window.navpath;
-    navpath.nic = nic;
-    store.set('navpath', window.navpath);
+    let nic = ev.target.getAttribute('nic'); // let navpath = window.navpath
+    // navpath.nic = nic
+    // store.set('navpath', window.navpath)
+
+    window.navpath.nic = nic;
     if (!nic) return;
     collapseRightHeader(nic);
     otherNic(nic);

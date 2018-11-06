@@ -99,20 +99,6 @@ pouch.get('_local/current').then(function (current) {
   })
 })
 
-// let navpath = store.get('navpath') || {section: 'lib'}
-// log('LOAD-navpath', navpath)
-
-// if (navpath.section == 'lib') navigate({section: 'lib'})
-// else {
-//   let lib = store.get('lib') || []
-//   // log('npath=>', navpath)
-//   // log('lib=>', lib)
-//   let bpath = lib[navpath.bkey].bpath
-//   // log('bpath=>', bpath)
-//   getDir(bpath, navpath)
-// }
-// // navigate({section: 'lib'})
-
 function getLib() {
   let options = {
     include_docs: true,
@@ -151,7 +137,7 @@ function getBook(navpath) {
   }
   pouch.allDocs(options).then(function (result) {
     let texts = result.rows.map(row=> { return row.doc})
-    log('GET TEXTS', texts)
+    // log('GET TEXTS', texts)
     parseBook(texts)
   }).catch(function (err) {
     log('getLib', err);
@@ -213,7 +199,7 @@ export function navigate(navpath) {
   //   // log('ADD-SEC', navpath.section)
   // }
 
-  store.set('navpath', navpath)
+  // store.set('navpath', navpath)
   // log('STORE-navpath', navpath)
   log('Navigate:', navpath)
   window.navpath = navpath
