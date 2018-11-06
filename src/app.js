@@ -125,7 +125,24 @@ function getTitle(navpath) {
   pouch.allDocs(options).then(function (result) {
     let docs = result.rows.map(row=> { return row.doc})
     // log('GETTITLE', docs)
+    window.info = docs[0]
     parseTitle(docs[0])
+  }).catch(function (err) {
+    log('getLib', err);
+  })
+}
+
+function getBook(navpath) {
+  log('GB info', window.info)
+  let options = {
+    include_docs: true,
+    keys: window.info.fns
+  }
+  pouch.allDocs(options).then(function (result) {
+    let texts = result.rows.map(row=> { return row.doc})
+    log('GET TEXTS', texts)
+    // window.info.texts = texts
+    parseBook(texts)
   }).catch(function (err) {
     log('getLib', err);
   })
@@ -178,7 +195,7 @@ export function navigate(navpath) {
   // if (sec == 'lib') parseLib()
   if (sec == 'lib') getLib()
   else if (sec == 'title') getTitle(navpath)
-  else if (sec == 'book') parseBook(navpath)
+  else if (sec == 'book') getBook(navpath)
   else showSection(sec)
 
   // let hkey = JSON.stringify(navpath)

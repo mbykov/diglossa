@@ -51,7 +51,7 @@ function scrollPanes(ev) {
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
     let start = qs('#source > p').length
     log('___START', start)
-    setChunk(start, book)
+    s_etChunk(start, book)
   }
 }
 
@@ -82,14 +82,15 @@ function keyScroll(ev) {
     let start = qs('#source > p').length
     // log('___KEY START', start)
     // ошибка при прокрутке всегда
-    setChunk(start, book)
+    s_etChunk(start, book)
   }
 }
 
 
-export function parseTitle(info) {
+export function parseTitle() {
   // log('========= parse title =============')
   window.split.setSizes([50,50])
+  let info = window.info
   log('TITLE', info)
 
   let osource = q('#source')
@@ -137,72 +138,70 @@ function goBookEvent(ev) {
   navigate(navpath)
 }
 
-export function parseBook(navpath) {
+export function parseBook(texts) {
   // log('___parseBook_start')
+  if (!texts) return
   window.split.setSizes([50,50])
-  window.navpath = navpath // reload !
-  // let obook = q('#source')
+  // window.navpath = navpath // reload !
+  // let navpath = window.navpath
   let osource = q('#source')
   let otrns = q('#trns')
   empty(osource)
   empty(otrns)
 
-  // log('parse-BOOK-npath:', navpath)
-  let lib = store.get('lib')
-  let info = lib[navpath.bkey]
-  let texts = store.get(info.bkey)
-  // log('BOOK-LIB', lib)
-  // log('INFO', info)
-  // log('TEXTS', texts)
-  if (!info) return
-  if (!texts) return
-
   let start = 0
-  let fpath = navpath.fpath
-  let book = {}
-  book.info = info
-  book.texts = texts
+  // let fpath = navpath.fpath
+  // let book = {}
+  // book.info = info
+  // book.texts = texts
 
-  let nic = navpath.nic
-  setBookText(book, fpath, nic, start)
+  // let nic = navpath.nic
+  setBookText(texts, start)
 
   osource.addEventListener("mouseover", copyToClipboard, false)
   otrns.addEventListener("wheel", cyclePar, false)
 }
 
-function setBookText(book, fpath, nic, start) {
-  let author = _.filter(book.texts.panes, auth=> { return auth.author && auth.fpath == fpath})[0]
-  let trns = _.filter(book.texts.panes, auth=> { return !auth.author && auth.fpath == fpath})
+function setBookText(texts, start) {
+  let navpath = window.navpath
+  let fpath = navpath.fpath
+  let author = _.filter(texts, auth=> { return auth.author && auth.fpath == fpath})[0]
+  let trns = _.filter(texts, auth=> { return !auth.author && auth.fpath == fpath})
 
-  book.author = author
-  book.trns = trns
+  author.rows = _.compact(author.text.split('\n'))
+  trns.forEach(trn=> { trn.rows = _.compact(trn.text.split('\n')) })
+  window.author = author
+  window.trns = trns
 
   let cnics = trns.map(auth=> { return auth.nic })
-  book.cnics = cnics
+  let nic = window.currentNic
   if (!nic) nic = cnics[0]
   if (!cnics.includes(nic)) nic = cnics[0]
-  window.navpath.nic = nic
-  store.set('navpath', window.navpath)
+  window.currentNic = nic
+  // store.set('navpath', window.navpath)
 
   // log('BEFORE CHUNK nic', nic)
-  window.book = book
+  // window.book = book
+
   setChunk(start)
-  createRightHeader()
-  createLeftHeader()
+  // createRightHeader()
+  // createLeftHeader()
 }
 
 function setChunk(start) {
   let limit = 20
-  let book = window.book
-  let author = book.author
-  let trns = book.trns
-  if (!author || !author.rows) return
+  let author = window.author
+  let trns = window.trns
+  log('HERE auth', author)
+  log('HERE trns', trns)
+  if (!author) return
+
   let authrows = author.rows.slice(start, start+limit)
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
   let rePunct = new RegExp(punct, 'g')
   let osource = q('#source')
   let otrns = q('#trns')
-  let nic = window.navpath.nic
+  let nic = window.currentNic
 
   authrows.forEach((astr, idx) => {
     let oleft = p()
@@ -212,13 +211,13 @@ function setChunk(start) {
     oleft.setAttribute('nic', author.nic)
     osource.appendChild(oleft)
     let orights = []
-    trns.forEach(auth => {
-      let rstr = auth.rows[start+idx]
+    trns.forEach(trn => {
+      let rstr = trn.rows[start+idx]
       let oright = p(rstr)
       oright.setAttribute('idx', start+idx)
-      oright.setAttribute('nic', auth.nic)
+      oright.setAttribute('nic', trn.nic)
       otrns.appendChild(oright)
-      if (auth.nic == nic) oright.setAttribute('active', true)
+      if (trn.nic == nic) oright.setAttribute('active', true)
       orights.push(oright)
     })
     alignPars(oleft, orights)
@@ -377,12 +376,3 @@ function expandRightHeader() {
     oli.classList.remove('active')
   })
 }
-
-// function reSetBook_(nic) {
-//   let osource = q('#source')
-//   let otrns = q('#trns')
-//   let scrollTop = osource.scrollTop
-//   setBookText(nic)
-//   osource.scrollTop = scrollTop
-//   otrns.scrollTop = scrollTop
-// }
