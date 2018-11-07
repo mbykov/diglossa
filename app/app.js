@@ -151,11 +151,12 @@ const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
 
 let libPath = path.resolve(upath, 'library');
 let pouch = new PouchDB(libPath);
+let current, info;
 
 window.onbeforeunload = function (ev) {
   // log('SAVE:')
   pouch.get('_local/current').then(function (doc) {
-    let current = window.navpath;
+    // let current = window.navpath
     current._id = '_local/current';
     current._rev = doc._rev;
     pouch.put(current).then(function () {
@@ -212,8 +213,7 @@ function getState() {
     log('START CURRENT:', current);
     if (current.section == 'lib') navigate({
       section: 'lib'
-    });else getDir(current); // navigate({section: 'lib'})
-    // window.navpath = {section: 'lib'}
+    });else getDir(current);
   }).catch(function (err) {
     // log('CURERR', err)
     pouch.put({
@@ -244,28 +244,32 @@ function getLib() {
   });
 }
 
-function getTitle(navpath) {
+function getTitle() {
+  log('CUR T', current);
   let options = {
     include_docs: true,
-    key: navpath.infoid
+    // key: navpath.book_id
+    key: current.book_id
   };
   pouch.allDocs(options).then(function (result) {
     let docs = result.rows.map(row => {
       return row.doc;
-    }); // log('GETTITLEINFO', docs)
+    });
+    log('GETTITLEINFO', docs); // window.info = docs[0]
 
-    window.info = docs[0];
-    Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])(docs[0]);
+    info = docs[0];
+    Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])(docs[0], current);
   }).catch(function (err) {
     log('getTitle', err);
   });
 }
 
-function getBook(navpath) {
-  log('GB info', window.info);
+function getBook() {
+  // log('GB info', window.info)
+  log('GB info', info);
   let options = {
     include_docs: true,
-    keys: window.info.fns
+    keys: info.fns
   };
   pouch.allDocs(options).then(function (result) {
     let texts = result.rows.map(row => {
@@ -287,7 +291,7 @@ function parseLib(infos) {
   if (!infos.length) oul.textContent = 'no book in lib';
   infos.forEach(info => {
     let ostr = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["create"])('li', 'libauth');
-    ostr.infoid = info._id;
+    ostr.book_id = info._id;
     oul.appendChild(ostr);
     let author = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])(info.book.author);
     let title = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])(info.book.title);
@@ -301,10 +305,10 @@ function parseLib(infos) {
 
 function goTitleEvent(ev) {
   if (ev.target.parentNode.nodeName != 'LI') return;
-  let infoid = ev.target.parentNode.infoid;
+  let book_id = ev.target.parentNode.book_id;
   navigate({
     section: 'title',
-    infoid: infoid
+    book_id: book_id
   });
 }
 
@@ -317,9 +321,10 @@ function navigate(navpath) {
   let ohright = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('.hright');
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["remove"])(ohleft);
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["remove"])(ohright);
+  current = navpath;
   let sec = navpath.section; // if (sec == 'lib') parseLib()
 
-  if (sec == 'lib') getLib();else if (sec == 'title') getTitle(navpath);else if (sec == 'book') getBook(navpath);else showSection(sec); // let hkey = JSON.stringify(navpath)
+  if (sec == 'lib') getLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook();else showSection(sec); // let hkey = JSON.stringify(navpath)
   // // log('HKEY', hkey)
   // if (!hstakey[hkey]) {
   //   hstates.push(navpath)
@@ -330,8 +335,7 @@ function navigate(navpath) {
   // store.set('navpath', navpath)
   // log('STORE-navpath', navpath)
 
-  log('Navigate:', navpath);
-  window.navpath = navpath;
+  log('Navigate:', navpath); // window.navpath = navpath
 }
 Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   // log('EV', ev.which, hstate, hstate - 1 > -1, hstates[hstate])
@@ -339,10 +343,10 @@ Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   // if (ev.which == 39 && hstate + 1 < hstates.length) log('RIGHT', hstate, hstates[hstate+1])
   if (ev.which == 37 && hstate - 1 > -1) hstate--;
   if (ev.which == 39 && hstate + 1 < hstates.length) hstate++;
-  let navpath = hstates[hstate]; // log('_arrow_navpath_', navpath)
+  let current = hstates[hstate]; // log('_arrow_navpath_', navpath)
   // store.set('hstate', hstate)
 
-  navigate(navpath);
+  navigate(current);
 });
 
 function showSection(name) {
@@ -365,26 +369,27 @@ function getFNS(fns) {
   if (!fns) return;
   let bpath = fns[0]; // log('Bpath:', bpath)
   // current
+  // log('NAV BEFORE GET', window.navpath)
 
-  log('NAV BEFORE GET', window.navpath);
-  let infoid = ['info', bpath].join('-');
+  log('NAV BEFORE GET', current);
+  let book_id = ['info', bpath].join('-');
   let cur = {
-    infoid: infoid
+    book_id: book_id
   };
   getDir(cur);
 }
 
-function getDir(navpath) {
-  log('GETDIR', navpath);
-  let bpath = navpath.infoid.split('-')[1];
+function getDir(current) {
+  log('GETDIR', current);
+  let bpath = current.book_id.split('-')[1];
   if (!bpath) return;
   Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
     if (!book) return; // startWatcher(book.bpath)
-    // log('INFO::', book.info)
 
+    log('INFO::', book.info);
     Promise.all([pushInfo(book.info), pushTexts(book.texts)]).then(function (res) {
       log('PUSH ALL RES', res);
-      if (navpath.section) window.info = book.info, navigate(navpath);else navigate({
+      if (current.section) info = book.info, navigate(current);else navigate({
         section: 'lib'
       }); // navigate({section: 'lib'})
     }).catch(function (err) {
@@ -476,7 +481,7 @@ const historyMode_ = event => {
 // function startWatcher(bpath) {
 //   watch(bpath, { recursive: true }, function(evt, name) {
 //     log('%s changed.', name);
-//     // navigate(navpath)
+//     // navigate(current)
 //     navigate({section: 'lib'})
 //   })
 // }
@@ -522,6 +527,8 @@ const store = new Store(); // const Apstore = require('./apstore')
 
 const clipboard = __webpack_require__(/*! electron-clipboard-extended */ "electron-clipboard-extended");
 
+let current;
+let info;
 function twoPages() {
   var sizes = store.get('split-sizes');
   if (sizes) sizes = JSON.parse(sizes);else sizes = [50, 50];
@@ -547,8 +554,9 @@ function scrollPanes(ev) {
   source.scrollTop += delta;
   trns.scrollTop = source.scrollTop; // let start = qs('#source > p').length
   // if (!start) return
+  // if (!window.navpath || window.navpath.section != 'book') return
 
-  if (!window.navpath || window.navpath.section != 'book') return;
+  if (!current || current.section != 'book') return;
   let el = ev.target;
   let oapp = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#app');
   let book = oapp.book;
@@ -580,8 +588,9 @@ function keyScroll(ev) {
 
   trns.scrollTop = source.scrollTop; // let start = qs('#source > p').length
   // if (!start) return
+  // if (!window.navpath || window.navpath.section != 'book') return
 
-  if (!window.navpath || window.navpath.section != 'book') return;
+  if (!current || current.section != 'book') return;
   let book = window.book;
 
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
@@ -592,10 +601,11 @@ function keyScroll(ev) {
   }
 }
 
-function parseTitle() {
+function parseTitle(bookinfo, bookcurrent) {
   // log('========= parse title =============')
   window.split.setSizes([50, 50]);
-  let info = window.info;
+  info = bookinfo;
+  current = bookcurrent;
   log('TITLEinfo', info);
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
@@ -633,38 +643,31 @@ function parseTitle() {
 }
 
 function goBookEvent(ev) {
-  if (!ev.target.classList.contains('tree-node-text')) return;
-  let navpath = window.navpath;
+  if (!ev.target.classList.contains('tree-node-text')) return; // let navpath = window.navpath
+
   let fpath = ev.target.getAttribute('fpath');
-  navpath.fpath = fpath;
-  navpath.section = 'book';
-  Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(navpath);
+  current.fpath = fpath;
+  current.section = 'book';
+  Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(current);
 }
 
 function parseBook(texts) {
   // log('___parseBook_start')
   if (!texts) return;
-  window.split.setSizes([50, 50]); // window.navpath = navpath // reload !
-  // let navpath = window.navpath
-
+  window.split.setSizes([50, 50]);
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns);
-  let start = 0; // let fpath = navpath.fpath
-  // let book = {}
-  // book.info = info
-  // book.texts = texts
-  // let nic = navpath.nic
-
+  let start = 0;
   setBookText(texts, start);
   osource.addEventListener("mouseover", copyToClipboard, false);
   otrns.addEventListener("wheel", cyclePar, false);
 }
 
 function setBookText(texts, start) {
-  let navpath = window.navpath;
-  let fpath = navpath.fpath;
+  // let navpath = window.navpath
+  let fpath = current.fpath;
 
   let author = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(texts, auth => {
     return auth.author && auth.fpath == fpath;
@@ -784,16 +787,16 @@ function createLeftHeader() {
   obook.appendChild(ohleft);
   ohleft.classList.add('hleft');
   ohleft.style.left = arect.width * 0.15 + 'px';
-  ohleft.addEventListener("click", clickLeftHeader, false);
-  let info = window.info;
+  ohleft.addEventListener("click", clickLeftHeader, false); // let info = window.info
+
   let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(info.tree, info.book.title);
-  ohleft.appendChild(otree);
-  let navpath = window.navpath;
+  ohleft.appendChild(otree); // let navpath = window.navpath
+
   let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree-title');
   let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree-body');
 
-  if (navpath.fpath) {
-    otitle.textContent = navpath.fpath;
+  if (current.fpath) {
+    otitle.textContent = current.fpath;
     otbody.classList.add('tree-collapse');
   } else {
     otitle.textContent = info.book.title;
@@ -809,12 +812,12 @@ function clickLeftHeader(ev) {
 
   if (fpath) {
     if (ev.target.classList.contains('tree-node-empty')) return;
-    let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree-title');
-    let navpath = window.navpath;
-    navpath.fpath = fpath;
-    otitle.textContent = navpath.fpath;
+    let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree-title'); // let navpath = window.navpath
+
+    current.fpath = fpath;
+    otitle.textContent = current.fpath;
     otbody.classList.add('tree-collapse');
-    Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(navpath);
+    Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(current);
   } else {
     otbody.classList.remove('tree-collapse');
     let ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('.hleft');
@@ -834,15 +837,14 @@ function createRightHeader(nics) {
   oul.addEventListener("click", clickRightHeader, false);
   ohright.appendChild(oul);
   obook.appendChild(ohright);
-  createNameList(nics); // let navpath = window.navpath
-
+  createNameList(nics);
   let nic = window.currentNic;
   collapseRightHeader(nic);
 }
 
 function createNameList(nics) {
-  let info = window.info;
-  let nicnames = window.info.nicnames;
+  // let info = window.info
+  let nicnames = info.nicnames;
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#namelist');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(oul);
   oul.setAttribute('nics', nics);
@@ -859,11 +861,9 @@ function clickRightHeader(ev) {
   if (ev.target.classList.contains('active')) {
     expandRightHeader();
   } else {
-    let nic = ev.target.getAttribute('nic'); // let navpath = window.navpath
-    // navpath.nic = nic
-    // store.set('navpath', window.navpath)
+    let nic = ev.target.getAttribute('nic'); // window.navpath.nic = nic
 
-    window.navpath.nic = nic;
+    current.nic = nic;
     if (!nic) return;
     collapseRightHeader(nic);
     otherNic(nic);

@@ -14,6 +14,9 @@ const store = new Store()
 // const elasticlunr = require('elasticlunr');
 const clipboard = require('electron-clipboard-extended')
 
+let current
+let info
+
 export function twoPages() {
   var sizes = store.get('split-sizes')
   if (sizes) sizes = JSON.parse(sizes)
@@ -43,7 +46,8 @@ function scrollPanes(ev) {
 
   // let start = qs('#source > p').length
   // if (!start) return
-  if (!window.navpath || window.navpath.section != 'book') return
+  // if (!window.navpath || window.navpath.section != 'book') return
+  if (!current || current.section != 'book') return
 
   let el = ev.target
   let oapp = q('#app')
@@ -75,7 +79,8 @@ function keyScroll(ev) {
 
   // let start = qs('#source > p').length
   // if (!start) return
-  if (!window.navpath || window.navpath.section != 'book') return
+  // if (!window.navpath || window.navpath.section != 'book') return
+  if (!current || current.section != 'book') return
 
   let book = window.book
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
@@ -87,10 +92,11 @@ function keyScroll(ev) {
 }
 
 
-export function parseTitle() {
+export function parseTitle(bookinfo, bookcurrent) {
   // log('========= parse title =============')
   window.split.setSizes([50,50])
-  let info = window.info
+  info = bookinfo
+  current = bookcurrent
   log('TITLEinfo', info)
 
   let osource = q('#source')
@@ -131,31 +137,23 @@ export function parseTitle() {
 
 function goBookEvent(ev) {
   if (!ev.target.classList.contains('tree-node-text')) return
-  let navpath = window.navpath
+  // let navpath = window.navpath
   let fpath = ev.target.getAttribute('fpath')
-  navpath.fpath = fpath
-  navpath.section = 'book'
-  navigate(navpath)
+  current.fpath = fpath
+  current.section = 'book'
+  navigate(current)
 }
 
 export function parseBook(texts) {
   // log('___parseBook_start')
   if (!texts) return
   window.split.setSizes([50,50])
-  // window.navpath = navpath // reload !
-  // let navpath = window.navpath
   let osource = q('#source')
   let otrns = q('#trns')
   empty(osource)
   empty(otrns)
 
   let start = 0
-  // let fpath = navpath.fpath
-  // let book = {}
-  // book.info = info
-  // book.texts = texts
-
-  // let nic = navpath.nic
   setBookText(texts, start)
 
   osource.addEventListener("mouseover", copyToClipboard, false)
@@ -163,8 +161,8 @@ export function parseBook(texts) {
 }
 
 function setBookText(texts, start) {
-  let navpath = window.navpath
-  let fpath = navpath.fpath
+  // let navpath = window.navpath
+  let fpath = current.fpath
   let author = _.filter(texts, auth=> { return auth.author && auth.fpath == fpath})[0]
   let trns = _.filter(texts, auth=> { return !auth.author && auth.fpath == fpath})
 
@@ -268,14 +266,14 @@ function createLeftHeader() {
   ohleft.style.left = arect.width*0.15 + 'px'
   ohleft.addEventListener("click", clickLeftHeader, false)
 
-  let info = window.info
+  // let info = window.info
   let otree = tree(info.tree, info.book.title)
   ohleft.appendChild(otree)
-  let navpath = window.navpath
+  // let navpath = window.navpath
   let otitle = q('#tree-title')
   let otbody = q('#tree-body')
-  if (navpath.fpath) {
-    otitle.textContent = navpath.fpath
+  if (current.fpath) {
+    otitle.textContent = current.fpath
     otbody.classList.add('tree-collapse')
   } else {
     otitle.textContent = info.book.title
@@ -291,11 +289,11 @@ function clickLeftHeader(ev) {
   if (fpath) {
     if (ev.target.classList.contains('tree-node-empty')) return
     let otitle = q('#tree-title')
-    let navpath = window.navpath
-    navpath.fpath = fpath
-    otitle.textContent = navpath.fpath
+    // let navpath = window.navpath
+    current.fpath = fpath
+    otitle.textContent = current.fpath
     otbody.classList.add('tree-collapse')
-    navigate(navpath)
+    navigate(current)
   } else {
     otbody.classList.remove('tree-collapse')
     let ohleft = q('.hleft')
@@ -317,14 +315,13 @@ function createRightHeader(nics) {
   ohright.appendChild(oul)
   obook.appendChild(ohright)
   createNameList(nics)
-  // let navpath = window.navpath
   let nic = window.currentNic
   collapseRightHeader(nic)
 }
 
 function createNameList(nics) {
-  let info = window.info
-  let nicnames = window.info.nicnames
+  // let info = window.info
+  let nicnames = info.nicnames
   let oul = q('#namelist')
   empty(oul)
   oul.setAttribute('nics', nics)
@@ -342,10 +339,8 @@ function clickRightHeader(ev) {
     expandRightHeader()
   } else {
     let nic = ev.target.getAttribute('nic')
-    // let navpath = window.navpath
-    // navpath.nic = nic
-    // store.set('navpath', window.navpath)
-    window.navpath.nic = nic
+    // window.navpath.nic = nic
+    current.nic = nic
     if (!nic) return
     collapseRightHeader(nic)
     otherNic(nic)
