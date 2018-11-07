@@ -211,6 +211,7 @@ getState();
 function getState() {
   pouch.get('_local/current').then(function (current) {
     log('START CURRENT:', current);
+    window.current = current;
     if (current.section == 'lib') navigate({
       section: 'lib'
     });else getDir(current);
@@ -276,7 +277,7 @@ function getBook() {
       return row.doc;
     }); // log('GET TEXTS', texts)
 
-    Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(texts);
+    Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, info, texts);
   }).catch(function (err) {
     log('getBook', err);
   });
@@ -527,8 +528,10 @@ const store = new Store(); // const Apstore = require('./apstore')
 
 const clipboard = __webpack_require__(/*! electron-clipboard-extended */ "electron-clipboard-extended");
 
-let current;
-let info;
+let current; // = window.current
+
+let info; //  = window.info
+
 function twoPages() {
   var sizes = store.get('split-sizes');
   if (sizes) sizes = JSON.parse(sizes);else sizes = [50, 50];
@@ -651,8 +654,11 @@ function goBookEvent(ev) {
   Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(current);
 }
 
-function parseBook(texts) {
-  // log('___parseBook_start')
+function parseBook(bookcurrent, bookinfo, texts) {
+  info = bookinfo;
+  current = bookcurrent;
+  log('_ info', info);
+  log('_ cur', current);
   if (!texts) return;
   window.split.setSizes([50, 50]);
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
@@ -666,7 +672,6 @@ function parseBook(texts) {
 }
 
 function setBookText(texts, start) {
-  // let navpath = window.navpath
   let fpath = current.fpath;
 
   let author = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(texts, auth => {
@@ -844,6 +849,11 @@ function createRightHeader(nics) {
 
 function createNameList(nics) {
   // let info = window.info
+  if (!info) {
+    log('NO INFO ???');
+    return;
+  }
+
   let nicnames = info.nicnames;
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#namelist');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(oul);

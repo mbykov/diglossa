@@ -95,6 +95,7 @@ getState()
 function getState() {
   pouch.get('_local/current').then(function (current) {
     log('START CURRENT:', current)
+    window.current = current
     if (current.section == 'lib') navigate({section: 'lib'})
     else getDir(current)
   }).catch(function (err) {
@@ -149,7 +150,7 @@ function getBook() {
   pouch.allDocs(options).then(function (result) {
     let texts = result.rows.map(row=> { return row.doc})
     // log('GET TEXTS', texts)
-    parseBook(texts)
+    parseBook(current, info, texts)
   }).catch(function (err) {
     log('getBook', err);
   })

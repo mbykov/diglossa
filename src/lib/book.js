@@ -14,8 +14,8 @@ const store = new Store()
 // const elasticlunr = require('elasticlunr');
 const clipboard = require('electron-clipboard-extended')
 
-let current
-let info
+let current // = window.current
+let info //  = window.info
 
 export function twoPages() {
   var sizes = store.get('split-sizes')
@@ -144,8 +144,11 @@ function goBookEvent(ev) {
   navigate(current)
 }
 
-export function parseBook(texts) {
-  // log('___parseBook_start')
+export function parseBook(bookcurrent, bookinfo, texts) {
+  info = bookinfo
+  current = bookcurrent
+  log('_ info', info)
+  log('_ cur', current)
   if (!texts) return
   window.split.setSizes([50,50])
   let osource = q('#source')
@@ -161,7 +164,6 @@ export function parseBook(texts) {
 }
 
 function setBookText(texts, start) {
-  // let navpath = window.navpath
   let fpath = current.fpath
   let author = _.filter(texts, auth=> { return auth.author && auth.fpath == fpath})[0]
   let trns = _.filter(texts, auth=> { return !auth.author && auth.fpath == fpath})
@@ -321,6 +323,10 @@ function createRightHeader(nics) {
 
 function createNameList(nics) {
   // let info = window.info
+  if (!info) {
+    log('NO INFO ???')
+    return
+  }
   let nicnames = info.nicnames
   let oul = q('#namelist')
   empty(oul)
