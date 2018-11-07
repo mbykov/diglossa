@@ -43,7 +43,7 @@ function scrollPanes(ev) {
 
   // let start = qs('#source > p').length
   // if (!start) return
-  if (window.navpath.section != 'book') return
+  if (!window.navpath || window.navpath.section != 'book') return
 
   let el = ev.target
   let oapp = q('#app')
@@ -75,7 +75,7 @@ function keyScroll(ev) {
 
   // let start = qs('#source > p').length
   // if (!start) return
-  if (window.navpath.section != 'book') return
+  if (!window.navpath || window.navpath.section != 'book') return
 
   let book = window.book
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
@@ -91,7 +91,7 @@ export function parseTitle() {
   // log('========= parse title =============')
   window.split.setSizes([50,50])
   let info = window.info
-  log('TITLE', info)
+  log('TITLEinfo', info)
 
   let osource = q('#source')
   let otrns = q('#trns')

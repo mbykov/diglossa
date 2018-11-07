@@ -80,24 +80,30 @@ app.on("ready", () => {
     win.openDevTools();
   }
 
-  // win.onbeforeunload = (ev) => {
-  //   console.log('I do not want to be closed')
-  //   ev.returnValue = true
-  //   // ev.returnValue = false
-  // }
-
-  let evt
-  win.on('close', (ev) => {
-    console.log('APP BEFORE QUIT')
-    ev.preventDefault()
-    evt = ev
-    win.webContents.send('save-state', 'xxx')
-  })
+  // win.on('close', (ev) => {
+  //   console.log('APP BEFORE QUIT')
+  //   ev.preventDefault()
+  //   win.webContents.send('save-state', 'xxx')
+  // })
   ipcMain.on('state-saved', (event, current) => {
     console.log('STATE-SAVED', current)
-    // evt.defaultPrevented = false
+    // win.destroy()
+  })
+
+  ipcMain.on('state-saved-quit', (event, current) => {
+    console.log('STATE-SAVED-QUIT', current)
     win.destroy()
   })
+
+  // win.onbeforeunload = (ev) => {
+  //   console.log('I do not want to be closed')
+  //   ev.returnValue = false
+  //   // win.webContents.send('save-state', 'xxx')
+  // }
+
+  // win.onbeforeunload=function(){
+    // return 'Are you sure you want to exit?';
+  // }
 
 });
 
