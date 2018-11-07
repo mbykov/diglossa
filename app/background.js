@@ -197,27 +197,7 @@ electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("ready", () => {
 
   if (env__WEBPACK_IMPORTED_MODULE_12__.name === "development") {
     win.openDevTools();
-  } // win.on('close', (ev) => {
-  //   console.log('APP BEFORE QUIT')
-  //   ev.preventDefault()
-  //   win.webContents.send('save-state', 'xxx')
-  // })
-
-
-  electron__WEBPACK_IMPORTED_MODULE_2__["ipcMain"].on('state-saved', (event, current) => {
-    console.log('STATE-SAVED', current); // win.destroy()
-  });
-  electron__WEBPACK_IMPORTED_MODULE_2__["ipcMain"].on('state-saved-quit', (event, current) => {
-    console.log('STATE-SAVED-QUIT', current);
-    win.destroy();
-  }); // win.onbeforeunload = (ev) => {
-  //   console.log('I do not want to be closed')
-  //   ev.returnValue = false
-  //   // win.webContents.send('save-state', 'xxx')
-  // }
-  // win.onbeforeunload=function(){
-  // return 'Are you sure you want to exit?';
-  // }
+  }
 });
 electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("window-all-closed", () => {
   electron__WEBPACK_IMPORTED_MODULE_2__["app"].quit();

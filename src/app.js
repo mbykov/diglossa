@@ -42,60 +42,23 @@ let pouch = new PouchDB(libPath)
 
 
 window.onbeforeunload = function (ev) {
-  log('SAVE:')
+  // log('SAVE:')
   pouch.get('_local/current').then(function(doc) {
     let current = window.navpath
     current._id = '_local/current'
     current._rev = doc._rev
     pouch.put(current).then(function() {
-      log('SEND:', current)
-      ipcRenderer.send('state-saved', current)
+      // log('SEND:', current)
+      // ipcRenderer.send('state-saved', current)
       ev.returnValue = false
     })
   }).catch(function (err) {
-    log('SAVE ERR', err)
+    // log('SAVE ERR', err)
     pouch.put({ _id: '_local/current', section: 'lib'}).then(function() {
       navigate({section: 'lib'})
     })
   })
-  // ev.returnValue = false
-  // return false
 }
-
-// window.onunload = function (ev) {
-//   log('UNSAVE:')
-//   pouch.get('_local/current').then(function(doc) {
-//     let current = window.navpath
-//     current._id = '_local/current'
-//     current._rev = doc._rev
-//     pouch.put(current).then(function() {
-//       log('SEND:', current)
-//       ipcRenderer.send('state-saved-quit', current)
-//     })
-//   }).catch(function (err) {
-//     log('SAVE-QUIT ERR', err)
-//   })
-//   ev.returnValue = true
-// }
-
-// ipcRenderer.on('save-state', function (event) {
-//   log('SAVE:')
-//   pouch.get('_local/current').then(function(doc) {
-//     let current = window.navpath
-//     current._id = '_local/current'
-//     current._rev = doc._rev
-//     pouch.put(current).then(function() {
-//       log('SEND:', current)
-//       ipcRenderer.send('state-saved', current)
-//       getState()
-//     })
-//   }).catch(function (err) {
-//     log('SAVE ERR', err)
-//     pouch.put({ _id: '_local/current', section: 'lib'}).then(function() {
-//       navigate({section: 'lib'})
-//     })
-//   })
-// })
 
 ipcRenderer.on('home', function (event) {
   navigate({section: 'lib'})
@@ -286,7 +249,9 @@ function getFNS(fns) {
   // log('Bpath:', bpath)
   // current
   log('NAV BEFORE GET', window.navpath)
-  // getDir(bpath)
+  let infoid = ['info', bpath].join('-')
+  let cur = {infoid: infoid}
+  getDir(cur)
 }
 
 function getDir(navpath) {
@@ -303,7 +268,7 @@ function getDir(navpath) {
       pushTexts(book.texts)
     ]).then(function(res) {
       log('PUSH ALL RES', res)
-      if (navpath) window.info = book.info, navigate(navpath)
+      if (navpath.section) window.info = book.info, navigate(navpath)
       else navigate({section: 'lib'})
       // navigate({section: 'lib'})
     }).catch(function(err) {
