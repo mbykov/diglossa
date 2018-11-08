@@ -2,7 +2,6 @@
 
 // import "./stylesheets/app.css";
 // import "./stylesheets/main.css";
-// const {BrowserWindow} = require('electron').remote
 
 import "./lib/context_menu.js";
 import _ from "lodash";
@@ -21,8 +20,6 @@ const Store = require('electron-store')
 const store = new Store()
 // const elasticlunr = require('elasticlunr')
 
-// const Mousetrap = require('mousetrap')
-// const axios = require('axios')
 const path = require('path')
 
 const clipboard = require('electron-clipboard-extended')
@@ -94,12 +91,11 @@ getState()
 
 function getState() {
   pouch.get('_local/current').then(function (current) {
-    log('START CURRENT:', current)
+    log('INIT CURRENT:', current)
     window.current = current
     if (current.section == 'lib') navigate({section: 'lib'})
     else getDir(current)
   }).catch(function (err) {
-    // log('CURERR', err)
     pouch.put({ _id: '_local/current', section: 'lib'}).then(function() {
       navigate({section: 'lib'})
     })
@@ -118,12 +114,12 @@ function getLib() {
     log('GETLIB', docs)
     parseLib(docs)
   }).catch(function (err) {
-    log('getLib', err);
+    log('getLibErr:', err);
   })
 }
 
 function getTitle() {
-  log('CUR T', current)
+  // log('getTitle cur:', current)
   let options = {
     include_docs: true,
     // key: navpath.book_id
@@ -131,28 +127,27 @@ function getTitle() {
   }
   pouch.allDocs(options).then(function (result) {
     let docs = result.rows.map(row=> { return row.doc})
-    log('GETTITLEINFO', docs)
-    // window.info = docs[0]
+    // log('GETTITLEINFO', docs)
     info = docs[0]
     parseTitle(docs[0], current)
   }).catch(function (err) {
-    log('getTitle', err);
+    log('getTitleErr', err);
   })
 }
 
 function getBook() {
-  // log('GB info', window.info)
   log('GB info', info)
   let options = {
     include_docs: true,
     keys: info.fns
+    // keys: info.pids
   }
   pouch.allDocs(options).then(function (result) {
     let texts = result.rows.map(row=> { return row.doc})
-    // log('GET TEXTS', texts)
+    log('PS', texts.length)
     parseBook(current, info, texts)
   }).catch(function (err) {
-    log('getBook', err);
+    log('getBookErr', err);
   })
 }
 
@@ -196,7 +191,6 @@ export function navigate(navpath) {
 
   current = navpath
   let sec = navpath.section
-  // if (sec == 'lib') parseLib()
   if (sec == 'lib') getLib()
   else if (sec == 'title') getTitle()
   else if (sec == 'book') getBook()
@@ -250,10 +244,7 @@ function showSection(name) {
 function getFNS(fns) {
   if (!fns) return
   let bpath = fns[0]
-  // log('Bpath:', bpath)
-  // current
-  // log('NAV BEFORE GET', window.navpath)
-  log('NAV BEFORE GET', current)
+  // log('NAV BEFORE GET', current)
   let book_id = ['info', bpath].join('-')
   let cur = {book_id: book_id}
   getDir(cur)
@@ -300,7 +291,6 @@ function pushInfo(ndoc) {
         // log('NDOC-rev', ndoc)
         return pouch.put(ndoc)
       }
-      // if (JSON.stringify(ndoc) == JSON.stringify(testdoc)) return
     } else {
       return pouch.put(ndoc)
     }
@@ -308,7 +298,6 @@ function pushInfo(ndoc) {
 }
 
 function pushTexts(newdocs) {
-  // log('PUSH-NEW-TEXTS', newdocs)
   return pouch.allDocs({include_docs: true})
     .then(function(res) {
       let docs = res.rows.map(row=>{ return row.doc})
@@ -329,7 +318,6 @@ function pushTexts(newdocs) {
       return pouch.bulkDocs(cleandocs)
     })
 }
-
 
 
 function setSearch_(bkey, texts) {

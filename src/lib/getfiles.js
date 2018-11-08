@@ -129,8 +129,10 @@ function parseDir(bookpath) {
   // log('FNS', fns.length)
 
   info.fns = []
+  info.pids = []
   let texts = []
   let coms = []
+  let pars = []
   fns.forEach(fn => {
     let comment = false
     let com = fn.split('-')[1]
@@ -156,12 +158,23 @@ function parseDir(bookpath) {
     let id = [fpath, fname].join('')
     info.fns.push(id)
 
-    let pane = { _id: id, lang: lang, nic: nic, fpath: fpath, text: clean } // fname: fname,
+    let pane = { _id: id, lang: lang, nic: nic, fpath: fpath, text: clean, rows: rows } // fname: fname,
     if (auth && auth.author) pane.author = true // , info.book.author = auth.name
 
     if (comment) coms.push(pane)
     else texts.push(pane)
     // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
+
+    // rows.forEach((row, idx) => {
+    //   let pid = ['text', fpath, fname, idx].join('-')
+    //   let par = { _id: pid, idx: idx, lang: lang, nic: nic, fpath: fpath, text: row }
+    //   if (auth && auth.author) par.author = true
+    //   // if (comment) par.com = true
+    //   if (comment) return
+    //   info.pids.push(pid)
+    //   pars.push(par)
+    // })
+
   })
 
   info.fns = _.uniq(info.fns)

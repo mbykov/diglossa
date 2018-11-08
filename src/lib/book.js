@@ -14,8 +14,9 @@ const store = new Store()
 // const elasticlunr = require('elasticlunr');
 const clipboard = require('electron-clipboard-extended')
 
-let current // = window.current
-let info //  = window.info
+let current, info
+let apars = []
+let tpars = []
 
 export function twoPages() {
   var sizes = store.get('split-sizes')
@@ -44,9 +45,6 @@ function scrollPanes(ev) {
   source.scrollTop += delta
   trns.scrollTop = source.scrollTop
 
-  // let start = qs('#source > p').length
-  // if (!start) return
-  // if (!window.navpath || window.navpath.section != 'book') return
   if (!current || current.section != 'book') return
 
   let el = ev.target
@@ -55,7 +53,7 @@ function scrollPanes(ev) {
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
     let start = qs('#source > p').length
     log('___START', start)
-    s_etChunk(start, book)
+    // s_etChunk(start, book)
   }
 }
 
@@ -77,9 +75,6 @@ function keyScroll(ev) {
   }
   trns.scrollTop = source.scrollTop
 
-  // let start = qs('#source > p').length
-  // if (!start) return
-  // if (!window.navpath || window.navpath.section != 'book') return
   if (!current || current.section != 'book') return
 
   let book = window.book
@@ -87,10 +82,9 @@ function keyScroll(ev) {
     let start = qs('#source > p').length
     // log('___KEY START', start)
     // ошибка при прокрутке всегда
-    s_etChunk(start, book)
+    // s_etChunk(start, book)
   }
 }
-
 
 export function parseTitle(bookinfo, bookcurrent) {
   // log('========= parse title =============')
@@ -137,7 +131,6 @@ export function parseTitle(bookinfo, bookcurrent) {
 
 function goBookEvent(ev) {
   if (!ev.target.classList.contains('tree-node-text')) return
-  // let navpath = window.navpath
   let fpath = ev.target.getAttribute('fpath')
   current.fpath = fpath
   current.section = 'book'
@@ -147,9 +140,9 @@ function goBookEvent(ev) {
 export function parseBook(bookcurrent, bookinfo, texts) {
   info = bookinfo
   current = bookcurrent
-  log('_ info', info)
-  log('_ cur', current)
-  if (!texts) return
+  // log('parseBook_ info', info)
+  // log('parseBook_ cur', current)
+  if (!texts.length) return
   window.split.setSizes([50,50])
   let osource = q('#source')
   let otrns = q('#trns')
@@ -165,23 +158,21 @@ export function parseBook(bookcurrent, bookinfo, texts) {
 
 function setBookText(texts, start) {
   let fpath = current.fpath
-  let author = _.filter(texts, auth=> { return auth.author && auth.fpath == fpath})[0]
-  let trns = _.filter(texts, auth=> { return !auth.author && auth.fpath == fpath})
+  let pars = _.filter(texts, text=> { return !text.com })
+  let coms = _.filter(texts, text=> { return text.com })
+  log('Ps', pars)
 
-  author.rows = _.compact(author.text.split('\n'))
-  trns.forEach(trn=> { trn.rows = _.compact(trn.text.split('\n')) })
-  window.author = author
-  window.trns = trns
+  apars = _.filter(pars, par=> { return par.author && par.fpath == fpath})
+  tpars = _.filter(pars, par=> { return !par.author && par.fpath == fpath})
+  // log('A', apars)
+  // log('T', tpars)
 
-  let cnics = trns.map(auth=> { return auth.nic })
-  let nic = window.currentNic
+  let cnics = _.uniq(tpars.map(auth=> { return auth.nic }))
+  // log('CNICS', cnics)
+  let nic = current.nic
   if (!nic) nic = cnics[0]
   if (!cnics.includes(nic)) nic = cnics[0]
-  // window.nics = cnics
-  window.currentNic = nic
-
-  // log('BEFORE CHUNK nic', nic)
-  // window.book = book
+  current.nic = nic
 
   setChunk(start)
   createRightHeader(cnics)
@@ -190,37 +181,49 @@ function setBookText(texts, start) {
 
 function setChunk(start) {
   let limit = 20
-  let author = window.author
-  let trns = window.trns
-  // log('HERE auth', author)
-  // log('HERE trns', trns)
-  if (!author) return
+  let author = apars[0]
+  let anic = author.nic
 
-  let authrows = author.rows.slice(start, start+limit)
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
   let rePunct = new RegExp(punct, 'g')
   let osource = q('#source')
   let otrns = q('#trns')
-  let nic = window.currentNic
+  let nic = current.nic
 
-  authrows.forEach((astr, idx) => {
+  author.rows.forEach((astr, idx) => {
+    let pars = []
     let oleft = p()
     let html = astr.replace(rePunct, " <span class=\"active\">$1</span>")
     oleft.innerHTML = html
     oleft.setAttribute('idx', start+idx)
-    oleft.setAttribute('nic', author.nic)
+    oleft.setAttribute('nic', anic)
     osource.appendChild(oleft)
-    let orights = []
-    trns.forEach(trn => {
-      let rstr = trn.rows[start+idx]
-      let oright = p(rstr)
-      oright.setAttribute('idx', start+idx)
-      oright.setAttribute('nic', trn.nic)
-      otrns.appendChild(oright)
-      if (trn.nic == nic) oright.setAttribute('active', true)
-      orights.push(oright)
+    pars.push(oleft)
+
+    let prights = tpars.map(tpar=> {
+      let text = _.find(tpar.rows, (par, idy)=> { return idy == idx})
+      return {idx: idx, nic: tpar.nic, text: text}
     })
-    alignPars(oleft, orights)
+
+    prights.forEach(tpar => {
+      let rstr = tpar.text
+      let oright = p(rstr)
+      oright.setAttribute('idx', start+tpar.idx)
+      oright.setAttribute('nic', tpar.nic)
+      if (tpar.nic == nic) oright.setAttribute('active', true)
+      pars.push(oright)
+      otrns.appendChild(oright)
+    })
+    alignPars(pars)
+  })
+}
+
+function alignPars(pars) {
+  let heights = pars.map(par => { return par.scrollHeight })
+  let max = _.max(heights)
+  pars.forEach(par => {
+    par.style.height = max + 'px'
+    if (!par.getAttribute('active')) par.classList.add('hidden')
   })
 }
 
@@ -231,16 +234,6 @@ function copyToClipboard(ev) {
   if (ev.target.nodeName != 'SPAN') return
   let wf = ev.target.textContent
   clipboard.writeText(wf)
-}
-
-function alignPars(oleft, orights) {
-  orights.push(oleft)
-  let heights = orights.map(par => { return par.scrollHeight })
-  let max = _.max(heights)
-  orights.forEach(par => {
-    par.style.height = max + 'px'
-    if (!par.getAttribute('active')) par.classList.add('hidden')
-  })
 }
 
 function cyclePar(ev) {
@@ -268,10 +261,8 @@ function createLeftHeader() {
   ohleft.style.left = arect.width*0.15 + 'px'
   ohleft.addEventListener("click", clickLeftHeader, false)
 
-  // let info = window.info
   let otree = tree(info.tree, info.book.title)
   ohleft.appendChild(otree)
-  // let navpath = window.navpath
   let otitle = q('#tree-title')
   let otbody = q('#tree-body')
   if (current.fpath) {
@@ -291,7 +282,6 @@ function clickLeftHeader(ev) {
   if (fpath) {
     if (ev.target.classList.contains('tree-node-empty')) return
     let otitle = q('#tree-title')
-    // let navpath = window.navpath
     current.fpath = fpath
     otitle.textContent = current.fpath
     otbody.classList.add('tree-collapse')
@@ -304,7 +294,6 @@ function clickLeftHeader(ev) {
 }
 
 function createRightHeader(nics) {
-  // let book = window.book
   let obook = q('#book')
   let arect = obook.getBoundingClientRect()
   let ohright = div()
@@ -317,16 +306,11 @@ function createRightHeader(nics) {
   ohright.appendChild(oul)
   obook.appendChild(ohright)
   createNameList(nics)
-  let nic = window.currentNic
+  let nic = current.nic
   collapseRightHeader(nic)
 }
 
 function createNameList(nics) {
-  // let info = window.info
-  if (!info) {
-    log('NO INFO ???')
-    return
-  }
   let nicnames = info.nicnames
   let oul = q('#namelist')
   empty(oul)
@@ -345,7 +329,6 @@ function clickRightHeader(ev) {
     expandRightHeader()
   } else {
     let nic = ev.target.getAttribute('nic')
-    // window.navpath.nic = nic
     current.nic = nic
     if (!nic) return
     collapseRightHeader(nic)
