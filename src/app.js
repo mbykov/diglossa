@@ -137,12 +137,13 @@ function getTitle() {
 
 function getBook() {
   log('GB info', info)
-  let options = {
-    include_docs: true,
-    keys: info.fns
-    // keys: info.pids
-  }
-  pouch.allDocs(options).then(function (result) {
+  let endkey = [info.tpath, '\ufff0'].join('')
+  let opts = { include_docs: true, startkey: info.tpath, endkey: endkey }
+  // let options = {
+  //   include_docs: true,
+  //   keys: info.fns
+  // }
+  pouch.allDocs(opts).then(function (result) {
     let texts = result.rows.map(row=> { return row.doc})
     log('PS', texts.length)
     parseBook(current, info, texts)
@@ -226,7 +227,38 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
 Mousetrap.bind(['ctrl+f'], function(ev) {
   let wf = clipboard.readText()
   log('WF', wf)
+  let key = ['wf', wf].join('-')
+  let options = { include_docs: true, key: key }
+  pouch.allDocs(options)
+    .then(function (result) {
+      let wfs = result.rows.map(row=> { return row.doc})
+      log('WFS', wfs)
+
+      let textids = wfs.map(wf=> { return wf.wfpath.textid })
+      let tpaths = textids.map(textid=> { return textid.split('.')[0] })
+      let tpath = _.uniq(tpaths)
+      log('TPATH', tpath)
+
+      let endkey = [tpath, '\ufff0'].join('')
+      let opts = { include_docs: true, startkey: tpath, endkey: endkey }
+      pouch.allDocs(opts)
+        .then(function (result) {
+          let tts = result.rows.map(row=> { return row.doc})
+          log('TTS', tts)
+        })
+      let qresults = []
+      wfs.forEach(wf=>{
+        let qres = []
+      })
+      // parseBook(current, info, texts)
+    }).catch(function (err) {
+      log('getWFSErr', err);
+    })
 })
+
+// function getQuery(wf) {
+// }
+
 
 function showSection(name) {
   window.split.setSizes([100,0])

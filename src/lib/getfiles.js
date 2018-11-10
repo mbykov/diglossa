@@ -128,8 +128,8 @@ function parseDir(bookpath) {
   fns = _.filter(fns, fn=>{ return fn != ipath })
   // log('FNS', fns.length)
 
+  let tpaths = []
   info.fns = []
-  info.pids = []
   let texts = []
   let coms = []
   let pars = []
@@ -156,9 +156,11 @@ function parseDir(bookpath) {
 
     // let id = md5([info.book.author, info.book.title, fpath].join(''))
     let textid = ['text', fpath, fname].join('-')
+    let tpath = textid.split('.')[0]
+    tpaths.push(tpath)
     info.fns.push(textid)
 
-    let pane = { _id: textid, lang: lang, nic: nic, fpath: fpath, text: clean, rows: rows } // fname: fname,
+    let pane = { _id: textid, lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname, text: clean,
     if (auth && auth.author) pane.author = true // , info.book.author = auth.name
 
     if (comment) coms.push(pane)
@@ -168,6 +170,9 @@ function parseDir(bookpath) {
   })
 
   info.fns = _.uniq(info.fns)
+  info.tpaths = _.uniq(tpaths).length
+  info.tpath = _.uniq(tpaths)[0]
+
   // let bkey = md5([info.book.author, info.book.title].join('-'))
   let id = ['info', bpath].join('-')
   info._id = id
@@ -191,14 +196,14 @@ function bookWFMap(book, rows, textid) {
     let punctless = row.replace(/[.,\/#!$%\^&\*;:{}=\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
     let wfs = _.compact(punctless.split(' '))
     wfs.forEach(wf=> {
-      if (!map[wf]) map[wf] = []
-      map[wf].push({textid: textid, idx: idx})
+      if (!map[wf]) map[wf] = {textid: textid, idxs: []}
+      map[wf].idxs.push(idx)
     })
   })
   let ndocs = []
   for (let wf in map) {
-    let wfpaths = map[wf]
-    let ndoc = {wf: wf, wfpaths: wfpaths}
+    let wfpath = map[wf]
+    let ndoc = {wf: wf, wfpath: wfpath}
     ndoc._id = ['wf', wf].join('-')
     ndocs.push(ndoc)
   }

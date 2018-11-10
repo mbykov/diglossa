@@ -262,12 +262,17 @@ function getTitle() {
 
 function getBook() {
   log('GB info', info);
-  let options = {
+  let endkey = [info.tpath, '\ufff0'].join('');
+  let opts = {
     include_docs: true,
-    keys: info.fns // keys: info.pids
+    startkey: info.tpath,
+    endkey: endkey // let options = {
+    //   include_docs: true,
+    //   keys: info.fns
+    // }
 
   };
-  pouch.allDocs(options).then(function (result) {
+  pouch.allDocs(opts).then(function (result) {
     let texts = result.rows.map(row => {
       return row.doc;
     });
@@ -346,7 +351,47 @@ Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
 Mousetrap.bind(['ctrl+f'], function (ev) {
   let wf = clipboard.readText();
   log('WF', wf);
-});
+  let key = ['wf', wf].join('-');
+  let options = {
+    include_docs: true,
+    key: key
+  };
+  pouch.allDocs(options).then(function (result) {
+    let wfs = result.rows.map(row => {
+      return row.doc;
+    });
+    log('WFS', wfs);
+    let textids = wfs.map(wf => {
+      return wf.wfpath.textid;
+    });
+    let tpaths = textids.map(textid => {
+      return textid.split('.')[0];
+    });
+
+    let tpath = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.uniq(tpaths);
+
+    log('TPATH', tpath);
+    let endkey = [tpath, '\ufff0'].join('');
+    let opts = {
+      include_docs: true,
+      startkey: tpath,
+      endkey: endkey
+    };
+    pouch.allDocs(opts).then(function (result) {
+      let tts = result.rows.map(row => {
+        return row.doc;
+      });
+      log('TTS', tts);
+    });
+    let qresults = [];
+    wfs.forEach(wf => {
+      let qres = [];
+    }); // parseBook(current, info, texts)
+  }).catch(function (err) {
+    log('getWFSErr', err);
+  });
+}); // function getQuery(wf) {
+// }
 
 function showSection(name) {
   window.split.setSizes([100, 0]);
@@ -1150,8 +1195,8 @@ function parseDir(bookpath) {
     return fn != ipath;
   }); // log('FNS', fns.length)
 
+  let tpaths = [];
   info.fns = [];
-  info.pids = [];
   let texts = [];
   let coms = [];
   let pars = [];
@@ -1181,14 +1226,15 @@ function parseDir(bookpath) {
     if (auth) lang = auth.lang; // let id = md5([info.book.author, info.book.title, fpath].join(''))
 
     let textid = ['text', fpath, fname].join('-');
+    let tpath = textid.split('.')[0];
+    tpaths.push(tpath);
     info.fns.push(textid);
     let pane = {
       _id: textid,
       lang: lang,
       nic: nic,
       fpath: fpath,
-      text: clean,
-      rows: rows // fname: fname,
+      rows: rows // fname: fname, text: clean,
 
     };
     if (auth && auth.author) pane.author = true; // , info.book.author = auth.name
@@ -1196,7 +1242,9 @@ function parseDir(bookpath) {
     if (comment) coms.push(pane);else texts.push(pane);
     if (auth && auth.author) info.map = bookWFMap(info.book, rows, textid);
   });
-  info.fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(info.fns); // let bkey = md5([info.book.author, info.book.title].join('-'))
+  info.fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(info.fns);
+  info.tpaths = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(tpaths).length;
+  info.tpath = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(tpaths)[0]; // let bkey = md5([info.book.author, info.book.title].join('-'))
 
   let id = ['info', bpath].join('-');
   info._id = id;
@@ -1227,20 +1275,20 @@ function bookWFMap(book, rows, textid) {
     let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(punctless.split(' '));
 
     wfs.forEach(wf => {
-      if (!map[wf]) map[wf] = [];
-      map[wf].push({
+      if (!map[wf]) map[wf] = {
         textid: textid,
-        idx: idx
-      });
+        idxs: []
+      };
+      map[wf].idxs.push(idx);
     });
   });
   let ndocs = [];
 
   for (let wf in map) {
-    let wfpaths = map[wf];
+    let wfpath = map[wf];
     let ndoc = {
       wf: wf,
-      wfpaths: wfpaths
+      wfpath: wfpath
     };
     ndoc._id = ['wf', wf].join('-');
     ndocs.push(ndoc);
