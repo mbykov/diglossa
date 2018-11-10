@@ -343,6 +343,10 @@ Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
 
   navigate(current);
 });
+Mousetrap.bind(['ctrl+f'], function (ev) {
+  let wf = clipboard.readText();
+  log('WF', wf);
+});
 
 function showSection(name) {
   window.split.setSizes([100, 0]);
@@ -376,10 +380,9 @@ function getDir(current) {
   let bpath = current.book_id.split('-')[1];
   if (!bpath) return;
   Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
-    if (!book) return; // startWatcher(book.bpath)
-
+    if (!book) return;
     log('INFO::', book.info);
-    Promise.all([pushInfo(book.info), pushTexts(book.texts)]).then(function (res) {
+    Promise.all([pushInfo(book.info), pushTexts(book.texts), pushMap(book.info)]).then(function (res) {
       log('PUSH ALL RES', res);
       if (current.section) info = book.info, navigate(current);else navigate({
         section: 'lib'
@@ -413,6 +416,11 @@ function pushInfo(ndoc) {
 }
 
 function pushTexts(newdocs) {
+  let options = {
+    include_docs: true,
+    startkey: 'text',
+    endkey: 'text\ufff0'
+  };
   return pouch.allDocs({
     include_docs: true
   }).then(function (res) {
@@ -434,6 +442,37 @@ function pushTexts(newdocs) {
       }
     });
     log('CLD', cleandocs);
+    return pouch.bulkDocs(cleandocs);
+  });
+}
+
+function pushMap(info) {
+  let options = {
+    include_docs: true,
+    startkey: 'wf',
+    endkey: 'wf\ufff0'
+  };
+  return pouch.allDocs(options).then(function (res) {
+    let docs = res.rows.map(row => {
+      return row.doc;
+    }); // log('ODOCS', docs)
+
+    let cleandocs = [];
+    let hdoc = {};
+    docs.forEach(doc => {
+      hdoc[doc._id] = doc;
+    }); // log('NDOCS', info.map)
+
+    info.map.forEach(ndoc => {
+      let doc = hdoc[ndoc._id];
+
+      if (doc) {
+        if (lodash__WEBPACK_IMPORTED_MODULE_1___default.a.isEqual(doc.fns, ndoc.fns)) return;else doc.fns = doc.fns.concat(ndoc.fns), cleandocs.push(doc);
+      } else {
+        cleandocs.push(ndoc);
+      }
+    }); // log('CMAP', cleandocs)
+
     return pouch.bulkDocs(cleandocs);
   });
 }
@@ -1141,10 +1180,10 @@ function parseDir(bookpath) {
     let lang;
     if (auth) lang = auth.lang; // let id = md5([info.book.author, info.book.title, fpath].join(''))
 
-    let id = [fpath, fname].join('');
-    info.fns.push(id);
+    let textid = ['text', fpath, fname].join('-');
+    info.fns.push(textid);
     let pane = {
-      _id: id,
+      _id: textid,
       lang: lang,
       nic: nic,
       fpath: fpath,
@@ -1154,19 +1193,11 @@ function parseDir(bookpath) {
     };
     if (auth && auth.author) pane.author = true; // , info.book.author = auth.name
 
-    if (comment) coms.push(pane);else texts.push(pane); // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
-    // rows.forEach((row, idx) => {
-    //   let pid = ['text', fpath, fname, idx].join('-')
-    //   let par = { _id: pid, idx: idx, lang: lang, nic: nic, fpath: fpath, text: row }
-    //   if (auth && auth.author) par.author = true
-    //   // if (comment) par.com = true
-    //   if (comment) return
-    //   info.pids.push(pid)
-    //   pars.push(par)
-    // })
+    if (comment) coms.push(pane);else texts.push(pane);
+    if (auth && auth.author) info.map = bookWFMap(info.book, rows, textid);
   });
-  info.fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(info.fns);
-  let bkey = md5([info.book.author, info.book.title].join('-'));
+  info.fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(info.fns); // let bkey = md5([info.book.author, info.book.title].join('-'))
+
   let id = ['info', bpath].join('-');
   info._id = id;
   info.tree = tree; // info.bkey = bkey
@@ -1188,23 +1219,35 @@ function done(err) {
   console.log('successfully added documents');
 }
 
-function bookWFMap(text, title, fn) {
+function bookWFMap(book, rows, textid) {
   let map = {};
-  let pless = text.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9'"<>\[\]]/g, '');
-  let rows = pless.split('\n');
   rows.forEach((row, idx) => {
-    let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(row.split(' '));
+    let punctless = row.replace(/[.,\/#!$%\^&\*;:{}=\-+_`~()a-zA-Z0-9'"<>\[\]]/g, '');
+
+    let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(punctless.split(' '));
 
     wfs.forEach(wf => {
       if (!map[wf]) map[wf] = [];
       map[wf].push({
-        title: title,
-        fn: fn,
+        textid: textid,
         idx: idx
       });
     });
   });
-  return map;
+  let ndocs = [];
+
+  for (let wf in map) {
+    let wfpaths = map[wf];
+    let ndoc = {
+      wf: wf,
+      wfpaths: wfpaths
+    };
+    ndoc._id = ['wf', wf].join('-');
+    ndocs.push(ndoc);
+  } // log('MAP', map)
+
+
+  return ndocs;
 }
 
 function parseInfo(ipath) {

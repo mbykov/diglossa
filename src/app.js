@@ -223,6 +223,11 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
   navigate(current)
 })
 
+Mousetrap.bind(['ctrl+f'], function(ev) {
+  let wf = clipboard.readText()
+  log('WF', wf)
+})
+
 function showSection(name) {
   window.split.setSizes([100,0])
   let osource = q('#source')
@@ -256,12 +261,12 @@ function getDir(current) {
   if (!bpath) return
   openDir(bpath, (book) => {
     if (!book) return
-    // startWatcher(book.bpath)
     log('INFO::', book.info)
 
     Promise.all([
       pushInfo(book.info),
-      pushTexts(book.texts)
+      pushTexts(book.texts),
+      pushMap(book.info)
     ]).then(function(res) {
       log('PUSH ALL RES', res)
       if (current.section) info = book.info, navigate(current)
@@ -298,6 +303,11 @@ function pushInfo(ndoc) {
 }
 
 function pushTexts(newdocs) {
+  let options = {
+    include_docs: true,
+    startkey: 'text',
+    endkey: 'text\ufff0'
+  }
   return pouch.allDocs({include_docs: true})
     .then(function(res) {
       let docs = res.rows.map(row=>{ return row.doc})
@@ -315,6 +325,35 @@ function pushTexts(newdocs) {
         }
       })
       log('CLD', cleandocs)
+      return pouch.bulkDocs(cleandocs)
+    })
+}
+
+function pushMap(info) {
+  let options = {
+    include_docs: true,
+    startkey: 'wf',
+    endkey: 'wf\ufff0'
+  }
+  return pouch.allDocs(options)
+    .then(function(res) {
+      let docs = res.rows.map(row=>{ return row.doc})
+      // log('ODOCS', docs)
+      let cleandocs = []
+      let hdoc = {}
+      docs.forEach(doc=> { hdoc[doc._id] = doc })
+
+      // log('NDOCS', info.map)
+      info.map.forEach(ndoc=> {
+        let doc = hdoc[ndoc._id]
+        if (doc) {
+          if (_.isEqual(doc.fns, ndoc.fns)) return
+          else doc.fns = doc.fns.concat(ndoc.fns), cleandocs.push(doc)
+        } else {
+          cleandocs.push(ndoc)
+        }
+      })
+      // log('CMAP', cleandocs)
       return pouch.bulkDocs(cleandocs)
     })
 }

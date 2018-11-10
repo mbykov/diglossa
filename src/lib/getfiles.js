@@ -155,30 +155,20 @@ function parseDir(bookpath) {
     if (auth) lang = auth.lang
 
     // let id = md5([info.book.author, info.book.title, fpath].join(''))
-    let id = [fpath, fname].join('')
-    info.fns.push(id)
+    let textid = ['text', fpath, fname].join('-')
+    info.fns.push(textid)
 
-    let pane = { _id: id, lang: lang, nic: nic, fpath: fpath, text: clean, rows: rows } // fname: fname,
+    let pane = { _id: textid, lang: lang, nic: nic, fpath: fpath, text: clean, rows: rows } // fname: fname,
     if (auth && auth.author) pane.author = true // , info.book.author = auth.name
 
     if (comment) coms.push(pane)
     else texts.push(pane)
-    // if (auth.author) book.map = bookWFMap(clean, info.book.title, fn)
 
-    // rows.forEach((row, idx) => {
-    //   let pid = ['text', fpath, fname, idx].join('-')
-    //   let par = { _id: pid, idx: idx, lang: lang, nic: nic, fpath: fpath, text: row }
-    //   if (auth && auth.author) par.author = true
-    //   // if (comment) par.com = true
-    //   if (comment) return
-    //   info.pids.push(pid)
-    //   pars.push(par)
-    // })
-
+    if (auth && auth.author) info.map = bookWFMap(info.book, rows, textid)
   })
 
   info.fns = _.uniq(info.fns)
-  let bkey = md5([info.book.author, info.book.title].join('-'))
+  // let bkey = md5([info.book.author, info.book.title].join('-'))
   let id = ['info', bpath].join('-')
   info._id = id
   info.tree = tree
@@ -195,18 +185,25 @@ function done (err) {
   console.log('successfully added documents')
 }
 
-function bookWFMap(text, title, fn) {
+function bookWFMap(book, rows, textid) {
   let map = {}
-  let pless = text.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9'"<>\[\]]/g,'')
-  let rows = pless.split('\n')
   rows.forEach((row, idx)=> {
-    let wfs = _.compact(row.split(' '))
+    let punctless = row.replace(/[.,\/#!$%\^&\*;:{}=\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
+    let wfs = _.compact(punctless.split(' '))
     wfs.forEach(wf=> {
       if (!map[wf]) map[wf] = []
-      map[wf].push({title: title, fn: fn, idx: idx})
+      map[wf].push({textid: textid, idx: idx})
     })
   })
-  return map
+  let ndocs = []
+  for (let wf in map) {
+    let wfpaths = map[wf]
+    let ndoc = {wf: wf, wfpaths: wfpaths}
+    ndoc._id = ['wf', wf].join('-')
+    ndocs.push(ndoc)
+  }
+  // log('MAP', map)
+  return ndocs
 }
 
 
