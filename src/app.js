@@ -225,18 +225,18 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
 })
 
 Mousetrap.bind(['ctrl+f'], function(ev) {
-  let wf = clipboard.readText()
-  log('WF', wf)
-  let key = ['wf', wf].join('-')
+  let query = clipboard.readText()
+  log('WF', query)
+  let key = ['wf', query].join('-')
   let options = { include_docs: true, key: key }
   pouch.allDocs(options)
     .then(function (result) {
-      let wfs = result.rows.map(row=> { return row.doc})
-      log('WFS', wfs)
+      let wfdocs = result.rows.map(row=> { return row.doc})
+      log('WFdocs', wfdocs)
 
-      let textids = wfs.map(wf=> { return wf.wfpath.textid })
+      let textids = wfdocs.map(wf=> { return wf.textid })
       let tpaths = textids.map(textid=> { return textid.split('.')[0] })
-      let tpath = _.uniq(tpaths)
+      let tpath = _.uniq(tpaths)[0]
       log('TPATH', tpath)
 
       let endkey = [tpath, '\ufff0'].join('')
@@ -245,11 +245,22 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
         .then(function (result) {
           let tts = result.rows.map(row=> { return row.doc})
           log('TTS', tts)
+          let qresults = []
+          wfdocs.forEach(wfdoc=>{
+            wfdoc.idxs.forEach(idx=> {
+              let qres = {query: query, title: info.book.title, tpath: tpath, idx: idx, texts: []}
+              tts.forEach(tobj=>{
+                let text = {nic: tobj.nic, lang: tobj.lang}
+                if (tobj.author) text.author = true
+                text.row = tobj.rows[idx].slice(0,10)
+                qres.texts.push(text)
+              })
+              qresults.push(qres)
+            })
+          })
+          log('QRs', qresults)
         })
-      let qresults = []
-      wfs.forEach(wf=>{
-        let qres = []
-      })
+
       // parseBook(current, info, texts)
     }).catch(function (err) {
       log('getWFSErr', err);

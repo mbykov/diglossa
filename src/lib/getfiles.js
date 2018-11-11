@@ -196,14 +196,15 @@ function bookWFMap(book, rows, textid) {
     let punctless = row.replace(/[.,\/#!$%\^&\*;:{}=\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
     let wfs = _.compact(punctless.split(' '))
     wfs.forEach(wf=> {
-      if (!map[wf]) map[wf] = {textid: textid, idxs: []}
-      map[wf].idxs.push(idx)
+      // if (!map[wf]) map[wf] = {textid: textid, idxs: []}
+      if (!map[wf]) map[wf] = []
+      map[wf].push(idx)
     })
   })
   let ndocs = []
   for (let wf in map) {
-    let wfpath = map[wf]
-    let ndoc = {wf: wf, wfpath: wfpath}
+    let idxs = map[wf]
+    let ndoc = {wf: wf, idxs: idxs, textid: textid}
     ndoc._id = ['wf', wf].join('-')
     ndocs.push(ndoc)
   }

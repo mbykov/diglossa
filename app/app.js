@@ -349,26 +349,26 @@ Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   navigate(current);
 });
 Mousetrap.bind(['ctrl+f'], function (ev) {
-  let wf = clipboard.readText();
-  log('WF', wf);
-  let key = ['wf', wf].join('-');
+  let query = clipboard.readText();
+  log('WF', query);
+  let key = ['wf', query].join('-');
   let options = {
     include_docs: true,
     key: key
   };
   pouch.allDocs(options).then(function (result) {
-    let wfs = result.rows.map(row => {
+    let wfdocs = result.rows.map(row => {
       return row.doc;
     });
-    log('WFS', wfs);
-    let textids = wfs.map(wf => {
-      return wf.wfpath.textid;
+    log('WFdocs', wfdocs);
+    let textids = wfdocs.map(wf => {
+      return wf.textid;
     });
     let tpaths = textids.map(textid => {
       return textid.split('.')[0];
     });
 
-    let tpath = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.uniq(tpaths);
+    let tpath = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.uniq(tpaths)[0];
 
     log('TPATH', tpath);
     let endkey = [tpath, '\ufff0'].join('');
@@ -382,10 +382,29 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
         return row.doc;
       });
       log('TTS', tts);
-    });
-    let qresults = [];
-    wfs.forEach(wf => {
-      let qres = [];
+      let qresults = [];
+      wfdocs.forEach(wfdoc => {
+        wfdoc.idxs.forEach(idx => {
+          let qres = {
+            query: query,
+            title: info.book.title,
+            tpath: tpath,
+            idx: idx,
+            texts: []
+          };
+          tts.forEach(tobj => {
+            let text = {
+              nic: tobj.nic,
+              lang: tobj.lang
+            };
+            if (tobj.author) text.author = true;
+            text.row = tobj.rows[idx].slice(0, 10);
+            qres.texts.push(text);
+          });
+          qresults.push(qres);
+        });
+      });
+      log('QRs', qresults);
     }); // parseBook(current, info, texts)
   }).catch(function (err) {
     log('getWFSErr', err);
@@ -1275,20 +1294,19 @@ function bookWFMap(book, rows, textid) {
     let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(punctless.split(' '));
 
     wfs.forEach(wf => {
-      if (!map[wf]) map[wf] = {
-        textid: textid,
-        idxs: []
-      };
-      map[wf].idxs.push(idx);
+      // if (!map[wf]) map[wf] = {textid: textid, idxs: []}
+      if (!map[wf]) map[wf] = [];
+      map[wf].push(idx);
     });
   });
   let ndocs = [];
 
   for (let wf in map) {
-    let wfpath = map[wf];
+    let idxs = map[wf];
     let ndoc = {
       wf: wf,
-      wfpath: wfpath
+      idxs: idxs,
+      textid: textid
     };
     ndoc._id = ['wf', wf].join('-');
     ndocs.push(ndoc);
