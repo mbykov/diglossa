@@ -248,12 +248,19 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
           let qresults = []
           wfdocs.forEach(wfdoc=>{
             wfdoc.idxs.forEach(idx=> {
-              let qres = {query: query, title: info.book.title, tpath: tpath, idx: idx, texts: []}
-              tts.forEach(tobj=>{
-                let text = {nic: tobj.nic, lang: tobj.lang}
-                if (tobj.author) text.author = true
-                text.row = tobj.rows[idx].slice(0,10)
-                qres.texts.push(text)
+              let qres = {query: query, title: info.book.title, tpath: tpath, idx: idx, trns: []}
+              let tauth = _.find(tts, tobj=> { return tobj.author})
+              let row = tauth.rows[idx]
+              let textauth = textAround(tauth, row, query)
+              // qres.auth = textauth
+              qres.trns.push(textauth)
+              let start = textauth.text.split(query)[0].length
+              // log('START', start)
+              let tttrn = _.filter(tts, tobj=> { return !tobj.author})
+              tttrn.forEach(tobj=> {
+                let row = tobj.rows[idx]
+                let textrn = textAround(tobj, row, query, start)
+                qres.trns.push(textrn)
               })
               qresults.push(qres)
             })
@@ -267,8 +274,28 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
     })
 })
 
-// function getQuery(wf) {
-// }
+function textAround(tobj, row, query, start) {
+  let line = {nic: tobj.nic, lang: tobj.lang}
+  if (tobj.author) {
+    line.author = true
+    line.text = aroundA(row, query)
+  } else {
+    line.text = row.slice(start, start+100)
+  }
+  return line
+}
+
+function aroundA(str, wf) {
+  // log('STR', str, wf)
+  let limit = 50
+  let arr = str.split(wf)
+  let head = arr[0].slice(-limit)
+  let tail = arr[1].slice(0,limit)
+  // let qspan = ['<span class="query">', wf, '</span>'].join('')
+  // html = [head, query, tail] .join('')
+  let text =  [head, wf, tail] .join(' ')
+  return text
+}
 
 
 function showSection(name) {
