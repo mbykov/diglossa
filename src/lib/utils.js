@@ -35,10 +35,11 @@ export function recreate (element) {
 //   return document.createTextNode(str)
 // }
 
-export function span (str) {
-  var oSpan = document.createElement('span')
-  oSpan.textContent = str
-  return oSpan
+export function span (str, style) {
+  let el = document.createElement('span')
+  el.textContent = str
+  if (style) el.classList.add(style)
+  return el
 }
 
 export function br () {
@@ -54,10 +55,11 @@ export function div (str, style) {
   return el
 }
 
-export function p (str) {
-  var oDiv = document.createElement('p')
-  oDiv.textContent = str
-  return oDiv
+export function p (str, style) {
+  let el = document.createElement('p')
+  el.textContent = str
+  if (style) el.classList.add(style)
+  return el
 }
 
 export function empty (el) {

@@ -206,12 +206,12 @@ window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])(); // 
 getState();
 
 function getState() {
-  pouch.get('_local/current').then(function (current) {
+  pouch.get('_local/current').then(function (navpath) {
+    current = navpath;
     log('INIT CURRENT:', current);
-    window.current = current;
     if (current.section == 'lib') navigate({
       section: 'lib'
-    });else getDir(current);
+    });else if (current.section == 'search') parseQuery();else getDir(current);
   }).catch(function (err) {
     pouch.put({
       _id: '_local/current',
@@ -324,7 +324,7 @@ function navigate(navpath) {
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["remove"])(ohright);
   current = navpath;
   let sec = navpath.section;
-  if (sec == 'lib') getLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook();else showSection(sec); // let hkey = JSON.stringify(navpath)
+  if (sec == 'lib') getLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook();else if (sec == 'search') parseQuery();else showSection(sec); // let hkey = JSON.stringify(navpath)
   // // log('HKEY', hkey)
   // if (!hstakey[hkey]) {
   //   hstates.push(navpath)
@@ -332,8 +332,6 @@ function navigate(navpath) {
   //   hstakey[hkey] = true
   //   // log('ADD-SEC', navpath.section)
   // }
-  // store.set('navpath', navpath)
-  // log('STORE-navpath', navpath)
 
   log('Navigate:', navpath); // window.navpath = navpath
 }
@@ -382,15 +380,17 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
         return row.doc;
       });
       log('TTS', tts);
-      let qresults = [];
+      let qresults = {
+        query: query,
+        qbooks: []
+      };
       wfdocs.forEach(wfdoc => {
         wfdoc.idxs.forEach(idx => {
-          let qres = {
-            query: query,
+          let qbook = {
             title: info.book.title,
             tpath: tpath,
             idx: idx,
-            trns: []
+            texts: []
           };
 
           let tauth = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(tts, tobj => {
@@ -400,7 +400,8 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
           let row = tauth.rows[idx];
           let textauth = textAround(tauth, row, query); // qres.auth = textauth
 
-          qres.trns.push(textauth);
+          qbook.texts.push(textauth); // procent
+
           let start = textauth.text.split(query)[0].length; // log('START', start)
 
           let tttrn = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.filter(tts, tobj => {
@@ -410,17 +411,54 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
           tttrn.forEach(tobj => {
             let row = tobj.rows[idx];
             let textrn = textAround(tobj, row, query, start);
-            qres.trns.push(textrn);
+            qbook.texts.push(textrn);
           });
-          qresults.push(qres);
+          qresults.qbooks.push(qbook);
         });
       });
       log('QRs', qresults);
+      current = {
+        _id: '_local/current',
+        section: 'search',
+        qresults: qresults
+      };
+      navigate(current);
     }); // parseBook(current, info, texts)
   }).catch(function (err) {
     log('getWFSErr', err);
   });
 });
+
+function parseQuery() {
+  window.split.setSizes([100, 0]);
+  let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
+  let otrns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#trns');
+  log('Q-current', current);
+  let res = current.qresults;
+  let oquery = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])(res.query, 'title');
+  osource.appendChild(oquery);
+  res.qbooks.forEach(qbook => {
+    log('Q-book', qbook);
+    let obook = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])();
+    let otitle = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])(qbook.title, 'qtitle');
+    let oidx = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])('par: ' + qbook.idx, 'qtitle');
+    obook.appendChild(otitle);
+    obook.appendChild(oidx);
+    osource.appendChild(obook);
+    let otext = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])('', 'qtext');
+    qbook.texts.forEach(tobj => {
+      let oline = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["p"])(tobj.text, 'qline');
+      oline.setAttribute('nic', tobj.nic);
+      if (!tobj.author) oline.classList.add('hidden');
+      otext.appendChild(oline);
+    });
+    osource.appendChild(otext);
+  });
+  let oline = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])('json', 'title');
+  let otxt = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])(JSON.stringify(current.qresults));
+  osource.appendChild(oline);
+  osource.appendChild(otxt);
+}
 
 function textAround(tobj, row, query, start) {
   let line = {
@@ -432,21 +470,21 @@ function textAround(tobj, row, query, start) {
     line.author = true;
     line.text = aroundA(row, query);
   } else {
-    line.text = row.slice(start, start + 100);
+    line.text = row.slice(start, start + 150);
   }
 
   return line;
 }
 
 function aroundA(str, wf) {
-  // log('STR', str, wf)
   let limit = 50;
   let arr = str.split(wf);
   let head = arr[0].slice(-limit);
   let tail = arr[1].slice(0, limit); // let qspan = ['<span class="query">', wf, '</span>'].join('')
   // html = [head, query, tail] .join('')
 
-  let text = [head, wf, tail].join(' ');
+  let text = [head, wf, tail].join(''); // log('AROUND', wf, text)
+
   return text;
 }
 
@@ -1520,10 +1558,11 @@ function recreate(element) {
 //   return document.createTextNode(str)
 // }
 
-function span(str) {
-  var oSpan = document.createElement('span');
-  oSpan.textContent = str;
-  return oSpan;
+function span(str, style) {
+  let el = document.createElement('span');
+  el.textContent = str;
+  if (style) el.classList.add(style);
+  return el;
 }
 function br() {
   let oBR = document.createElement('br');
@@ -1536,10 +1575,11 @@ function div(str, style) {
   if (style) el.id = style;
   return el;
 }
-function p(str) {
-  var oDiv = document.createElement('p');
-  oDiv.textContent = str;
-  return oDiv;
+function p(str, style) {
+  let el = document.createElement('p');
+  el.textContent = str;
+  if (style) el.classList.add(style);
+  return el;
 }
 function empty(el) {
   if (!el) return;

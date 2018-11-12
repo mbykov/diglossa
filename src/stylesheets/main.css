@@ -270,3 +270,11 @@ span.active {
 div.hleft.header > div.tree {
   /* display: none; */
 }
+
+.qtitle {
+  padding-right: 15px;
+}
+
+#source > div.qtext > p.hidden {
+  display: none;
+}
