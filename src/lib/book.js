@@ -160,7 +160,7 @@ function setBookText(texts, start) {
   let fpath = current.fpath
   let pars = _.filter(texts, text=> { return !text.com })
   let coms = _.filter(texts, text=> { return text.com })
-  log('Ps', pars)
+  // log('Ps', pars)
 
   apars = _.filter(pars, par=> { return par.author && par.fpath == fpath})
   tpars = _.filter(pars, par=> { return !par.author && par.fpath == fpath})

@@ -195,8 +195,7 @@ electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('parseDir', function (ev
 // let hstate = store.get('hstate') || -1
 
 let hstates = [];
-let hstate = -1; // let hstakey = {}
-// log('HSTATE=>', hstate)
+let hstate = -1; // log('HSTATE=>', hstate)
 // log('HSTATES=>', hstates)
 // let position = hstates[hstate] || {section: 'lib'}
 // log('HSTATES=>POS', position)
@@ -235,6 +234,7 @@ function getLib() {
       return row.doc;
     });
     log('GETLIB', docs);
+    hstate = 0;
     parseLib(docs);
   }).catch(function (err) {
     log('getLibErr:', err);
@@ -261,7 +261,7 @@ function getTitle() {
 }
 
 function getBook() {
-  log('GB info', info);
+  // log('GB info', info)
   let endkey = [info.tpath, '\ufff0'].join('');
   let opts = {
     include_docs: true,
@@ -275,8 +275,8 @@ function getBook() {
   pouch.allDocs(opts).then(function (result) {
     let texts = result.rows.map(row => {
       return row.doc;
-    });
-    log('PS', texts.length);
+    }); // log('PS', texts.length)
+
     Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, info, texts);
   }).catch(function (err) {
     log('getBookErr', err);
@@ -323,32 +323,30 @@ function navigate(navpath) {
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["remove"])(ohleft);
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["remove"])(ohright);
   current = navpath;
-  let sec = navpath.section;
-  if (sec == 'lib') getLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook();else if (sec == 'search') parseQuery();else showSection(sec); // let hkey = JSON.stringify(navpath)
-  // // log('HKEY', hkey)
-  // if (!hstakey[hkey]) {
-  //   hstates.push(navpath)
-  //   hstate = hstates.length-1
-  //   hstakey[hkey] = true
-  //   // log('ADD-SEC', navpath.section)
-  // }
+  let already = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.findIndex(hstates, current) + 1;
 
-  log('Navigate:', navpath); // window.navpath = navpath
+  if (!already) {
+    hstates.push(lodash__WEBPACK_IMPORTED_MODULE_1___default.a.clone(current));
+    hstate = hstates.length - 1;
+  }
+
+  log('HSTATES', hstates);
+  log('Navigate:', current);
+  let sec = current.section;
+  if (sec == 'lib') getLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook();else if (sec == 'search') parseQuery();else showSection(sec);
 }
 Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
-  // log('EV', ev.which, hstate, hstate - 1 > -1, hstates[hstate])
-  // if (ev.which == 37 && hstate - 1 > -1) log('LEFT', hstate, hstates[hstate-1])
-  // if (ev.which == 39 && hstate + 1 < hstates.length) log('RIGHT', hstate, hstates[hstate+1])
+  // log('EV', ev.which, hstate, hstates)
+  if (ev.which == 37 && hstate - 1 <= -1) return;
   if (ev.which == 37 && hstate - 1 > -1) hstate--;
+  if (ev.which == 39 && hstate + 1 >= hstates.length) return;
   if (ev.which == 39 && hstate + 1 < hstates.length) hstate++;
-  let current = hstates[hstate]; // log('_arrow_navpath_', navpath)
-  // store.set('hstate', hstate)
-
-  navigate(current);
+  let state = hstates[hstate];
+  navigate(state);
 });
 Mousetrap.bind(['ctrl+f'], function (ev) {
-  let query = clipboard.readText();
-  log('WF', query);
+  let query = clipboard.readText(); // log('WF', query)
+
   let key = ['wf', query].join('-');
   let options = {
     include_docs: true,
@@ -839,9 +837,9 @@ function setBookText(texts, start) {
 
   let coms = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(texts, text => {
     return text.com;
-  });
+  }); // log('Ps', pars)
 
-  log('Ps', pars);
+
   apars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
     return par.author && par.fpath == fpath;
   });
