@@ -137,16 +137,12 @@ function getTitle() {
 }
 
 function getBook() {
-  // log('GB info', info)
+  log('GB info', info)
   let endkey = [info.tpath, '\ufff0'].join('')
   let opts = { include_docs: true, startkey: info.tpath, endkey: endkey }
-  // let options = {
-  //   include_docs: true,
-  //   keys: info.fns
-  // }
   pouch.allDocs(opts).then(function (result) {
     let texts = result.rows.map(row=> { return row.doc})
-    // log('PS', texts.length)
+    // log('GBTxs', texts.length)
     parseBook(current, info, texts)
   }).catch(function (err) {
     log('getBookErr', err);

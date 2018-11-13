@@ -129,7 +129,7 @@ function parseDir(bookpath) {
   // log('FNS', fns.length)
 
   let tpaths = []
-  info.fns = []
+  info.tids = []
   let texts = []
   let coms = []
   let pars = []
@@ -142,7 +142,7 @@ function parseDir(bookpath) {
     if (ext == '.info') return
     if (ext == '.json') return
     let nic = ext.replace(/^\./, '')
-    let auth = _.find(info.auths, auth=> { return auth.ext == nic})
+    let auth = _.find(info.auths, auth=> { return auth.ext == nic}) || nic
 
     let txt = fse.readFileSync(path.resolve(bpath, fn), 'utf8')
     let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ')
@@ -155,23 +155,25 @@ function parseDir(bookpath) {
     if (auth) lang = auth.lang
 
     // let id = md5([info.book.author, info.book.title, fpath].join(''))
-    let textid = ['text', fpath, fname].join('-')
-    let tpath = textid.split('.')[0]
-    tpaths.push(tpath)
-    info.fns.push(textid)
+    // let textid = ['text', fpath, fname].join('-')
+    // let textid = ['text', fpath, nic].join('-')
+    let textid = ['text', info.book.author, info.book.title, fpath, nic].join('-')
+    // let tpath = ['text', fpath].join('-')
+    // tpaths.push(tpath)
+    info.tids.push(textid)
 
     let pane = { _id: textid, lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname, text: clean,
-    if (auth && auth.author) pane.author = true // , info.book.author = auth.name
+    if (auth.author) pane.author = true // , info.book.author = auth.name
 
     if (comment) coms.push(pane)
     else texts.push(pane)
 
-    if (auth && auth.author) info.map = bookWFMap(info.book, rows, textid)
+    if (auth.author) info.map = bookWFMap(info.book, rows, textid)
   })
 
-  info.fns = _.uniq(info.fns)
-  info.tpaths = _.uniq(tpaths).length
-  info.tpath = _.uniq(tpaths)[0]
+  // info.fns = _.uniq(info.fns)
+  // info.tpaths = _.uniq(tpaths)
+  info.tpath = ['text', info.book.author, info.book.title].join('-')
 
   // let bkey = md5([info.book.author, info.book.title].join('-'))
   let id = ['info', bpath].join('-')

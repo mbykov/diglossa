@@ -261,21 +261,17 @@ function getTitle() {
 }
 
 function getBook() {
-  // log('GB info', info)
+  log('GB info', info);
   let endkey = [info.tpath, '\ufff0'].join('');
   let opts = {
     include_docs: true,
     startkey: info.tpath,
-    endkey: endkey // let options = {
-    //   include_docs: true,
-    //   keys: info.fns
-    // }
-
+    endkey: endkey
   };
   pouch.allDocs(opts).then(function (result) {
     let texts = result.rows.map(row => {
       return row.doc;
-    }); // log('PS', texts.length)
+    }); // log('GBTxs', texts.length)
 
     Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, info, texts);
   }).catch(function (err) {
@@ -829,7 +825,8 @@ function parseBook(bookcurrent, bookinfo, texts) {
 }
 
 function setBookText(texts, start) {
-  let fpath = current.fpath;
+  // log('setBookText-TEXTS', texts)
+  let fpath = current.fpath; // log('BCUR', current)
 
   let pars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(texts, text => {
     return !text.com;
@@ -837,7 +834,7 @@ function setBookText(texts, start) {
 
   let coms = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(texts, text => {
     return text.com;
-  }); // log('Ps', pars)
+  }); // log('Pars', pars)
 
 
   apars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
@@ -871,7 +868,8 @@ function setChunk(start) {
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   let nic = current.nic;
-  author.rows.forEach((astr, idx) => {
+  let arows = author.rows.slice(start, start + limit);
+  arows.forEach((astr, idx) => {
     let pars = [];
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])();
     let html = astr.replace(rePunct, " <span class=\"active\">$1</span>");
@@ -881,7 +879,9 @@ function setChunk(start) {
     osource.appendChild(oleft);
     pars.push(oleft);
     let prights = tpars.map(tpar => {
-      let text = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(tpar.rows, (par, idy) => {
+      let trows = tpar.rows.slice(start, start + limit);
+
+      let text = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(trows, (par, idy) => {
         return idy == idx;
       });
 
@@ -1289,7 +1289,7 @@ function parseDir(bookpath) {
   }); // log('FNS', fns.length)
 
   let tpaths = [];
-  info.fns = [];
+  info.tids = [];
   let texts = [];
   let coms = [];
   let pars = [];
@@ -1302,11 +1302,9 @@ function parseDir(bookpath) {
     if (ext == '.info') return;
     if (ext == '.json') return;
     let nic = ext.replace(/^\./, '');
-
     let auth = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(info.auths, auth => {
       return auth.ext == nic;
-    });
-
+    }) || nic;
     let txt = fse.readFileSync(path.resolve(bpath, fn), 'utf8');
     let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ');
 
@@ -1317,11 +1315,13 @@ function parseDir(bookpath) {
     let fpath = fparts.join('/');
     let lang;
     if (auth) lang = auth.lang; // let id = md5([info.book.author, info.book.title, fpath].join(''))
+    // let textid = ['text', fpath, fname].join('-')
+    // let textid = ['text', fpath, nic].join('-')
 
-    let textid = ['text', fpath, fname].join('-');
-    let tpath = textid.split('.')[0];
-    tpaths.push(tpath);
-    info.fns.push(textid);
+    let textid = ['text', info.book.author, info.book.title, fpath, nic].join('-'); // let tpath = ['text', fpath].join('-')
+    // tpaths.push(tpath)
+
+    info.tids.push(textid);
     let pane = {
       _id: textid,
       lang: lang,
@@ -1330,14 +1330,14 @@ function parseDir(bookpath) {
       rows: rows // fname: fname, text: clean,
 
     };
-    if (auth && auth.author) pane.author = true; // , info.book.author = auth.name
+    if (auth.author) pane.author = true; // , info.book.author = auth.name
 
     if (comment) coms.push(pane);else texts.push(pane);
-    if (auth && auth.author) info.map = bookWFMap(info.book, rows, textid);
-  });
-  info.fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(info.fns);
-  info.tpaths = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(tpaths).length;
-  info.tpath = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(tpaths)[0]; // let bkey = md5([info.book.author, info.book.title].join('-'))
+    if (auth.author) info.map = bookWFMap(info.book, rows, textid);
+  }); // info.fns = _.uniq(info.fns)
+  // info.tpaths = _.uniq(tpaths)
+
+  info.tpath = ['text', info.book.author, info.book.title].join('-'); // let bkey = md5([info.book.author, info.book.title].join('-'))
 
   let id = ['info', bpath].join('-');
   info._id = id;

@@ -157,10 +157,12 @@ export function parseBook(bookcurrent, bookinfo, texts) {
 }
 
 function setBookText(texts, start) {
+  // log('setBookText-TEXTS', texts)
   let fpath = current.fpath
+  // log('BCUR', current)
   let pars = _.filter(texts, text=> { return !text.com })
   let coms = _.filter(texts, text=> { return text.com })
-  // log('Ps', pars)
+  // log('Pars', pars)
 
   apars = _.filter(pars, par=> { return par.author && par.fpath == fpath})
   tpars = _.filter(pars, par=> { return !par.author && par.fpath == fpath})
@@ -190,7 +192,8 @@ function setChunk(start) {
   let otrns = q('#trns')
   let nic = current.nic
 
-  author.rows.forEach((astr, idx) => {
+  let arows = author.rows.slice(start, start + limit)
+  arows.forEach((astr, idx) => {
     let pars = []
     let oleft = p()
     let html = astr.replace(rePunct, " <span class=\"active\">$1</span>")
@@ -201,7 +204,8 @@ function setChunk(start) {
     pars.push(oleft)
 
     let prights = tpars.map(tpar=> {
-      let text = _.find(tpar.rows, (par, idy)=> { return idy == idx})
+      let trows = tpar.rows.slice(start, start + limit)
+      let text = _.find(trows, (par, idy)=> { return idy == idx})
       return {idx: idx, nic: tpar.nic, text: text}
     })
 
