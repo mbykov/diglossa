@@ -137,7 +137,7 @@ function getTitle() {
 }
 
 function getBook() {
-  log('GB info', info)
+  // log('GB info', info)
   let endkey = [info.tpath, '\ufff0'].join('')
   let opts = { include_docs: true, startkey: info.tpath, endkey: endkey }
   pouch.allDocs(opts).then(function (result) {
@@ -272,7 +272,7 @@ function parseQuery() {
   window.split.setSizes([100,0])
   let osource = q('#source')
   let otrns = q('#trns')
-  log('Q-current', current)
+  // log('Q-current', current)
   let res = current.qresults
   let oquery = div(res.query, 'title')
   osource.appendChild(oquery)
@@ -364,7 +364,7 @@ function getDir(current) {
     Promise.all([
       pushInfo(book.info),
       pushTexts(book.texts),
-      pushMap(book.info)
+      // pushMap(book.info)
     ]).then(function(res) {
       log('PUSH ALL RES', res)
       if (current.section) info = book.info, navigate(current)

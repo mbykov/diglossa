@@ -128,11 +128,12 @@ function parseDir(bookpath) {
   fns = _.filter(fns, fn=>{ return fn != ipath })
   // log('FNS', fns.length)
 
-  let tpaths = []
-  info.tids = []
+  let tpath = ['text', info.book.author, info.book.title].join('-')
+  // info.tids = []
   let texts = []
   let coms = []
   let pars = []
+  let map = {}
   fns.forEach(fn => {
     let comment = false
     let com = fn.split('-')[1]
@@ -159,8 +160,7 @@ function parseDir(bookpath) {
     // let textid = ['text', fpath, nic].join('-')
     let textid = ['text', info.book.author, info.book.title, fpath, nic].join('-')
     // let tpath = ['text', fpath].join('-')
-    // tpaths.push(tpath)
-    info.tids.push(textid)
+    // info.tids.push(textid)
 
     let pane = { _id: textid, lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname, text: clean,
     if (auth.author) pane.author = true // , info.book.author = auth.name
@@ -168,50 +168,37 @@ function parseDir(bookpath) {
     if (comment) coms.push(pane)
     else texts.push(pane)
 
-    if (auth.author) info.map = bookWFMap(info.book, rows, textid)
+    if (auth.author) bookWFMap(map, rows, textid)
   })
-
-  // info.fns = _.uniq(info.fns)
-  // info.tpaths = _.uniq(tpaths)
   info.tpath = ['text', info.book.author, info.book.title].join('-')
-
-  // let bkey = md5([info.book.author, info.book.title].join('-'))
   let id = ['info', bpath].join('-')
   info._id = id
   info.tree = tree
-  // info.bkey = bkey
   info.bpath = bpath
 
-  let book = {bkey: bpath, info: info, texts: texts, coms: coms} // , bpath: bpath
+  let book = {bkey: bpath, info: info, texts: texts, coms: coms, map: map} // , bpath: bpath
   log('BOOK FROM GET', book)
   return book
 }
 
-function done (err) {
-  if (err) throw err
-  console.log('successfully added documents')
-}
-
-function bookWFMap(book, rows, textid) {
-  let map = {}
+function bookWFMap(map, rows, textid) {
   rows.forEach((row, idx)=> {
-    let punctless = row.replace(/[.,\/#!$%\^&\*;:{}=\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
+    let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
     let wfs = _.compact(punctless.split(' '))
     wfs.forEach(wf=> {
-      // if (!map[wf]) map[wf] = {textid: textid, idxs: []}
-      if (!map[wf]) map[wf] = []
-      map[wf].push(idx)
+      if (!map[wf]) map[wf] = {}
+      if (!map[wf][textid]) map[wf][textid] = []
+      map[wf][textid].push(idx)
     })
   })
-  let ndocs = []
-  for (let wf in map) {
-    let idxs = map[wf]
-    let ndoc = {wf: wf, idxs: idxs, textid: textid}
-    ndoc._id = ['wf', wf].join('-')
-    ndocs.push(ndoc)
-  }
-  // log('MAP', map)
-  return ndocs
+  // let ndocs = []
+  // for (let wf in map) {
+  //   let idxs = map[wf]
+  //   let ndoc = {wf: wf, idxs: idxs, textid: textid}
+  //   ndoc._id = ['wf', wf].join('-')
+  //   ndocs.push(ndoc)
+  // }
+  return
 }
 
 
@@ -233,4 +220,9 @@ function parseInfo(ipath) {
   })
   info.nicnames = nicnames
   return info
+}
+
+function done (err) {
+  if (err) throw err
+  console.log('successfully added documents')
 }

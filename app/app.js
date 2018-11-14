@@ -261,7 +261,7 @@ function getTitle() {
 }
 
 function getBook() {
-  log('GB info', info);
+  // log('GB info', info)
   let endkey = [info.tpath, '\ufff0'].join('');
   let opts = {
     include_docs: true,
@@ -426,8 +426,8 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
 function parseQuery() {
   window.split.setSizes([100, 0]);
   let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
-  let otrns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#trns');
-  log('Q-current', current);
+  let otrns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#trns'); // log('Q-current', current)
+
   let res = current.qresults;
   let oquery = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])(res.query, 'title');
   osource.appendChild(oquery);
@@ -516,7 +516,7 @@ function getDir(current) {
   Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
     if (!book) return;
     log('INFO::', book.info);
-    Promise.all([pushInfo(book.info), pushTexts(book.texts), pushMap(book.info)]).then(function (res) {
+    Promise.all([pushInfo(book.info), pushTexts(book.texts)]).then(function (res) {
       log('PUSH ALL RES', res);
       if (current.section) info = book.info, navigate(current);else navigate({
         section: 'lib'
@@ -1288,11 +1288,12 @@ function parseDir(bookpath) {
     return fn != ipath;
   }); // log('FNS', fns.length)
 
-  let tpaths = [];
-  info.tids = [];
+  let tpath = ['text', info.book.author, info.book.title].join('-'); // info.tids = []
+
   let texts = [];
   let coms = [];
   let pars = [];
+  let map = {};
   fns.forEach(fn => {
     let comment = false;
     let com = fn.split('-')[1];
@@ -1319,9 +1320,8 @@ function parseDir(bookpath) {
     // let textid = ['text', fpath, nic].join('-')
 
     let textid = ['text', info.book.author, info.book.title, fpath, nic].join('-'); // let tpath = ['text', fpath].join('-')
-    // tpaths.push(tpath)
+    // info.tids.push(textid)
 
-    info.tids.push(textid);
     let pane = {
       _id: textid,
       lang: lang,
@@ -1333,61 +1333,45 @@ function parseDir(bookpath) {
     if (auth.author) pane.author = true; // , info.book.author = auth.name
 
     if (comment) coms.push(pane);else texts.push(pane);
-    if (auth.author) info.map = bookWFMap(info.book, rows, textid);
-  }); // info.fns = _.uniq(info.fns)
-  // info.tpaths = _.uniq(tpaths)
-
-  info.tpath = ['text', info.book.author, info.book.title].join('-'); // let bkey = md5([info.book.author, info.book.title].join('-'))
-
+    if (auth.author) bookWFMap(map, rows, textid);
+  });
+  info.tpath = ['text', info.book.author, info.book.title].join('-');
   let id = ['info', bpath].join('-');
   info._id = id;
-  info.tree = tree; // info.bkey = bkey
-
+  info.tree = tree;
   info.bpath = bpath;
   let book = {
     bkey: bpath,
     info: info,
     texts: texts,
-    coms: coms // , bpath: bpath
+    coms: coms,
+    map: map // , bpath: bpath
 
   };
   log('BOOK FROM GET', book);
   return book;
 }
 
-function done(err) {
-  if (err) throw err;
-  console.log('successfully added documents');
-}
-
-function bookWFMap(book, rows, textid) {
-  let map = {};
+function bookWFMap(map, rows, textid) {
   rows.forEach((row, idx) => {
-    let punctless = row.replace(/[.,\/#!$%\^&\*;:{}=\-+_`~()a-zA-Z0-9'"<>\[\]]/g, '');
+    let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g, '');
 
     let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(punctless.split(' '));
 
     wfs.forEach(wf => {
-      // if (!map[wf]) map[wf] = {textid: textid, idxs: []}
-      if (!map[wf]) map[wf] = [];
-      map[wf].push(idx);
+      if (!map[wf]) map[wf] = {};
+      if (!map[wf][textid]) map[wf][textid] = [];
+      map[wf][textid].push(idx);
     });
-  });
-  let ndocs = [];
+  }); // let ndocs = []
+  // for (let wf in map) {
+  //   let idxs = map[wf]
+  //   let ndoc = {wf: wf, idxs: idxs, textid: textid}
+  //   ndoc._id = ['wf', wf].join('-')
+  //   ndocs.push(ndoc)
+  // }
 
-  for (let wf in map) {
-    let idxs = map[wf];
-    let ndoc = {
-      wf: wf,
-      idxs: idxs,
-      textid: textid
-    };
-    ndoc._id = ['wf', wf].join('-');
-    ndocs.push(ndoc);
-  } // log('MAP', map)
-
-
-  return ndocs;
+  return;
 }
 
 function parseInfo(ipath) {
@@ -1411,6 +1395,11 @@ function parseInfo(ipath) {
   });
   info.nicnames = nicnames;
   return info;
+}
+
+function done(err) {
+  if (err) throw err;
+  console.log('successfully added documents');
 }
 
 /***/ }),
