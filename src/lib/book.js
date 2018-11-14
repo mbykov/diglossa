@@ -137,26 +137,36 @@ function goBookEvent(ev) {
   navigate(current)
 }
 
-export function parseBook(bookcurrent, bookinfo, texts) {
+export function parseBook(bookcurrent, bookinfo, pars) {
   info = bookinfo
   current = bookcurrent
   // log('parseBook_ info', info)
   // log('parseBook_ cur', current)
-  if (!texts.length) return
+  if (!pars.length) return
   window.split.setSizes([50,50])
   let osource = q('#source')
   let otrns = q('#trns')
   empty(osource)
   empty(otrns)
 
+  let cnics = _.uniq(pars.map(auth=> { return auth.nic }))
+  // log('CNICS', cnics)
+  let nic = current.nic
+  if (!nic) nic = cnics[0]
+  if (!cnics.includes(nic)) nic = cnics[0]
+  current.nic = nic
+
   let start = 0
-  setBookText(texts, start)
+  // setBookText(pars, start)
+  setChunk(pars)
+  createRightHeader(cnics)
+  createLeftHeader()
 
   osource.addEventListener("mouseover", copyToClipboard, false)
   otrns.addEventListener("wheel", cyclePar, false)
 }
 
-function setBookText(texts, start) {
+function setBookText_(texts, start) {
   // log('setBookText-TEXTS', texts)
   let fpath = current.fpath
   // log('BCUR', current)
@@ -181,53 +191,47 @@ function setBookText(texts, start) {
   createLeftHeader()
 }
 
-function setChunk(start) {
+function setChunk(pars) {
   let limit = 20
-  let author = apars[0]
-  let anic = author.nic
+  // let author = apars[0]
+  // let anic = author.nic
+  let nic = current.nic
 
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
   let rePunct = new RegExp(punct, 'g')
   let osource = q('#source')
   let otrns = q('#trns')
-  let nic = current.nic
 
-  let arows = author.rows.slice(start, start + limit)
-  arows.forEach((astr, idx) => {
-    let pars = []
-    let oleft = p()
-    let html = astr.replace(rePunct, " <span class=\"active\">$1</span>")
-    oleft.innerHTML = html
-    oleft.setAttribute('idx', start+idx)
-    oleft.setAttribute('nic', anic)
+  apars = _.filter(pars, par=> { return par.author})
+  log('AP', apars)
+  tpars = _.filter(pars, par=> { return !par.author})
+  apars.forEach((apar, idx)=> {
+    let oleft = p(apar.text)
+    oleft.setAttribute('idx', apar.idx)
+    oleft.setAttribute('nic', apar.nic)
     osource.appendChild(oleft)
-    pars.push(oleft)
+    let aligns = [oleft]
 
-    let prights = tpars.map(tpar=> {
-      let trows = tpar.rows.slice(start, start + limit)
-      let text = _.find(trows, (par, idy)=> { return idy == idx})
-      return {idx: idx, nic: tpar.nic, text: text}
-    })
-
-    prights.forEach(tpar => {
-      let rstr = tpar.text
-      let oright = p(rstr)
-      oright.setAttribute('idx', start+tpar.idx)
-      oright.setAttribute('nic', tpar.nic)
-      if (tpar.nic == nic) oright.setAttribute('active', true)
-      pars.push(oright)
+    let pars = _.filter(tpars, par=> { return par.idx == apar.idx})
+    pars.forEach(par => {
+      let oright = p(par.text)
+      oright.setAttribute('idx', apar.idx)
+      oright.setAttribute('nic', par.nic)
+      if (par.nic == nic) oright.classList.add('active')
+      else oright.classList.add('hidden')
       otrns.appendChild(oright)
+      aligns.push(oright)
     })
-    alignPars(pars)
+    alignPars(aligns)
   })
 }
 
 function alignPars(pars) {
   let heights = pars.map(par => { return par.scrollHeight })
-  let max = _.max(heights)
+  let max = _.max(heights) + 12
   pars.forEach(par => {
     par.style.height = max + 'px'
-    if (!par.getAttribute('active')) par.classList.add('hidden')
+    // if (!par.getAttribute('active')) par.classList.add('hidden')
   })
 }
 

@@ -177,7 +177,9 @@ function getText() {
   let selector = {fpath: 'Dialogues/Parmenides', idx: {$gte: 20, $lt: 40}}
   pouch.find({selector: selector}) // sort: ['idx'], , limit: 20
     .then(function(res) {
-      log('FIND', res)
+      if (!res.docs) return
+      log('DOCS', res.docs)
+      parseBook(current, info, res.docs)
     })
 
   // pouch.allDocs(opts).then(function (result) {

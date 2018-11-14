@@ -320,7 +320,9 @@ function getText() {
     selector: selector
   }) // sort: ['idx'], , limit: 20
   .then(function (res) {
-    log('FIND', res);
+    if (!res.docs) return;
+    log('DOCS', res.docs);
+    Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, info, res.docs);
   }); // pouch.allDocs(opts).then(function (result) {
   //   let texts = result.rows.map(row=> { return row.doc})
   //   log('GBTxs', texts)
@@ -860,24 +862,37 @@ function goBookEvent(ev) {
   Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(current);
 }
 
-function parseBook(bookcurrent, bookinfo, texts) {
+function parseBook(bookcurrent, bookinfo, pars) {
   info = bookinfo;
   current = bookcurrent; // log('parseBook_ info', info)
   // log('parseBook_ cur', current)
 
-  if (!texts.length) return;
+  if (!pars.length) return;
   window.split.setSizes([50, 50]);
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns);
-  let start = 0;
-  setBookText(texts, start);
+
+  let cnics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(pars.map(auth => {
+    return auth.nic;
+  })); // log('CNICS', cnics)
+
+
+  let nic = current.nic;
+  if (!nic) nic = cnics[0];
+  if (!cnics.includes(nic)) nic = cnics[0];
+  current.nic = nic;
+  let start = 0; // setBookText(pars, start)
+
+  setChunk(pars);
+  createRightHeader(cnics);
+  createLeftHeader();
   osource.addEventListener("mouseover", copyToClipboard, false);
   otrns.addEventListener("wheel", cyclePar, false);
 }
 
-function setBookText(texts, start) {
+function setBookText_(texts, start) {
   // log('setBookText-TEXTS', texts)
   let fpath = current.fpath; // log('BCUR', current)
 
@@ -912,48 +927,42 @@ function setBookText(texts, start) {
   createLeftHeader();
 }
 
-function setChunk(start) {
-  let limit = 20;
-  let author = apars[0];
-  let anic = author.nic;
+function setChunk(pars) {
+  let limit = 20; // let author = apars[0]
+  // let anic = author.nic
+
+  let nic = current.nic;
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
   let rePunct = new RegExp(punct, 'g');
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
-  let nic = current.nic;
-  let arows = author.rows.slice(start, start + limit);
-  arows.forEach((astr, idx) => {
-    let pars = [];
-    let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])();
-    let html = astr.replace(rePunct, " <span class=\"active\">$1</span>");
-    oleft.innerHTML = html;
-    oleft.setAttribute('idx', start + idx);
-    oleft.setAttribute('nic', anic);
+  apars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
+    return par.author;
+  });
+  log('AP', apars);
+  tpars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
+    return !par.author;
+  });
+  apars.forEach((apar, idx) => {
+    let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])(apar.text);
+    oleft.setAttribute('idx', apar.idx);
+    oleft.setAttribute('nic', apar.nic);
     osource.appendChild(oleft);
-    pars.push(oleft);
-    let prights = tpars.map(tpar => {
-      let trows = tpar.rows.slice(start, start + limit);
+    let aligns = [oleft];
 
-      let text = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(trows, (par, idy) => {
-        return idy == idx;
-      });
-
-      return {
-        idx: idx,
-        nic: tpar.nic,
-        text: text
-      };
+    let pars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(tpars, par => {
+      return par.idx == apar.idx;
     });
-    prights.forEach(tpar => {
-      let rstr = tpar.text;
-      let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])(rstr);
-      oright.setAttribute('idx', start + tpar.idx);
-      oright.setAttribute('nic', tpar.nic);
-      if (tpar.nic == nic) oright.setAttribute('active', true);
-      pars.push(oright);
+
+    pars.forEach(par => {
+      let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])(par.text);
+      oright.setAttribute('idx', apar.idx);
+      oright.setAttribute('nic', par.nic);
+      if (par.nic == nic) oright.classList.add('active');else oright.classList.add('hidden');
       otrns.appendChild(oright);
+      aligns.push(oright);
     });
-    alignPars(pars);
+    alignPars(aligns);
   });
 }
 
@@ -961,12 +970,9 @@ function alignPars(pars) {
   let heights = pars.map(par => {
     return par.scrollHeight;
   });
-
-  let max = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.max(heights);
-
+  let max = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.max(heights) + 12;
   pars.forEach(par => {
-    par.style.height = max + 'px';
-    if (!par.getAttribute('active')) par.classList.add('hidden');
+    par.style.height = max + 'px'; // if (!par.getAttribute('active')) par.classList.add('hidden')
   });
 }
 
