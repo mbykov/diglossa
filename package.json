@@ -49,6 +49,7 @@
     "node-dir": "^0.1.17",
     "node-watch": "^0.5.8",
     "pouchdb": "^7.0.0",
+    "pouchdb-find": "^7.0.0",
     "split.js": "^1.4.0",
     "textract": "^2.4.0"
   },

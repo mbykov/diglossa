@@ -129,11 +129,11 @@ function parseDir(bookpath) {
   // log('FNS', fns.length)
 
   let tpath = ['text', info.book.author, info.book.title].join('-')
-  // info.tids = []
   let texts = []
   let coms = []
   let pars = []
   let map = {}
+  info.sections = []
   fns.forEach(fn => {
     let comment = false
     let com = fn.split('-')[1]
@@ -152,31 +152,36 @@ function parseDir(bookpath) {
     let fparts = fn.split('/')
     let fname = fparts.pop()
     let fpath = fparts.join('/')
+    if (!fpath) fpath = info.book.title
+    info.sections.push(fpath)
+
     let lang
     if (auth) lang = auth.lang
 
-    // let id = md5([info.book.author, info.book.title, fpath].join(''))
-    // let textid = ['text', fpath, fname].join('-')
-    // let textid = ['text', fpath, nic].join('-')
     let textid = ['text', info.book.author, info.book.title, fpath, nic].join('-')
-    // let tpath = ['text', fpath].join('-')
-    // info.tids.push(textid)
-
     let pane = { _id: textid, lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname, text: clean,
     if (auth.author) pane.author = true // , info.book.author = auth.name
-
     if (comment) coms.push(pane)
     else texts.push(pane)
 
-    if (auth.author) bookWFMap(map, rows, textid)
+    rows.forEach((row, idx)=> {
+      let parid = ['text', info.book.author, info.book.title, fpath, idx, 'nic', nic].join('-')
+      // let secid = ['text', info.book.author, info.book.title, fpath].join('-')
+      let par = { _id: parid, idx: idx, lang: lang, nic: nic, fpath: fpath, text: row }
+      if (auth.author) par.author = true
+      if (comment) coms.push(par)
+      else pars.push(par)
+    })
+
+    // if (auth.author) bookWFMap(map, rows, textid)
   })
-  info.tpath = ['text', info.book.author, info.book.title].join('-')
-  let id = ['info', bpath].join('-')
+  // info.tpath = ['text', info.book.author, info.book.title].join('-')
+  let id = ['info', tpath].join('-')
   info._id = id
   info.tree = tree
-  info.bpath = bpath
+  // info.bpath = bpath
 
-  let book = {bkey: bpath, info: info, texts: texts, coms: coms, map: map} // , bpath: bpath
+  let book = {bkey: bpath, info: info, texts: texts, coms: coms, map: map, pars: pars}
   log('BOOK FROM GET', book)
   return book
 }

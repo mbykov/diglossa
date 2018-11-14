@@ -33,11 +33,18 @@ const apath = app.getAppPath()
 let upath = app.getPath("userData")
 // const watch = require('node-watch')
 
-const PouchDB = require('pouchdb')
 let libPath = path.resolve(upath, 'library')
+const PouchDB = require('pouchdb')
+PouchDB.plugin(require('pouchdb-find'))
 let pouch = new PouchDB(libPath)
+pouch.createIndex({
+  index: {fields: ['fpath', 'idx']}
+});
+
 
 let current, info
+let limit = 20
+let uf = '\ufff0'
 
 window.onbeforeunload = function (ev) {
   // log('SAVE:')
@@ -149,6 +156,40 @@ function getBook() {
   })
 }
 
+// отдельные pars по
+function getText() {
+  log('GB info', info)
+  log('GB cur', current)
+  // let parid = ['text', info.book.author, info.book.title, fpath, idx, nic].join('-')
+  let start = current.pos || 20
+  // let finish = start + 20
+  // let startstr = [start, ''].join('-')
+  let startstr = '20-nic'
+  // let endstr = [start+limit, '\ufff0'].join('-')
+  // let endstr = [40, '\ufff0'].join('-')
+  let endstr = '40-nic\ufff0'
+  log('S1', startstr)
+  log('S2', endstr)
+  let startkey =  ['text', info.book.author, info.book.title, current.fpath, startstr].join('-')
+  let endkey =  ['text', info.book.author, info.book.title, current.fpath, endstr].join('-')
+  let opts = { include_docs: true, startkey: startkey, endkey: endkey }
+
+  let selector = {fpath: 'Dialogues/Parmenides', idx: {$gte: 20, $lt: 40}}
+  pouch.find({selector: selector}) // sort: ['idx'], , limit: 20
+    .then(function(res) {
+      log('FIND', res)
+    })
+
+  // pouch.allDocs(opts).then(function (result) {
+  //   let texts = result.rows.map(row=> { return row.doc})
+  //   log('GBTxs', texts)
+  //   // parseBook(current, info, texts)
+  // }).catch(function (err) {
+  //   log('getBookErr', err);
+  // })
+}
+
+
 function parseLib(infos) {
   window.split.setSizes([100,0])
   let osource = q('#source')
@@ -199,7 +240,8 @@ export function navigate(navpath) {
   let sec = current.section
   if (sec == 'lib') getLib()
   else if (sec == 'title') getTitle()
-  else if (sec == 'book') getBook()
+  // else if (sec == 'book') getBook()
+  else if (sec == 'book') getText()
   else if (sec == 'search') parseQuery()
   else showSection(sec)
 
@@ -359,11 +401,12 @@ function getDir(current) {
   if (!bpath) return
   openDir(bpath, (book) => {
     if (!book) return
-    log('INFO::', book.info)
+    log('DIR-INFO::', book.info)
 
     Promise.all([
       pushInfo(book.info),
-      pushTexts(book.texts),
+      // pushTexts(book.texts),
+      pushTexts(book.pars),
       // pushMap(book.info)
     ]).then(function(res) {
       log('PUSH ALL RES', res)

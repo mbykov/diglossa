@@ -144,11 +144,20 @@ const app = electron__WEBPACK_IMPORTED_MODULE_3__["remote"].app;
 const apath = app.getAppPath();
 let upath = app.getPath("userData"); // const watch = require('node-watch')
 
+let libPath = path.resolve(upath, 'library');
+
 const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
 
-let libPath = path.resolve(upath, 'library');
+PouchDB.plugin(__webpack_require__(/*! pouchdb-find */ "pouchdb-find"));
 let pouch = new PouchDB(libPath);
+pouch.createIndex({
+  index: {
+    fields: ['fpath', 'idx']
+  }
+});
 let current, info;
+let limit = 20;
+let uf = '\ufff0';
 
 window.onbeforeunload = function (ev) {
   // log('SAVE:')
@@ -277,6 +286,48 @@ function getBook() {
   }).catch(function (err) {
     log('getBookErr', err);
   });
+} // отдельные pars по
+
+
+function getText() {
+  log('GB info', info);
+  log('GB cur', current); // let parid = ['text', info.book.author, info.book.title, fpath, idx, nic].join('-')
+
+  let start = current.pos || 20; // let finish = start + 20
+  // let startstr = [start, ''].join('-')
+
+  let startstr = '20-nic'; // let endstr = [start+limit, '\ufff0'].join('-')
+  // let endstr = [40, '\ufff0'].join('-')
+
+  let endstr = '40-nic\ufff0';
+  log('S1', startstr);
+  log('S2', endstr);
+  let startkey = ['text', info.book.author, info.book.title, current.fpath, startstr].join('-');
+  let endkey = ['text', info.book.author, info.book.title, current.fpath, endstr].join('-');
+  let opts = {
+    include_docs: true,
+    startkey: startkey,
+    endkey: endkey
+  };
+  let selector = {
+    fpath: 'Dialogues/Parmenides',
+    idx: {
+      $gte: 20,
+      $lt: 40
+    }
+  };
+  pouch.find({
+    selector: selector
+  }) // sort: ['idx'], , limit: 20
+  .then(function (res) {
+    log('FIND', res);
+  }); // pouch.allDocs(opts).then(function (result) {
+  //   let texts = result.rows.map(row=> { return row.doc})
+  //   log('GBTxs', texts)
+  //   // parseBook(current, info, texts)
+  // }).catch(function (err) {
+  //   log('getBookErr', err);
+  // })
 }
 
 function parseLib(infos) {
@@ -329,7 +380,8 @@ function navigate(navpath) {
   log('HSTATES', hstates);
   log('Navigate:', current);
   let sec = current.section;
-  if (sec == 'lib') getLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook();else if (sec == 'search') parseQuery();else showSection(sec);
+  if (sec == 'lib') getLib();else if (sec == 'title') getTitle(); // else if (sec == 'book') getBook()
+  else if (sec == 'book') getText();else if (sec == 'search') parseQuery();else showSection(sec);
 }
 Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   // log('EV', ev.which, hstate, hstates)
@@ -515,8 +567,9 @@ function getDir(current) {
   if (!bpath) return;
   Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
     if (!book) return;
-    log('INFO::', book.info);
-    Promise.all([pushInfo(book.info), pushTexts(book.texts)]).then(function (res) {
+    log('DIR-INFO::', book.info);
+    Promise.all([pushInfo(book.info), // pushTexts(book.texts),
+    pushTexts(book.pars)]).then(function (res) {
       log('PUSH ALL RES', res);
       if (current.section) info = book.info, navigate(current);else navigate({
         section: 'lib'
@@ -1288,12 +1341,12 @@ function parseDir(bookpath) {
     return fn != ipath;
   }); // log('FNS', fns.length)
 
-  let tpath = ['text', info.book.author, info.book.title].join('-'); // info.tids = []
-
+  let tpath = ['text', info.book.author, info.book.title].join('-');
   let texts = [];
   let coms = [];
   let pars = [];
   let map = {};
+  info.sections = [];
   fns.forEach(fn => {
     let comment = false;
     let com = fn.split('-')[1];
@@ -1314,14 +1367,11 @@ function parseDir(bookpath) {
     let fparts = fn.split('/');
     let fname = fparts.pop();
     let fpath = fparts.join('/');
+    if (!fpath) fpath = info.book.title;
+    info.sections.push(fpath);
     let lang;
-    if (auth) lang = auth.lang; // let id = md5([info.book.author, info.book.title, fpath].join(''))
-    // let textid = ['text', fpath, fname].join('-')
-    // let textid = ['text', fpath, nic].join('-')
-
-    let textid = ['text', info.book.author, info.book.title, fpath, nic].join('-'); // let tpath = ['text', fpath].join('-')
-    // info.tids.push(textid)
-
+    if (auth) lang = auth.lang;
+    let textid = ['text', info.book.author, info.book.title, fpath, nic].join('-');
     let pane = {
       _id: textid,
       lang: lang,
@@ -1333,20 +1383,33 @@ function parseDir(bookpath) {
     if (auth.author) pane.author = true; // , info.book.author = auth.name
 
     if (comment) coms.push(pane);else texts.push(pane);
-    if (auth.author) bookWFMap(map, rows, textid);
-  });
-  info.tpath = ['text', info.book.author, info.book.title].join('-');
-  let id = ['info', bpath].join('-');
+    rows.forEach((row, idx) => {
+      let parid = ['text', info.book.author, info.book.title, fpath, idx, 'nic', nic].join('-'); // let secid = ['text', info.book.author, info.book.title, fpath].join('-')
+
+      let par = {
+        _id: parid,
+        idx: idx,
+        lang: lang,
+        nic: nic,
+        fpath: fpath,
+        text: row
+      };
+      if (auth.author) par.author = true;
+      if (comment) coms.push(par);else pars.push(par);
+    }); // if (auth.author) bookWFMap(map, rows, textid)
+  }); // info.tpath = ['text', info.book.author, info.book.title].join('-')
+
+  let id = ['info', tpath].join('-');
   info._id = id;
-  info.tree = tree;
-  info.bpath = bpath;
+  info.tree = tree; // info.bpath = bpath
+
   let book = {
     bkey: bpath,
     info: info,
     texts: texts,
     coms: coms,
-    map: map // , bpath: bpath
-
+    map: map,
+    pars: pars
   };
   log('BOOK FROM GET', book);
   return book;
@@ -1768,6 +1831,17 @@ module.exports = require("path");
 /***/ (function(module, exports) {
 
 module.exports = require("pouchdb");
+
+/***/ }),
+
+/***/ "pouchdb-find":
+/*!*******************************!*\
+  !*** external "pouchdb-find" ***!
+  \*******************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("pouchdb-find");
 
 /***/ }),
 
