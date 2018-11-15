@@ -2,7 +2,7 @@ import _ from 'lodash'
 import Split from 'split.js'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
 import tree from './tree';
-import {navigate} from '../app';
+import { navigate } from '../app';
 
 const fse = require('fs-extra')
 const path = require('path')
@@ -15,6 +15,7 @@ const store = new Store()
 const clipboard = require('electron-clipboard-extended')
 
 let current, info
+let limit = 20
 let apars = []
 let tpars = []
 
@@ -53,6 +54,8 @@ function scrollPanes(ev) {
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
     let start = qs('#source > p').length
     log('___START', start)
+    log('___STARTc', current)
+
     // s_etChunk(start, book)
   }
 }
@@ -80,8 +83,8 @@ function keyScroll(ev) {
   let book = window.book
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
     let start = qs('#source > p').length
-    // log('___KEY START', start)
-    // ошибка при прокрутке всегда
+    log('___KEY START', start)
+    // ошибка при прокрутке всегда - реагирует на любое нажатие
     // s_etChunk(start, book)
   }
 }
@@ -192,7 +195,7 @@ function setBookText_(texts, start) {
 }
 
 function setChunk(pars) {
-  let limit = 20
+  // let limit = 20
   // let author = apars[0]
   // let anic = author.nic
   let nic = current.nic

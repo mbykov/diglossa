@@ -179,6 +179,7 @@ function parseDir(bookpath) {
   let id = ['info', tpath].join('-')
   info._id = id
   info.tree = tree
+  info.info = true
   // info.bpath = bpath
 
   let book = {bkey: bpath, info: info, texts: texts, coms: coms, map: map, pars: pars}

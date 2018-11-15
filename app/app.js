@@ -106,9 +106,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./lib/utils */ "./src/lib/utils.js");
 /* harmony import */ var _lib_book__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/book */ "./src/lib/book.js");
 /* harmony import */ var _lib_getfiles__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./lib/getfiles */ "./src/lib/getfiles.js");
+/* harmony import */ var _lib_pouch__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./lib/pouch */ "./src/lib/pouch.js");
 //
 // import "./stylesheets/app.css";
 // import "./stylesheets/main.css";
+
 
 
 
@@ -155,8 +157,8 @@ pouch.createIndex({
     fields: ['fpath', 'idx']
   }
 });
-let current, info;
-let limit = 20;
+let current, info; // let limit = 20
+
 let uf = '\ufff0';
 
 window.onbeforeunload = function (ev) {
@@ -232,7 +234,7 @@ function getState() {
   });
 }
 
-function getLib() {
+function getLib_() {
   let options = {
     include_docs: true,
     startkey: 'info',
@@ -247,6 +249,20 @@ function getLib() {
     parseLib(docs);
   }).catch(function (err) {
     log('getLibErr:', err);
+  });
+}
+
+function goLib() {
+  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getLib"])().then(function (res) {
+    log('GETLIB', res);
+    log('GETLIB', res.docs, lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs));
+
+    let infos = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs);
+
+    hstate = 0;
+    parseLib(infos);
+  }).catch(function (err) {
+    log('GET LIB ERR:', err);
   });
 }
 
@@ -267,69 +283,39 @@ function getTitle() {
   }).catch(function (err) {
     log('getTitleErr', err);
   });
-}
+} // function getBook() {
+//   // log('GB info', info)
+//   let endkey = [info.tpath, '\ufff0'].join('')
+//   let opts = { include_docs: true, startkey: info.tpath, endkey: endkey }
+//   pouch.allDocs(opts).then(function (result) {
+//     let texts = result.rows.map(row=> { return row.doc})
+//     // log('GBTxs', texts.length)
+//     parseBook(current, info, texts)
+//   }).catch(function (err) {
+//     log('getBookErr', err);
+//   })
+// }
+// function getText_(start, end) {
+//   log('GB info', info)
+//   log('GB cur', current)
+//   if (!start && !end) start = 0, end = start+limit
+//   let selector = {fpath: 'Dialogues/Parmenides', idx: {$gte: start, $lt: end}}
+//   pouch.find({selector: selector}) // sort: ['idx'], , limit: 20
+//     .then(function(res) {
+//       if (!res.docs) return
+//       log('DOCS', res.docs)
+//       parseBook(current, info, res.docs)
+//     })
+// }
+
 
 function getBook() {
-  // log('GB info', info)
-  let endkey = [info.tpath, '\ufff0'].join('');
-  let opts = {
-    include_docs: true,
-    startkey: info.tpath,
-    endkey: endkey
-  };
-  pouch.allDocs(opts).then(function (result) {
-    let texts = result.rows.map(row => {
-      return row.doc;
-    }); // log('GBTxs', texts.length)
-
-    Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, info, texts);
-  }).catch(function (err) {
-    log('getBookErr', err);
+  let start = 0;
+  let end = 20;
+  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getText"])(start, end).then(function (res) {
+    let pars = res.docs;
+    Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, info, pars);
   });
-} // отдельные pars по
-
-
-function getText() {
-  log('GB info', info);
-  log('GB cur', current); // let parid = ['text', info.book.author, info.book.title, fpath, idx, nic].join('-')
-
-  let start = current.pos || 20; // let finish = start + 20
-  // let startstr = [start, ''].join('-')
-
-  let startstr = '20-nic'; // let endstr = [start+limit, '\ufff0'].join('-')
-  // let endstr = [40, '\ufff0'].join('-')
-
-  let endstr = '40-nic\ufff0';
-  log('S1', startstr);
-  log('S2', endstr);
-  let startkey = ['text', info.book.author, info.book.title, current.fpath, startstr].join('-');
-  let endkey = ['text', info.book.author, info.book.title, current.fpath, endstr].join('-');
-  let opts = {
-    include_docs: true,
-    startkey: startkey,
-    endkey: endkey
-  };
-  let selector = {
-    fpath: 'Dialogues/Parmenides',
-    idx: {
-      $gte: 20,
-      $lt: 40
-    }
-  };
-  pouch.find({
-    selector: selector
-  }) // sort: ['idx'], , limit: 20
-  .then(function (res) {
-    if (!res.docs) return;
-    log('DOCS', res.docs);
-    Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, info, res.docs);
-  }); // pouch.allDocs(opts).then(function (result) {
-  //   let texts = result.rows.map(row=> { return row.doc})
-  //   log('GBTxs', texts)
-  //   // parseBook(current, info, texts)
-  // }).catch(function (err) {
-  //   log('getBookErr', err);
-  // })
 }
 
 function parseLib(infos) {
@@ -382,8 +368,8 @@ function navigate(navpath) {
   log('HSTATES', hstates);
   log('Navigate:', current);
   let sec = current.section;
-  if (sec == 'lib') getLib();else if (sec == 'title') getTitle(); // else if (sec == 'book') getBook()
-  else if (sec == 'book') getText();else if (sec == 'search') parseQuery();else showSection(sec);
+  if (sec == 'lib') goLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook(); // else if (sec == 'book') getText()
+  else if (sec == 'search') parseQuery();else showSection(sec);
 }
 Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   // log('EV', ev.which, hstate, hstates)
@@ -664,22 +650,15 @@ function pushMap(info) {
 
     return pouch.bulkDocs(cleandocs);
   });
-}
+} // function setSearch_(bkey, texts) {
+//   texts.forEach(text => {
+//     if (!text.author) return
+//     let id = [bkey, text.fpath].join('/')
+//     let panee = { id: id, lang: text.lang, nic: text.nic, fpath: text.fpath, text: _.flatten(text.rows)[0] }
+//     // lunr.addDoc(panee)
+//   })
+// }
 
-function setSearch_(bkey, texts) {
-  texts.forEach(text => {
-    if (!text.author) return;
-    let id = [bkey, text.fpath].join('/');
-    let panee = {
-      id: id,
-      lang: text.lang,
-      nic: text.nic,
-      fpath: text.fpath,
-      text: lodash__WEBPACK_IMPORTED_MODULE_1___default.a.flatten(text.rows)[0] // lunr.addDoc(panee)
-
-    };
-  });
-}
 
 const historyMode_ = event => {
   const checkArrow = element => {
@@ -730,7 +709,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
+ // import { getText } from './pouch';
 
 const fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
@@ -747,6 +726,7 @@ const store = new Store(); // const Apstore = require('./apstore')
 const clipboard = __webpack_require__(/*! electron-clipboard-extended */ "electron-clipboard-extended");
 
 let current, info;
+let limit = 20;
 let apars = [];
 let tpars = [];
 function twoPages() {
@@ -780,7 +760,8 @@ function scrollPanes(ev) {
 
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
     let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length;
-    log('___START', start); // s_etChunk(start, book)
+    log('___START', start);
+    log('___STARTc', current); // s_etChunk(start, book)
   }
 }
 
@@ -807,8 +788,8 @@ function keyScroll(ev) {
   let book = window.book;
 
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
-    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length; // log('___KEY START', start)
-    // ошибка при прокрутке всегда
+    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length;
+    log('___KEY START', start); // ошибка при прокрутке всегда - реагирует на любое нажатие
     // s_etChunk(start, book)
   }
 }
@@ -860,7 +841,19 @@ function goBookEvent(ev) {
   current.fpath = fpath;
   current.section = 'book';
   Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(current);
-}
+} // function getText(start, end) {
+//   log('GB info', info)
+//   log('GB cur', current)
+//   if (!start && !end) start = 0, end = start+limit
+//   let selector = {fpath: 'Dialogues/Parmenides', idx: {$gte: start, $lt: end}}
+//   pouch.find({selector: selector}) // sort: ['idx'], , limit: 20
+//     .then(function(res) {
+//       if (!res.docs) return
+//       log('DOCS', res.docs)
+//       parseBook(current, info, res.docs)
+//     })
+// }
+
 
 function parseBook(bookcurrent, bookinfo, pars) {
   info = bookinfo;
@@ -928,9 +921,9 @@ function setBookText_(texts, start) {
 }
 
 function setChunk(pars) {
-  let limit = 20; // let author = apars[0]
+  // let limit = 20
+  // let author = apars[0]
   // let anic = author.nic
-
   let nic = current.nic;
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
   let rePunct = new RegExp(punct, 'g');
@@ -1407,7 +1400,8 @@ function parseDir(bookpath) {
 
   let id = ['info', tpath].join('-');
   info._id = id;
-  info.tree = tree; // info.bpath = bpath
+  info.tree = tree;
+  info.info = true; // info.bpath = bpath
 
   let book = {
     bkey: bpath,
@@ -1469,6 +1463,72 @@ function parseInfo(ipath) {
 function done(err) {
   if (err) throw err;
   console.log('successfully added documents');
+}
+
+/***/ }),
+
+/***/ "./src/lib/pouch.js":
+/*!**************************!*\
+  !*** ./src/lib/pouch.js ***!
+  \**************************/
+/*! exports provided: getLib, getText */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib", function() { return getLib; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getText", function() { return getText; });
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! electron */ "electron");
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "lodash");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_1__);
+//
+
+
+
+const path = __webpack_require__(/*! path */ "path");
+
+const log = console.log;
+const app = electron__WEBPACK_IMPORTED_MODULE_0__["remote"].app;
+const apath = app.getAppPath();
+let upath = app.getPath("userData");
+let libPath = path.resolve(upath, 'library');
+
+const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
+
+PouchDB.plugin(__webpack_require__(/*! pouchdb-find */ "pouchdb-find"));
+let pouch = new PouchDB(libPath);
+pouch.createIndex({
+  index: {
+    fields: ['fpath', 'idx']
+  }
+});
+pouch.createIndex({
+  index: {
+    fields: ['info']
+  }
+});
+let limit = 20;
+function getLib() {
+  let selector = {
+    info: true
+  };
+  return pouch.find({
+    selector: selector
+  });
+}
+function getText(start, end) {
+  if (!start && !end) start = 0, end = start + limit;
+  let selector = {
+    fpath: 'Dialogues/Parmenides',
+    idx: {
+      $gte: start,
+      $lt: end
+    }
+  };
+  return pouch.find({
+    selector: selector
+  }); // sort: ['idx'], , limit: 20
 }
 
 /***/ }),

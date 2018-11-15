@@ -13,6 +13,8 @@ import { q, qs, empty, create, remove, span, p, div, enclitic } from './lib/util
 import { twoPages, parseTitle, parseBook } from './lib/book'
 import { openODS, openDir } from './lib/getfiles'
 
+import { getLib, getText } from './lib/pouch';
+
 const Mousetrap = require('mousetrap')
 let fse = require('fs-extra')
 const log = console.log
@@ -43,7 +45,7 @@ pouch.createIndex({
 
 
 let current, info
-let limit = 20
+// let limit = 20
 let uf = '\ufff0'
 
 window.onbeforeunload = function (ev) {
@@ -109,21 +111,17 @@ function getState() {
   })
 }
 
-
-function getLib() {
-  let options = {
-    include_docs: true,
-    startkey: 'info',
-    endkey: 'info\ufff0'
-  }
-  pouch.allDocs(options).then(function (result) {
-    let docs = result.rows.map(row=> { return row.doc})
-    log('GETLIB', docs)
-    hstate = 0
-    parseLib(docs)
-  }).catch(function (err) {
-    log('getLibErr:', err);
-  })
+function goLib() {
+  getLib()
+    .then(function(res) {
+      log('GETLIB', res)
+      log('GETLIB', res.docs, _.compact(res.docs))
+      let infos = _.compact(res.docs)
+      hstate = 0
+      parseLib(infos)
+    }).catch(function (err) {
+      log('GET LIB ERR:', err);
+    })
 }
 
 function getTitle() {
@@ -143,52 +141,42 @@ function getTitle() {
   })
 }
 
+// function getBook() {
+//   // log('GB info', info)
+//   let endkey = [info.tpath, '\ufff0'].join('')
+//   let opts = { include_docs: true, startkey: info.tpath, endkey: endkey }
+//   pouch.allDocs(opts).then(function (result) {
+//     let texts = result.rows.map(row=> { return row.doc})
+//     // log('GBTxs', texts.length)
+//     parseBook(current, info, texts)
+//   }).catch(function (err) {
+//     log('getBookErr', err);
+//   })
+// }
+
+// function getText_(start, end) {
+//   log('GB info', info)
+//   log('GB cur', current)
+//   if (!start && !end) start = 0, end = start+limit
+
+//   let selector = {fpath: 'Dialogues/Parmenides', idx: {$gte: start, $lt: end}}
+//   pouch.find({selector: selector}) // sort: ['idx'], , limit: 20
+//     .then(function(res) {
+//       if (!res.docs) return
+//       log('DOCS', res.docs)
+//       parseBook(current, info, res.docs)
+//     })
+// }
+
 function getBook() {
-  // log('GB info', info)
-  let endkey = [info.tpath, '\ufff0'].join('')
-  let opts = { include_docs: true, startkey: info.tpath, endkey: endkey }
-  pouch.allDocs(opts).then(function (result) {
-    let texts = result.rows.map(row=> { return row.doc})
-    // log('GBTxs', texts.length)
-    parseBook(current, info, texts)
-  }).catch(function (err) {
-    log('getBookErr', err);
-  })
-}
-
-// отдельные pars по
-function getText() {
-  log('GB info', info)
-  log('GB cur', current)
-  // let parid = ['text', info.book.author, info.book.title, fpath, idx, nic].join('-')
-  let start = current.pos || 20
-  // let finish = start + 20
-  // let startstr = [start, ''].join('-')
-  let startstr = '20-nic'
-  // let endstr = [start+limit, '\ufff0'].join('-')
-  // let endstr = [40, '\ufff0'].join('-')
-  let endstr = '40-nic\ufff0'
-  log('S1', startstr)
-  log('S2', endstr)
-  let startkey =  ['text', info.book.author, info.book.title, current.fpath, startstr].join('-')
-  let endkey =  ['text', info.book.author, info.book.title, current.fpath, endstr].join('-')
-  let opts = { include_docs: true, startkey: startkey, endkey: endkey }
-
-  let selector = {fpath: 'Dialogues/Parmenides', idx: {$gte: 20, $lt: 40}}
-  pouch.find({selector: selector}) // sort: ['idx'], , limit: 20
+  let start = 0
+  let end = 20
+  getText(start, end)
     .then(function(res) {
-      if (!res.docs) return
-      log('DOCS', res.docs)
-      parseBook(current, info, res.docs)
+      let pars = res.docs
+      parseBook(current, info, pars)
     })
 
-  // pouch.allDocs(opts).then(function (result) {
-  //   let texts = result.rows.map(row=> { return row.doc})
-  //   log('GBTxs', texts)
-  //   // parseBook(current, info, texts)
-  // }).catch(function (err) {
-  //   log('getBookErr', err);
-  // })
 }
 
 
@@ -240,10 +228,10 @@ export function navigate(navpath) {
   log('Navigate:', current)
 
   let sec = current.section
-  if (sec == 'lib') getLib()
+  if (sec == 'lib') goLib()
   else if (sec == 'title') getTitle()
-  // else if (sec == 'book') getBook()
-  else if (sec == 'book') getText()
+  else if (sec == 'book') getBook()
+  // else if (sec == 'book') getText()
   else if (sec == 'search') parseQuery()
   else showSection(sec)
 
@@ -502,14 +490,14 @@ function pushMap(info) {
 }
 
 
-function setSearch_(bkey, texts) {
-  texts.forEach(text => {
-    if (!text.author) return
-    let id = [bkey, text.fpath].join('/')
-    let panee = { id: id, lang: text.lang, nic: text.nic, fpath: text.fpath, text: _.flatten(text.rows)[0] }
-    // lunr.addDoc(panee)
-  })
-}
+// function setSearch_(bkey, texts) {
+//   texts.forEach(text => {
+//     if (!text.author) return
+//     let id = [bkey, text.fpath].join('/')
+//     let panee = { id: id, lang: text.lang, nic: text.nic, fpath: text.fpath, text: _.flatten(text.rows)[0] }
+//     // lunr.addDoc(panee)
+//   })
+// }
 
 const historyMode_ = event => {
   const checkArrow = element => {
