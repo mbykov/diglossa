@@ -221,7 +221,7 @@ function getState() {
     log('INIT CURRENT:', current);
     if (current.section == 'lib') navigate({
       section: 'lib'
-    });else if (current.section == 'search') parseQuery();else getDir(current);
+    });else if (current.section == 'search') parseQuery();else getDir();
   }).catch(function (err) {
     pouch.put({
       _id: '_local/current',
@@ -234,44 +234,23 @@ function getState() {
   });
 }
 
-function getLib_() {
-  let options = {
-    include_docs: true,
-    startkey: 'info',
-    endkey: 'info\ufff0'
-  };
-  pouch.allDocs(options).then(function (result) {
-    let docs = result.rows.map(row => {
+function goLib() {
+  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getLib"])().then(function (result) {
+    let infos = result.rows.map(row => {
       return row.doc;
     });
-    log('GETLIB', docs);
-    hstate = 0;
-    parseLib(docs);
-  }).catch(function (err) {
-    log('getLibErr:', err);
-  });
-}
-
-function goLib() {
-  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getLib"])().then(function (res) {
-    log('GETLIB', res);
-    log('GETLIB', res.docs, lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs));
-
-    let infos = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs);
-
-    hstate = 0;
+    log('INFOS', infos);
     parseLib(infos);
   }).catch(function (err) {
-    log('GET LIB ERR:', err);
+    log('getLibErr', err);
   });
 }
 
-function getTitle() {
+function getTitle_() {
   // log('getTitle cur:', current)
   let options = {
     include_docs: true,
-    // key: navpath.book_id
-    key: current.book_id
+    key: current.info_id
   };
   pouch.allDocs(options).then(function (result) {
     let docs = result.rows.map(row => {
@@ -279,7 +258,19 @@ function getTitle() {
     }); // log('GETTITLEINFO', docs)
 
     info = docs[0];
+    current.bpath = info.bpath;
     Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])(docs[0], current);
+  }).catch(function (err) {
+    log('getTitleErr', err);
+  });
+}
+
+function getTitle() {
+  // log('getTitle cur:', current)
+  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getInfo"])(current).then(function (curinfo) {
+    info = curinfo;
+    current.bpath = info.bpath;
+    Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])(info, current);
   }).catch(function (err) {
     log('getTitleErr', err);
   });
@@ -295,7 +286,7 @@ function getTitle() {
 //     log('getBookErr', err);
 //   })
 // }
-// function getText_(start, end) {
+// function getT ext_(start, end) {
 //   log('GB info', info)
 //   log('GB cur', current)
 //   if (!start && !end) start = 0, end = start+limit
@@ -312,7 +303,7 @@ function getTitle() {
 function getBook() {
   let start = 0;
   let end = 20;
-  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getText"])(start, end).then(function (res) {
+  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getText"])(current.fpath, start, end).then(function (res) {
     let pars = res.docs;
     Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, info, pars);
   });
@@ -327,7 +318,7 @@ function parseLib(infos) {
   if (!infos.length) oul.textContent = 'no book in lib';
   infos.forEach(info => {
     let ostr = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["create"])('li', 'libauth');
-    ostr.book_id = info._id;
+    ostr.info_id = info._id;
     oul.appendChild(ostr);
     let author = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])(info.book.author);
     let title = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])(info.book.title);
@@ -341,10 +332,10 @@ function parseLib(infos) {
 
 function goTitleEvent(ev) {
   if (ev.target.parentNode.nodeName != 'LI') return;
-  let book_id = ev.target.parentNode.book_id;
+  let info_id = ev.target.parentNode.info_id;
   navigate({
     section: 'title',
-    book_id: book_id
+    info_id: info_id
   });
 }
 
@@ -541,23 +532,19 @@ function showSection(name) {
 function getFNS(fns) {
   if (!fns) return;
   let bpath = fns[0]; // log('NAV BEFORE GET', current)
+  // let info_id = ['info', bpath].join('-')
+  // let cur = {info_id: info_id}
 
-  let book_id = ['info', bpath].join('-');
-  let cur = {
-    book_id: book_id
-  };
-  getDir(cur);
+  getDir(bpath);
 }
 
-function getDir(current) {
-  log('GETDIR', current);
-  let bpath = current.book_id.split('-')[1];
-  if (!bpath) return;
+function getDir(bpath) {
+  log('getDIR-bpath', bpath);
+  if (!bpath) bpath = current.bpath;
   Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
     if (!book) return;
     log('DIR-INFO::', book.info);
-    Promise.all([pushInfo(book.info), // pushTexts(book.texts),
-    pushTexts(book.pars)]).then(function (res) {
+    Promise.all([pushInfo(book.info), pushTexts(book.pars)]).then(function (res) {
       log('PUSH ALL RES', res);
       if (current.section) info = book.info, navigate(current);else navigate({
         section: 'lib'
@@ -705,11 +692,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
 /* harmony import */ var _tree__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./tree */ "./src/lib/tree.js");
 /* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../app */ "./src/app.js");
+/* harmony import */ var _pouch__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./pouch */ "./src/lib/pouch.js");
 
 
 
 
- // import { getText } from './pouch';
+
+
 
 const fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
@@ -726,9 +715,9 @@ const store = new Store(); // const Apstore = require('./apstore')
 const clipboard = __webpack_require__(/*! electron-clipboard-extended */ "electron-clipboard-extended");
 
 let current, info;
-let limit = 20;
-let apars = [];
-let tpars = [];
+let limit = 20; // let apars = []
+// let tpars = []
+
 function twoPages() {
   var sizes = store.get('split-sizes');
   if (sizes) sizes = JSON.parse(sizes);else sizes = [50, 50];
@@ -760,8 +749,14 @@ function scrollPanes(ev) {
 
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
     let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length;
+    let end = start + limit;
     log('___START', start);
-    log('___STARTc', current); // s_etChunk(start, book)
+    log('___Scur', current);
+    log('___Sinfo', info);
+    log('___Sstart', start);
+    Object(_pouch__WEBPACK_IMPORTED_MODULE_5__["getText"])(current.fpath, start, end).then(function (res) {
+      setChunk(res.docs);
+    });
   }
 }
 
@@ -788,8 +783,8 @@ function keyScroll(ev) {
   let book = window.book;
 
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
-    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length;
-    log('___KEY START', start); // ошибка при прокрутке всегда - реагирует на любое нажатие
+    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length; // log('___KEY START', start)
+    // ошибка при прокрутке всегда - реагирует на любое нажатие
     // s_etChunk(start, book)
   }
 }
@@ -841,24 +836,12 @@ function goBookEvent(ev) {
   current.fpath = fpath;
   current.section = 'book';
   Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(current);
-} // function getText(start, end) {
-//   log('GB info', info)
-//   log('GB cur', current)
-//   if (!start && !end) start = 0, end = start+limit
-//   let selector = {fpath: 'Dialogues/Parmenides', idx: {$gte: start, $lt: end}}
-//   pouch.find({selector: selector}) // sort: ['idx'], , limit: 20
-//     .then(function(res) {
-//       if (!res.docs) return
-//       log('DOCS', res.docs)
-//       parseBook(current, info, res.docs)
-//     })
-// }
-
+}
 
 function parseBook(bookcurrent, bookinfo, pars) {
   info = bookinfo;
-  current = bookcurrent; // log('parseBook_ info', info)
-  // log('parseBook_ cur', current)
+  current = bookcurrent;
+  log('parseBook_ info', info); // log('parseBook_ cur', current)
 
   if (!pars.length) return;
   window.split.setSizes([50, 50]);
@@ -875,8 +858,8 @@ function parseBook(bookcurrent, bookinfo, pars) {
   let nic = current.nic;
   if (!nic) nic = cnics[0];
   if (!cnics.includes(nic)) nic = cnics[0];
-  current.nic = nic;
-  let start = 0; // setBookText(pars, start)
+  current.nic = nic; // let start = 0
+  // setBookText(pars, start)
 
   setChunk(pars);
   createRightHeader(cnics);
@@ -921,21 +904,21 @@ function setBookText_(texts, start) {
 }
 
 function setChunk(pars) {
-  // let limit = 20
-  // let author = apars[0]
-  // let anic = author.nic
   let nic = current.nic;
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
   let rePunct = new RegExp(punct, 'g');
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
-  apars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
+
+  let apars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
     return par.author;
-  });
-  log('AP', apars);
-  tpars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
+  }); // log('AP', apars)
+
+
+  let tpars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
     return !par.author;
   });
+
   apars.forEach((apar, idx) => {
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])(apar.text);
     oleft.setAttribute('idx', apar.idx);
@@ -1323,8 +1306,10 @@ function parseDir(bookpath) {
   let bpath = path.resolve(__dirname, bookpath);
   let dname = bookpath.split('/').slice(-1)[0]; // + '/'
 
-  const dtree = dirTree(bpath); // log('=DTREE', dtree)
-
+  const dtree = dirTree(bpath);
+  log('=BPATH', bpath, bookpath);
+  log('=DTREE', dtree);
+  if (!dtree) return;
   let fns = [];
   let tree = {};
   walk(fns, dname, dtree, tree); // log('=TREE', tree)
@@ -1396,13 +1381,12 @@ function parseDir(bookpath) {
       if (auth.author) par.author = true;
       if (comment) coms.push(par);else pars.push(par);
     }); // if (auth.author) bookWFMap(map, rows, textid)
-  }); // info.tpath = ['text', info.book.author, info.book.title].join('-')
-
-  let id = ['info', tpath].join('-');
+  });
+  let id = ['info', info.book.author, info.book.title].join('-');
   info._id = id;
   info.tree = tree;
-  info.info = true; // info.bpath = bpath
-
+  info.info = true;
+  info.bpath = bpath;
   let book = {
     bkey: bpath,
     info: info,
@@ -1471,11 +1455,13 @@ function done(err) {
 /*!**************************!*\
   !*** ./src/lib/pouch.js ***!
   \**************************/
-/*! exports provided: getLib, getText */
+/*! exports provided: getLib_, getInfo, getLib, getText */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib_", function() { return getLib_; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getInfo", function() { return getInfo; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib", function() { return getLib; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getText", function() { return getText; });
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! electron */ "electron");
@@ -1502,14 +1488,12 @@ pouch.createIndex({
   index: {
     fields: ['fpath', 'idx']
   }
-});
-pouch.createIndex({
-  index: {
-    fields: ['info']
-  }
-});
+}); // pouch.createIndex({
+//   index: {fields: ['info']},
+// });
+
 let limit = 20;
-function getLib() {
+function getLib_() {
   let selector = {
     info: true
   };
@@ -1517,10 +1501,21 @@ function getLib() {
     selector: selector
   });
 }
-function getText(start, end) {
+function getInfo(current) {
+  return pouch.get(current.info_id);
+}
+function getLib() {
+  let options = {
+    include_docs: true,
+    startkey: 'info',
+    endkey: 'info\ufff0'
+  };
+  return pouch.allDocs(options);
+}
+function getText(fpath, start, end) {
   if (!start && !end) start = 0, end = start + limit;
   let selector = {
-    fpath: 'Dialogues/Parmenides',
+    fpath: fpath,
     idx: {
       $gte: start,
       $lt: end

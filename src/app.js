@@ -13,7 +13,7 @@ import { q, qs, empty, create, remove, span, p, div, enclitic } from './lib/util
 import { twoPages, parseTitle, parseBook } from './lib/book'
 import { openODS, openDir } from './lib/getfiles'
 
-import { getLib, getText } from './lib/pouch';
+import { getInfo, getLib, getText } from './lib/pouch';
 
 const Mousetrap = require('mousetrap')
 let fse = require('fs-extra')
@@ -103,7 +103,7 @@ function getState() {
     log('INIT CURRENT:', current)
     if (current.section == 'lib') navigate({section: 'lib'})
     else if (current.section == 'search') parseQuery()
-    else getDir(current)
+    else getDir()
   }).catch(function (err) {
     pouch.put({ _id: '_local/current', section: 'lib'}).then(function() {
       navigate({section: 'lib'})
@@ -113,33 +113,44 @@ function getState() {
 
 function goLib() {
   getLib()
-    .then(function(res) {
-      log('GETLIB', res)
-      log('GETLIB', res.docs, _.compact(res.docs))
-      let infos = _.compact(res.docs)
-      hstate = 0
+    .then(function (result) {
+      let infos = result.rows.map(row=> { return row.doc})
+      log('INFOS', infos)
       parseLib(infos)
     }).catch(function (err) {
-      log('GET LIB ERR:', err);
+      log('getLibErr', err);
     })
 }
 
-function getTitle() {
+function getTitle_() {
   // log('getTitle cur:', current)
   let options = {
     include_docs: true,
-    // key: navpath.book_id
-    key: current.book_id
+    key: current.info_id
   }
   pouch.allDocs(options).then(function (result) {
     let docs = result.rows.map(row=> { return row.doc})
     // log('GETTITLEINFO', docs)
     info = docs[0]
+    current.bpath = info.bpath
     parseTitle(docs[0], current)
   }).catch(function (err) {
     log('getTitleErr', err);
   })
 }
+
+function getTitle() {
+  // log('getTitle cur:', current)
+  getInfo(current)
+    .then(function (curinfo) {
+      info = curinfo
+      current.bpath = info.bpath
+      parseTitle(info, current)
+    }).catch(function (err) {
+      log('getTitleErr', err);
+    })
+}
+
 
 // function getBook() {
 //   // log('GB info', info)
@@ -154,7 +165,7 @@ function getTitle() {
 //   })
 // }
 
-// function getText_(start, end) {
+// function getT ext_(start, end) {
 //   log('GB info', info)
 //   log('GB cur', current)
 //   if (!start && !end) start = 0, end = start+limit
@@ -171,12 +182,11 @@ function getTitle() {
 function getBook() {
   let start = 0
   let end = 20
-  getText(start, end)
+  getText(current.fpath, start, end)
     .then(function(res) {
       let pars = res.docs
       parseBook(current, info, pars)
     })
-
 }
 
 
@@ -190,7 +200,7 @@ function parseLib(infos) {
   if (!infos.length) oul.textContent = 'no book in lib'
   infos.forEach(info => {
     let ostr = create('li', 'libauth')
-    ostr.book_id = info._id
+    ostr.info_id = info._id
     oul.appendChild(ostr)
     let author = span(info.book.author)
     let title = span(info.book.title)
@@ -204,8 +214,8 @@ function parseLib(infos) {
 
 function goTitleEvent(ev) {
   if (ev.target.parentNode.nodeName != 'LI') return
-  let book_id = ev.target.parentNode.book_id
-  navigate({section: 'title', book_id: book_id})
+  let info_id = ev.target.parentNode.info_id
+  navigate({section: 'title', info_id: info_id})
 }
 
 export function navigate(navpath) {
@@ -380,22 +390,20 @@ function getFNS(fns) {
   if (!fns) return
   let bpath = fns[0]
   // log('NAV BEFORE GET', current)
-  let book_id = ['info', bpath].join('-')
-  let cur = {book_id: book_id}
-  getDir(cur)
+  // let info_id = ['info', bpath].join('-')
+  // let cur = {info_id: info_id}
+  getDir(bpath)
 }
 
-function getDir(current) {
-  log('GETDIR', current)
-  let bpath = current.book_id.split('-')[1]
-  if (!bpath) return
+function getDir(bpath) {
+  log('getDIR-bpath', bpath)
+  if (!bpath) bpath = current.bpath
   openDir(bpath, (book) => {
     if (!book) return
     log('DIR-INFO::', book.info)
 
     Promise.all([
       pushInfo(book.info),
-      // pushTexts(book.texts),
       pushTexts(book.pars),
       // pushMap(book.info)
     ]).then(function(res) {

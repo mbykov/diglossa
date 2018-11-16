@@ -114,7 +114,9 @@ function parseDir(bookpath) {
   let bpath = path.resolve(__dirname, bookpath)
   let dname = bookpath.split('/').slice(-1)[0] // + '/'
   const dtree = dirTree(bpath)
-  // log('=DTREE', dtree)
+  log('=BPATH', bpath, bookpath)
+  log('=DTREE', dtree)
+  if (!dtree) return
   let fns = []
   let tree = {}
   walk(fns, dname, dtree, tree)
@@ -175,12 +177,11 @@ function parseDir(bookpath) {
 
     // if (auth.author) bookWFMap(map, rows, textid)
   })
-  // info.tpath = ['text', info.book.author, info.book.title].join('-')
-  let id = ['info', tpath].join('-')
+  let id = ['info', info.book.author, info.book.title].join('-')
   info._id = id
   info.tree = tree
   info.info = true
-  // info.bpath = bpath
+  info.bpath = bpath
 
   let book = {bkey: bpath, info: info, texts: texts, coms: coms, map: map, pars: pars}
   log('BOOK FROM GET', book)

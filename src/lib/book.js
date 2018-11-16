@@ -3,6 +3,7 @@ import Split from 'split.js'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
 import tree from './tree';
 import { navigate } from '../app';
+import { getText } from './pouch';
 
 const fse = require('fs-extra')
 const path = require('path')
@@ -16,8 +17,8 @@ const clipboard = require('electron-clipboard-extended')
 
 let current, info
 let limit = 20
-let apars = []
-let tpars = []
+// let apars = []
+// let tpars = []
 
 export function twoPages() {
   var sizes = store.get('split-sizes')
@@ -53,10 +54,15 @@ function scrollPanes(ev) {
   let book = oapp.book
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
     let start = qs('#source > p').length
+    let end = start + limit
     log('___START', start)
-    log('___STARTc', current)
-
-    // s_etChunk(start, book)
+    log('___Scur', current)
+    log('___Sinfo', info)
+    log('___Sstart', start)
+    getText(current.fpath, start, end)
+      .then(function(res) {
+        setChunk(res.docs)
+      })
   }
 }
 
@@ -83,7 +89,7 @@ function keyScroll(ev) {
   let book = window.book
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
     let start = qs('#source > p').length
-    log('___KEY START', start)
+    // log('___KEY START', start)
     // ошибка при прокрутке всегда - реагирует на любое нажатие
     // s_etChunk(start, book)
   }
@@ -143,7 +149,7 @@ function goBookEvent(ev) {
 export function parseBook(bookcurrent, bookinfo, pars) {
   info = bookinfo
   current = bookcurrent
-  // log('parseBook_ info', info)
+  log('parseBook_ info', info)
   // log('parseBook_ cur', current)
   if (!pars.length) return
   window.split.setSizes([50,50])
@@ -159,7 +165,7 @@ export function parseBook(bookcurrent, bookinfo, pars) {
   if (!cnics.includes(nic)) nic = cnics[0]
   current.nic = nic
 
-  let start = 0
+  // let start = 0
   // setBookText(pars, start)
   setChunk(pars)
   createRightHeader(cnics)
@@ -195,9 +201,6 @@ function setBookText_(texts, start) {
 }
 
 function setChunk(pars) {
-  // let limit = 20
-  // let author = apars[0]
-  // let anic = author.nic
   let nic = current.nic
 
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
@@ -205,9 +208,9 @@ function setChunk(pars) {
   let osource = q('#source')
   let otrns = q('#trns')
 
-  apars = _.filter(pars, par=> { return par.author})
-  log('AP', apars)
-  tpars = _.filter(pars, par=> { return !par.author})
+  let apars = _.filter(pars, par=> { return par.author})
+  // log('AP', apars)
+  let tpars = _.filter(pars, par=> { return !par.author})
   apars.forEach((apar, idx)=> {
     let oleft = p(apar.text)
     oleft.setAttribute('idx', apar.idx)
