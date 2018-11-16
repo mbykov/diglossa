@@ -160,16 +160,12 @@ let uf = '\ufff0';
 window.onbeforeunload = function (ev) {
   // log('SAVE:')
   libdb.get('_local/current').then(function (doc) {
-    // let current = window.navpath
     current._id = '_local/current';
     current._rev = doc._rev;
     libdb.put(current).then(function () {
-      // log('SEND:', current)
-      // ipcRenderer.send('state-saved', current)
       ev.returnValue = false;
     });
   }).catch(function (err) {
-    // log('SAVE ERR', err)
     libdb.put({
       _id: '_local/current',
       section: 'lib'
@@ -219,14 +215,20 @@ function getState() {
       section: 'lib'
     });else if (current.section == 'search') parseQuery();else getDir();
   }).catch(function (err) {
-    libdb.put({
-      _id: '_local/current',
-      section: 'lib'
-    }).then(function () {
-      navigate({
+    if (err.name === 'not_found') {
+      Promise.all([libdb.put({
+        _id: '_local/libstate',
+        psize: 0
+      }), libdb.put({
+        _id: '_local/current',
         section: 'lib'
+      })]).then(function () {
+        log('SET DEFAULT VALUES');
+        navigate({
+          section: 'lib'
+        });
       });
-    });
+    } else throw err;
   });
 }
 
@@ -242,25 +244,6 @@ function goLib() {
   });
 }
 
-function getTitle_() {
-  // log('getTitle cur:', current)
-  let options = {
-    include_docs: true,
-    key: current.info_id
-  };
-  libdb.allDocs(options).then(function (result) {
-    let docs = result.rows.map(row => {
-      return row.doc;
-    }); // log('GETTITLEINFO', docs)
-
-    info = docs[0];
-    current.bpath = info.bpath;
-    Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])(docs[0], current);
-  }).catch(function (err) {
-    log('getTitleErr', err);
-  });
-}
-
 function getTitle() {
   // log('getTitle cur:', current)
   Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getInfo"])(current).then(function (curinfo) {
@@ -270,35 +253,9 @@ function getTitle() {
   }).catch(function (err) {
     log('getTitleErr', err);
   });
-} // function getBook() {
-//   // log('GB info', info)
-//   let endkey = [info.tpath, '\ufff0'].join('')
-//   let opts = { include_docs: true, startkey: info.tpath, endkey: endkey }
-//   libdb.allDocs(opts).then(function (result) {
-//     let texts = result.rows.map(row=> { return row.doc})
-//     // log('GBTxs', texts.length)
-//     parseBook(current, info, texts)
-//   }).catch(function (err) {
-//     log('getBookErr', err);
-//   })
-// }
-// function getT ext_(start, end) {
-//   log('GB info', info)
-//   log('GB cur', current)
-//   if (!start && !end) start = 0, end = start+limit
-//   let selector = {fpath: 'Dialogues/Parmenides', idx: {$gte: start, $lt: end}}
-//   libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
-//     .then(function(res) {
-//       if (!res.docs) return
-//       log('DOCS', res.docs)
-//       parseBook(current, info, res.docs)
-//     })
-// }
-
+}
 
 function getBook() {
-  // let start = 0
-  // let end = 20
   Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getText"])(current.fpath).then(function (res) {
     // log('EXPLA', res)
     let pars = res.docs;
@@ -516,40 +473,6 @@ function showSection(name) {
   let secpath = path.resolve(apath, 'src/sections', [name, 'html'].join('.'));
   const section = fse.readFileSync(secpath);
   osource.innerHTML = section;
-} // let lunr = elasticlunr(function () {
-//   this.addField('nic')
-//   this.addField('lang')
-//   this.addField('fpath')
-//   this.addField('text')
-//   this.setRef('id')
-// })
-// унести в getFile, и грязно пока
-
-
-function getFNS(fns) {
-  if (!fns) return;
-  let bpath = fns[0]; // log('NAV BEFORE GET', current)
-  // let info_id = ['info', bpath].join('-')
-  // let cur = {info_id: info_id}
-
-  getDir(bpath);
-}
-
-function getDir(bpath) {
-  log('getDIR-bpath', bpath);
-  if (!bpath) bpath = current.bpath;
-  Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
-    if (!book) return;
-    log('DIR-INFO::', book.info);
-    Promise.all([pushInfo(book.info), pushTexts(book.pars)]).then(function (res) {
-      log('PUSH ALL RES', res);
-      if (current.section) info = book.info, navigate(current);else navigate({
-        section: 'lib'
-      }); // navigate({section: 'lib'})
-    }).catch(function (err) {
-      log('ALL RES ERR', err);
-    });
-  });
 }
 
 function pushInfo(ndoc) {
@@ -658,15 +581,48 @@ const historyMode_ = event => {
   };
 
   checkArrow(event.target);
-}; // document.addEventListener("click", historyMode, false)
-// не работает - почему?
-// function startWatcher(bpath) {
-//   watch(bpath, { recursive: true }, function(evt, name) {
-//     log('%s changed.', name);
-//     // navigate(current)
-//     navigate({section: 'lib'})
-//   })
-// }
+}; // унести в getFile, и грязно пока
+
+
+function getFNS(fns) {
+  if (!fns) return;
+  let bpath = fns[0];
+  getDir(bpath);
+}
+
+function getDir(bpath) {
+  log('getDIR-bpath', bpath);
+  if (!bpath) bpath = current.bpath;
+  Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
+    if (!book) return;
+    log('DIR-INFO::', book.info);
+    Promise.all([pushInfo(book.info), pushTexts(book.pars)]).then(function (res) {
+      log('PUSH ALL RES', res);
+      Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getDBState"])().then(function (libstate) {
+        log('____DBSTATE:', libstate);
+
+        if (libstate.psize != book.pars.length) {
+          libstate.psize = book.pars.length;
+          Promise.all([libdb.put(libstate), libdb.createIndex({
+            index: {
+              fields: ['fpath', 'idx']
+            },
+            name: 'fpathindex'
+          })]).then(function (doc) {
+            log('INDEX CREATED:', doc);
+          }).catch(function (err) {
+            log('INDEX-ERR:', err);
+          });
+        }
+      });
+      if (current.section) info = book.info, navigate(current);else navigate({
+        section: 'lib'
+      }); // navigate({section: 'lib'})
+    }).catch(function (err) {
+      log('ALL RES ERR', err);
+    });
+  });
+}
 
 /***/ }),
 
@@ -846,8 +802,8 @@ function goBookEvent(ev) {
 
 function parseBook(bookcurrent, bookinfo, pars) {
   info = bookinfo;
-  current = bookcurrent;
-  log('parseBook_ info', info); // log('parseBook_ cur', current)
+  current = bookcurrent; // log('parseBook_info', info)
+  // log('parseBook_ cur', current)
 
   if (!pars.length) return;
   window.split.setSizes([50, 50]);
@@ -1467,12 +1423,13 @@ function done(err) {
 /*!**************************!*\
   !*** ./src/lib/pouch.js ***!
   \**************************/
-/*! exports provided: getLib_, getInfo, getLib, getText */
+/*! exports provided: getDBState, setDBState, getInfo, getLib, getText */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib_", function() { return getLib_; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getDBState", function() { return getDBState; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "setDBState", function() { return setDBState; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getInfo", function() { return getInfo; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib", function() { return getLib; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getText", function() { return getText; });
@@ -1500,16 +1457,25 @@ libdb.createIndex({
   index: {
     fields: ['fpath', 'idx']
   },
-  name: 'myindex' // ddoc: 'mydesigndoc'
-
+  name: 'fpathindex'
 });
 let limit = 20;
-function getLib_() {
-  let selector = {
-    info: true
+function getDBState() {
+  return libdb.get('_local/libstate');
+}
+function setDBState(psize) {
+  let dbstate = {
+    psize: psize
   };
-  return libdb.find({
-    selector: selector
+  return libdb.get('_local/libstate').then(function (doc) {
+    log('DB-DOC:', doc);
+    dbstate._id = '_local/libstate';
+    if (doc) dbstate._rev = doc._rev;
+    return libdb.put(dbstate).then(function (res) {
+      log('DB-STATE:', res);
+    });
+  }).catch(function (err) {
+    log('DB-STATE-ERR:', err);
   });
 }
 function getInfo(current) {

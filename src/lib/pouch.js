@@ -15,16 +15,29 @@ PouchDB.plugin(require('pouchdb-find'))
 let libdb = new PouchDB(libPath)
 libdb.createIndex({
   index: {fields: ['fpath', 'idx']},
-  name: 'myindex'
-  // ddoc: 'mydesigndoc'
+  name: 'fpathindex'
 })
 
 
 let limit = 20
 
-export function getLib_() {
-  let selector = { info: true }
-  return libdb.find({ selector: selector })
+export function getDBState() {
+  return libdb.get('_local/libstate')
+}
+
+export function setDBState(psize) {
+  let dbstate = {psize: psize}
+  return libdb.get('_local/libstate')
+    .then(function(doc) {
+      log('DB-DOC:', doc)
+      dbstate._id = '_local/libstate'
+      if (doc) dbstate._rev = doc._rev
+      return libdb.put(dbstate).then(function(res) {
+        log('DB-STATE:', res)
+      })
+    }).catch(function (err) {
+      log('DB-STATE-ERR:', err)
+    })
 }
 
 export function getInfo(current) {

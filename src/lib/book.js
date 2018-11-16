@@ -158,7 +158,7 @@ function goBookEvent(ev) {
 export function parseBook(bookcurrent, bookinfo, pars) {
   info = bookinfo
   current = bookcurrent
-  log('parseBook_ info', info)
+  // log('parseBook_info', info)
   // log('parseBook_ cur', current)
   if (!pars.length) return
   window.split.setSizes([50,50])
