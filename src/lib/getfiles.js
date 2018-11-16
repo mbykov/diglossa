@@ -134,7 +134,7 @@ function parseDir(bookpath) {
   let texts = []
   let coms = []
   let pars = []
-  let map = {}
+  let map
   info.sections = []
   fns.forEach(fn => {
     let comment = false
@@ -175,7 +175,7 @@ function parseDir(bookpath) {
       else pars.push(par)
     })
 
-    // if (auth.author) bookWFMap(map, rows, textid)
+    if (auth.author) map = bookWFMap(rows, textid)
   })
   let id = ['info', info.book.author, info.book.title].join('-')
   info._id = id
@@ -183,12 +183,14 @@ function parseDir(bookpath) {
   info.info = true
   info.bpath = bpath
 
-  let book = {bkey: bpath, info: info, texts: texts, coms: coms, map: map, pars: pars}
+  // let book = {bkey: bpath, info: info, texts: texts, coms: coms, map: map, pars: pars}
+  let book = {info: info, map: map, pars: pars}
   log('BOOK FROM GET', book)
   return book
 }
 
-function bookWFMap(map, rows, textid) {
+function bookWFMap(rows, textid) {
+  let map = {}
   rows.forEach((row, idx)=> {
     let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
     let wfs = _.compact(punctless.split(' '))
@@ -198,14 +200,14 @@ function bookWFMap(map, rows, textid) {
       map[wf][textid].push(idx)
     })
   })
-  // let ndocs = []
-  // for (let wf in map) {
-  //   let idxs = map[wf]
-  //   let ndoc = {wf: wf, idxs: idxs, textid: textid}
-  //   ndoc._id = ['wf', wf].join('-')
-  //   ndocs.push(ndoc)
-  // }
-  return
+  let ndocs = []
+  for (let wf in map) {
+    let idxs = map[wf]
+    let ndoc = {wf: wf, idxs: idxs, textid: textid}
+    ndoc._id = ['wf', wf].join('-')
+    ndocs.push(ndoc)
+  }
+  return ndocs
 }
 
 

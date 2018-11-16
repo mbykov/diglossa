@@ -35,14 +35,12 @@ const apath = app.getAppPath()
 let upath = app.getPath("userData")
 // const watch = require('node-watch')
 
-let libPath = path.resolve(upath, 'library')
 const PouchDB = require('pouchdb')
 PouchDB.plugin(require('pouchdb-find'))
-let pouch = new PouchDB(libPath)
-pouch.createIndex({
-  index: {fields: ['fpath', 'idx']}
-});
-
+let libPath = path.resolve(upath, 'library')
+let libdb = new PouchDB(libPath)
+let ftdbPath = path.resolve(upath, 'ftdb')
+let ftdb = new PouchDB(ftdbPath)
 
 let current, info
 // let limit = 20
@@ -50,18 +48,18 @@ let uf = '\ufff0'
 
 window.onbeforeunload = function (ev) {
   // log('SAVE:')
-  pouch.get('_local/current').then(function(doc) {
+  libdb.get('_local/current').then(function(doc) {
     // let current = window.navpath
     current._id = '_local/current'
     current._rev = doc._rev
-    pouch.put(current).then(function() {
+    libdb.put(current).then(function() {
       // log('SEND:', current)
       // ipcRenderer.send('state-saved', current)
       ev.returnValue = false
     })
   }).catch(function (err) {
     // log('SAVE ERR', err)
-    pouch.put({ _id: '_local/current', section: 'lib'}).then(function() {
+    libdb.put({ _id: '_local/current', section: 'lib'}).then(function() {
       navigate({section: 'lib'})
     })
   })
@@ -98,14 +96,14 @@ window.split = twoPages()
 getState()
 
 function getState() {
-  pouch.get('_local/current').then(function (navpath) {
+  libdb.get('_local/current').then(function (navpath) {
     current = navpath
     log('INIT CURRENT:', current)
     if (current.section == 'lib') navigate({section: 'lib'})
     else if (current.section == 'search') parseQuery()
     else getDir()
   }).catch(function (err) {
-    pouch.put({ _id: '_local/current', section: 'lib'}).then(function() {
+    libdb.put({ _id: '_local/current', section: 'lib'}).then(function() {
       navigate({section: 'lib'})
     })
   })
@@ -128,7 +126,7 @@ function getTitle_() {
     include_docs: true,
     key: current.info_id
   }
-  pouch.allDocs(options).then(function (result) {
+  libdb.allDocs(options).then(function (result) {
     let docs = result.rows.map(row=> { return row.doc})
     // log('GETTITLEINFO', docs)
     info = docs[0]
@@ -156,7 +154,7 @@ function getTitle() {
 //   // log('GB info', info)
 //   let endkey = [info.tpath, '\ufff0'].join('')
 //   let opts = { include_docs: true, startkey: info.tpath, endkey: endkey }
-//   pouch.allDocs(opts).then(function (result) {
+//   libdb.allDocs(opts).then(function (result) {
 //     let texts = result.rows.map(row=> { return row.doc})
 //     // log('GBTxs', texts.length)
 //     parseBook(current, info, texts)
@@ -171,7 +169,7 @@ function getTitle() {
 //   if (!start && !end) start = 0, end = start+limit
 
 //   let selector = {fpath: 'Dialogues/Parmenides', idx: {$gte: start, $lt: end}}
-//   pouch.find({selector: selector}) // sort: ['idx'], , limit: 20
+//   libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
 //     .then(function(res) {
 //       if (!res.docs) return
 //       log('DOCS', res.docs)
@@ -180,10 +178,11 @@ function getTitle() {
 // }
 
 function getBook() {
-  let start = 0
-  let end = 20
-  getText(current.fpath, start, end)
+  // let start = 0
+  // let end = 20
+  getText(current.fpath)
     .then(function(res) {
+      // log('EXPLA', res)
       let pars = res.docs
       parseBook(current, info, pars)
     })
@@ -262,7 +261,7 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
   // log('WF', query)
   let key = ['wf', query].join('-')
   let options = { include_docs: true, key: key }
-  pouch.allDocs(options)
+  libdb.allDocs(options)
     .then(function (result) {
       let wfdocs = result.rows.map(row=> { return row.doc})
       log('WFdocs', wfdocs)
@@ -274,7 +273,7 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
 
       let endkey = [tpath, '\ufff0'].join('')
       let opts = { include_docs: true, startkey: tpath, endkey: endkey }
-      pouch.allDocs(opts)
+      libdb.allDocs(opts)
         .then(function (result) {
           let tts = result.rows.map(row=> { return row.doc})
           log('TTS', tts)
@@ -405,7 +404,7 @@ function getDir(bpath) {
     Promise.all([
       pushInfo(book.info),
       pushTexts(book.pars),
-      // pushMap(book.info)
+      // pushMap(book.map)
     ]).then(function(res) {
       log('PUSH ALL RES', res)
       if (current.section) info = book.info, navigate(current)
@@ -420,7 +419,7 @@ function getDir(bpath) {
 
 function pushInfo(ndoc) {
   // log('NDOCinfo', ndoc)
-  return pouch.get(ndoc._id).catch(function (err) {
+  return libdb.get(ndoc._id).catch(function (err) {
     if (err.name === 'not_found') return
     else throw err
   }).then(function (doc) {
@@ -433,10 +432,10 @@ function pushInfo(ndoc) {
       else {
         ndoc._rev = doc._rev
         // log('NDOC-rev', ndoc)
-        return pouch.put(ndoc)
+        return libdb.put(ndoc)
       }
     } else {
-      return pouch.put(ndoc)
+      return libdb.put(ndoc)
     }
   })
 }
@@ -447,7 +446,7 @@ function pushTexts(newdocs) {
     startkey: 'text',
     endkey: 'text\ufff0'
   }
-  return pouch.allDocs({include_docs: true})
+  return libdb.allDocs({include_docs: true})
     .then(function(res) {
       let docs = res.rows.map(row=>{ return row.doc})
 
@@ -464,17 +463,17 @@ function pushTexts(newdocs) {
         }
       })
       log('CLD', cleandocs)
-      return pouch.bulkDocs(cleandocs)
+      return libdb.bulkDocs(cleandocs)
     })
 }
 
-function pushMap(info) {
+function pushMap(map) {
   let options = {
     include_docs: true,
     startkey: 'wf',
     endkey: 'wf\ufff0'
   }
-  return pouch.allDocs(options)
+  return ftdb.allDocs(options)
     .then(function(res) {
       let docs = res.rows.map(row=>{ return row.doc})
       // log('ODOCS', docs)
@@ -482,8 +481,8 @@ function pushMap(info) {
       let hdoc = {}
       docs.forEach(doc=> { hdoc[doc._id] = doc })
 
-      // log('NDOCS', info.map)
-      info.map.forEach(ndoc=> {
+      // log('NDOCS', map)
+      map.forEach(ndoc=> {
         let doc = hdoc[ndoc._id]
         if (doc) {
           if (_.isEqual(doc.fns, ndoc.fns)) return
@@ -493,7 +492,7 @@ function pushMap(info) {
         }
       })
       // log('CMAP', cleandocs)
-      return pouch.bulkDocs(cleandocs)
+      return ftdb.bulkDocs(cleandocs)
     })
 }
 

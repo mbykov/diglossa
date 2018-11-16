@@ -49,16 +49,25 @@ function scrollPanes(ev) {
 
   if (!current || current.section != 'book') return
 
-  let el = ev.target
-  let oapp = q('#app')
-  let book = oapp.book
+  let sTop = source.scrollTop;
+  let spars = qs('#source > p')
+  _.each(spars, el=> {
+    let off = sTop - el.offsetTop
+    if (off < 0) {
+      current.pos = el.getAttribute('idx')
+      return false
+    }
+  })
+
+
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
     let start = qs('#source > p').length
     let end = start + limit
-    log('___START', start)
-    log('___Scur', current)
-    log('___Sinfo', info)
-    log('___Sstart', start)
+    // log('___START', start)
+    // log('___Scur', current)
+    // log('___Sinfo', info)
+    // log('___Sstart', start)
+    // с подкачкой вверх будет проблема? - direction
     getText(current.fpath, start, end)
       .then(function(res) {
         setChunk(res.docs)

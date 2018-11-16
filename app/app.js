@@ -146,35 +146,31 @@ const app = electron__WEBPACK_IMPORTED_MODULE_3__["remote"].app;
 const apath = app.getAppPath();
 let upath = app.getPath("userData"); // const watch = require('node-watch')
 
-let libPath = path.resolve(upath, 'library');
-
 const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
 
 PouchDB.plugin(__webpack_require__(/*! pouchdb-find */ "pouchdb-find"));
-let pouch = new PouchDB(libPath);
-pouch.createIndex({
-  index: {
-    fields: ['fpath', 'idx']
-  }
-});
+let libPath = path.resolve(upath, 'library');
+let libdb = new PouchDB(libPath);
+let ftdbPath = path.resolve(upath, 'ftdb');
+let ftdb = new PouchDB(ftdbPath);
 let current, info; // let limit = 20
 
 let uf = '\ufff0';
 
 window.onbeforeunload = function (ev) {
   // log('SAVE:')
-  pouch.get('_local/current').then(function (doc) {
+  libdb.get('_local/current').then(function (doc) {
     // let current = window.navpath
     current._id = '_local/current';
     current._rev = doc._rev;
-    pouch.put(current).then(function () {
+    libdb.put(current).then(function () {
       // log('SEND:', current)
       // ipcRenderer.send('state-saved', current)
       ev.returnValue = false;
     });
   }).catch(function (err) {
     // log('SAVE ERR', err)
-    pouch.put({
+    libdb.put({
       _id: '_local/current',
       section: 'lib'
     }).then(function () {
@@ -216,14 +212,14 @@ window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])(); // 
 getState();
 
 function getState() {
-  pouch.get('_local/current').then(function (navpath) {
+  libdb.get('_local/current').then(function (navpath) {
     current = navpath;
     log('INIT CURRENT:', current);
     if (current.section == 'lib') navigate({
       section: 'lib'
     });else if (current.section == 'search') parseQuery();else getDir();
   }).catch(function (err) {
-    pouch.put({
+    libdb.put({
       _id: '_local/current',
       section: 'lib'
     }).then(function () {
@@ -252,7 +248,7 @@ function getTitle_() {
     include_docs: true,
     key: current.info_id
   };
-  pouch.allDocs(options).then(function (result) {
+  libdb.allDocs(options).then(function (result) {
     let docs = result.rows.map(row => {
       return row.doc;
     }); // log('GETTITLEINFO', docs)
@@ -278,7 +274,7 @@ function getTitle() {
 //   // log('GB info', info)
 //   let endkey = [info.tpath, '\ufff0'].join('')
 //   let opts = { include_docs: true, startkey: info.tpath, endkey: endkey }
-//   pouch.allDocs(opts).then(function (result) {
+//   libdb.allDocs(opts).then(function (result) {
 //     let texts = result.rows.map(row=> { return row.doc})
 //     // log('GBTxs', texts.length)
 //     parseBook(current, info, texts)
@@ -291,7 +287,7 @@ function getTitle() {
 //   log('GB cur', current)
 //   if (!start && !end) start = 0, end = start+limit
 //   let selector = {fpath: 'Dialogues/Parmenides', idx: {$gte: start, $lt: end}}
-//   pouch.find({selector: selector}) // sort: ['idx'], , limit: 20
+//   libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
 //     .then(function(res) {
 //       if (!res.docs) return
 //       log('DOCS', res.docs)
@@ -301,9 +297,10 @@ function getTitle() {
 
 
 function getBook() {
-  let start = 0;
-  let end = 20;
-  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getText"])(current.fpath, start, end).then(function (res) {
+  // let start = 0
+  // let end = 20
+  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getText"])(current.fpath).then(function (res) {
+    // log('EXPLA', res)
     let pars = res.docs;
     Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, info, pars);
   });
@@ -379,7 +376,7 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
     include_docs: true,
     key: key
   };
-  pouch.allDocs(options).then(function (result) {
+  libdb.allDocs(options).then(function (result) {
     let wfdocs = result.rows.map(row => {
       return row.doc;
     });
@@ -400,7 +397,7 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
       startkey: tpath,
       endkey: endkey
     };
-    pouch.allDocs(opts).then(function (result) {
+    libdb.allDocs(opts).then(function (result) {
       let tts = result.rows.map(row => {
         return row.doc;
       });
@@ -557,7 +554,7 @@ function getDir(bpath) {
 
 function pushInfo(ndoc) {
   // log('NDOCinfo', ndoc)
-  return pouch.get(ndoc._id).catch(function (err) {
+  return libdb.get(ndoc._id).catch(function (err) {
     if (err.name === 'not_found') return;else throw err;
   }).then(function (doc) {
     // log('DOC-old', doc)
@@ -569,10 +566,10 @@ function pushInfo(ndoc) {
       if (lodash__WEBPACK_IMPORTED_MODULE_1___default.a.isEqual(ndoc, testdoc)) return;else {
         ndoc._rev = doc._rev; // log('NDOC-rev', ndoc)
 
-        return pouch.put(ndoc);
+        return libdb.put(ndoc);
       }
     } else {
-      return pouch.put(ndoc);
+      return libdb.put(ndoc);
     }
   });
 }
@@ -583,7 +580,7 @@ function pushTexts(newdocs) {
     startkey: 'text',
     endkey: 'text\ufff0'
   };
-  return pouch.allDocs({
+  return libdb.allDocs({
     include_docs: true
   }).then(function (res) {
     let docs = res.rows.map(row => {
@@ -604,17 +601,17 @@ function pushTexts(newdocs) {
       }
     });
     log('CLD', cleandocs);
-    return pouch.bulkDocs(cleandocs);
+    return libdb.bulkDocs(cleandocs);
   });
 }
 
-function pushMap(info) {
+function pushMap(map) {
   let options = {
     include_docs: true,
     startkey: 'wf',
     endkey: 'wf\ufff0'
   };
-  return pouch.allDocs(options).then(function (res) {
+  return ftdb.allDocs(options).then(function (res) {
     let docs = res.rows.map(row => {
       return row.doc;
     }); // log('ODOCS', docs)
@@ -623,9 +620,9 @@ function pushMap(info) {
     let hdoc = {};
     docs.forEach(doc => {
       hdoc[doc._id] = doc;
-    }); // log('NDOCS', info.map)
+    }); // log('NDOCS', map)
 
-    info.map.forEach(ndoc => {
+    map.forEach(ndoc => {
       let doc = hdoc[ndoc._id];
 
       if (doc) {
@@ -635,7 +632,7 @@ function pushMap(info) {
       }
     }); // log('CMAP', cleandocs)
 
-    return pouch.bulkDocs(cleandocs);
+    return ftdb.bulkDocs(cleandocs);
   });
 } // function setSearch_(bkey, texts) {
 //   texts.forEach(text => {
@@ -743,17 +740,26 @@ function scrollPanes(ev) {
   source.scrollTop += delta;
   trns.scrollTop = source.scrollTop;
   if (!current || current.section != 'book') return;
-  let el = ev.target;
-  let oapp = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#app');
-  let book = oapp.book;
+  let sTop = source.scrollTop;
+  let spars = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p');
+
+  lodash__WEBPACK_IMPORTED_MODULE_0___default.a.each(spars, el => {
+    let off = sTop - el.offsetTop;
+
+    if (off < 0) {
+      current.pos = el.getAttribute('idx');
+      return false;
+    }
+  });
 
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
     let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length;
-    let end = start + limit;
-    log('___START', start);
-    log('___Scur', current);
-    log('___Sinfo', info);
-    log('___Sstart', start);
+    let end = start + limit; // log('___START', start)
+    // log('___Scur', current)
+    // log('___Sinfo', info)
+    // log('___Sstart', start)
+    // с подкачкой вверх будет проблема? - direction
+
     Object(_pouch__WEBPACK_IMPORTED_MODULE_5__["getText"])(current.fpath, start, end).then(function (res) {
       setChunk(res.docs);
     });
@@ -1329,7 +1335,7 @@ function parseDir(bookpath) {
   let texts = [];
   let coms = [];
   let pars = [];
-  let map = {};
+  let map;
   info.sections = [];
   fns.forEach(fn => {
     let comment = false;
@@ -1380,18 +1386,17 @@ function parseDir(bookpath) {
       };
       if (auth.author) par.author = true;
       if (comment) coms.push(par);else pars.push(par);
-    }); // if (auth.author) bookWFMap(map, rows, textid)
+    });
+    if (auth.author) map = bookWFMap(rows, textid);
   });
   let id = ['info', info.book.author, info.book.title].join('-');
   info._id = id;
   info.tree = tree;
   info.info = true;
-  info.bpath = bpath;
+  info.bpath = bpath; // let book = {bkey: bpath, info: info, texts: texts, coms: coms, map: map, pars: pars}
+
   let book = {
-    bkey: bpath,
     info: info,
-    texts: texts,
-    coms: coms,
     map: map,
     pars: pars
   };
@@ -1399,7 +1404,8 @@ function parseDir(bookpath) {
   return book;
 }
 
-function bookWFMap(map, rows, textid) {
+function bookWFMap(rows, textid) {
+  let map = {};
   rows.forEach((row, idx) => {
     let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g, '');
 
@@ -1410,15 +1416,21 @@ function bookWFMap(map, rows, textid) {
       if (!map[wf][textid]) map[wf][textid] = [];
       map[wf][textid].push(idx);
     });
-  }); // let ndocs = []
-  // for (let wf in map) {
-  //   let idxs = map[wf]
-  //   let ndoc = {wf: wf, idxs: idxs, textid: textid}
-  //   ndoc._id = ['wf', wf].join('-')
-  //   ndocs.push(ndoc)
-  // }
+  });
+  let ndocs = [];
 
-  return;
+  for (let wf in map) {
+    let idxs = map[wf];
+    let ndoc = {
+      wf: wf,
+      idxs: idxs,
+      textid: textid
+    };
+    ndoc._id = ['wf', wf].join('-');
+    ndocs.push(ndoc);
+  }
+
+  return ndocs;
 }
 
 function parseInfo(ipath) {
@@ -1483,26 +1495,25 @@ let libPath = path.resolve(upath, 'library');
 const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
 
 PouchDB.plugin(__webpack_require__(/*! pouchdb-find */ "pouchdb-find"));
-let pouch = new PouchDB(libPath);
-pouch.createIndex({
+let libdb = new PouchDB(libPath);
+libdb.createIndex({
   index: {
     fields: ['fpath', 'idx']
-  }
-}); // pouch.createIndex({
-//   index: {fields: ['info']},
-// });
+  },
+  name: 'myindex' // ddoc: 'mydesigndoc'
 
+});
 let limit = 20;
 function getLib_() {
   let selector = {
     info: true
   };
-  return pouch.find({
+  return libdb.find({
     selector: selector
   });
 }
 function getInfo(current) {
-  return pouch.get(current.info_id);
+  return libdb.get(current.info_id);
 }
 function getLib() {
   let options = {
@@ -1510,7 +1521,7 @@ function getLib() {
     startkey: 'info',
     endkey: 'info\ufff0'
   };
-  return pouch.allDocs(options);
+  return libdb.allDocs(options);
 }
 function getText(fpath, start, end) {
   if (!start && !end) start = 0, end = start + limit;
@@ -1521,9 +1532,10 @@ function getText(fpath, start, end) {
       $lt: end
     }
   };
-  return pouch.find({
+  return libdb.find({
     selector: selector
   }); // sort: ['idx'], , limit: 20
+  // return libdb.explain({selector: selector})
 }
 
 /***/ }),
