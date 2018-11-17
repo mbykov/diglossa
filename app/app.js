@@ -216,13 +216,14 @@ function getState() {
     });else if (current.section == 'search') parseQuery();else getDir();
   }).catch(function (err) {
     if (err.name === 'not_found') {
-      Promise.all([libdb.put({
-        _id: '_local/libstate',
-        psize: 0
-      }), libdb.put({
+      // Promise.all([
+      //   // libdb.put({ _id: '_local/libstate', psize: 0}),
+      //   libdb.put({ _id: '_local/current', section: 'lib'})
+      // ])
+      libdb.put({
         _id: '_local/current',
         section: 'lib'
-      })]).then(function () {
+      }).then(function () {
         log('SET DEFAULT VALUES');
         navigate({
           section: 'lib'
@@ -257,10 +258,40 @@ function getTitle() {
 
 function getBook() {
   Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getText"])(current).then(function (res) {
-    // log('getBook-pars', res.docs)
-    let pars = res.docs;
+    let pars = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs);
+
+    log('___getBook-pars:', pars);
+    if (!pars || !pars.length) log('no texts');
     Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, info, pars);
-  });
+  }); // let options = { include_docs: true }
+  // libdb.allDocs(options)
+  //   .then(function (result) {
+  //     let docs = result.rows.map(row=> { return row.doc})
+  //     log('RES_________', docs)
+  //   })
+  // let selector = {fpath: 'Dialogues/Parmenides', pos: {$gte: 0, $lt: 10}}
+  // let selector = {fpath: 'Dialogues/Parmenides'}
+  // libdb.explain({
+  //   selector: selector,
+  //   fields: ['fpath', 'idx']
+  // }).then(function (explanation) {
+  //   log('EX', explanation)
+  // }).catch(function (err) {
+  //   console.log(err);
+  // })
+  // log('CREATING INDEX')
+  // libdb.createIndex({
+  //   index: {fields: ['fpath', 'pos']},
+  //   // index: {fields: ['fpath']},
+  //   name: 'fpathindex'
+  // }).then(function() {
+  //   libdb.find({selector: selector}) // , fields: ['fpath']
+  //     .then(function (res, asd) {
+  //       log('FOUND', res, asd)
+  //     }).catch(function (err) {
+  //       console.log(err);
+  //     })
+  // })
 }
 
 function parseLib(infos) {
@@ -497,11 +528,11 @@ function pushInfo(ndoc) {
 }
 
 function pushTexts(newdocs) {
-  let options = {
-    include_docs: true,
-    startkey: 'text',
-    endkey: 'text\ufff0'
-  };
+  // let options = {
+  //   include_docs: true,
+  //   startkey: 'text',
+  //   endkey: 'text\ufff0'
+  // }
   return libdb.allDocs({
     include_docs: true
   }).then(function (res) {
@@ -556,15 +587,7 @@ function pushMap(map) {
 
     return ftdb.bulkDocs(cleandocs);
   });
-} // function setSearch_(bkey, texts) {
-//   texts.forEach(text => {
-//     if (!text.author) return
-//     let id = [bkey, text.fpath].join('/')
-//     let panee = { id: id, lang: text.lang, nic: text.nic, fpath: text.fpath, text: _.flatten(text.rows)[0] }
-//     // lunr.addDoc(panee)
-//   })
-// }
-
+}
 
 const historyMode_ = event => {
   const checkArrow = element => {
@@ -597,23 +620,19 @@ function getDir(bpath) {
 
     Promise.all([pushInfo(book.info), pushTexts(book.pars)]).then(function (res) {
       log('PUSH ALL RES', res);
-      Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getDBState"])().then(function (libstate) {
-        log('____DBSTATE:', libstate);
 
-        if (libstate.psize != book.pars.length) {
-          libstate.psize = book.pars.length;
-          Promise.all([libdb.put(libstate), libdb.createIndex({
-            index: {
-              fields: ['fpath', 'idx']
-            },
-            name: 'fpathindex'
-          })]).then(function (doc) {
-            log('INDEX CREATED:', doc);
-          }).catch(function (err) {
-            log('INDEX-ERR:', err);
-          });
-        }
-      }); // wtf ?
+      if (res[1].length) {
+        log('INDEX!');
+        libdb.createIndex({
+          index: {
+            fields: ['fpath', 'pos']
+          },
+          name: 'fpathindex'
+        }).then(function (res) {
+          log('INDEX CREATED');
+        });
+      } // wtf ?
+
 
       if (current.section) info = book.info, navigate(current);else navigate({
         section: 'lib'
@@ -703,7 +722,7 @@ function scrollPanes(ev) {
     let off = sTop - el.offsetTop;
 
     if (off < 0) {
-      current.pos = el.getAttribute('idx');
+      current.pos = el.getAttribute('pos');
       return false;
     }
   });
@@ -830,45 +849,10 @@ function parseBook(bookcurrent, bookinfo, pars) {
   otrns.addEventListener("wheel", cyclePar, false);
 }
 
-function setBookText_(texts, start) {
-  // log('setBookText-TEXTS', texts)
-  let fpath = current.fpath; // log('BCUR', current)
-
-  let pars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(texts, text => {
-    return !text.com;
-  });
-
-  let coms = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(texts, text => {
-    return text.com;
-  }); // log('Pars', pars)
-
-
-  apars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
-    return par.author && par.fpath == fpath;
-  });
-  tpars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
-    return !par.author && par.fpath == fpath;
-  }); // log('A', apars)
-  // log('T', tpars)
-
-  let cnics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(tpars.map(auth => {
-    return auth.nic;
-  })); // log('CNICS', cnics)
-
-
-  let nic = current.nic;
-  if (!nic) nic = cnics[0];
-  if (!cnics.includes(nic)) nic = cnics[0];
-  current.nic = nic;
-  setChunk(start);
-  createRightHeader(cnics);
-  createLeftHeader();
-}
-
 function setChunk(pars) {
-  let nic = current.nic;
-  let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
-  let rePunct = new RegExp(punct, 'g');
+  let nic = current.nic; // let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
+  // let rePunct = new RegExp(punct, 'g')
+
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
 
@@ -881,20 +865,22 @@ function setChunk(pars) {
     return !par.author;
   });
 
-  apars.forEach((apar, idx) => {
-    let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])(apar.text);
-    oleft.setAttribute('idx', apar.idx);
+  apars.forEach(apar => {
+    let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])(apar.text); // let oleft = p()
+    // oleft.innerHTML = apar.text
+
+    oleft.setAttribute('pos', apar.pos);
     oleft.setAttribute('nic', apar.nic);
     osource.appendChild(oleft);
     let aligns = [oleft];
 
     let pars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(tpars, par => {
-      return par.idx == apar.idx;
+      return par.pos == apar.pos;
     });
 
     pars.forEach(par => {
       let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])(par.text);
-      oright.setAttribute('idx', apar.idx);
+      oright.setAttribute('pos', apar.pos);
       oright.setAttribute('nic', par.nic);
       if (par.nic == nic) oright.classList.add('active');else oright.classList.add('hidden');
       otrns.appendChild(oright);
@@ -910,7 +896,8 @@ function alignPars(pars) {
   });
   let max = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.max(heights) + 12;
   pars.forEach(par => {
-    par.style.height = max + 'px'; // if (!par.getAttribute('active')) par.classList.add('hidden')
+    par.style.height = max + 'px';
+    if (par.pos == 0) log('MAX', max); // if (!par.getAttribute('active')) par.classList.add('hidden')
   });
 }
 
@@ -924,8 +911,8 @@ function copyToClipboard(ev) {
 
 function cyclePar(ev) {
   if (ev.shiftKey != true) return;
-  let idx = ev.target.getAttribute('idx');
-  let selector = '#trns [idx="' + idx + '"]';
+  let idx = ev.target.getAttribute('pos');
+  let selector = '#trns [pos="' + idx + '"]';
   let pars = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])(selector);
 
   let nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.map(pars, par => {
@@ -1288,9 +1275,11 @@ function parseDir(bookpath) {
     return fn != ipath;
   }); // log('FNS', fns.length)
 
-  let tpath = ['text', info.book.author, info.book.title].join('-');
-  let texts = [];
-  let coms = [];
+  let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
+  let rePunct = new RegExp(punct, 'g');
+  let tpath = ['text', info.book.author, info.book.title].join('-'); // let texts = []
+  // let coms = []
+
   let pars = [];
   let map;
   info.sections = [];
@@ -1318,33 +1307,33 @@ function parseDir(bookpath) {
     info.sections.push(fpath);
     let lang;
     if (auth) lang = auth.lang;
-    let textid = ['text', info.book.author, info.book.title, fpath, nic].join('-');
-    let pane = {
-      _id: textid,
-      lang: lang,
-      nic: nic,
-      fpath: fpath,
-      rows: rows // fname: fname, text: clean,
+    let textid = ['text', info.book.author, info.book.title, fpath, nic].join('-'); // let pane = { _id: textid, lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname, text: clean,
+    // if (auth.author) pane.author = true // , info.book.author = auth.name
+    // if (comment) coms.push(pane)
+    // else texts.push(pane)
 
-    };
-    if (auth.author) pane.author = true; // , info.book.author = auth.name
-
-    if (comment) coms.push(pane);else texts.push(pane);
     rows.forEach((row, idx) => {
-      let parid = ['text', info.book.author, info.book.title, fpath, idx, 'nic', nic].join('-'); // let secid = ['text', info.book.author, info.book.title, fpath].join('-')
+      let parid = ['text', info.book.author, info.book.title, fpath, idx, nic].join('-'); // let parid = [info.book.author, info.book.title, fpath, idx, nic].join('-')
 
       let par = {
         _id: parid,
-        idx: idx,
+        pos: idx,
         lang: lang,
         nic: nic,
         fpath: fpath,
         text: row
       };
-      if (auth.author) par.author = true;
-      if (comment) coms.push(par);else pars.push(par);
-    });
-    if (auth.author) map = bookWFMap(rows, textid);
+
+      if (auth.author) {
+        // let text = row.replace(rePunct, "<span class\"active\">$1<\/span>")
+        par.author = true; // if (idx == 0) log('_HTML_', par.text)
+        // par.text = row
+      } // if (comment) coms.push(par)
+      // else pars.push(par)
+
+
+      if (!comment) pars.push(par);
+    }); // if (auth.author) map = bookWFMap(rows, textid)
   });
   let id = ['info', info.book.author, info.book.title].join('-');
   info._id = id;
@@ -1357,7 +1346,7 @@ function parseDir(bookpath) {
     map: map,
     pars: pars
   };
-  log('BOOK FROM GET', book);
+  log('GETFILE BOOK:', book);
   return book;
 }
 
@@ -1424,12 +1413,11 @@ function done(err) {
 /*!**************************!*\
   !*** ./src/lib/pouch.js ***!
   \**************************/
-/*! exports provided: getDBState, setDBState, getInfo, getLib, getText */
+/*! exports provided: setDBState, getInfo, getLib, getText */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getDBState", function() { return getDBState; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "setDBState", function() { return setDBState; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getInfo", function() { return getInfo; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib", function() { return getLib; });
@@ -1453,17 +1441,15 @@ let libPath = path.resolve(upath, 'library');
 const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
 
 PouchDB.plugin(__webpack_require__(/*! pouchdb-find */ "pouchdb-find"));
-let libdb = new PouchDB(libPath);
-libdb.createIndex({
-  index: {
-    fields: ['fpath', 'idx']
-  },
-  name: 'fpathindex'
-});
-let limit = 20;
-function getDBState() {
-  return libdb.get('_local/libstate');
-}
+let libdb = new PouchDB(libPath); // libdb.createIndex({
+//   index: {fields: ['fpath', 'idx']},
+//   name: 'fpathindex'
+// })
+
+let limit = 20; // export function getDBState() {
+//   return libdb.get('_local/libstate')
+// }
+
 function setDBState(psize) {
   let dbstate = {
     psize: psize
@@ -1491,18 +1477,17 @@ function getLib() {
   return libdb.allDocs(options);
 }
 function getText(current) {
-  // if (!start && !end) start = 0, end = start+limit
   let fpath = current.fpath;
   let start = current.pos * 1 || 0;
   let end = start * 1 + limit * 1;
   let selector = {
     fpath: fpath,
-    idx: {
+    pos: {
       $gte: start,
       $lt: end
     }
   };
-  log('=getText sel:', selector);
+  log('=pouch-text-selector=:', selector);
   return libdb.find({
     selector: selector
   }); // sort: ['idx'], , limit: 20

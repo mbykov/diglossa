@@ -13,17 +13,17 @@ let libPath = path.resolve(upath, 'library')
 const PouchDB = require('pouchdb')
 PouchDB.plugin(require('pouchdb-find'))
 let libdb = new PouchDB(libPath)
-libdb.createIndex({
-  index: {fields: ['fpath', 'idx']},
-  name: 'fpathindex'
-})
+// libdb.createIndex({
+//   index: {fields: ['fpath', 'idx']},
+//   name: 'fpathindex'
+// })
 
 
 let limit = 20
 
-export function getDBState() {
-  return libdb.get('_local/libstate')
-}
+// export function getDBState() {
+//   return libdb.get('_local/libstate')
+// }
 
 export function setDBState(psize) {
   let dbstate = {psize: psize}
@@ -55,12 +55,11 @@ export function getLib() {
 
 
 export function getText(current) {
-  // if (!start && !end) start = 0, end = start+limit
   let fpath = current.fpath
   let start = current.pos*1 || 0
   let end = start*1 + limit*1
-  let selector = {fpath: fpath, idx: {$gte: start, $lt: end}}
-  log('=getText sel:', selector)
+  let selector = {fpath: fpath, pos: {$gte: start, $lt: end}}
+  log('=pouch-text-selector=:', selector)
   return libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
   // return libdb.explain({selector: selector})
 }

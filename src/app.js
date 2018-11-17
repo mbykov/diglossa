@@ -101,10 +101,11 @@ function getState() {
     else getDir()
   }).catch(function (err) {
     if (err.name === 'not_found') {
-      Promise.all([
-        libdb.put({ _id: '_local/libstate', psize: 0}),
-        libdb.put({ _id: '_local/current', section: 'lib'})
-      ])
+      // Promise.all([
+      //   // libdb.put({ _id: '_local/libstate', psize: 0}),
+      //   libdb.put({ _id: '_local/current', section: 'lib'})
+      // ])
+      libdb.put({ _id: '_local/current', section: 'lib'})
         .then(function() {
           log('SET DEFAULT VALUES')
           navigate({section: 'lib'})
@@ -140,10 +141,46 @@ function getTitle() {
 function getBook() {
   getText(current)
     .then(function(res) {
-      // log('getBook-pars', res.docs)
-      let pars = res.docs
+      let pars = _.compact(res.docs)
+      log('___getBook-pars:', pars)
+      if (!pars || !pars.length) log('no texts')
       parseBook(current, info, pars)
     })
+
+  // let options = { include_docs: true }
+  // libdb.allDocs(options)
+  //   .then(function (result) {
+  //     let docs = result.rows.map(row=> { return row.doc})
+  //     log('RES_________', docs)
+  //   })
+
+  // let selector = {fpath: 'Dialogues/Parmenides', pos: {$gte: 0, $lt: 10}}
+  // let selector = {fpath: 'Dialogues/Parmenides'}
+
+  // libdb.explain({
+  //   selector: selector,
+  //   fields: ['fpath', 'idx']
+  // }).then(function (explanation) {
+  //   log('EX', explanation)
+  // }).catch(function (err) {
+  //   console.log(err);
+  // })
+
+  // log('CREATING INDEX')
+  // libdb.createIndex({
+  //   index: {fields: ['fpath', 'pos']},
+  //   // index: {fields: ['fpath']},
+  //   name: 'fpathindex'
+  // }).then(function() {
+  //   libdb.find({selector: selector}) // , fields: ['fpath']
+  //     .then(function (res, asd) {
+  //       log('FOUND', res, asd)
+  //     }).catch(function (err) {
+  //       console.log(err);
+  //     })
+  // })
+
+
 }
 
 function parseLib(infos) {
@@ -356,11 +393,11 @@ function pushInfo(ndoc) {
 }
 
 function pushTexts(newdocs) {
-  let options = {
-    include_docs: true,
-    startkey: 'text',
-    endkey: 'text\ufff0'
-  }
+  // let options = {
+  //   include_docs: true,
+  //   startkey: 'text',
+  //   endkey: 'text\ufff0'
+  // }
   return libdb.allDocs({include_docs: true})
     .then(function(res) {
       let docs = res.rows.map(row=>{ return row.doc})
@@ -411,16 +448,6 @@ function pushMap(map) {
     })
 }
 
-
-// function setSearch_(bkey, texts) {
-//   texts.forEach(text => {
-//     if (!text.author) return
-//     let id = [bkey, text.fpath].join('/')
-//     let panee = { id: id, lang: text.lang, nic: text.nic, fpath: text.fpath, text: _.flatten(text.rows)[0] }
-//     // lunr.addDoc(panee)
-//   })
-// }
-
 const historyMode_ = event => {
   const checkArrow = element => {
     // if (!element.classList.contains("arrow")) return
@@ -459,26 +486,16 @@ function getDir(bpath) {
     ])
       .then(function(res) {
         log('PUSH ALL RES', res)
-        getDBState()
-          .then(function(libstate) {
-            log('____DBSTATE:', libstate)
-            if (libstate.psize != book.pars.length) {
-              libstate.psize = book.pars.length
-              Promise.all([
-                libdb.put(libstate),
-                libdb.createIndex({
-                  index: {fields: ['fpath', 'idx']},
-                  name: 'fpathindex'
-                })
-              ])
-                .then(function(doc) {
-                  log('INDEX CREATED:', doc)
-                }).catch(function (err) {
-                  log('INDEX-ERR:', err)
-                })
-            }
+        if (res[1].length) {
+          log('INDEX!')
+          libdb.createIndex({
+            index: {fields: ['fpath', 'pos']},
+            name: 'fpathindex'
           })
-
+            .then(function(res) {
+              log('INDEX CREATED')
+            })
+        }
         // wtf ?
         if (current.section) info = book.info, navigate(current)
         else navigate({section: 'lib'})

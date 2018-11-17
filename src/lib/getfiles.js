@@ -130,9 +130,12 @@ function parseDir(bookpath) {
   fns = _.filter(fns, fn=>{ return fn != ipath })
   // log('FNS', fns.length)
 
+  let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
+  let rePunct = new RegExp(punct, 'g')
+
   let tpath = ['text', info.book.author, info.book.title].join('-')
-  let texts = []
-  let coms = []
+  // let texts = []
+  // let coms = []
   let pars = []
   let map
   info.sections = []
@@ -161,21 +164,27 @@ function parseDir(bookpath) {
     if (auth) lang = auth.lang
 
     let textid = ['text', info.book.author, info.book.title, fpath, nic].join('-')
-    let pane = { _id: textid, lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname, text: clean,
-    if (auth.author) pane.author = true // , info.book.author = auth.name
-    if (comment) coms.push(pane)
-    else texts.push(pane)
+    // let pane = { _id: textid, lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname, text: clean,
+    // if (auth.author) pane.author = true // , info.book.author = auth.name
+    // if (comment) coms.push(pane)
+    // else texts.push(pane)
 
     rows.forEach((row, idx)=> {
-      let parid = ['text', info.book.author, info.book.title, fpath, idx, 'nic', nic].join('-')
-      // let secid = ['text', info.book.author, info.book.title, fpath].join('-')
-      let par = { _id: parid, idx: idx, lang: lang, nic: nic, fpath: fpath, text: row }
-      if (auth.author) par.author = true
-      if (comment) coms.push(par)
-      else pars.push(par)
+      let parid = ['text', info.book.author, info.book.title, fpath, idx, nic].join('-')
+      // let parid = [info.book.author, info.book.title, fpath, idx, nic].join('-')
+      let par = { _id: parid, pos: idx, lang: lang, nic: nic, fpath: fpath, text: row }
+      if (auth.author) {
+        // let text = row.replace(rePunct, "<span class\"active\">$1<\/span>")
+        par.author = true
+        // if (idx == 0) log('_HTML_', par.text)
+        // par.text = row
+      }
+      // if (comment) coms.push(par)
+      // else pars.push(par)
+      if (!comment) pars.push(par)
     })
 
-    if (auth.author) map = bookWFMap(rows, textid)
+    // if (auth.author) map = bookWFMap(rows, textid)
   })
   let id = ['info', info.book.author, info.book.title].join('-')
   info._id = id
@@ -185,7 +194,7 @@ function parseDir(bookpath) {
 
   // let book = {bkey: bpath, info: info, texts: texts, coms: coms, map: map, pars: pars}
   let book = {info: info, map: map, pars: pars}
-  log('BOOK FROM GET', book)
+  log('GETFILE BOOK:', book)
   return book
 }
 

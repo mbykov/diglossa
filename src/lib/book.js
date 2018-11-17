@@ -54,7 +54,7 @@ function scrollPanes(ev) {
   _.each(spars, el=> {
     let off = sTop - el.offsetTop
     if (off < 0) {
-      current.pos = el.getAttribute('idx')
+      current.pos = el.getAttribute('pos')
       return false
     }
   })
@@ -183,53 +183,30 @@ export function parseBook(bookcurrent, bookinfo, pars) {
   otrns.addEventListener("wheel", cyclePar, false)
 }
 
-function setBookText_(texts, start) {
-  // log('setBookText-TEXTS', texts)
-  let fpath = current.fpath
-  // log('BCUR', current)
-  let pars = _.filter(texts, text=> { return !text.com })
-  let coms = _.filter(texts, text=> { return text.com })
-  // log('Pars', pars)
-
-  apars = _.filter(pars, par=> { return par.author && par.fpath == fpath})
-  tpars = _.filter(pars, par=> { return !par.author && par.fpath == fpath})
-  // log('A', apars)
-  // log('T', tpars)
-
-  let cnics = _.uniq(tpars.map(auth=> { return auth.nic }))
-  // log('CNICS', cnics)
-  let nic = current.nic
-  if (!nic) nic = cnics[0]
-  if (!cnics.includes(nic)) nic = cnics[0]
-  current.nic = nic
-
-  setChunk(start)
-  createRightHeader(cnics)
-  createLeftHeader()
-}
-
 function setChunk(pars) {
   let nic = current.nic
 
-  let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
-  let rePunct = new RegExp(punct, 'g')
+  // let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
+  // let rePunct = new RegExp(punct, 'g')
   let osource = q('#source')
   let otrns = q('#trns')
 
   let apars = _.filter(pars, par=> { return par.author})
   // log('AP', apars)
   let tpars = _.filter(pars, par=> { return !par.author})
-  apars.forEach((apar, idx)=> {
+  apars.forEach(apar=> {
     let oleft = p(apar.text)
-    oleft.setAttribute('idx', apar.idx)
+    // let oleft = p()
+    // oleft.innerHTML = apar.text
+    oleft.setAttribute('pos', apar.pos)
     oleft.setAttribute('nic', apar.nic)
     osource.appendChild(oleft)
     let aligns = [oleft]
 
-    let pars = _.filter(tpars, par=> { return par.idx == apar.idx})
+    let pars = _.filter(tpars, par=> { return par.pos == apar.pos})
     pars.forEach(par => {
       let oright = p(par.text)
-      oright.setAttribute('idx', apar.idx)
+      oright.setAttribute('pos', apar.pos)
       oright.setAttribute('nic', par.nic)
       if (par.nic == nic) oright.classList.add('active')
       else oright.classList.add('hidden')
@@ -245,6 +222,7 @@ function alignPars(pars) {
   let max = _.max(heights) + 12
   pars.forEach(par => {
     par.style.height = max + 'px'
+    if (par.pos == 0) log('MAX', max)
     // if (!par.getAttribute('active')) par.classList.add('hidden')
   })
 }
@@ -260,9 +238,9 @@ function copyToClipboard(ev) {
 
 function cyclePar(ev) {
   if (ev.shiftKey != true) return
-  let idx = ev.target.getAttribute('idx')
+  let idx = ev.target.getAttribute('pos')
 
-  let selector = '#trns [idx="'+idx+'"]'
+  let selector = '#trns [pos="'+idx+'"]'
   let pars = qs(selector)
   let nics = _.map(pars, par=> { return par.getAttribute('nic') })
   let curpar = _.find(pars, par=> { return !par.classList.contains('hidden') })
