@@ -59,17 +59,16 @@ function scrollPanes(ev) {
     }
   })
 
-
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
+    // с подкачкой вверх будет проблема? - direction
     let start = qs('#source > p').length
-    let end = start + limit
     // log('___START', start)
     // log('___Scur', current)
     // log('___Sinfo', info)
-    // log('___Sstart', start)
-    // с подкачкой вверх будет проблема? - direction
-    getText(current.fpath, start, end)
+    current.pos = start
+    getText(current)
       .then(function(res) {
+        // log('___res.docs', res.docs)
         setChunk(res.docs)
       })
   }
@@ -306,6 +305,7 @@ function clickLeftHeader(ev) {
     if (ev.target.classList.contains('tree-node-empty')) return
     let otitle = q('#tree-title')
     current.fpath = fpath
+    current.pos = 0
     otitle.textContent = current.fpath
     otbody.classList.add('tree-collapse')
     navigate(current)

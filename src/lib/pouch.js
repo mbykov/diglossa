@@ -54,9 +54,13 @@ export function getLib() {
 }
 
 
-export function getText(fpath, start, end) {
-  if (!start && !end) start = 0, end = start+limit
+export function getText(current) {
+  // if (!start && !end) start = 0, end = start+limit
+  let fpath = current.fpath
+  let start = current.pos*1 || 0
+  let end = start*1 + limit*1
   let selector = {fpath: fpath, idx: {$gte: start, $lt: end}}
+  log('=getText sel:', selector)
   return libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
   // return libdb.explain({selector: selector})
 }

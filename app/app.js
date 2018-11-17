@@ -256,8 +256,8 @@ function getTitle() {
 }
 
 function getBook() {
-  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getText"])(current.fpath).then(function (res) {
-    // log('EXPLA', res)
+  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getText"])(current).then(function (res) {
+    // log('getBook-pars', res.docs)
     let pars = res.docs;
     Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, info, pars);
   });
@@ -313,8 +313,7 @@ function navigate(navpath) {
   log('HSTATES', hstates);
   log('Navigate:', current);
   let sec = current.section;
-  if (sec == 'lib') goLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook(); // else if (sec == 'book') getText()
-  else if (sec == 'search') parseQuery();else showSection(sec);
+  if (sec == 'lib') goLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook();else if (sec == 'search') parseQuery();else showSection(sec);
 }
 Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   // log('EV', ev.which, hstate, hstates)
@@ -594,8 +593,8 @@ function getDir(bpath) {
   log('getDIR-bpath', bpath);
   if (!bpath) bpath = current.bpath;
   Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
-    if (!book) return;
-    log('DIR-INFO::', book.info);
+    if (!book) return; // log('DIR-INFO::', book.info) // то же что book from get
+
     Promise.all([pushInfo(book.info), pushTexts(book.pars)]).then(function (res) {
       log('PUSH ALL RES', res);
       Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getDBState"])().then(function (libstate) {
@@ -614,7 +613,8 @@ function getDir(bpath) {
             log('INDEX-ERR:', err);
           });
         }
-      });
+      }); // wtf ?
+
       if (current.section) info = book.info, navigate(current);else navigate({
         section: 'lib'
       }); // navigate({section: 'lib'})
@@ -709,14 +709,14 @@ function scrollPanes(ev) {
   });
 
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
-    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length;
-    let end = start + limit; // log('___START', start)
+    // с подкачкой вверх будет проблема? - direction
+    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length; // log('___START', start)
     // log('___Scur', current)
     // log('___Sinfo', info)
-    // log('___Sstart', start)
-    // с подкачкой вверх будет проблема? - direction
 
-    Object(_pouch__WEBPACK_IMPORTED_MODULE_5__["getText"])(current.fpath, start, end).then(function (res) {
+    current.pos = start;
+    Object(_pouch__WEBPACK_IMPORTED_MODULE_5__["getText"])(current).then(function (res) {
+      // log('___res.docs', res.docs)
       setChunk(res.docs);
     });
   }
@@ -980,6 +980,7 @@ function clickLeftHeader(ev) {
     if (ev.target.classList.contains('tree-node-empty')) return;
     let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree-title');
     current.fpath = fpath;
+    current.pos = 0;
     otitle.textContent = current.fpath;
     otbody.classList.add('tree-collapse');
     Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(current);
@@ -1268,9 +1269,9 @@ function parseDir(bookpath) {
   let bpath = path.resolve(__dirname, bookpath);
   let dname = bookpath.split('/').slice(-1)[0]; // + '/'
 
-  const dtree = dirTree(bpath);
-  log('=BPATH', bpath, bookpath);
-  log('=DTREE', dtree);
+  const dtree = dirTree(bpath); // log('=BPATH', bpath, bookpath)
+  // log('=DTREE', dtree)
+
   if (!dtree) return;
   let fns = [];
   let tree = {};
@@ -1489,8 +1490,11 @@ function getLib() {
   };
   return libdb.allDocs(options);
 }
-function getText(fpath, start, end) {
-  if (!start && !end) start = 0, end = start + limit;
+function getText(current) {
+  // if (!start && !end) start = 0, end = start+limit
+  let fpath = current.fpath;
+  let start = current.pos * 1 || 0;
+  let end = start * 1 + limit * 1;
   let selector = {
     fpath: fpath,
     idx: {
@@ -1498,6 +1502,7 @@ function getText(fpath, start, end) {
       $lt: end
     }
   };
+  log('=getText sel:', selector);
   return libdb.find({
     selector: selector
   }); // sort: ['idx'], , limit: 20

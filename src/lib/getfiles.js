@@ -114,8 +114,8 @@ function parseDir(bookpath) {
   let bpath = path.resolve(__dirname, bookpath)
   let dname = bookpath.split('/').slice(-1)[0] // + '/'
   const dtree = dirTree(bpath)
-  log('=BPATH', bpath, bookpath)
-  log('=DTREE', dtree)
+  // log('=BPATH', bpath, bookpath)
+  // log('=DTREE', dtree)
   if (!dtree) return
   let fns = []
   let tree = {}

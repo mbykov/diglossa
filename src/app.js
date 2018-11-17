@@ -138,9 +138,9 @@ function getTitle() {
 }
 
 function getBook() {
-  getText(current.fpath)
+  getText(current)
     .then(function(res) {
-      // log('EXPLA', res)
+      // log('getBook-pars', res.docs)
       let pars = res.docs
       parseBook(current, info, pars)
     })
@@ -197,7 +197,6 @@ export function navigate(navpath) {
   if (sec == 'lib') goLib()
   else if (sec == 'title') getTitle()
   else if (sec == 'book') getBook()
-  // else if (sec == 'book') getText()
   else if (sec == 'search') parseQuery()
   else showSection(sec)
 
@@ -451,7 +450,7 @@ function getDir(bpath) {
   if (!bpath) bpath = current.bpath
   openDir(bpath, (book) => {
     if (!book) return
-    log('DIR-INFO::', book.info)
+    // log('DIR-INFO::', book.info) // то же что book from get
     Promise.all([
       pushInfo(book.info),
       pushTexts(book.pars),
@@ -480,12 +479,13 @@ function getDir(bpath) {
             }
           })
 
-      if (current.section) info = book.info, navigate(current)
-      else navigate({section: 'lib'})
-      // navigate({section: 'lib'})
-    }).catch(function(err) {
-      log('ALL RES ERR', err)
-    })
+        // wtf ?
+        if (current.section) info = book.info, navigate(current)
+        else navigate({section: 'lib'})
+        // navigate({section: 'lib'})
+      }).catch(function(err) {
+        log('ALL RES ERR', err)
+      })
 
   })
 }
