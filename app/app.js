@@ -328,96 +328,53 @@ Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   navigate(state);
 });
 Mousetrap.bind(['ctrl+f'], function (ev) {
-  let query = clipboard.readText(); // Map
+  let query = clipboard.readText(); // MAP
 
   ftdb.get(query).then(function (wfdoc) {
     // let wfdocs = result.rows.map(row=> { return row.doc})
     log('WFdoc', query, wfdoc);
-    let keys = [];
-    wfdoc.docs.forEach(wfdoc => {
-      current.nics.forEach(nic => {
-        keys.push([wfdoc, nic].join('-'));
-      });
-    }); // log('KEYS', keys)
-
     let opts = {
       include_docs: true,
-      keys: keys
+      keys: wfdoc.parids
     };
     libdb.allDocs(opts).then(function (result) {
-      let qdocs = result.rows.map(row => {
+      let qdocs = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(result.rows.map(row => {
         return row.doc;
-      });
+      }));
+
       log('QDOCS', qdocs);
-      current = {
-        _id: '_local/current',
-        section: 'search',
-        qdocs: []
-      };
-      navigate(current);
-    });
-    return;
-    libdb.allDocs(opts).then(function (result) {
-      let qdocs = result.rows.map(row => {
-        return row.doc;
-      });
-      log('QDOCS', qdocs);
-      let qresults = {
-        query: query,
-        qbooks: []
-      };
-      wfdocs.forEach(wfdoc => {
-        wfdoc.idxs.forEach(idx => {
-          let qbook = {
-            title: info.book.title,
-            tpath: tpath,
-            idx: idx,
-            texts: []
-          };
 
-          let tauth = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(tts, tobj => {
-            return tobj.author;
-          });
+      let qgroups = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qdocs, 'fpath');
 
-          let row = tauth.rows[idx];
-          let textauth = textAround(tauth, row, query); // qres.auth = textauth
+      log('QGRS', qgroups); // <<<<<============= короткие строки по месту query =================== HERE
 
-          qbook.texts.push(textauth); // procent
-
-          let start = textauth.text.split(query)[0].length; // log('START', start)
-
-          let tttrn = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.filter(tts, tobj => {
-            return !tobj.author;
-          });
-
-          tttrn.forEach(tobj => {
-            let row = tobj.rows[idx];
-            let textrn = textAround(tobj, row, query, start);
-            qbook.texts.push(textrn);
-          });
-          qresults.qbooks.push(qbook);
+      for (let groupid in qgroups) {
+        let qgroup = qgroups[groupid];
+        qgroup.forEach(par => {
+          // вычислить процент PROCENT
+          if (par.author) par.innerHTMLhtml = aroundQuery(par.text, query);else par.text = par.text.slice(0, 100);
         });
-      });
-      log('QRs', qresults);
+      } // где navigate ?
+
+
       current = {
         _id: '_local/current',
         section: 'search',
-        qresults: qresults
+        qgroups: qgroups,
+        query: query
       };
       navigate(current);
     });
-  }).catch(function (err) {
-    log('getWFSErr', err);
   });
-});
+}); // Note: The correspondence between the text and the translation within the paragraph is very approximate.
 
 function parseQuery() {
   window.split.setSizes([100, 0]);
   let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
   let otrns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#trns'); // log('Q-current', current)
 
-  let res = current.qdocs;
-  let oquery = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])(res.query, 'title');
+  let res = current.qgroups;
+  let oquery = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])(current.query, 'title');
   osource.appendChild(oquery); // res.qbooks.forEach(qbook=> {
   //   log('Q-book', qbook)
   //   let obook = div()
@@ -437,7 +394,7 @@ function parseQuery() {
   // })
 
   let oline = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])('json', 'title');
-  let otxt = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])(JSON.stringify(current.qdocs));
+  let otxt = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])(JSON.stringify(current.qgroups));
   osource.appendChild(oline);
   osource.appendChild(otxt);
 }
@@ -458,16 +415,16 @@ function textAround(tobj, row, query, start) {
   return line;
 }
 
-function aroundA(str, wf) {
-  let limit = 50;
+function aroundQuery(str, wf) {
+  let limit = 100;
   let arr = str.split(wf);
   let head = arr[0].slice(-limit);
-  let tail = arr[1].slice(0, limit); // let qspan = ['<span class="query">', wf, '</span>'].join('')
-  // html = [head, query, tail] .join('')
+  let tail = arr[1].slice(0, limit);
+  let qspan = ['<span class="query">', wf, '</span>'].join('');
+  let html = [head, qspan, tail].join(''); // let text =  [head, wf, tail] .join('')
+  // log('AROUND', wf, text)
 
-  let text = [head, wf, tail].join(''); // log('AROUND', wf, text)
-
-  return text;
+  return html;
 }
 
 function showSection(name) {
@@ -664,6 +621,8 @@ let current, info;
 let limit = 20; // let apars = []
 // let tpars = []
 
+let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
+let rePunct = new RegExp(punct, 'g');
 function twoPages() {
   var sizes = store.get('split-sizes');
   if (sizes) sizes = JSON.parse(sizes);else sizes = [50, 50];
@@ -813,8 +772,8 @@ function parseBook(bookcurrent, bookinfo, pars) {
   let nic = current.nic;
   if (!nic) nic = cnics[0];
   if (!cnics.includes(nic)) nic = cnics[0];
-  current.nic = nic;
-  current.nics = cnics; // let start = 0
+  current.nic = nic; // current.nics = cnics
+  // let start = 0
   // setBookText(pars, start)
 
   setChunk(pars);
@@ -839,9 +798,10 @@ function setChunk(pars) {
   });
 
   apars.forEach(apar => {
-    // let oleft = p(apar.text)
+    let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>"); // let oleft = p(apar.text)
+
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])();
-    oleft.innerHTML = apar.text;
+    oleft.innerHTML = html;
     oleft.setAttribute('pos', apar.pos);
     oleft.setAttribute('nic', apar.nic);
     osource.appendChild(oleft);
@@ -1253,6 +1213,7 @@ function parseDir(bookpath) {
   // let texts = []
   // let coms = []
 
+  let nics = [];
   let pars = [];
   let map = {};
   info.sections = [];
@@ -1265,6 +1226,7 @@ function parseDir(bookpath) {
     if (ext == '.info') return;
     if (ext == '.json') return;
     let nic = ext.replace(/^\./, '');
+    nics.push(nic);
     let auth = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(info.auths, auth => {
       return auth.ext == nic;
     }) || nic;
@@ -1299,9 +1261,9 @@ function parseDir(bookpath) {
       };
 
       if (auth.author) {
-        let html = row.replace(rePunct, "<span class=\"active\">$1<\/span>");
-        par.author = true;
-        par.text = html; // bookWFMap_(map, row, fpath, idx) // mango failes use index
+        // let html = row.replace(rePunct, "<span class=\"active\">$1<\/span>")
+        par.author = true; // par.text = html
+        // bookWFMap_(map, row, fpath, idx) // mango failes use index
 
         bookWFMap(map, row, groupid);
       } // if (comment) coms.push(par)
@@ -1311,17 +1273,30 @@ function parseDir(bookpath) {
       if (!comment) pars.push(par);
     });
   });
+  nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(nics);
   let id = ['info', info.book.author, info.book.title].join('-');
   info._id = id;
   info.tree = tree;
   info.info = true;
   info.bpath = bpath;
-  let mapdocs = [];
+  let mapnics = {};
 
   for (let wf in map) {
+    map[wf].forEach(groupid => {
+      nics.forEach(nic => {
+        let parid = [groupid, nic].join('-');
+        if (!mapnics[wf]) mapnics[wf] = [];
+        mapnics[wf].push(parid);
+      });
+    });
+  }
+
+  let mapdocs = [];
+
+  for (let wf in mapnics) {
     let mapdoc = {
       _id: wf,
-      docs: map[wf]
+      parids: mapnics[wf]
     };
     mapdocs.push(mapdoc);
   }

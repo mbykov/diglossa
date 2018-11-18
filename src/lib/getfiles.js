@@ -136,6 +136,7 @@ function parseDir(bookpath) {
   // let tpath = ['text', info.book.author, info.book.title].join('-')
   // let texts = []
   // let coms = []
+  let nics = []
   let pars = []
   let map = {}
   info.sections = []
@@ -148,6 +149,7 @@ function parseDir(bookpath) {
     if (ext == '.info') return
     if (ext == '.json') return
     let nic = ext.replace(/^\./, '')
+    nics.push(nic)
     let auth = _.find(info.auths, auth=> { return auth.ext == nic}) || nic
 
     let txt = fse.readFileSync(path.resolve(bpath, fn), 'utf8')
@@ -175,9 +177,9 @@ function parseDir(bookpath) {
       // let parid = [info.book.author, info.book.title, fpath, idx, nic].join('-')
       let par = { _id: parid, pos: idx, lang: lang, nic: nic, fpath: fpath, text: row }
       if (auth.author) {
-        let html = row.replace(rePunct, "<span class=\"active\">$1<\/span>")
+        // let html = row.replace(rePunct, "<span class=\"active\">$1<\/span>")
         par.author = true
-        par.text = html
+        // par.text = html
         // bookWFMap_(map, row, fpath, idx) // mango failes use index
         bookWFMap(map, row, groupid)
       }
@@ -186,15 +188,27 @@ function parseDir(bookpath) {
       if (!comment) pars.push(par)
     })
   })
+
+  nics = _.uniq(nics)
   let id = ['info', info.book.author, info.book.title].join('-')
   info._id = id
   info.tree = tree
   info.info = true
   info.bpath = bpath
 
-  let mapdocs = []
+  let mapnics = {}
   for (let wf in map) {
-    let mapdoc = {_id: wf, docs: map[wf]}
+    map[wf].forEach(groupid=> {
+      nics.forEach(nic=> {
+        let parid = [groupid, nic].join('-')
+        if (!mapnics[wf]) mapnics[wf] = []
+        mapnics[wf].push(parid)
+      })
+    })
+  }
+  let mapdocs = []
+  for (let wf in mapnics) {
+    let mapdoc = {_id: wf, parids: mapnics[wf]}
     mapdocs.push(mapdoc)
   }
 

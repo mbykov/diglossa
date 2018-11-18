@@ -216,72 +216,43 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
 
 Mousetrap.bind(['ctrl+f'], function(ev) {
   let query = clipboard.readText()
-  // Map
+  // MAP
   ftdb.get(query)
     .then(function (wfdoc) {
       // let wfdocs = result.rows.map(row=> { return row.doc})
       log('WFdoc', query, wfdoc)
 
-      let keys = []
-      wfdoc.docs.forEach(wfdoc=> {
-        current.nics.forEach(nic=> {
-          keys.push([wfdoc, nic].join('-'))
-        })
-      })
-      // log('KEYS', keys)
-
-      let opts = { include_docs: true, keys: keys }
+      let opts = { include_docs: true, keys: wfdoc.parids }
       libdb.allDocs(opts)
         .then(function (result) {
-          let qdocs = result.rows.map(row=> { return row.doc})
+          let qdocs = _.compact(result.rows.map(row=> { return row.doc}))
           log('QDOCS', qdocs)
-
-          current = {_id: '_local/current', section: 'search', qdocs: []}
-          navigate(current)
-        })
-      return
-
-      libdb.allDocs(opts)
-        .then(function (result) {
-          let qdocs = result.rows.map(row=> { return row.doc})
-          log('QDOCS', qdocs)
-          let qresults = {query: query, qbooks: []}
-          wfdocs.forEach(wfdoc=>{
-            wfdoc.idxs.forEach(idx=> {
-              let qbook = {title: info.book.title, tpath: tpath, idx: idx, texts: []}
-              let tauth = _.find(tts, tobj=> { return tobj.author})
-              let row = tauth.rows[idx]
-              let textauth = textAround(tauth, row, query)
-              // qres.auth = textauth
-              qbook.texts.push(textauth)
-              // procent
-              let start = textauth.text.split(query)[0].length
-              // log('START', start)
-              let tttrn = _.filter(tts, tobj=> { return !tobj.author})
-              tttrn.forEach(tobj=> {
-                let row = tobj.rows[idx]
-                let textrn = textAround(tobj, row, query, start)
-                qbook.texts.push(textrn)
-              })
-              qresults.qbooks.push(qbook)
+          let qgroups = _.groupBy(qdocs, 'fpath')
+          log('QGRS', qgroups)
+          // <<<<<============= короткие строки по месту query =================== HERE
+          for (let groupid in qgroups) {
+            let qgroup = qgroups[groupid]
+            qgroup.forEach(par=> {
+              // вычислить процент PROCENT
+              if (par.author) par.innerHTMLhtml = aroundQuery(par.text, query)
+              else par.text = par.text.slice(0, 100)
             })
-          })
-          log('QRs', qresults)
-          current = {_id: '_local/current', section: 'search', qresults: qresults}
+          }
+          // где navigate ?
+          current = {_id: '_local/current', section: 'search', qgroups: qgroups, query: query}
           navigate(current)
         })
-    }).catch(function (err) {
-      log('getWFSErr', err);
     })
 })
 
+// Note: The correspondence between the text and the translation within the paragraph is very approximate.
 function parseQuery() {
   window.split.setSizes([100,0])
   let osource = q('#source')
   let otrns = q('#trns')
   // log('Q-current', current)
-  let res = current.qdocs
-  let oquery = div(res.query, 'title')
+  let res = current.qgroups
+  let oquery = div(current.query, 'title')
   osource.appendChild(oquery)
 
   // res.qbooks.forEach(qbook=> {
@@ -303,7 +274,7 @@ function parseQuery() {
   // })
 
   let oline = div('json', 'title')
-  let otxt = div(JSON.stringify(current.qdocs))
+  let otxt = div(JSON.stringify(current.qgroups))
   osource.appendChild(oline)
   osource.appendChild(otxt)
 }
@@ -320,16 +291,16 @@ function textAround(tobj, row, query, start) {
   return line
 }
 
-function aroundA(str, wf) {
-  let limit = 50
+function aroundQuery(str, wf) {
+  let limit = 100
   let arr = str.split(wf)
   let head = arr[0].slice(-limit)
   let tail = arr[1].slice(0,limit)
-  // let qspan = ['<span class="query">', wf, '</span>'].join('')
-  // html = [head, query, tail] .join('')
-  let text =  [head, wf, tail] .join('')
+  let qspan = ['<span class="query">', wf, '</span>'].join('')
+  let html = [head, qspan, tail] .join('')
+  // let text =  [head, wf, tail] .join('')
   // log('AROUND', wf, text)
-  return text
+  return html
 }
 
 

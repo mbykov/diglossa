@@ -20,6 +20,9 @@ let limit = 20
 // let apars = []
 // let tpars = []
 
+let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
+let rePunct = new RegExp(punct, 'g')
+
 export function twoPages() {
   var sizes = store.get('split-sizes')
   if (sizes) sizes = JSON.parse(sizes)
@@ -172,7 +175,7 @@ export function parseBook(bookcurrent, bookinfo, pars) {
   if (!nic) nic = cnics[0]
   if (!cnics.includes(nic)) nic = cnics[0]
   current.nic = nic
-  current.nics = cnics
+  // current.nics = cnics
 
   // let start = 0
   // setBookText(pars, start)
@@ -193,9 +196,10 @@ function setChunk(pars) {
   // log('AP', apars)
   let tpars = _.filter(pars, par=> { return !par.author})
   apars.forEach(apar=> {
+    let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>")
     // let oleft = p(apar.text)
     let oleft = p()
-    oleft.innerHTML = apar.text
+    oleft.innerHTML = html
     oleft.setAttribute('pos', apar.pos)
     oleft.setAttribute('nic', apar.nic)
     osource.appendChild(oleft)
