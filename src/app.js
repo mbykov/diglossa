@@ -96,9 +96,10 @@ function getState() {
   libdb.get('_local/current').then(function (navpath) {
     current = navpath
     log('INIT CURRENT:', current)
-    if (current.section == 'lib') navigate({section: 'lib'})
-    else if (current.section == 'search') parseQuery()
-    else getDir()
+    navigate(current)
+    // if (current.section == 'lib') navigate({section: 'lib'})
+    // else if (current.section == 'search') parseQuery()
+    // else getDir()
   }).catch(function (err) {
     if (err.name === 'not_found') {
       // Promise.all([
@@ -128,7 +129,7 @@ function goLib() {
 
 function getTitle() {
   // log('getTitle cur:', current)
-  getInfo(current)
+  getInfo(current.info_id)
     .then(function (curinfo) {
       info = curinfo
       current.bpath = info.bpath
@@ -139,12 +140,17 @@ function getTitle() {
 }
 
 function getBook() {
-  getText(current)
-    .then(function(res) {
-      let pars = _.compact(res.docs)
-      // log('___getBook-pars:', pars.length)
-      if (!pars || !pars.length) log('no texts')
-      parseBook(current, info, pars)
+  getInfo(current.info_id)
+    .then(function (curinfo) {
+      getText(current)
+        .then(function(res) {
+          let pars = _.compact(res.docs)
+          // log('___getBook-pars:', pars.length)
+          if (!pars || !pars.length) log('no texts')
+          parseBook(current, curinfo, pars)
+        })
+    }).catch(function (err) {
+      log('getTitleErr', err);
     })
 }
 
@@ -214,14 +220,12 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
   navigate(state)
 })
 
+// MAP
 Mousetrap.bind(['ctrl+f'], function(ev) {
   let query = clipboard.readText()
-  // MAP
   ftdb.get(query)
     .then(function (wfdoc) {
-      // let wfdocs = result.rows.map(row=> { return row.doc})
       log('WFdoc', query, wfdoc)
-
       let opts = { include_docs: true, keys: wfdoc.parids }
       libdb.allDocs(opts)
         .then(function (result) {
@@ -238,57 +242,43 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
               else par.text = par.text.slice(0, 100)
             })
           }
-          // где navigate ?
           current = {_id: '_local/current', section: 'search', qgroups: qgroups, query: query}
           navigate(current)
         })
     })
 })
 
-// Note: The correspondence between the text and the translation within the paragraph is very approximate.
+// .
 function parseQuery() {
   window.split.setSizes([100,0])
   let osource = q('#source')
   let otrns = q('#trns')
   // log('Q-current', current)
-  let res = current.qgroups
   let oquery = div(current.query, 'title')
   osource.appendChild(oquery)
+  // унести в help
+  let disclaimer = 'Note: The correspondence between the place of a query in the source and in the translations within the paragraph is very approximate'
+  let odisc = p(disclaimer, 'disclaimer')
+  oquery.appendChild(odisc)
 
-  // res.qbooks.forEach(qbook=> {
-  //   log('Q-book', qbook)
-  //   let obook = div()
-  //   let otitle = span(qbook.title, 'qtitle')
-  //   let oidx = span('par: '+qbook.idx, 'qtitle')
-  //   obook.appendChild(otitle)
-  //   obook.appendChild(oidx)
-  //   osource.appendChild(obook)
-  //   let otext = div('', 'qtext')
-  //   qbook.texts.forEach(tobj=> {
-  //     let oline = p(tobj.text, 'qline')
-  //     oline.setAttribute('nic', tobj.nic)
-  //     if (!tobj.author) oline.classList.add('hidden')
-  //     otext.appendChild(oline)
-  //   })
-  //   osource.appendChild(otext)
-  // })
-
-  let oline = div('json', 'title')
-  let otxt = div(JSON.stringify(current.qgroups))
-  osource.appendChild(oline)
-  osource.appendChild(otxt)
-}
-
-
-function textAround(tobj, row, query, start) {
-  let line = {nic: tobj.nic, lang: tobj.lang}
-  if (tobj.author) {
-    line.author = true
-    line.text = aroundA(row, query)
-  } else {
-    line.text = row.slice(start, start+150)
+  for (let qfpath in current.qgroups) {
+    let group = current.qgroups[qfpath]
+    let ogroup = div()
+    let ofpath = span(qfpath, 'qfpath')
+    let opos = span('par: '+group[0].pos, 'qpos')
+    ogroup.appendChild(ofpath)
+    ogroup.appendChild(opos)
+    let otext = div('', 'qtext')
+    group.forEach(par=> {
+      let oline = p(par.text, 'qline')
+      oline.setAttribute('nic', par.nic)
+      if (par.author) oline.innerHTML = aroundQuery(par.text, current.query), log('AAAAA', par.nic)
+      else oline.classList.add('hidden')
+      otext.appendChild(oline)
+    })
+    ogroup.appendChild(otext)
+    osource.appendChild(ogroup)
   }
-  return line
 }
 
 function aroundQuery(str, wf) {
@@ -301,6 +291,17 @@ function aroundQuery(str, wf) {
   // let text =  [head, wf, tail] .join('')
   // log('AROUND', wf, text)
   return html
+}
+
+function textAround(tobj, row, query, start) {
+  let line = {nic: tobj.nic, lang: tobj.lang}
+  if (tobj.author) {
+    line.author = true
+    line.text = aroundA(row, query)
+  } else {
+    line.text = row.slice(start, start+150)
+  }
+  return line
 }
 
 

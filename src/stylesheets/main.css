@@ -271,10 +271,23 @@ div.hleft.header > div.tree {
   /* display: none; */
 }
 
-.qtitle {
+.qfpath {
   padding-right: 15px;
+  color: maroon;
+  cursor: pointer;
 }
 
-#source > div.qtext > p.hidden {
+.query {
+  color: maroon;
+  font-weight: bold;
+}
+
+/* #source > div:nth-child(2) > p:nth-child(4) */
+/* #source > div:nth-child(2) > div > p:nth-child(2) */
+div.qtext > p.hidden {
   display: none;
 }
+
+.disclaimer {
+  font-size: 10px;
+  }
