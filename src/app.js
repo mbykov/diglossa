@@ -142,7 +142,7 @@ function getBook() {
   getText(current)
     .then(function(res) {
       let pars = _.compact(res.docs)
-      log('___getBook-pars:', pars)
+      // log('___getBook-pars:', pars.length)
       if (!pars || !pars.length) log('no texts')
       parseBook(current, info, pars)
     })
@@ -256,9 +256,14 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
     .then(function (wfdoc) {
       // let wfdocs = result.rows.map(row=> { return row.doc})
       log('WFdoc', query, wfdoc)
+      let opts = { include_docs: true, keys: wfdoc.docs }
+      libdb.allDocs(opts)
+        .then(function (result) {
+          let qdocs = result.rows.map(row=> { return row.doc})
+          log('QDOCS', qdocs)
+        })
       return
 
-      let opts = { include_docs: true, keys: wfdoc.parids }
       libdb.allDocs(opts)
         .then(function (result) {
           let qdocs = result.rows.map(row=> { return row.doc})
@@ -288,8 +293,6 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
           current = {_id: '_local/current', section: 'search', qresults: qresults}
           navigate(current)
         })
-
-      // parseBook(current, info, texts)
     }).catch(function (err) {
       log('getWFSErr', err);
     })
@@ -326,7 +329,6 @@ function parseQuery() {
   osource.appendChild(oline)
   osource.appendChild(otxt)
 }
-
 
 
 function textAround(tobj, row, query, start) {
@@ -432,7 +434,7 @@ function pushMap(ndocs) {
           cleandocs.push(ndoc)
         }
       })
-      log('MAP', cleandocs)
+      log('MAP', cleandocs.length)
       return ftdb.bulkDocs(cleandocs)
     })
 }

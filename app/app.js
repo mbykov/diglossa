@@ -258,9 +258,9 @@ function getTitle() {
 
 function getBook() {
   Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getText"])(current).then(function (res) {
-    let pars = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs);
+    let pars = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs); // log('___getBook-pars:', pars.length)
 
-    log('___getBook-pars:', pars);
+
     if (!pars || !pars.length) log('no texts');
     Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, info, pars);
   }); // let options = { include_docs: true }
@@ -361,11 +361,17 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
   ftdb.get(query).then(function (wfdoc) {
     // let wfdocs = result.rows.map(row=> { return row.doc})
     log('WFdoc', query, wfdoc);
-    return;
     let opts = {
       include_docs: true,
-      keys: wfdoc.parids
+      keys: wfdoc.docs
     };
+    libdb.allDocs(opts).then(function (result) {
+      let qdocs = result.rows.map(row => {
+        return row.doc;
+      });
+      log('QDOCS', qdocs);
+    });
+    return;
     libdb.allDocs(opts).then(function (result) {
       let qdocs = result.rows.map(row => {
         return row.doc;
@@ -414,7 +420,7 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
         qresults: qresults
       };
       navigate(current);
-    }); // parseBook(current, info, texts)
+    });
   }).catch(function (err) {
     log('getWFSErr', err);
   });
@@ -567,7 +573,7 @@ function pushMap(ndocs) {
         cleandocs.push(ndoc);
       }
     });
-    log('MAP', cleandocs);
+    log('MAP', cleandocs.length);
     return ftdb.bulkDocs(cleandocs);
   });
 }
@@ -1309,8 +1315,9 @@ function parseDir(bookpath) {
       if (auth.author) {
         let html = row.replace(rePunct, "<span class=\"active\">$1<\/span>");
         par.author = true;
-        par.text = html;
-        bookWFMap(map, row, fpath, idx);
+        par.text = html; // bookWFMap_(map, row, fpath, idx) // mango failes use index
+
+        bookWFMap(map, row, parid);
       } // if (comment) coms.push(par)
       // else pars.push(par)
 
@@ -1342,7 +1349,19 @@ function parseDir(bookpath) {
   return book;
 }
 
-function bookWFMap(map, row, fpath, pos) {
+function bookWFMap(map, row, parid) {
+  let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g, '');
+
+  let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(punctless.split(' '));
+
+  wfs.forEach(wf => {
+    if (!map[wf]) map[wf] = [];
+    map[wf].push(parid);
+  });
+} // mango-find can not use indexes with $or
+
+
+function bookWFMap_(map, row, fpath, pos) {
   let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g, '');
 
   let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(punctless.split(' '));

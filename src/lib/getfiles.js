@@ -177,7 +177,8 @@ function parseDir(bookpath) {
         let html = row.replace(rePunct, "<span class=\"active\">$1<\/span>")
         par.author = true
         par.text = html
-        bookWFMap(map, row, fpath, idx)
+        // bookWFMap_(map, row, fpath, idx) // mango failes use index
+        bookWFMap(map, row, parid)
       }
       // if (comment) coms.push(par)
       // else pars.push(par)
@@ -201,7 +202,17 @@ function parseDir(bookpath) {
   return book
 }
 
-function bookWFMap(map, row, fpath, pos) {
+function bookWFMap(map, row, parid) {
+  let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
+  let wfs = _.compact(punctless.split(' '))
+  wfs.forEach(wf=> {
+    if (!map[wf]) map[wf] = []
+    map[wf].push(parid)
+  })
+}
+
+// mango-find can not use indexes with $or
+function bookWFMap_(map, row, fpath, pos) {
   let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
   let wfs = _.compact(punctless.split(' '))
   wfs.forEach(wf=> {
