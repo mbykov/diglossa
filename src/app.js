@@ -146,41 +146,6 @@ function getBook() {
       if (!pars || !pars.length) log('no texts')
       parseBook(current, info, pars)
     })
-
-  // let options = { include_docs: true }
-  // libdb.allDocs(options)
-  //   .then(function (result) {
-  //     let docs = result.rows.map(row=> { return row.doc})
-  //     log('RES_________', docs)
-  //   })
-
-  // let selector = {fpath: 'Dialogues/Parmenides', pos: {$gte: 0, $lt: 10}}
-  // let selector = {fpath: 'Dialogues/Parmenides'}
-
-  // libdb.explain({
-  //   selector: selector,
-  //   fields: ['fpath', 'idx']
-  // }).then(function (explanation) {
-  //   log('EX', explanation)
-  // }).catch(function (err) {
-  //   console.log(err);
-  // })
-
-  // log('CREATING INDEX')
-  // libdb.createIndex({
-  //   index: {fields: ['fpath', 'pos']},
-  //   // index: {fields: ['fpath']},
-  //   name: 'fpathindex'
-  // }).then(function() {
-  //   libdb.find({selector: selector}) // , fields: ['fpath']
-  //     .then(function (res, asd) {
-  //       log('FOUND', res, asd)
-  //     }).catch(function (err) {
-  //       console.log(err);
-  //     })
-  // })
-
-
 }
 
 function parseLib(infos) {
@@ -256,11 +221,23 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
     .then(function (wfdoc) {
       // let wfdocs = result.rows.map(row=> { return row.doc})
       log('WFdoc', query, wfdoc)
-      let opts = { include_docs: true, keys: wfdoc.docs }
+
+      let keys = []
+      wfdoc.docs.forEach(wfdoc=> {
+        current.nics.forEach(nic=> {
+          keys.push([wfdoc, nic].join('-'))
+        })
+      })
+      // log('KEYS', keys)
+
+      let opts = { include_docs: true, keys: keys }
       libdb.allDocs(opts)
         .then(function (result) {
           let qdocs = result.rows.map(row=> { return row.doc})
           log('QDOCS', qdocs)
+
+          current = {_id: '_local/current', section: 'search', qdocs: []}
+          navigate(current)
         })
       return
 
@@ -303,29 +280,30 @@ function parseQuery() {
   let osource = q('#source')
   let otrns = q('#trns')
   // log('Q-current', current)
-  let res = current.qresults
+  let res = current.qdocs
   let oquery = div(res.query, 'title')
   osource.appendChild(oquery)
-  res.qbooks.forEach(qbook=> {
-    log('Q-book', qbook)
-    let obook = div()
-    let otitle = span(qbook.title, 'qtitle')
-    let oidx = span('par: '+qbook.idx, 'qtitle')
-    obook.appendChild(otitle)
-    obook.appendChild(oidx)
-    osource.appendChild(obook)
-    let otext = div('', 'qtext')
-    qbook.texts.forEach(tobj=> {
-      let oline = p(tobj.text, 'qline')
-      oline.setAttribute('nic', tobj.nic)
-      if (!tobj.author) oline.classList.add('hidden')
-      otext.appendChild(oline)
-    })
-    osource.appendChild(otext)
-  })
+
+  // res.qbooks.forEach(qbook=> {
+  //   log('Q-book', qbook)
+  //   let obook = div()
+  //   let otitle = span(qbook.title, 'qtitle')
+  //   let oidx = span('par: '+qbook.idx, 'qtitle')
+  //   obook.appendChild(otitle)
+  //   obook.appendChild(oidx)
+  //   osource.appendChild(obook)
+  //   let otext = div('', 'qtext')
+  //   qbook.texts.forEach(tobj=> {
+  //     let oline = p(tobj.text, 'qline')
+  //     oline.setAttribute('nic', tobj.nic)
+  //     if (!tobj.author) oline.classList.add('hidden')
+  //     otext.appendChild(oline)
+  //   })
+  //   osource.appendChild(otext)
+  // })
 
   let oline = div('json', 'title')
-  let otxt = div(JSON.stringify(current.qresults))
+  let otxt = div(JSON.stringify(current.qdocs))
   osource.appendChild(oline)
   osource.appendChild(otxt)
 }
@@ -473,7 +451,6 @@ function getDir(bpath) {
       pushInfo(book.info),
       pushTexts(book.pars),
       pushMap(book.mapdocs)
-      // setDBState(book.pars.length)
     ])
       .then(function(res) {
         log('PUSH ALL RES', res)

@@ -172,6 +172,7 @@ export function parseBook(bookcurrent, bookinfo, pars) {
   if (!nic) nic = cnics[0]
   if (!cnics.includes(nic)) nic = cnics[0]
   current.nic = nic
+  current.nics = cnics
 
   // let start = 0
   // setBookText(pars, start)

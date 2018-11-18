@@ -263,35 +263,7 @@ function getBook() {
 
     if (!pars || !pars.length) log('no texts');
     Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, info, pars);
-  }); // let options = { include_docs: true }
-  // libdb.allDocs(options)
-  //   .then(function (result) {
-  //     let docs = result.rows.map(row=> { return row.doc})
-  //     log('RES_________', docs)
-  //   })
-  // let selector = {fpath: 'Dialogues/Parmenides', pos: {$gte: 0, $lt: 10}}
-  // let selector = {fpath: 'Dialogues/Parmenides'}
-  // libdb.explain({
-  //   selector: selector,
-  //   fields: ['fpath', 'idx']
-  // }).then(function (explanation) {
-  //   log('EX', explanation)
-  // }).catch(function (err) {
-  //   console.log(err);
-  // })
-  // log('CREATING INDEX')
-  // libdb.createIndex({
-  //   index: {fields: ['fpath', 'pos']},
-  //   // index: {fields: ['fpath']},
-  //   name: 'fpathindex'
-  // }).then(function() {
-  //   libdb.find({selector: selector}) // , fields: ['fpath']
-  //     .then(function (res, asd) {
-  //       log('FOUND', res, asd)
-  //     }).catch(function (err) {
-  //       console.log(err);
-  //     })
-  // })
+  });
 }
 
 function parseLib(infos) {
@@ -361,15 +333,28 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
   ftdb.get(query).then(function (wfdoc) {
     // let wfdocs = result.rows.map(row=> { return row.doc})
     log('WFdoc', query, wfdoc);
+    let keys = [];
+    wfdoc.docs.forEach(wfdoc => {
+      current.nics.forEach(nic => {
+        keys.push([wfdoc, nic].join('-'));
+      });
+    }); // log('KEYS', keys)
+
     let opts = {
       include_docs: true,
-      keys: wfdoc.docs
+      keys: keys
     };
     libdb.allDocs(opts).then(function (result) {
       let qdocs = result.rows.map(row => {
         return row.doc;
       });
       log('QDOCS', qdocs);
+      current = {
+        _id: '_local/current',
+        section: 'search',
+        qdocs: []
+      };
+      navigate(current);
     });
     return;
     libdb.allDocs(opts).then(function (result) {
@@ -431,28 +416,28 @@ function parseQuery() {
   let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
   let otrns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#trns'); // log('Q-current', current)
 
-  let res = current.qresults;
+  let res = current.qdocs;
   let oquery = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])(res.query, 'title');
-  osource.appendChild(oquery);
-  res.qbooks.forEach(qbook => {
-    log('Q-book', qbook);
-    let obook = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])();
-    let otitle = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])(qbook.title, 'qtitle');
-    let oidx = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])('par: ' + qbook.idx, 'qtitle');
-    obook.appendChild(otitle);
-    obook.appendChild(oidx);
-    osource.appendChild(obook);
-    let otext = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])('', 'qtext');
-    qbook.texts.forEach(tobj => {
-      let oline = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["p"])(tobj.text, 'qline');
-      oline.setAttribute('nic', tobj.nic);
-      if (!tobj.author) oline.classList.add('hidden');
-      otext.appendChild(oline);
-    });
-    osource.appendChild(otext);
-  });
+  osource.appendChild(oquery); // res.qbooks.forEach(qbook=> {
+  //   log('Q-book', qbook)
+  //   let obook = div()
+  //   let otitle = span(qbook.title, 'qtitle')
+  //   let oidx = span('par: '+qbook.idx, 'qtitle')
+  //   obook.appendChild(otitle)
+  //   obook.appendChild(oidx)
+  //   osource.appendChild(obook)
+  //   let otext = div('', 'qtext')
+  //   qbook.texts.forEach(tobj=> {
+  //     let oline = p(tobj.text, 'qline')
+  //     oline.setAttribute('nic', tobj.nic)
+  //     if (!tobj.author) oline.classList.add('hidden')
+  //     otext.appendChild(oline)
+  //   })
+  //   osource.appendChild(otext)
+  // })
+
   let oline = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])('json', 'title');
-  let otxt = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])(JSON.stringify(current.qresults));
+  let otxt = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])(JSON.stringify(current.qdocs));
   osource.appendChild(oline);
   osource.appendChild(otxt);
 }
@@ -607,8 +592,7 @@ function getDir(bpath) {
   Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
     if (!book) return; // log('DIR-INFO::', book.info) // то же что book from get
 
-    Promise.all([pushInfo(book.info), pushTexts(book.pars), pushMap(book.mapdocs) // setDBState(book.pars.length)
-    ]).then(function (res) {
+    Promise.all([pushInfo(book.info), pushTexts(book.pars), pushMap(book.mapdocs)]).then(function (res) {
       log('PUSH ALL RES', res);
 
       if (res[1].length) {
@@ -829,7 +813,8 @@ function parseBook(bookcurrent, bookinfo, pars) {
   let nic = current.nic;
   if (!nic) nic = cnics[0];
   if (!cnics.includes(nic)) nic = cnics[0];
-  current.nic = nic; // let start = 0
+  current.nic = nic;
+  current.nics = cnics; // let start = 0
   // setBookText(pars, start)
 
   setChunk(pars);
@@ -1264,8 +1249,8 @@ function parseDir(bookpath) {
   }); // log('FNS', fns.length)
 
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
-  let rePunct = new RegExp(punct, 'g');
-  let tpath = ['text', info.book.author, info.book.title].join('-'); // let texts = []
+  let rePunct = new RegExp(punct, 'g'); // let tpath = ['text', info.book.author, info.book.title].join('-')
+  // let texts = []
   // let coms = []
 
   let pars = [];
@@ -1301,7 +1286,8 @@ function parseDir(bookpath) {
     // else texts.push(pane)
 
     rows.forEach((row, idx) => {
-      let parid = ['text', info.book.author, info.book.title, fpath, idx, nic].join('-'); // let parid = [info.book.author, info.book.title, fpath, idx, nic].join('-')
+      let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-');
+      let parid = [groupid, nic].join('-'); // let parid = [info.book.author, info.book.title, fpath, idx, nic].join('-')
 
       let par = {
         _id: parid,
@@ -1317,7 +1303,7 @@ function parseDir(bookpath) {
         par.author = true;
         par.text = html; // bookWFMap_(map, row, fpath, idx) // mango failes use index
 
-        bookWFMap(map, row, parid);
+        bookWFMap(map, row, groupid);
       } // if (comment) coms.push(par)
       // else pars.push(par)
 
@@ -1349,14 +1335,14 @@ function parseDir(bookpath) {
   return book;
 }
 
-function bookWFMap(map, row, parid) {
+function bookWFMap(map, row, groupid) {
   let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g, '');
 
   let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(punctless.split(' '));
 
   wfs.forEach(wf => {
     if (!map[wf]) map[wf] = [];
-    map[wf].push(parid);
+    map[wf].push(groupid);
   });
 } // mango-find can not use indexes with $or
 

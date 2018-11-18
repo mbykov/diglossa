@@ -133,7 +133,7 @@ function parseDir(bookpath) {
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
   let rePunct = new RegExp(punct, 'g')
 
-  let tpath = ['text', info.book.author, info.book.title].join('-')
+  // let tpath = ['text', info.book.author, info.book.title].join('-')
   // let texts = []
   // let coms = []
   let pars = []
@@ -170,7 +170,8 @@ function parseDir(bookpath) {
     // else texts.push(pane)
 
     rows.forEach((row, idx)=> {
-      let parid = ['text', info.book.author, info.book.title, fpath, idx, nic].join('-')
+      let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-')
+      let parid = [groupid, nic].join('-')
       // let parid = [info.book.author, info.book.title, fpath, idx, nic].join('-')
       let par = { _id: parid, pos: idx, lang: lang, nic: nic, fpath: fpath, text: row }
       if (auth.author) {
@@ -178,7 +179,7 @@ function parseDir(bookpath) {
         par.author = true
         par.text = html
         // bookWFMap_(map, row, fpath, idx) // mango failes use index
-        bookWFMap(map, row, parid)
+        bookWFMap(map, row, groupid)
       }
       // if (comment) coms.push(par)
       // else pars.push(par)
@@ -202,12 +203,12 @@ function parseDir(bookpath) {
   return book
 }
 
-function bookWFMap(map, row, parid) {
+function bookWFMap(map, row, groupid) {
   let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
   let wfs = _.compact(punctless.split(' '))
   wfs.forEach(wf=> {
     if (!map[wf]) map[wf] = []
-    map[wf].push(parid)
+    map[wf].push(groupid)
   })
 }
 
