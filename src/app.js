@@ -251,25 +251,18 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
 
 Mousetrap.bind(['ctrl+f'], function(ev) {
   let query = clipboard.readText()
-  // log('WF', query)
-  let key = ['wf', query].join('-')
-  let options = { include_docs: true, key: key }
-  libdb.allDocs(options)
-    .then(function (result) {
-      let wfdocs = result.rows.map(row=> { return row.doc})
-      log('WFdocs', wfdocs)
+  // Map
+  ftdb.get(query)
+    .then(function (wfdoc) {
+      // let wfdocs = result.rows.map(row=> { return row.doc})
+      log('WFdoc', query, wfdoc)
+      return
 
-      let textids = wfdocs.map(wf=> { return wf.textid })
-      let tpaths = textids.map(textid=> { return textid.split('.')[0] })
-      let tpath = _.uniq(tpaths)[0]
-      log('TPATH', tpath)
-
-      let endkey = [tpath, '\ufff0'].join('')
-      let opts = { include_docs: true, startkey: tpath, endkey: endkey }
+      let opts = { include_docs: true, keys: wfdoc.parids }
       libdb.allDocs(opts)
         .then(function (result) {
-          let tts = result.rows.map(row=> { return row.doc})
-          log('TTS', tts)
+          let qdocs = result.rows.map(row=> { return row.doc})
+          log('QDOCS', qdocs)
           let qresults = {query: query, qbooks: []}
           wfdocs.forEach(wfdoc=>{
             wfdoc.idxs.forEach(idx=> {
@@ -393,15 +386,9 @@ function pushInfo(ndoc) {
 }
 
 function pushTexts(newdocs) {
-  // let options = {
-  //   include_docs: true,
-  //   startkey: 'text',
-  //   endkey: 'text\ufff0'
-  // }
   return libdb.allDocs({include_docs: true})
     .then(function(res) {
       let docs = res.rows.map(row=>{ return row.doc})
-
       let cleandocs = []
       let hdoc = {}
       docs.forEach(doc=> { hdoc[doc._id] = doc })
@@ -419,31 +406,33 @@ function pushTexts(newdocs) {
     })
 }
 
-function pushMap(map) {
-  let options = {
-    include_docs: true,
-    startkey: 'wf',
-    endkey: 'wf\ufff0'
-  }
-  return ftdb.allDocs(options)
+function pushMap(ndocs) {
+  return ftdb.allDocs({include_docs: true})
     .then(function(res) {
       let docs = res.rows.map(row=>{ return row.doc})
       // log('ODOCS', docs)
-      let cleandocs = []
       let hdoc = {}
       docs.forEach(doc=> { hdoc[doc._id] = doc })
 
+      let cleandocs = []
       // log('NDOCS', map)
-      map.forEach(ndoc=> {
+      ndocs.forEach(ndoc=> {
         let doc = hdoc[ndoc._id]
         if (doc) {
-          if (_.isEqual(doc.fns, ndoc.fns)) return
-          else doc.fns = doc.fns.concat(ndoc.fns), cleandocs.push(doc)
+          // log('DOC-old', doc)
+          let testdoc = _.clone(doc)
+          delete testdoc._rev
+          if (_.isEqual(ndoc, testdoc)) return
+          else {
+            // неверно - нужны только уникальные значения, uniq не катит
+            doc.docs = ndoc.docs //  _.uniq(doc.docs.concat(ndoc.docs))
+            cleandocs.push(doc)
+          }
         } else {
           cleandocs.push(ndoc)
         }
       })
-      // log('CMAP', cleandocs)
+      log('MAP', cleandocs)
       return ftdb.bulkDocs(cleandocs)
     })
 }
@@ -481,7 +470,7 @@ function getDir(bpath) {
     Promise.all([
       pushInfo(book.info),
       pushTexts(book.pars),
-      // pushMap(book.map)
+      pushMap(book.mapdocs)
       // setDBState(book.pars.length)
     ])
       .then(function(res) {

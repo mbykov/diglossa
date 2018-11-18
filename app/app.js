@@ -356,39 +356,21 @@ Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   navigate(state);
 });
 Mousetrap.bind(['ctrl+f'], function (ev) {
-  let query = clipboard.readText(); // log('WF', query)
+  let query = clipboard.readText(); // Map
 
-  let key = ['wf', query].join('-');
-  let options = {
-    include_docs: true,
-    key: key
-  };
-  libdb.allDocs(options).then(function (result) {
-    let wfdocs = result.rows.map(row => {
-      return row.doc;
-    });
-    log('WFdocs', wfdocs);
-    let textids = wfdocs.map(wf => {
-      return wf.textid;
-    });
-    let tpaths = textids.map(textid => {
-      return textid.split('.')[0];
-    });
-
-    let tpath = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.uniq(tpaths)[0];
-
-    log('TPATH', tpath);
-    let endkey = [tpath, '\ufff0'].join('');
+  ftdb.get(query).then(function (wfdoc) {
+    // let wfdocs = result.rows.map(row=> { return row.doc})
+    log('WFdoc', query, wfdoc);
+    return;
     let opts = {
       include_docs: true,
-      startkey: tpath,
-      endkey: endkey
+      keys: wfdoc.parids
     };
     libdb.allDocs(opts).then(function (result) {
-      let tts = result.rows.map(row => {
+      let qdocs = result.rows.map(row => {
         return row.doc;
       });
-      log('TTS', tts);
+      log('QDOCS', qdocs);
       let qresults = {
         query: query,
         qbooks: []
@@ -528,11 +510,6 @@ function pushInfo(ndoc) {
 }
 
 function pushTexts(newdocs) {
-  // let options = {
-  //   include_docs: true,
-  //   startkey: 'text',
-  //   endkey: 'text\ufff0'
-  // }
   return libdb.allDocs({
     include_docs: true
   }).then(function (res) {
@@ -558,33 +535,39 @@ function pushTexts(newdocs) {
   });
 }
 
-function pushMap(map) {
-  let options = {
-    include_docs: true,
-    startkey: 'wf',
-    endkey: 'wf\ufff0'
-  };
-  return ftdb.allDocs(options).then(function (res) {
+function pushMap(ndocs) {
+  return ftdb.allDocs({
+    include_docs: true
+  }).then(function (res) {
     let docs = res.rows.map(row => {
       return row.doc;
     }); // log('ODOCS', docs)
 
-    let cleandocs = [];
     let hdoc = {};
     docs.forEach(doc => {
       hdoc[doc._id] = doc;
-    }); // log('NDOCS', map)
+    });
+    let cleandocs = []; // log('NDOCS', map)
 
-    map.forEach(ndoc => {
+    ndocs.forEach(ndoc => {
       let doc = hdoc[ndoc._id];
 
       if (doc) {
-        if (lodash__WEBPACK_IMPORTED_MODULE_1___default.a.isEqual(doc.fns, ndoc.fns)) return;else doc.fns = doc.fns.concat(ndoc.fns), cleandocs.push(doc);
+        // log('DOC-old', doc)
+        let testdoc = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.clone(doc);
+
+        delete testdoc._rev;
+        if (lodash__WEBPACK_IMPORTED_MODULE_1___default.a.isEqual(ndoc, testdoc)) return;else {
+          // неверно - нужны только уникальные значения, uniq не катит
+          doc.docs = ndoc.docs; //  _.uniq(doc.docs.concat(ndoc.docs))
+
+          cleandocs.push(doc);
+        }
       } else {
         cleandocs.push(ndoc);
       }
-    }); // log('CMAP', cleandocs)
-
+    });
+    log('MAP', cleandocs);
     return ftdb.bulkDocs(cleandocs);
   });
 }
@@ -618,7 +601,8 @@ function getDir(bpath) {
   Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
     if (!book) return; // log('DIR-INFO::', book.info) // то же что book from get
 
-    Promise.all([pushInfo(book.info), pushTexts(book.pars)]).then(function (res) {
+    Promise.all([pushInfo(book.info), pushTexts(book.pars), pushMap(book.mapdocs) // setDBState(book.pars.length)
+    ]).then(function (res) {
       log('PUSH ALL RES', res);
 
       if (res[1].length) {
@@ -850,9 +834,7 @@ function parseBook(bookcurrent, bookinfo, pars) {
 }
 
 function setChunk(pars) {
-  let nic = current.nic; // let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
-  // let rePunct = new RegExp(punct, 'g')
-
+  let nic = current.nic;
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
 
@@ -866,9 +848,9 @@ function setChunk(pars) {
   });
 
   apars.forEach(apar => {
-    let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])(apar.text); // let oleft = p()
-    // oleft.innerHTML = apar.text
-
+    // let oleft = p(apar.text)
+    let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])();
+    oleft.innerHTML = apar.text;
     oleft.setAttribute('pos', apar.pos);
     oleft.setAttribute('nic', apar.nic);
     osource.appendChild(oleft);
@@ -1281,7 +1263,7 @@ function parseDir(bookpath) {
   // let coms = []
 
   let pars = [];
-  let map;
+  let map = {};
   info.sections = [];
   fns.forEach(fn => {
     let comment = false;
@@ -1325,58 +1307,54 @@ function parseDir(bookpath) {
       };
 
       if (auth.author) {
-        // let text = row.replace(rePunct, "<span class\"active\">$1<\/span>")
-        par.author = true; // if (idx == 0) log('_HTML_', par.text)
-        // par.text = row
+        let html = row.replace(rePunct, "<span class=\"active\">$1<\/span>");
+        par.author = true;
+        par.text = html;
+        bookWFMap(map, row, fpath, idx);
       } // if (comment) coms.push(par)
       // else pars.push(par)
 
 
       if (!comment) pars.push(par);
-    }); // if (auth.author) map = bookWFMap(rows, textid)
+    });
   });
   let id = ['info', info.book.author, info.book.title].join('-');
   info._id = id;
   info.tree = tree;
   info.info = true;
-  info.bpath = bpath; // let book = {bkey: bpath, info: info, texts: texts, coms: coms, map: map, pars: pars}
+  info.bpath = bpath;
+  let mapdocs = [];
+
+  for (let wf in map) {
+    let mapdoc = {
+      _id: wf,
+      docs: map[wf]
+    };
+    mapdocs.push(mapdoc);
+  }
 
   let book = {
     info: info,
-    map: map,
-    pars: pars
+    pars: pars,
+    mapdocs: mapdocs
   };
   log('GETFILE BOOK:', book);
   return book;
 }
 
-function bookWFMap(rows, textid) {
-  let map = {};
-  rows.forEach((row, idx) => {
-    let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g, '');
+function bookWFMap(map, row, fpath, pos) {
+  let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g, '');
 
-    let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(punctless.split(' '));
+  let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(punctless.split(' '));
 
-    wfs.forEach(wf => {
-      if (!map[wf]) map[wf] = {};
-      if (!map[wf][textid]) map[wf][textid] = [];
-      map[wf][textid].push(idx);
-    });
-  });
-  let ndocs = [];
-
-  for (let wf in map) {
-    let idxs = map[wf];
-    let ndoc = {
-      wf: wf,
-      idxs: idxs,
-      textid: textid
+  wfs.forEach(wf => {
+    if (!map[wf]) map[wf] = [];
+    let mdoc = {
+      fpath: fpath,
+      pos: pos
     };
-    ndoc._id = ['wf', wf].join('-');
-    ndocs.push(ndoc);
-  }
-
-  return ndocs;
+    map[wf].push(mdoc);
+  });
 }
 
 function parseInfo(ipath) {

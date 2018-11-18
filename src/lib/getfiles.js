@@ -137,7 +137,7 @@ function parseDir(bookpath) {
   // let texts = []
   // let coms = []
   let pars = []
-  let map
+  let map = {}
   info.sections = []
   fns.forEach(fn => {
     let comment = false
@@ -174,17 +174,15 @@ function parseDir(bookpath) {
       // let parid = [info.book.author, info.book.title, fpath, idx, nic].join('-')
       let par = { _id: parid, pos: idx, lang: lang, nic: nic, fpath: fpath, text: row }
       if (auth.author) {
-        // let text = row.replace(rePunct, "<span class\"active\">$1<\/span>")
+        let html = row.replace(rePunct, "<span class=\"active\">$1<\/span>")
         par.author = true
-        // if (idx == 0) log('_HTML_', par.text)
-        // par.text = row
+        par.text = html
+        bookWFMap(map, row, fpath, idx)
       }
       // if (comment) coms.push(par)
       // else pars.push(par)
       if (!comment) pars.push(par)
     })
-
-    // if (auth.author) map = bookWFMap(rows, textid)
   })
   let id = ['info', info.book.author, info.book.title].join('-')
   info._id = id
@@ -192,31 +190,25 @@ function parseDir(bookpath) {
   info.info = true
   info.bpath = bpath
 
-  // let book = {bkey: bpath, info: info, texts: texts, coms: coms, map: map, pars: pars}
-  let book = {info: info, map: map, pars: pars}
+  let mapdocs = []
+  for (let wf in map) {
+    let mapdoc = {_id: wf, docs: map[wf]}
+    mapdocs.push(mapdoc)
+  }
+
+  let book = {info: info, pars: pars, mapdocs: mapdocs}
   log('GETFILE BOOK:', book)
   return book
 }
 
-function bookWFMap(rows, textid) {
-  let map = {}
-  rows.forEach((row, idx)=> {
-    let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
-    let wfs = _.compact(punctless.split(' '))
-    wfs.forEach(wf=> {
-      if (!map[wf]) map[wf] = {}
-      if (!map[wf][textid]) map[wf][textid] = []
-      map[wf][textid].push(idx)
-    })
+function bookWFMap(map, row, fpath, pos) {
+  let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
+  let wfs = _.compact(punctless.split(' '))
+  wfs.forEach(wf=> {
+    if (!map[wf]) map[wf] = []
+    let mdoc = { fpath: fpath, pos: pos }
+    map[wf].push(mdoc)
   })
-  let ndocs = []
-  for (let wf in map) {
-    let idxs = map[wf]
-    let ndoc = {wf: wf, idxs: idxs, textid: textid}
-    ndoc._id = ['wf', wf].join('-')
-    ndocs.push(ndoc)
-  }
-  return ndocs
 }
 
 

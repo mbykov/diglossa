@@ -185,9 +185,6 @@ export function parseBook(bookcurrent, bookinfo, pars) {
 
 function setChunk(pars) {
   let nic = current.nic
-
-  // let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
-  // let rePunct = new RegExp(punct, 'g')
   let osource = q('#source')
   let otrns = q('#trns')
 
@@ -195,9 +192,9 @@ function setChunk(pars) {
   // log('AP', apars)
   let tpars = _.filter(pars, par=> { return !par.author})
   apars.forEach(apar=> {
-    let oleft = p(apar.text)
-    // let oleft = p()
-    // oleft.innerHTML = apar.text
+    // let oleft = p(apar.text)
+    let oleft = p()
+    oleft.innerHTML = apar.text
     oleft.setAttribute('pos', apar.pos)
     oleft.setAttribute('nic', apar.nic)
     osource.appendChild(oleft)
