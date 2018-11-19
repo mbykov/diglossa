@@ -221,7 +221,7 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
 })
 
 // MAP
-Mousetrap.bind(['ctrl+f'], function(ev) {
+Mousetrap.bind(['f'], function(ev) {
   let query = clipboard.readText()
   ftdb.get(query)
     .then(function (wfdoc) {
@@ -253,13 +253,14 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
     })
 })
 
-// .
 function parseQuery() {
   window.split.setSizes([100,0])
   let osource = q('#source')
   let otrns = q('#trns')
-  // log('Q-current', current)
-  let oquery = div(current.query, 'title')
+  let oquery = div('', '')
+  oquery.id = 'qresults'
+  let otitle = div(current.query, 'qtitle')
+  oquery.appendChild(otitle)
   osource.appendChild(oquery)
   // унести в help
   let disclaimer = 'Scroll with Shift, but note: the correspondence between a place of the query in the source and in the translations within the paragraph is very approximate'
@@ -275,49 +276,79 @@ function parseQuery() {
         log('getTitleErr', err);
       })
   }
+  oquery.addEventListener("wheel", scrollQueries, false)
+}
 
 function parseQbook(info, qinfo) {
   let qgroups = _.groupBy(qinfo, 'fpath')
   log('QGRS', info._id, qgroups)
   for (let fpath in qgroups) {
     let qgroup = qgroups[fpath]
-    qgroup.forEach(par=> {
-      // вычислить процент PROCENT
-      if (par.author) par.innerHTMLhtml = aroundQuery(par.text, current.query)
-      else par.text = par.text.slice(0, 100)
-    })
-    parseGroup(fpath, qgroup)
+    let qpos = _.groupBy(qgroup, 'pos')
+    for (let pos in qpos) {
+      let qlines = qpos[pos]
+      qlines.forEach(par=> {
+        // вычислить процент PROCENT
+        if (par.author) par.innerHTMLhtml = aroundQuery(par.text, current.query)
+        else par.text = par.text.slice(0, 100)
+      })
+      parseGroup(info._id, fpath, pos, qlines)
+    }
   }
 }
-}
 
 
-function parseGroup(fpath, qgroup) {
-  log('__________QGP', qgroup)
-  let osource = q('#source')
-  let qpos = qgroup[0].pos
-  let postxt = ['pos:', qpos].join(' ')
+function parseGroup(infoid, fpath, pos, lines) {
+  // log('__________QGP', fpath, pos)
+  let osource = q('#qresults')
+
+  let postxt = ['par:', pos].join(' ')
   let linktxt = [fpath, postxt].join(' - ')
+  let ogroup = div('', '')
   let olink = div(linktxt, 'qlink')
-  olink.setAttribute('qfpath', fpath)
-  olink.setAttribute('qpos', qpos)
+  olink.setAttribute('infoid', infoid)
+  olink.setAttribute('fpath', fpath)
+  olink.setAttribute('pos', pos)
 
   let otext = div('', 'qtext')
-  qgroup.forEach(par=> {
+  lines.forEach(par=> {
     let oline = p(par.text, 'qline')
     oline.setAttribute('nic', par.nic)
+    oline.setAttribute('pos', par.pos)
     if (par.author) oline.innerHTML = aroundQuery(par.text, current.query)
     else oline.classList.add('hidden')
     otext.appendChild(oline)
   })
-  osource.appendChild(olink)
-  osource.appendChild(otext)
+  ogroup.appendChild(olink)
+  ogroup.appendChild(otext)
+  osource.appendChild(ogroup)
   olink.addEventListener('click', jumpPos, false)
 }
 
 function jumpPos(ev) {
   let el = ev.target
   log('JUMP', ev.target)
+}
+
+function scrollQueries(ev) {
+  if (ev.shiftKey != true) return
+  let idx = ev.target.getAttribute('pos')
+  if (!ev.target.parentElement.classList.contains('qtext')) return
+  let parent = ev.target.parentElement
+  // log('QP', parent)
+  let pars = parent.children
+  // log('Qpars', pars)
+  let nics = _.map(pars, par=> { return par.getAttribute('nic') })
+  // log('Qnics', nics)
+
+  let curpar = _.find(pars, par=> { return !par.classList.contains('hidden') })
+  let nic = curpar.getAttribute('nic')
+  let nicidx = nics.indexOf(nic)
+  let nextnic = (nicidx+1 == nics.length) ? nics[0] : nics[nicidx+1]
+  let next = _.find(pars, par=> { return par.getAttribute('nic') == nextnic })
+  next.classList.remove('hidden')
+  curpar.classList.add('hidden')
+
 }
 
 function aroundQuery(str, wf) {

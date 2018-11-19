@@ -277,13 +277,13 @@ div.hleft.header > div.tree {
   cursor: pointer;
 }
 
+.qtext {
+  padding-left: 15px;
+}
+
 .query {
   color: maroon;
   font-weight: bold;
-}
-
-.qtext {
-  padding-left: 15px;
 }
 
 /* #source > div:nth-child(2) > p:nth-child(4) */
@@ -295,3 +295,10 @@ div.qtext > p.hidden {
 .disclaimer {
   font-size: 10px;
   }
+
+.qtitle {
+  color: maroon;
+  font-size: 24px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}

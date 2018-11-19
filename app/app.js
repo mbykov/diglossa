@@ -332,7 +332,7 @@ Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   navigate(state);
 }); // MAP
 
-Mousetrap.bind(['ctrl+f'], function (ev) {
+Mousetrap.bind(['f'], function (ev) {
   let query = clipboard.readText();
   ftdb.get(query).then(function (wfdoc) {
     log('WFdoc', query, wfdoc);
@@ -373,14 +373,16 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
       navigate(current);
     });
   });
-}); // .
+});
 
 function parseQuery() {
   window.split.setSizes([100, 0]);
   let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
-  let otrns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#trns'); // log('Q-current', current)
-
-  let oquery = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])(current.query, 'title');
+  let otrns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#trns');
+  let oquery = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])('', '');
+  oquery.id = 'qresults';
+  let otitle = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])(current.query, 'qtitle');
+  oquery.appendChild(otitle);
   osource.appendChild(oquery); // унести в help
 
   let disclaimer = 'Scroll with Shift, but note: the correspondence between a place of the query in the source and in the translations within the paragraph is very approximate';
@@ -396,46 +398,88 @@ function parseQuery() {
     });
   }
 
-  function parseQbook(info, qinfo) {
-    let qgroups = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qinfo, 'fpath');
+  oquery.addEventListener("wheel", scrollQueries, false);
+}
 
-    log('QGRS', info._id, qgroups);
+function parseQbook(info, qinfo) {
+  let qgroups = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qinfo, 'fpath');
 
-    for (let fpath in qgroups) {
-      let qgroup = qgroups[fpath];
-      qgroup.forEach(par => {
+  log('QGRS', info._id, qgroups);
+
+  for (let fpath in qgroups) {
+    let qgroup = qgroups[fpath];
+
+    let qpos = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qgroup, 'pos');
+
+    for (let pos in qpos) {
+      let qlines = qpos[pos];
+      qlines.forEach(par => {
         // вычислить процент PROCENT
         if (par.author) par.innerHTMLhtml = aroundQuery(par.text, current.query);else par.text = par.text.slice(0, 100);
       });
-      parseGroup(fpath, qgroup);
+      parseGroup(info._id, fpath, pos, qlines);
     }
   }
 }
 
-function parseGroup(fpath, qgroup) {
-  log('__________QGP', qgroup);
-  let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
-  let qpos = qgroup[0].pos;
-  let postxt = ['pos:', qpos].join(' ');
+function parseGroup(infoid, fpath, pos, lines) {
+  // log('__________QGP', fpath, pos)
+  let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#qresults');
+  let postxt = ['par:', pos].join(' ');
   let linktxt = [fpath, postxt].join(' - ');
+  let ogroup = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])('', '');
   let olink = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])(linktxt, 'qlink');
-  olink.setAttribute('qfpath', fpath);
-  olink.setAttribute('qpos', qpos);
+  olink.setAttribute('infoid', infoid);
+  olink.setAttribute('fpath', fpath);
+  olink.setAttribute('pos', pos);
   let otext = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])('', 'qtext');
-  qgroup.forEach(par => {
+  lines.forEach(par => {
     let oline = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["p"])(par.text, 'qline');
     oline.setAttribute('nic', par.nic);
+    oline.setAttribute('pos', par.pos);
     if (par.author) oline.innerHTML = aroundQuery(par.text, current.query);else oline.classList.add('hidden');
     otext.appendChild(oline);
   });
-  osource.appendChild(olink);
-  osource.appendChild(otext);
+  ogroup.appendChild(olink);
+  ogroup.appendChild(otext);
+  osource.appendChild(ogroup);
   olink.addEventListener('click', jumpPos, false);
 }
 
 function jumpPos(ev) {
   let el = ev.target;
   log('JUMP', ev.target);
+}
+
+function scrollQueries(ev) {
+  if (ev.shiftKey != true) return;
+  let idx = ev.target.getAttribute('pos');
+  if (!ev.target.parentElement.classList.contains('qtext')) return;
+  let parent = ev.target.parentElement;
+  log('QP', parent);
+  let pars = parent.children;
+  log('Qpars', pars);
+
+  let nics = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.map(pars, par => {
+    return par.getAttribute('nic');
+  });
+
+  log('Qnics', nics);
+
+  let curpar = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(pars, par => {
+    return !par.classList.contains('hidden');
+  });
+
+  let nic = curpar.getAttribute('nic');
+  let nicidx = nics.indexOf(nic);
+  let nextnic = nicidx + 1 == nics.length ? nics[0] : nics[nicidx + 1];
+
+  let next = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(pars, par => {
+    return par.getAttribute('nic') == nextnic;
+  });
+
+  next.classList.remove('hidden');
+  curpar.classList.add('hidden');
 }
 
 function aroundQuery(str, wf) {
