@@ -230,19 +230,24 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
       libdb.allDocs(opts)
         .then(function (result) {
           let qdocs = _.compact(result.rows.map(row=> { return row.doc}))
-          log('QDOCS', qdocs)
-          let qgroups = _.groupBy(qdocs, 'fpath')
-          log('QGRS', qgroups)
-          // <<<<<============= короткие строки по месту query =================== HERE
-          for (let groupid in qgroups) {
-            let qgroup = qgroups[groupid]
-            qgroup.forEach(par=> {
-              // вычислить процент PROCENT
-              if (par.author) par.innerHTMLhtml = aroundQuery(par.text, query)
-              else par.text = par.text.slice(0, 100)
-            })
+          // log('QDOCS', qdocs)
+          let qinfos = _.groupBy(qdocs, 'infoid')
+          log('QIND', qinfos)
+
+          for (let infoid in qinfos) {
+            let qgroups = _.groupBy(qinfos[infoid], 'fpath')
+            log('QGRS', infoid, qgroups)
+            for (let fpath in qgroups) {
+              let qgroup = qgroups[fpath]
+              qgroup.forEach(par=> {
+                // вычислить процент PROCENT
+                if (par.author) par.innerHTMLhtml = aroundQuery(par.text, query)
+                else par.text = par.text.slice(0, 100)
+              })
+            }
           }
-          current = {_id: '_local/current', section: 'search', qgroups: qgroups, query: query}
+
+          current = {_id: '_local/current', section: 'search', qinfos: qinfos, query: query}
           navigate(current)
         })
     })
@@ -257,35 +262,57 @@ function parseQuery() {
   let oquery = div(current.query, 'title')
   osource.appendChild(oquery)
   // унести в help
-  let disclaimer = 'Note: The correspondence between the place of a query in the source and in the translations within the paragraph is very approximate'
+  let disclaimer = 'Scroll with Shift, but note: the correspondence between a place of the query in the source and in the translations within the paragraph is very approximate'
   let odisc = p(disclaimer, 'disclaimer')
   oquery.appendChild(odisc)
 
-  for (let qfpath in current.qgroups) {
-    let group = current.qgroups[qfpath]
-    let qpos = group[0].pos
-    let postxt = ['pos:', qpos].join(' ')
-    let linktxt = [qfpath, postxt].join(' - ')
-    let olink = div(linktxt, 'qlink')
-    olink.setAttribute('qfpath', qfpath)
-    olink.setAttribute('qpos', qpos)
-    // let ofpath = span(qfpath, '')
-    // let opos = span('par: '+group[0].pos, '')
-    // olink.appendChild(ofpath)
-    // olink.appendChild(opos)
-
-    let otext = div('', 'qtext')
-    group.forEach(par=> {
-      let oline = p(par.text, 'qline')
-      oline.setAttribute('nic', par.nic)
-      if (par.author) oline.innerHTML = aroundQuery(par.text, current.query)
-      else oline.classList.add('hidden')
-      otext.appendChild(oline)
-    })
-    osource.appendChild(olink)
-    osource.appendChild(otext)
-    olink.addEventListener('click', jumpPos, false)
+  for (let infoid in current.qinfos) {
+    getInfo(infoid)
+      .then(function (info) {
+        let qinfo = current.qinfos[infoid]
+        parseQbook(info, qinfo)
+      }).catch(function (err) {
+        log('getTitleErr', err);
+      })
   }
+
+function parseQbook(info, qinfo) {
+  let qgroups = _.groupBy(qinfo, 'fpath')
+  log('QGRS', info._id, qgroups)
+  for (let fpath in qgroups) {
+    let qgroup = qgroups[fpath]
+    qgroup.forEach(par=> {
+      // вычислить процент PROCENT
+      if (par.author) par.innerHTMLhtml = aroundQuery(par.text, current.query)
+      else par.text = par.text.slice(0, 100)
+    })
+    parseGroup(fpath, qgroup)
+  }
+}
+}
+
+
+function parseGroup(fpath, qgroup) {
+  log('__________QGP', qgroup)
+  let osource = q('#source')
+  let qpos = qgroup[0].pos
+  let postxt = ['pos:', qpos].join(' ')
+  let linktxt = [fpath, postxt].join(' - ')
+  let olink = div(linktxt, 'qlink')
+  olink.setAttribute('qfpath', fpath)
+  olink.setAttribute('qpos', qpos)
+
+  let otext = div('', 'qtext')
+  qgroup.forEach(par=> {
+    let oline = p(par.text, 'qline')
+    oline.setAttribute('nic', par.nic)
+    if (par.author) oline.innerHTML = aroundQuery(par.text, current.query)
+    else oline.classList.add('hidden')
+    otext.appendChild(oline)
+  })
+  osource.appendChild(olink)
+  osource.appendChild(otext)
+  olink.addEventListener('click', jumpPos, false)
 }
 
 function jumpPos(ev) {
