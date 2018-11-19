@@ -271,7 +271,7 @@ div.hleft.header > div.tree {
   /* display: none; */
 }
 
-.qfpath {
+.qlink {
   padding-right: 15px;
   color: maroon;
   cursor: pointer;
@@ -280,6 +280,10 @@ div.hleft.header > div.tree {
 .query {
   color: maroon;
   font-weight: bold;
+}
+
+.qtext {
+  padding-left: 15px;
 }
 
 /* #source > div:nth-child(2) > p:nth-child(4) */

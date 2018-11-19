@@ -126,16 +126,16 @@ function parseDir(bookpath) {
   let ipath = path.resolve(bpath, 'info.json')
   // log('IPATH', ipath)
   let info = parseInfo(ipath)
-  // log('_INFO_', info)
+  // log('INFO', info)
   fns = _.filter(fns, fn=>{ return fn != ipath })
   // log('FNS', fns.length)
 
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
   let rePunct = new RegExp(punct, 'g')
 
-  // let tpath = ['text', info.book.author, info.book.title].join('-')
-  // let texts = []
-  // let coms = []
+  let infoid = ['info', info.book.author, info.book.title].join('-')
+  info._id = infoid
+
   let nics = []
   let pars = []
   let map = {}
@@ -175,7 +175,7 @@ function parseDir(bookpath) {
       let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-')
       let parid = [groupid, nic].join('-')
       // let parid = [info.book.author, info.book.title, fpath, idx, nic].join('-')
-      let par = { _id: parid, pos: idx, lang: lang, nic: nic, fpath: fpath, text: row }
+      let par = { _id: parid, infoid: infoid, pos: idx, nic: nic, fpath: fpath, lang: lang, text: row }
       if (auth.author) {
         // let html = row.replace(rePunct, "<span class=\"active\">$1<\/span>")
         par.author = true
@@ -190,8 +190,6 @@ function parseDir(bookpath) {
   })
 
   nics = _.uniq(nics)
-  let id = ['info', info.book.author, info.book.title].join('-')
-  info._id = id
   info.tree = tree
   info.info = true
   info.bpath = bpath

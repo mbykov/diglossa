@@ -129,7 +129,7 @@ function goLib() {
 
 function getTitle() {
   // log('getTitle cur:', current)
-  getInfo(current.info_id)
+  getInfo(current.infoid)
     .then(function (curinfo) {
       info = curinfo
       current.bpath = info.bpath
@@ -140,7 +140,7 @@ function getTitle() {
 }
 
 function getBook() {
-  getInfo(current.info_id)
+  getInfo(current.infoid)
     .then(function (curinfo) {
       getText(current)
         .then(function(res) {
@@ -164,7 +164,7 @@ function parseLib(infos) {
   if (!infos.length) oul.textContent = 'no book in lib'
   infos.forEach(info => {
     let ostr = create('li', 'libauth')
-    ostr.info_id = info._id
+    ostr.infoid = info._id
     oul.appendChild(ostr)
     let author = span(info.book.author)
     let title = span(info.book.title)
@@ -178,8 +178,8 @@ function parseLib(infos) {
 
 function goTitleEvent(ev) {
   if (ev.target.parentNode.nodeName != 'LI') return
-  let info_id = ev.target.parentNode.info_id
-  navigate({section: 'title', info_id: info_id})
+  let infoid = ev.target.parentNode.infoid
+  navigate({section: 'title', infoid: infoid})
 }
 
 export function navigate(navpath) {
@@ -263,22 +263,34 @@ function parseQuery() {
 
   for (let qfpath in current.qgroups) {
     let group = current.qgroups[qfpath]
-    let ogroup = div()
-    let ofpath = span(qfpath, 'qfpath')
-    let opos = span('par: '+group[0].pos, 'qpos')
-    ogroup.appendChild(ofpath)
-    ogroup.appendChild(opos)
+    let qpos = group[0].pos
+    let postxt = ['pos:', qpos].join(' ')
+    let linktxt = [qfpath, postxt].join(' - ')
+    let olink = div(linktxt, 'qlink')
+    olink.setAttribute('qfpath', qfpath)
+    olink.setAttribute('qpos', qpos)
+    // let ofpath = span(qfpath, '')
+    // let opos = span('par: '+group[0].pos, '')
+    // olink.appendChild(ofpath)
+    // olink.appendChild(opos)
+
     let otext = div('', 'qtext')
     group.forEach(par=> {
       let oline = p(par.text, 'qline')
       oline.setAttribute('nic', par.nic)
-      if (par.author) oline.innerHTML = aroundQuery(par.text, current.query), log('AAAAA', par.nic)
+      if (par.author) oline.innerHTML = aroundQuery(par.text, current.query)
       else oline.classList.add('hidden')
       otext.appendChild(oline)
     })
-    ogroup.appendChild(otext)
-    osource.appendChild(ogroup)
+    osource.appendChild(olink)
+    osource.appendChild(otext)
+    olink.addEventListener('click', jumpPos, false)
   }
+}
+
+function jumpPos(ev) {
+  let el = ev.target
+  log('JUMP', ev.target)
 }
 
 function aroundQuery(str, wf) {
@@ -288,8 +300,6 @@ function aroundQuery(str, wf) {
   let tail = arr[1].slice(0,limit)
   let qspan = ['<span class="query">', wf, '</span>'].join('')
   let html = [head, qspan, tail] .join('')
-  // let text =  [head, wf, tail] .join('')
-  // log('AROUND', wf, text)
   return html
 }
 
@@ -358,6 +368,7 @@ function pushTexts(newdocs) {
     })
 }
 
+// MAP
 function pushMap(ndocs) {
   return ftdb.allDocs({include_docs: true})
     .then(function(res) {
@@ -384,7 +395,7 @@ function pushMap(ndocs) {
           cleandocs.push(ndoc)
         }
       })
-      log('MAP', cleandocs.length)
+      log('map-cleandocs.length', cleandocs.length)
       return ftdb.bulkDocs(cleandocs)
     })
 }
