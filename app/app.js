@@ -909,14 +909,12 @@ function setChunk(pars, direction) {
     if (current.query) {
       let requery = new RegExp(current.query, 'g');
       html = html.replace(requery, "<span class=\"query\">" + current.query + "<\/span>");
-    } // XXX
-
+    }
 
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])();
     oleft.innerHTML = html;
     oleft.setAttribute('pos', apar.pos);
-    oleft.setAttribute('nic', apar.nic); // XXX - здесь - промотать до как было после prepend <<<<<<<<<<<<<<<==========================
-
+    oleft.setAttribute('nic', apar.nic);
     if (!direction) osource.appendChild(oleft);else osource.prepend(oleft);
     let aligns = [oleft];
 
@@ -933,7 +931,16 @@ function setChunk(pars, direction) {
       aligns.push(oright);
     });
     alignPars(aligns);
-  });
+  }); // XXX - здесь - промотать до как было после prepend <<<<<<<<<<<<<<<==========================
+
+  if (direction) {
+    let firstpos = apars[0].pos;
+    log('F', firstpos);
+    let firstel = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source [pos="' + firstpos + '"]')[0];
+    log('FEL', firstel);
+    let offset = firstel.offsetTop;
+    otrns.scrollTop = osource.scrollTop = offset;
+  }
 }
 
 function alignPars(pars) {
@@ -943,7 +950,6 @@ function alignPars(pars) {
   let max = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.max(heights) + 12;
   pars.forEach(par => {
     par.style.height = max + 'px';
-    if (par.pos == 0) log('MAX', max); // if (!par.getAttribute('active')) par.classList.add('hidden')
   });
 }
 
