@@ -232,11 +232,11 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
           let qdocs = _.compact(result.rows.map(row=> { return row.doc}))
           // log('QDOCS', qdocs)
           let qinfos = _.groupBy(qdocs, 'infoid')
-          log('QIND', qinfos)
+          // log('QINFOS', qinfos)
 
           for (let infoid in qinfos) {
             let qgroups = _.groupBy(qinfos[infoid], 'fpath')
-            log('QGRS', infoid, qgroups)
+            // log('QGRS', infoid, qgroups)
             for (let fpath in qgroups) {
               let qgroup = qgroups[fpath]
               qgroup.forEach(par=> {
@@ -281,7 +281,7 @@ function parseQuery() {
 
 function parseQbook(info, qinfo) {
   let qgroups = _.groupBy(qinfo, 'fpath')
-  log('QGRS', info._id, qgroups)
+  // log('QGRS', info._id, qgroups)
   for (let fpath in qgroups) {
     let qgroup = qgroups[fpath]
     let qpos = _.groupBy(qgroup, 'pos')
@@ -326,7 +326,7 @@ function parseGroup(infoid, fpath, pos, lines) {
 }
 
 function jumpPos(ev) {
-  log('JUMP', ev.target)
+  // log('JUMP', ev.target)
   let el = ev.target
   let infoid = el.getAttribute('infoid')
   let fpath = el.getAttribute('fpath')
@@ -340,12 +340,12 @@ function scrollQueries(ev) {
   // let idx = ev.target.getAttribute('pos')
   let el = ev.target
   let parent = el.closest('.qtext')
-  log('QP', parent)
+  // log('QP', parent)
   if (!parent) return
   let pars = parent.children
-  log('Qpars', pars)
+  // log('Qpars', pars)
   let nics = _.map(pars, par=> { return par.getAttribute('nic') })
-  log('Qnics', nics)
+  // log('Qnics', nics)
 
   let curpar = _.find(pars, par=> { return !par.classList.contains('hidden') })
   let nic = curpar.getAttribute('nic')

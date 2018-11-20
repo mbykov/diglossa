@@ -62,12 +62,23 @@ function scrollPanes(ev) {
     }
   })
 
+  if (source.scrollTop == 0) {
+    let start = qs('#source > p')[0]
+    let startpos = start.getAttribute('pos')
+    if (startpos > 0) {
+      let start = (startpos - limit > 0) ? startpos - limit : 0
+      // log('___START', start)
+      current.pos = start
+      getText(current, startpos)
+        .then(function(res) {
+          // log('___res.docs UP', res.docs)
+          setChunk(_.reverse(res.docs), true)
+        })
+    }
+  }
+
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
-    // с подкачкой вверх будет проблема? - direction
     let start = qs('#source > p').length
-    // log('___START', start)
-    // log('___Scur', current)
-    // log('___Sinfo', info)
     current.pos = start
     getText(current)
       .then(function(res) {
@@ -187,7 +198,7 @@ export function parseBook(bookcurrent, bookinfo, pars) {
   otrns.addEventListener("wheel", cyclePar, false)
 }
 
-function setChunk(pars) {
+function setChunk(pars, direction) {
   let nic = current.nic
   let osource = q('#source')
   let otrns = q('#trns')
@@ -195,19 +206,22 @@ function setChunk(pars) {
   let apars = _.filter(pars, par=> { return par.author})
   // log('AP', apars)
   let tpars = _.filter(pars, par=> { return !par.author})
+  // log('Cur Query', current.query)
   apars.forEach(apar=> {
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>")
     // let oleft = p(apar.text)
     if (current.query) {
-      log('C Query', current.query)
       let requery = new RegExp(current.query, 'g')
       html = html.replace(requery, "<span class=\"query\">"+current.query+"<\/span>")
     }
+    // XXX
     let oleft = p()
     oleft.innerHTML = html
     oleft.setAttribute('pos', apar.pos)
     oleft.setAttribute('nic', apar.nic)
-    osource.appendChild(oleft)
+    // XXX - здесь - промотать до как было после prepend <<<<<<<<<<<<<<<==========================
+    if (!direction) osource.appendChild(oleft)
+    else osource.prepend(oleft)
     let aligns = [oleft]
 
     let pars = _.filter(tpars, par=> { return par.pos == apar.pos})
@@ -217,7 +231,8 @@ function setChunk(pars) {
       oright.setAttribute('nic', par.nic)
       if (par.nic == nic) oright.classList.add('active')
       else oright.classList.add('hidden')
-      otrns.appendChild(oright)
+      if (!direction) otrns.appendChild(oright)
+      else otrns.prepend(oright)
       aligns.push(oright)
     })
     alignPars(aligns)

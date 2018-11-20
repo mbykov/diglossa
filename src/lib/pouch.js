@@ -53,10 +53,10 @@ export function getLib() {
   return libdb.allDocs(options)
 }
 
-export function getText(current) {
+export function getText(current, endpos) {
   let fpath = current.fpath
   let start = current.pos*1 || 0
-  let end = start*1 + limit*1
+  let end = endpos*1 || start*1 + limit*1
   let selector = {fpath: fpath, pos: {$gte: start, $lt: end}}
   // log('=pouch-text-selector=:', selector)
   return libdb.find({selector: selector}) // sort: ['idx'], , limit: 20

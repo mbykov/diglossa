@@ -346,14 +346,12 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
       })); // log('QDOCS', qdocs)
 
 
-      let qinfos = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qdocs, 'infoid');
+      let qinfos = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qdocs, 'infoid'); // log('QINFOS', qinfos)
 
-      log('QIND', qinfos);
 
       for (let infoid in qinfos) {
-        let qgroups = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qinfos[infoid], 'fpath');
+        let qgroups = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qinfos[infoid], 'fpath'); // log('QGRS', infoid, qgroups)
 
-        log('QGRS', infoid, qgroups);
 
         for (let fpath in qgroups) {
           let qgroup = qgroups[fpath];
@@ -402,9 +400,8 @@ function parseQuery() {
 }
 
 function parseQbook(info, qinfo) {
-  let qgroups = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qinfo, 'fpath');
+  let qgroups = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qinfo, 'fpath'); // log('QGRS', info._id, qgroups)
 
-  log('QGRS', info._id, qgroups);
 
   for (let fpath in qgroups) {
     let qgroup = qgroups[fpath];
@@ -447,7 +444,7 @@ function parseGroup(infoid, fpath, pos, lines) {
 }
 
 function jumpPos(ev) {
-  log('JUMP', ev.target);
+  // log('JUMP', ev.target)
   let el = ev.target;
   let infoid = el.getAttribute('infoid');
   let fpath = el.getAttribute('fpath');
@@ -466,17 +463,15 @@ function scrollQueries(ev) {
   if (ev.shiftKey != true) return; // let idx = ev.target.getAttribute('pos')
 
   let el = ev.target;
-  let parent = el.closest('.qtext');
-  log('QP', parent);
+  let parent = el.closest('.qtext'); // log('QP', parent)
+
   if (!parent) return;
-  let pars = parent.children;
-  log('Qpars', pars);
+  let pars = parent.children; // log('Qpars', pars)
 
   let nics = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.map(pars, par => {
     return par.getAttribute('nic');
-  });
+  }); // log('Qnics', nics)
 
-  log('Qnics', nics);
 
   let curpar = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(pars, par => {
     return !par.classList.contains('hidden');
@@ -759,12 +754,23 @@ function scrollPanes(ev) {
     }
   });
 
-  if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
-    // с подкачкой вверх будет проблема? - direction
-    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length; // log('___START', start)
-    // log('___Scur', current)
-    // log('___Sinfo', info)
+  if (source.scrollTop == 0) {
+    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p')[0];
+    let startpos = start.getAttribute('pos');
 
+    if (startpos > 0) {
+      let start = startpos - limit > 0 ? startpos - limit : 0; // log('___START', start)
+
+      current.pos = start;
+      Object(_pouch__WEBPACK_IMPORTED_MODULE_5__["getText"])(current, startpos).then(function (res) {
+        // log('___res.docs UP', res.docs)
+        setChunk(lodash__WEBPACK_IMPORTED_MODULE_0___default.a.reverse(res.docs), true);
+      });
+    }
+  }
+
+  if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
+    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length;
     current.pos = start;
     Object(_pouch__WEBPACK_IMPORTED_MODULE_5__["getText"])(current).then(function (res) {
       // log('___res.docs', res.docs)
@@ -882,7 +888,7 @@ function parseBook(bookcurrent, bookinfo, pars) {
   otrns.addEventListener("wheel", cyclePar, false);
 }
 
-function setChunk(pars) {
+function setChunk(pars, direction) {
   let nic = current.nic;
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
@@ -894,22 +900,24 @@ function setChunk(pars) {
 
   let tpars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
     return !par.author;
-  });
+  }); // log('Cur Query', current.query)
+
 
   apars.forEach(apar => {
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>"); // let oleft = p(apar.text)
 
     if (current.query) {
-      log('C Query', current.query);
       let requery = new RegExp(current.query, 'g');
       html = html.replace(requery, "<span class=\"query\">" + current.query + "<\/span>");
-    }
+    } // XXX
+
 
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])();
     oleft.innerHTML = html;
     oleft.setAttribute('pos', apar.pos);
-    oleft.setAttribute('nic', apar.nic);
-    osource.appendChild(oleft);
+    oleft.setAttribute('nic', apar.nic); // XXX - здесь - промотать до как было после prepend <<<<<<<<<<<<<<<==========================
+
+    if (!direction) osource.appendChild(oleft);else osource.prepend(oleft);
     let aligns = [oleft];
 
     let pars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(tpars, par => {
@@ -921,7 +929,7 @@ function setChunk(pars) {
       oright.setAttribute('pos', apar.pos);
       oright.setAttribute('nic', par.nic);
       if (par.nic == nic) oright.classList.add('active');else oright.classList.add('hidden');
-      otrns.appendChild(oright);
+      if (!direction) otrns.appendChild(oright);else otrns.prepend(oright);
       aligns.push(oright);
     });
     alignPars(aligns);
@@ -1537,10 +1545,10 @@ function getLib() {
   };
   return libdb.allDocs(options);
 }
-function getText(current) {
+function getText(current, endpos) {
   let fpath = current.fpath;
   let start = current.pos * 1 || 0;
-  let end = start * 1 + limit * 1;
+  let end = endpos * 1 || start * 1 + limit * 1;
   let selector = {
     fpath: fpath,
     pos: {
