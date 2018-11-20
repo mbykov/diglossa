@@ -332,7 +332,7 @@ Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   navigate(state);
 }); // MAP
 
-Mousetrap.bind(['f'], function (ev) {
+Mousetrap.bind(['ctrl+f'], function (ev) {
   let query = clipboard.readText();
   ftdb.get(query).then(function (wfdoc) {
     log('WFdoc', query, wfdoc);
@@ -424,7 +424,7 @@ function parseQbook(info, qinfo) {
 
 function parseGroup(infoid, fpath, pos, lines) {
   // log('__________QGP', fpath, pos)
-  let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#qresults');
+  let oresults = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#qresults');
   let postxt = ['par:', pos].join(' ');
   let linktxt = [fpath, postxt].join(' - ');
   let ogroup = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])('', '');
@@ -442,21 +442,33 @@ function parseGroup(infoid, fpath, pos, lines) {
   });
   ogroup.appendChild(olink);
   ogroup.appendChild(otext);
-  osource.appendChild(ogroup);
+  oresults.appendChild(ogroup);
   olink.addEventListener('click', jumpPos, false);
 }
 
 function jumpPos(ev) {
-  let el = ev.target;
   log('JUMP', ev.target);
+  let el = ev.target;
+  let infoid = el.getAttribute('infoid');
+  let fpath = el.getAttribute('fpath');
+  let pos = el.getAttribute('pos');
+  let newcur = {
+    section: "book",
+    infoid: infoid,
+    fpath: fpath,
+    pos: pos,
+    query: current.query
+  };
+  navigate(newcur);
 }
 
 function scrollQueries(ev) {
-  if (ev.shiftKey != true) return;
-  let idx = ev.target.getAttribute('pos');
-  if (!ev.target.parentElement.classList.contains('qtext')) return;
-  let parent = ev.target.parentElement;
+  if (ev.shiftKey != true) return; // let idx = ev.target.getAttribute('pos')
+
+  let el = ev.target;
+  let parent = el.closest('.qtext');
   log('QP', parent);
+  if (!parent) return;
   let pars = parent.children;
   log('Qpars', pars);
 
@@ -483,10 +495,15 @@ function scrollQueries(ev) {
 }
 
 function aroundQuery(str, wf) {
+  // это снести в общий метод посло структуризации кода
+  let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
+  let rePunct = new RegExp(punct, 'g');
   let limit = 100;
   let arr = str.split(wf);
   let head = arr[0].slice(-limit);
+  head = head.replace(rePunct, "<span class=\"active\">$1<\/span>");
   let tail = arr[1].slice(0, limit);
+  tail = tail.replace(rePunct, "<span class=\"active\">$1<\/span>");
   let qspan = ['<span class="query">', wf, '</span>'].join('');
   let html = [head, qspan, tail].join('');
   return html;
@@ -881,6 +898,12 @@ function setChunk(pars) {
 
   apars.forEach(apar => {
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>"); // let oleft = p(apar.text)
+
+    if (current.query) {
+      log('C Query', current.query);
+      let requery = new RegExp(current.query, 'g');
+      html = html.replace(requery, "<span class=\"query\">" + current.query + "<\/span>");
+    }
 
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["p"])();
     oleft.innerHTML = html;

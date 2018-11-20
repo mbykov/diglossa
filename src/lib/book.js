@@ -198,6 +198,11 @@ function setChunk(pars) {
   apars.forEach(apar=> {
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>")
     // let oleft = p(apar.text)
+    if (current.query) {
+      log('C Query', current.query)
+      let requery = new RegExp(current.query, 'g')
+      html = html.replace(requery, "<span class=\"query\">"+current.query+"<\/span>")
+    }
     let oleft = p()
     oleft.innerHTML = html
     oleft.setAttribute('pos', apar.pos)

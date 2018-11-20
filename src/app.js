@@ -221,7 +221,7 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
 })
 
 // MAP
-Mousetrap.bind(['f'], function(ev) {
+Mousetrap.bind(['ctrl+f'], function(ev) {
   let query = clipboard.readText()
   ftdb.get(query)
     .then(function (wfdoc) {
@@ -300,7 +300,7 @@ function parseQbook(info, qinfo) {
 
 function parseGroup(infoid, fpath, pos, lines) {
   // log('__________QGP', fpath, pos)
-  let osource = q('#qresults')
+  let oresults = q('#qresults')
 
   let postxt = ['par:', pos].join(' ')
   let linktxt = [fpath, postxt].join(' - ')
@@ -321,25 +321,31 @@ function parseGroup(infoid, fpath, pos, lines) {
   })
   ogroup.appendChild(olink)
   ogroup.appendChild(otext)
-  osource.appendChild(ogroup)
+  oresults.appendChild(ogroup)
   olink.addEventListener('click', jumpPos, false)
 }
 
 function jumpPos(ev) {
-  let el = ev.target
   log('JUMP', ev.target)
+  let el = ev.target
+  let infoid = el.getAttribute('infoid')
+  let fpath = el.getAttribute('fpath')
+  let pos = el.getAttribute('pos')
+  let newcur = {section: "book", infoid: infoid, fpath: fpath, pos: pos, query: current.query}
+  navigate(newcur)
 }
 
 function scrollQueries(ev) {
   if (ev.shiftKey != true) return
-  let idx = ev.target.getAttribute('pos')
-  if (!ev.target.parentElement.classList.contains('qtext')) return
-  let parent = ev.target.parentElement
-  // log('QP', parent)
+  // let idx = ev.target.getAttribute('pos')
+  let el = ev.target
+  let parent = el.closest('.qtext')
+  log('QP', parent)
+  if (!parent) return
   let pars = parent.children
-  // log('Qpars', pars)
+  log('Qpars', pars)
   let nics = _.map(pars, par=> { return par.getAttribute('nic') })
-  // log('Qnics', nics)
+  log('Qnics', nics)
 
   let curpar = _.find(pars, par=> { return !par.classList.contains('hidden') })
   let nic = curpar.getAttribute('nic')
@@ -352,10 +358,16 @@ function scrollQueries(ev) {
 }
 
 function aroundQuery(str, wf) {
+  // это снести в общий метод посло структуризации кода
+  let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
+  let rePunct = new RegExp(punct, 'g')
+
   let limit = 100
   let arr = str.split(wf)
   let head = arr[0].slice(-limit)
+  head =  head.replace(rePunct, "<span class=\"active\">$1<\/span>")
   let tail = arr[1].slice(0,limit)
+  tail =  tail.replace(rePunct, "<span class=\"active\">$1<\/span>")
   let qspan = ['<span class="query">', wf, '</span>'].join('')
   let html = [head, qspan, tail] .join('')
   return html
