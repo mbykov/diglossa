@@ -181,7 +181,7 @@ export function parseBook(bookcurrent, bookinfo, pars) {
   empty(osource)
   empty(otrns)
 
-  let cnics = _.uniq(pars.map(auth=> { return auth.nic }))
+  let cnics = _.uniq(pars.map(auth=> { if (!auth.author) return auth.nic }))
   // log('CNICS', cnics)
   let nic = current.nic
   if (!nic) nic = cnics[0]
@@ -189,8 +189,6 @@ export function parseBook(bookcurrent, bookinfo, pars) {
   current.nic = nic
   // current.nics = cnics
 
-  // let start = 0
-  // setBookText(pars, start)
   setChunk(pars)
   createRightHeader(cnics)
   createLeftHeader()

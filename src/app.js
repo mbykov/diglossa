@@ -235,11 +235,14 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
             let qgroups = _.groupBy(qinfos[infoid], 'fpath')
             // log('QGRS', infoid, qgroups)
             for (let fpath in qgroups) {
+              log('FPATH', fpath)
               let qgroup = qgroups[fpath]
+              let qauth = _.find(qgroup, par=> { return par.author })
+              let {html, percent} = aroundQuery(qauth.text, query)
+              qauth.text = html
               qgroup.forEach(par=> {
-                // вычислить процент PROCENT
-                if (par.author) par.innerHTMLhtml = aroundQuery(par.text, query)
-                else par.text = par.text.slice(0, 100)
+                if (par.author) return
+                else par.text = textAround(par.text, percent)
               })
             }
           }
@@ -284,11 +287,11 @@ function parseQbook(info, qinfo) {
     let qpos = _.groupBy(qgroup, 'pos')
     for (let pos in qpos) {
       let qlines = qpos[pos]
-      qlines.forEach(par=> {
+      // qlines.forEach(par=> {
         // вычислить процент PROCENT
-        if (par.author) par.innerHTMLhtml = aroundQuery(par.text, current.query)
-        else par.text = par.text.slice(0, 100)
-      })
+        // if (par.author) par.innerHTML = aroundQuery(par.text, current.query)
+        // else par.text = par.text.slice(0, 100)
+      // })
       parseGroup(info._id, fpath, pos, qlines)
     }
   }
@@ -312,7 +315,7 @@ function parseGroup(infoid, fpath, pos, lines) {
     let oline = p(par.text, 'qline')
     oline.setAttribute('nic', par.nic)
     oline.setAttribute('pos', par.pos)
-    if (par.author) oline.innerHTML = aroundQuery(par.text, current.query)
+    if (par.author) oline.innerHTML = par.text
     else oline.classList.add('hidden')
     otext.appendChild(oline)
   })
@@ -355,13 +358,14 @@ function scrollQueries(ev) {
 }
 
 function aroundQuery(str, wf) {
-  // это снести в общий метод посло структуризации кода
+  // это снести в общий метод после структуризации кода
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
   let rePunct = new RegExp(punct, 'g')
 
   let limit = 100
   let arr = str.split(wf)
   let head = arr[0].slice(-limit)
+  let percent = head.length/str.length
   head =  head.replace(rePunct, "<span class=\"active\">$1<\/span>")
   if (!arr[1]) {
     log('NO TAIL !!', wf, 'str:', str)
@@ -370,17 +374,16 @@ function aroundQuery(str, wf) {
   tail =  tail.replace(rePunct, "<span class=\"active\">$1<\/span>")
   let qspan = ['<span class="query">', wf, '</span>'].join('')
   let html = [head, qspan, tail] .join('')
-  return html
+  return {html: html, percent: percent}
 }
 
-function textAround(tobj, row, query, start) {
-  let line = {nic: tobj.nic, lang: tobj.lang}
-  if (tobj.author) {
-    line.author = true
-    line.text = aroundA(row, query)
-  } else {
-    line.text = row.slice(start, start+150)
-  }
+function textAround(str, percent) {
+  let center = str.length*percent
+  let start = center - 100
+  let head = str.substr(start, 100)
+  let tail = str.substr(center, 100)
+  log('percent:', percent, 'c', center, head, tail)
+  let line = [head, '<=>', tail].join('')
   return line
 }
 
