@@ -5,7 +5,7 @@
 
 import path from "path";
 import url from "url";
-import { app, BrowserWindow, Menu, ipcMain } from "electron";
+import { app, BrowserWindow, Menu, ipcMain, globalShortcut } from "electron";
 import { devMenuTemplate } from "./menu/dev_menu_template";
 import { editMenuTemplate } from "./menu/edit_menu_template";
 import { libMenuTemplate } from "./menu/lib_menu_template";
@@ -80,6 +80,10 @@ app.on("ready", () => {
     win.openDevTools();
   }
 
+  globalShortcut.register('CommandOrControl+Shift+R', () => {
+    // BrowserWindow.getFocusedWindow().webContents.send('re-read')
+    win.webContents.send('re-read')
+  })
 });
 
 app.on("window-all-closed", () => {

@@ -198,6 +198,8 @@ electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('parseDir', function (ev
 });
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('re-read', function (event) {
   log('RE-READ!');
+  let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#progress');
+  progress.style.display = 'inline-block';
   getDir();
 });
 let hstates = [];
@@ -313,6 +315,8 @@ function navigate(navpath) {
   log('Navigate:', current);
   let sec = current.section;
   if (sec == 'lib') goLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook();else if (sec == 'search') parseQuery();else showSection(sec);
+  let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#progress');
+  progress.style.display = 'none';
 }
 Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   // log('EV', ev.which, hstate, hstates)
@@ -489,6 +493,11 @@ function aroundQuery(str, wf) {
   let arr = str.split(wf);
   let head = arr[0].slice(-limit);
   head = head.replace(rePunct, "<span class=\"active\">$1<\/span>");
+
+  if (!arr[1]) {
+    log('NO TAIL !!', wf, 'str:', str);
+  }
+
   let tail = arr[1].slice(0, limit);
   tail = tail.replace(rePunct, "<span class=\"active\">$1<\/span>");
   let qspan = ['<span class="query">', wf, '</span>'].join('');
@@ -516,8 +525,13 @@ function showSection(name) {
   window.split.setSizes([100, 0]);
   let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
   let secpath = path.resolve(apath, 'src/sections', [name, 'html'].join('.'));
-  const section = fse.readFileSync(secpath);
-  osource.innerHTML = section;
+
+  try {
+    const section = fse.readFileSync(secpath);
+    osource.innerHTML = section;
+  } catch (e) {
+    log('NO SECTION ERR');
+  }
 }
 
 function pushInfo(ndoc) {
@@ -652,9 +666,9 @@ function getDir(bpath) {
       } // wtf ?
 
 
-      if (current.section) info = book.info, navigate(current);else navigate({
-        section: 'lib'
-      }); // navigate({section: 'lib'})
+      navigate(current); // if (current.section) info = book.info, navigate(current)
+      // else navigate({section: 'lib'})
+      // navigate({section: 'lib'})
     }).catch(function (err) {
       log('ALL RES ERR', err);
     });
@@ -747,8 +761,15 @@ function scrollPanes(ev) {
     }
   });
 
+  addChunk();
+}
+
+function addChunk() {
+  let source = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
+
   if (source.scrollTop == 0) {
     let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p')[0];
+    if (!start) return;
     let startpos = start.getAttribute('pos');
 
     if (startpos > 0) {
@@ -788,17 +809,12 @@ function keyScroll(ev) {
   } else if (ev.keyCode == 34) {
     let height = source.clientHeight;
     source.scrollTop = source.scrollTop + height - 60;
-  }
+  } else return;
 
   trns.scrollTop = source.scrollTop;
   if (!current || current.section != 'book') return;
-  let book = window.book;
-
-  if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
-    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length; // log('___KEY START', start)
-    // ошибка при прокрутке всегда - реагирует на любое нажатие
-    // s_etChunk(start, book)
-  }
+  addChunk();
+  log('KEY CUR', current);
 }
 
 function parseTitle(bookinfo, bookcurrent) {
@@ -924,13 +940,13 @@ function setChunk(pars, direction) {
       aligns.push(oright);
     });
     alignPars(aligns);
-  }); // XXX - здесь - промотать до как было после prepend <<<<<<<<<<<<<<<==========================
+  }); // position before adding upper chunk:
 
   if (direction) {
-    let firstpos = apars[0].pos;
-    log('F', firstpos);
-    let firstel = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source [pos="' + firstpos + '"]')[0];
-    log('FEL', firstel);
+    let firstpos = apars[0].pos; // log('F', firstpos)
+
+    let firstel = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source [pos="' + firstpos + '"]')[0]; // log('FEL', firstel)
+
     let offset = firstel.offsetTop;
     otrns.scrollTop = osource.scrollTop = offset;
   }

@@ -62,8 +62,14 @@ function scrollPanes(ev) {
     }
   })
 
+  addChunk()
+}
+
+function addChunk() {
+  let source = q('#source')
   if (source.scrollTop == 0) {
     let start = qs('#source > p')[0]
+    if (!start) return
     let startpos = start.getAttribute('pos')
     if (startpos > 0) {
       let start = (startpos - limit > 0) ? startpos - limit : 0
@@ -104,17 +110,12 @@ function keyScroll(ev) {
     let height = source.clientHeight
     source.scrollTop = source.scrollTop + height - 60
   }
+  else return
   trns.scrollTop = source.scrollTop
 
   if (!current || current.section != 'book') return
-
-  let book = window.book
-  if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
-    let start = qs('#source > p').length
-    // log('___KEY START', start)
-    // ошибка при прокрутке всегда - реагирует на любое нажатие
-    // s_etChunk(start, book)
-  }
+  addChunk()
+  log('KEY CUR', current)
 }
 
 export function parseTitle(bookinfo, bookcurrent) {
@@ -235,12 +236,13 @@ function setChunk(pars, direction) {
     })
     alignPars(aligns)
   })
-  // XXX - здесь - промотать до как было после prepend <<<<<<<<<<<<<<<==========================
+
+  // position before adding upper chunk:
   if (direction) {
     let firstpos = apars[0].pos
-    log('F', firstpos)
+    // log('F', firstpos)
     let firstel = qs('#source [pos="'+firstpos+'"]')[0]
-    log('FEL', firstel)
+    // log('FEL', firstel)
     let offset = firstel.offsetTop
     otrns.scrollTop = osource.scrollTop = offset
   }

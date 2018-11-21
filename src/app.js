@@ -80,6 +80,8 @@ ipcRenderer.on('parseDir', function (event, name) {
 
 ipcRenderer.on('re-read', function (event) {
   log('RE-READ!')
+  let progress = q('#progress')
+  progress.style.display = 'inline-block'
   getDir()
 })
 
@@ -199,6 +201,9 @@ export function navigate(navpath) {
   else if (sec == 'book') getBook()
   else if (sec == 'search') parseQuery()
   else showSection(sec)
+
+  let progress = q('#progress')
+  progress.style.display = 'none'
 
 }
 
@@ -358,6 +363,9 @@ function aroundQuery(str, wf) {
   let arr = str.split(wf)
   let head = arr[0].slice(-limit)
   head =  head.replace(rePunct, "<span class=\"active\">$1<\/span>")
+  if (!arr[1]) {
+    log('NO TAIL !!', wf, 'str:', str)
+  }
   let tail = arr[1].slice(0,limit)
   tail =  tail.replace(rePunct, "<span class=\"active\">$1<\/span>")
   let qspan = ['<span class="query">', wf, '</span>'].join('')
@@ -381,8 +389,12 @@ function showSection(name) {
   window.split.setSizes([100,0])
   let osource = q('#source')
   let secpath = path.resolve(apath, 'src/sections', [name, 'html'].join('.'))
-  const section = fse.readFileSync(secpath)
-  osource.innerHTML = section
+  try {
+    const section = fse.readFileSync(secpath)
+    osource.innerHTML = section
+  } catch(e) {
+    log('NO SECTION ERR')
+  }
 }
 
 
@@ -511,8 +523,9 @@ function getDir(bpath) {
             })
         }
         // wtf ?
-        if (current.section) info = book.info, navigate(current)
-        else navigate({section: 'lib'})
+        navigate(current)
+        // if (current.section) info = book.info, navigate(current)
+        // else navigate({section: 'lib'})
         // navigate({section: 'lib'})
       }).catch(function(err) {
         log('ALL RES ERR', err)

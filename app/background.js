@@ -198,6 +198,11 @@ electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("ready", () => {
   if (env__WEBPACK_IMPORTED_MODULE_12__.name === "development") {
     win.openDevTools();
   }
+
+  electron__WEBPACK_IMPORTED_MODULE_2__["globalShortcut"].register('CommandOrControl+Shift+R', () => {
+    // BrowserWindow.getFocusedWindow().webContents.send('re-read')
+    win.webContents.send('re-read');
+  });
 });
 electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("window-all-closed", () => {
   electron__WEBPACK_IMPORTED_MODULE_2__["app"].quit();
@@ -394,7 +399,7 @@ const fileMenuTemplate = {
     type: "separator"
   }, {
     label: "Re-read Files",
-    accelerator: "CmdOrCtrl+Shift+R",
+    accelerator: "CommandOrControl+Shift+R",
     click: () => {
       electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('re-read');
     }
