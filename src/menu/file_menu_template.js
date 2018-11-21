@@ -7,6 +7,8 @@ export const fileMenuTemplate = {
     { label: "Import from TXT", click: () => { BrowserWindow.getFocusedWindow().webContents.send('parseDir', 'readTXT') } },
     { label: "Clone from Github", click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'cloneGithub') } },
     { type: "separator" },
+    { label: "Re-read Files", accelerator: "CmdOrCtrl+Shift+R", click: () => { BrowserWindow.getFocusedWindow().webContents.send('re-read') } },
+    { type: "separator" },
     { label: "Publish", click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'publish') } },
     { type: "separator" },
     { label: "Export to TXT", click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'exportTXT') } },

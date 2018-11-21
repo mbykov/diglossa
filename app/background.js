@@ -393,6 +393,14 @@ const fileMenuTemplate = {
   }, {
     type: "separator"
   }, {
+    label: "Re-read Files",
+    accelerator: "CmdOrCtrl+Shift+R",
+    click: () => {
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('re-read');
+    }
+  }, {
+    type: "separator"
+  }, {
     label: "Publish",
     click: () => {
       electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'publish');

@@ -21,9 +21,16 @@ let libdb = new PouchDB(libPath)
 
 let limit = 20
 
-// export function getDBState() {
-//   return libdb.get('_local/libstate')
-// }
+export function getState() {
+  return libdb.get('_local/current')
+    .catch(function (err) {
+      if (err.name === 'not_found') {
+        return libdb.put({ _id: '_local/current', section: 'lib'})
+      }
+      else throw err
+    })
+}
+
 
 export function setDBState(psize) {
   let dbstate = {psize: psize}

@@ -118,6 +118,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+ // getState
 
 
 
@@ -194,32 +195,23 @@ electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('parseDir', function (ev
   dialog.showOpenDialog({
     properties: ['openDirectory']
   }, getFNS);
-}); // let hstates =   store.get('hstates') || []
-// let hstate = store.get('hstate') || -1
-
+});
+electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('re-read', function (event) {
+  log('RE-READ!');
+  getDir();
+});
 let hstates = [];
-let hstate = -1; // log('HSTATE=>', hstate)
-// log('HSTATES=>', hstates)
-// let position = hstates[hstate] || {section: 'lib'}
-// log('HSTATES=>POS', position)
-
-window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])(); // window.split.setSizes([50,50])
-
+let hstate = -1;
+window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])();
 getState();
 
 function getState() {
   libdb.get('_local/current').then(function (navpath) {
     current = navpath;
     log('INIT CURRENT:', current);
-    navigate(current); // if (current.section == 'lib') navigate({section: 'lib'})
-    // else if (current.section == 'search') parseQuery()
-    // else getDir()
+    navigate(current);
   }).catch(function (err) {
     if (err.name === 'not_found') {
-      // Promise.all([
-      //   // libdb.put({ _id: '_local/libstate', psize: 0}),
-      //   libdb.put({ _id: '_local/current', section: 'lib'})
-      // ])
       libdb.put({
         _id: '_local/current',
         section: 'lib'
@@ -640,6 +632,7 @@ function getFNS(fns) {
 function getDir(bpath) {
   log('getDIR-bpath', bpath);
   if (!bpath) bpath = current.bpath;
+  if (!bpath) return;
   Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
     if (!book) return; // log('DIR-INFO::', book.info) // то же что book from get
 
@@ -1488,11 +1481,12 @@ function done(err) {
 /*!**************************!*\
   !*** ./src/lib/pouch.js ***!
   \**************************/
-/*! exports provided: setDBState, getInfo, getLib, getText */
+/*! exports provided: getState, setDBState, getInfo, getLib, getText */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getState", function() { return getState; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "setDBState", function() { return setDBState; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getInfo", function() { return getInfo; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib", function() { return getLib; });
@@ -1521,10 +1515,17 @@ let libdb = new PouchDB(libPath); // libdb.createIndex({
 //   name: 'fpathindex'
 // })
 
-let limit = 20; // export function getDBState() {
-//   return libdb.get('_local/libstate')
-// }
-
+let limit = 20;
+function getState() {
+  return libdb.get('_local/current').catch(function (err) {
+    if (err.name === 'not_found') {
+      return libdb.put({
+        _id: '_local/current',
+        section: 'lib'
+      });
+    } else throw err;
+  });
+}
 function setDBState(psize) {
   let dbstate = {
     psize: psize

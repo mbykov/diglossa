@@ -13,7 +13,8 @@ import { q, qs, empty, create, remove, span, p, div, enclitic } from './lib/util
 import { twoPages, parseTitle, parseBook } from './lib/book'
 import { openODS, openDir } from './lib/getfiles'
 
-import { getDBState, setDBState, getInfo, getLib, getText } from './lib/pouch';
+// getState
+import { setDBState, getInfo, getLib, getText } from './lib/pouch';
 
 const Mousetrap = require('mousetrap')
 let fse = require('fs-extra')
@@ -77,43 +78,34 @@ ipcRenderer.on('parseDir', function (event, name) {
   dialog.showOpenDialog({properties: ['openDirectory'] }, getFNS)
 })
 
-// let hstates =   store.get('hstates') || []
-// let hstate = store.get('hstate') || -1
+ipcRenderer.on('re-read', function (event) {
+  log('RE-READ!')
+  getDir()
+})
+
 let hstates = []
 let hstate =  -1
 
-// log('HSTATE=>', hstate)
-// log('HSTATES=>', hstates)
-// let position = hstates[hstate] || {section: 'lib'}
-// log('HSTATES=>POS', position)
-
 window.split = twoPages()
-// window.split.setSizes([50,50])
 
 getState()
 
 function getState() {
-  libdb.get('_local/current').then(function (navpath) {
-    current = navpath
-    log('INIT CURRENT:', current)
-    navigate(current)
-    // if (current.section == 'lib') navigate({section: 'lib'})
-    // else if (current.section == 'search') parseQuery()
-    // else getDir()
-  }).catch(function (err) {
-    if (err.name === 'not_found') {
-      // Promise.all([
-      //   // libdb.put({ _id: '_local/libstate', psize: 0}),
-      //   libdb.put({ _id: '_local/current', section: 'lib'})
-      // ])
-      libdb.put({ _id: '_local/current', section: 'lib'})
-        .then(function() {
-          log('SET DEFAULT VALUES')
-          navigate({section: 'lib'})
-        })
-    }
+  libdb.get('_local/current')
+    .then(function (navpath) {
+      current = navpath
+      log('INIT CURRENT:', current)
+      navigate(current)
+    }).catch(function (err) {
+      if (err.name === 'not_found') {
+        libdb.put({ _id: '_local/current', section: 'lib'})
+          .then(function() {
+            log('SET DEFAULT VALUES')
+            navigate({section: 'lib'})
+          })
+      }
     else throw err
-  })
+    })
 }
 
 function goLib() {
@@ -497,6 +489,7 @@ function getFNS(fns) {
 function getDir(bpath) {
   log('getDIR-bpath', bpath)
   if (!bpath) bpath = current.bpath
+  if (!bpath) return
   openDir(bpath, (book) => {
     if (!book) return
     // log('DIR-INFO::', book.info) // то же что book from get
