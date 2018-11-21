@@ -437,6 +437,13 @@ const fileMenuTemplate = {
   }, {
     type: "separator"
   }, {
+    label: "Clean up DB",
+    click: () => {
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'cleanup');
+    }
+  }, {
+    type: "separator"
+  }, {
     label: "Quit",
     accelerator: "CmdOrCtrl+Q",
     click: () => {
@@ -508,8 +515,9 @@ __webpack_require__.r(__webpack_exports__);
 
 const leftMenuTemplate = {
   label: "<--",
+  // accelerator: "Alt+LeftArrow",
   click: () => {
-    console.log('LEFT');
+    electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'goleft');
   }
 };
 
@@ -560,7 +568,7 @@ __webpack_require__.r(__webpack_exports__);
 const rightMenuTemplate = {
   label: "-->",
   click: () => {
-    console.log('RIGHT');
+    electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'goright');
   }
 };
 

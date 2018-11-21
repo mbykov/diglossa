@@ -14,7 +14,7 @@ import { twoPages, parseTitle, parseBook } from './lib/book'
 import { openODS, openDir } from './lib/getfiles'
 
 // getState
-import { setDBState, getInfo, getLib, getText } from './lib/pouch';
+import { setDBState, getInfo, getLib, getText, cleanupDB } from './lib/pouch';
 
 const Mousetrap = require('mousetrap')
 let fse = require('fs-extra')
@@ -26,7 +26,7 @@ const store = new Store()
 const path = require('path')
 
 const clipboard = require('electron-clipboard-extended')
-const {dialog} = require('electron').remote
+const {dialog, getCurrentWindow} = require('electron').remote
 
 // const isDev = require('electron-is-dev')
 // const isDev = false
@@ -68,7 +68,6 @@ ipcRenderer.on('home', function (event) {
 })
 
 ipcRenderer.on('section', function (event, name) {
-  log('SEC NAME', name)
   navigate({section: name})
 })
 
@@ -84,6 +83,14 @@ ipcRenderer.on('re-read', function (event) {
   progress.style.display = 'inline-block'
   getDir()
 })
+
+ipcRenderer.on('action', function (event, action) {
+  if (action == 'goleft') goLeft()
+  else if (action == 'goright') goRight()
+  else if (action == 'cleanup') showCleanup()
+  // navigate({section: name})
+})
+
 
 let hstates = []
 let hstate =  -1
@@ -155,7 +162,7 @@ function parseLib(infos) {
   let oul = create('ul')
   osource.appendChild(oul)
 
-  if (!infos.length) oul.textContent = 'no book in lib'
+  if (!infos.length) oul.textContent = 'your library is empty'
   infos.forEach(info => {
     let ostr = create('li', 'libauth')
     ostr.infoid = info._id
@@ -216,6 +223,22 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
   let state = hstates[hstate]
   navigate(state)
 })
+
+// arrows
+function goLeft() {
+  if (hstate - 1 <= -1) return
+  if (hstate - 1 > -1) hstate--
+  let state = hstates[hstate]
+  navigate(state)
+}
+
+function goRight() {
+  log('RO RIGHT')
+  if (hstate + 1 >= hstates.length) return
+  if (hstate + 1 < hstates.length) hstate++
+  let state = hstates[hstate]
+  navigate(state)
+}
 
 // MAP
 Mousetrap.bind(['ctrl+f'], function(ev) {
@@ -527,12 +550,23 @@ function getDir(bpath) {
         }
         // wtf ?
         navigate(current)
-        // if (current.section) info = book.info, navigate(current)
-        // else navigate({section: 'lib'})
-        // navigate({section: 'lib'})
       }).catch(function(err) {
         log('ALL RES ERR', err)
       })
 
   })
+}
+
+function showCleanup() {
+  showSection('cleanup')
+  let ocleanup = q('#cleanup')
+  ocleanup.addEventListener("click", goCleanup, false)
+}
+
+function goCleanup() {
+  cleanupDB()
+    .then(function() {
+      getCurrentWindow().reload()
+      getState()
+    })
 }

@@ -5,7 +5,7 @@ import tree from './tree';
 import { navigate } from '../app';
 import { getText } from './pouch';
 
-const fse = require('fs-extra')
+// const fse = require('fs-extra')
 const path = require('path')
 const log = console.log
 const Store = require('electron-store')

@@ -8,6 +8,7 @@ const log = console.log
 const app = remote.app;
 const apath = app.getAppPath()
 let upath = app.getPath("userData")
+let fse = require('fs-extra')
 
 let libPath = path.resolve(upath, 'library')
 const PouchDB = require('pouchdb')
@@ -68,4 +69,8 @@ export function getText(current, endpos) {
   // log('=pouch-text-selector=:', selector)
   return libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
   // return libdb.explain({selector: selector})
+}
+
+export function cleanupDB() {
+  return fse.remove(libPath)
 }

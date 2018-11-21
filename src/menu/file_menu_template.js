@@ -17,6 +17,8 @@ export const fileMenuTemplate = {
     { type: "separator" },
     { label: "Create dictionary for book", click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'createDict') } },
     { type: "separator" },
+    { label: "Clean up DB", click: () => { BrowserWindow.getFocusedWindow().webContents.send('action', 'cleanup') } },
+    { type: "separator" },
     { label: "Quit",
       accelerator: "CmdOrCtrl+Q",
       click: () => {

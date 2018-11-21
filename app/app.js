@@ -137,7 +137,8 @@ const path = __webpack_require__(/*! path */ "path");
 const clipboard = __webpack_require__(/*! electron-clipboard-extended */ "electron-clipboard-extended");
 
 const {
-  dialog
+  dialog,
+  getCurrentWindow
 } = __webpack_require__(/*! electron */ "electron").remote; // const isDev = require('electron-is-dev')
 // const isDev = false
 
@@ -184,7 +185,6 @@ electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('home', function (event)
   });
 });
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('section', function (event, name) {
-  log('SEC NAME', name);
   navigate({
     section: name
   });
@@ -201,6 +201,9 @@ electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('re-read', function (eve
   let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#progress');
   progress.style.display = 'inline-block';
   getDir();
+});
+electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('action', function (event, action) {
+  if (action == 'goleft') goLeft();else if (action == 'goright') goRight();else if (action == 'cleanup') showCleanup(); // navigate({section: name})
 });
 let hstates = [];
 let hstate = -1;
@@ -270,7 +273,7 @@ function parseLib(infos) {
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(osource);
   let oul = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["create"])('ul');
   osource.appendChild(oul);
-  if (!infos.length) oul.textContent = 'no book in lib';
+  if (!infos.length) oul.textContent = 'your library is empty';
   infos.forEach(info => {
     let ostr = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["create"])('li', 'libauth');
     ostr.infoid = info._id;
@@ -326,7 +329,23 @@ Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   if (ev.which == 39 && hstate + 1 < hstates.length) hstate++;
   let state = hstates[hstate];
   navigate(state);
-}); // MAP
+}); // arrows
+
+function goLeft() {
+  if (hstate - 1 <= -1) return;
+  if (hstate - 1 > -1) hstate--;
+  let state = hstates[hstate];
+  navigate(state);
+}
+
+function goRight() {
+  log('RO RIGHT');
+  if (hstate + 1 >= hstates.length) return;
+  if (hstate + 1 < hstates.length) hstate++;
+  let state = hstates[hstate];
+  navigate(state);
+} // MAP
+
 
 Mousetrap.bind(['ctrl+f'], function (ev) {
   let query = clipboard.readText();
@@ -675,12 +694,23 @@ function getDir(bpath) {
       } // wtf ?
 
 
-      navigate(current); // if (current.section) info = book.info, navigate(current)
-      // else navigate({section: 'lib'})
-      // navigate({section: 'lib'})
+      navigate(current);
     }).catch(function (err) {
       log('ALL RES ERR', err);
     });
+  });
+}
+
+function showCleanup() {
+  showSection('cleanup');
+  let ocleanup = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#cleanup');
+  ocleanup.addEventListener("click", goCleanup, false);
+}
+
+function goCleanup() {
+  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["cleanupDB"])().then(function () {
+    getCurrentWindow().reload();
+    getState();
   });
 }
 
@@ -711,9 +741,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-
-const fse = __webpack_require__(/*! fs-extra */ "fs-extra");
+ // const fse = require('fs-extra')
 
 const path = __webpack_require__(/*! path */ "path");
 
@@ -1504,7 +1532,7 @@ function done(err) {
 /*!**************************!*\
   !*** ./src/lib/pouch.js ***!
   \**************************/
-/*! exports provided: getState, setDBState, getInfo, getLib, getText */
+/*! exports provided: getState, setDBState, getInfo, getLib, getText, cleanupDB */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1514,6 +1542,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getInfo", function() { return getInfo; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib", function() { return getLib; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getText", function() { return getText; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "cleanupDB", function() { return cleanupDB; });
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! electron */ "electron");
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "lodash");
@@ -1528,6 +1557,9 @@ const log = console.log;
 const app = electron__WEBPACK_IMPORTED_MODULE_0__["remote"].app;
 const apath = app.getAppPath();
 let upath = app.getPath("userData");
+
+let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
+
 let libPath = path.resolve(upath, 'library');
 
 const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
@@ -1591,6 +1623,9 @@ function getText(current, endpos) {
     selector: selector
   }); // sort: ['idx'], , limit: 20
   // return libdb.explain({selector: selector})
+}
+function cleanupDB() {
+  return fse.remove(libPath);
 }
 
 /***/ }),
