@@ -507,9 +507,10 @@ function aroundQuery(str, wf) {
 
   if (!arr[1]) {
     log('NO TAIL !!', wf, 'str:', str);
+    throw new Error('NO SEARCH!');
   }
 
-  let tail = arr[1].slice(0, limit);
+  let tail = arr.slice(1).join('').slice(0, limit);
   tail = tail.replace(rePunct, "<span class=\"active\">$1<\/span>");
   let qspan = ['<span class="query">', wf, '</span>'].join('');
   let html = [head, qspan, tail].join('');
@@ -525,7 +526,7 @@ function textAround(str, percent) {
   let head = str.substr(start, 100);
   let tail = str.substr(center, 100); // log('percent:', percent, 'c', center, head, tail)
 
-  let line = [head, '<=>', tail].join(''); // log('line.length:', line.length)
+  let line = [head, tail].join(''); // log('line.length:', line.length)
 
   return line;
 }
@@ -539,6 +540,7 @@ function showSection(name) {
     const section = fse.readFileSync(secpath);
     osource.innerHTML = section;
   } catch (e) {
+    osource.innerHTML = 'this feature will be realized in future version';
     log('NO SECTION ERR');
   }
 }
