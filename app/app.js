@@ -151,9 +151,10 @@ let upath = app.getPath("userData"); // const watch = require('node-watch')
 const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
 
 PouchDB.plugin(__webpack_require__(/*! pouchdb-find */ "pouchdb-find"));
-let libPath = path.resolve(upath, 'library');
+let dbPath = path.resolve(upath, 'pouch');
+let libPath = path.resolve(upath, 'pouch/library');
 let libdb = new PouchDB(libPath);
-let ftdbPath = path.resolve(upath, 'ftdb');
+let ftdbPath = path.resolve(upath, 'pouch/fulltext');
 let ftdb = new PouchDB(ftdbPath);
 let current, info; // let limit = 20
 
@@ -198,8 +199,6 @@ electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('parseDir', function (ev
 });
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('re-read', function (event) {
   log('RE-READ!');
-  let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#progress');
-  progress.style.display = 'inline-block';
   getDir();
 });
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('action', function (event, action) {
@@ -211,6 +210,7 @@ window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])();
 getState();
 
 function getState() {
+  fse.ensureDirSync(dbPath);
   libdb.get('_local/current').then(function (navpath) {
     current = navpath;
     log('INIT CURRENT:', current);
@@ -256,9 +256,9 @@ function getTitle() {
 function getBook() {
   Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getInfo"])(current.infoid).then(function (curinfo) {
     Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getText"])(current).then(function (res) {
-      let pars = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs); // log('___getBook-pars:', pars.length)
+      let pars = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs);
 
-
+      log('___getBook-cur:', current);
       if (!pars || !pars.length) log('no texts');
       Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, curinfo, pars);
     });
@@ -339,7 +339,6 @@ function goLeft() {
 }
 
 function goRight() {
-  log('RO RIGHT');
   if (hstate + 1 >= hstates.length) return;
   if (hstate + 1 < hstates.length) hstate++;
   let state = hstates[hstate];
@@ -363,29 +362,6 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
 
       let qinfos = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qdocs, 'infoid'); // log('QINFOS', qinfos)
 
-
-      for (let infoid in qinfos) {
-        let qgroups = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qinfos[infoid], 'fpath'); // log('QGRS', infoid, qgroups)
-
-
-        for (let fpath in qgroups) {
-          log('FPATH', fpath);
-          let qgroup = qgroups[fpath];
-
-          let qauth = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(qgroup, par => {
-            return par.author;
-          });
-
-          let {
-            html,
-            percent
-          } = aroundQuery(qauth.text, query);
-          qauth.text = html;
-          qgroup.forEach(par => {
-            if (par.author) return;else par.text = textAround(par.text, percent);
-          });
-        }
-      }
 
       current = {
         _id: '_local/current',
@@ -434,12 +410,20 @@ function parseQbook(info, qinfo) {
     let qpos = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qgroup, 'pos');
 
     for (let pos in qpos) {
-      let qlines = qpos[pos]; // qlines.forEach(par=> {
-      // вычислить процент PROCENT
-      // if (par.author) par.innerHTML = aroundQuery(par.text, current.query)
-      // else par.text = par.text.slice(0, 100)
-      // })
+      let qlines = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.cloneDeep(qpos[pos]);
 
+      let qauth = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(qlines, par => {
+        return par.author;
+      });
+
+      let {
+        html,
+        percent
+      } = aroundQuery(qauth.text, current.query);
+      qauth.text = html;
+      qlines.forEach(par => {
+        if (par.author) return;else par.text = textAround(par.text, percent);
+      });
       parseGroup(info._id, fpath, pos, qlines);
     }
   }
@@ -486,18 +470,15 @@ function jumpPos(ev) {
 }
 
 function scrollQueries(ev) {
-  if (ev.shiftKey != true) return; // let idx = ev.target.getAttribute('pos')
-
+  if (ev.shiftKey != true) return;
   let el = ev.target;
-  let parent = el.closest('.qtext'); // log('QP', parent)
-
+  let parent = el.closest('.qtext');
   if (!parent) return;
-  let pars = parent.children; // log('Qpars', pars)
+  let pars = parent.children;
 
   let nics = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.map(pars, par => {
     return par.getAttribute('nic');
-  }); // log('Qnics', nics)
-
+  });
 
   let curpar = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(pars, par => {
     return !par.classList.contains('hidden');
@@ -516,7 +497,6 @@ function scrollQueries(ev) {
 }
 
 function aroundQuery(str, wf) {
-  // это снести в общий метод после структуризации кода
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
   let rePunct = new RegExp(punct, 'g');
   let limit = 100;
@@ -543,9 +523,10 @@ function textAround(str, percent) {
   let center = str.length * percent;
   let start = center - 100;
   let head = str.substr(start, 100);
-  let tail = str.substr(center, 100);
-  log('percent:', percent, 'c', center, head, tail);
-  let line = [head, '<=>', tail].join('');
+  let tail = str.substr(center, 100); // log('percent:', percent, 'c', center, head, tail)
+
+  let line = [head, '<=>', tail].join(''); // log('line.length:', line.length)
+
   return line;
 }
 
@@ -672,6 +653,8 @@ function getFNS(fns) {
 }
 
 function getDir(bpath) {
+  let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#progress');
+  progress.style.display = 'inline-block';
   log('getDIR-bpath', bpath);
   if (!bpath) bpath = current.bpath;
   if (!bpath) return;
@@ -708,10 +691,11 @@ function showCleanup() {
 }
 
 function goCleanup() {
-  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["cleanupDB"])().then(function () {
-    getCurrentWindow().reload();
-    getState();
-  });
+  let fsee = __webpack_require__(/*! fs-extra */ "fs-extra");
+
+  fsee.emptyDirSync(dbPath);
+  getCurrentWindow().reload();
+  getState();
 }
 
 /***/ }),
@@ -850,8 +834,7 @@ function keyScroll(ev) {
 
   trns.scrollTop = source.scrollTop;
   if (!current || current.section != 'book') return;
-  addChunk();
-  log('KEY CUR', current);
+  addChunk(); // log('KEY CUR', current)
 }
 
 function parseTitle(bookinfo, bookcurrent) {
@@ -915,14 +898,12 @@ function parseBook(bookcurrent, bookinfo, pars) {
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns);
 
-  let cnics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(pars.map(auth => {
+  let cnics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(pars.map(auth => {
     if (!auth.author) return auth.nic;
-  })); // log('CNICS', cnics)
-
+  })));
 
   let nic = current.nic;
-  if (!nic) nic = cnics[0];
-  if (!cnics.includes(nic)) nic = cnics[0];
+  if (!nic) nic = cnics[0];else if (!cnics.includes(nic)) nic = cnics[0];
   current.nic = nic; // current.nics = cnics
 
   setChunk(pars);
@@ -1532,7 +1513,7 @@ function done(err) {
 /*!**************************!*\
   !*** ./src/lib/pouch.js ***!
   \**************************/
-/*! exports provided: getState, setDBState, getInfo, getLib, getText, cleanupDB */
+/*! exports provided: getState, setDBState, getInfo, getLib, getText */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1542,7 +1523,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getInfo", function() { return getInfo; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib", function() { return getLib; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getText", function() { return getText; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "cleanupDB", function() { return cleanupDB; });
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! electron */ "electron");
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "lodash");
@@ -1560,7 +1540,9 @@ let upath = app.getPath("userData");
 
 let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
-let libPath = path.resolve(upath, 'library');
+let dbPath = path.resolve(upath, 'pouch');
+let libPath = path.resolve(upath, 'pouch/library');
+let ftPath = path.resolve(upath, 'pouch/fulltext');
 
 const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
 
@@ -1623,9 +1605,6 @@ function getText(current, endpos) {
     selector: selector
   }); // sort: ['idx'], , limit: 20
   // return libdb.explain({selector: selector})
-}
-function cleanupDB() {
-  return fse.remove(libPath);
 }
 
 /***/ }),

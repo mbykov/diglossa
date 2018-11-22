@@ -10,7 +10,9 @@ const apath = app.getAppPath()
 let upath = app.getPath("userData")
 let fse = require('fs-extra')
 
-let libPath = path.resolve(upath, 'library')
+let dbPath = path.resolve(upath, 'pouch')
+let libPath = path.resolve(upath, 'pouch/library')
+let ftPath = path.resolve(upath, 'pouch/fulltext')
 const PouchDB = require('pouchdb')
 PouchDB.plugin(require('pouchdb-find'))
 let libdb = new PouchDB(libPath)
@@ -69,8 +71,4 @@ export function getText(current, endpos) {
   // log('=pouch-text-selector=:', selector)
   return libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
   // return libdb.explain({selector: selector})
-}
-
-export function cleanupDB() {
-  return fse.remove(libPath)
 }

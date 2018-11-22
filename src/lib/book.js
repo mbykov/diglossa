@@ -115,7 +115,7 @@ function keyScroll(ev) {
 
   if (!current || current.section != 'book') return
   addChunk()
-  log('KEY CUR', current)
+  // log('KEY CUR', current)
 }
 
 export function parseTitle(bookinfo, bookcurrent) {
@@ -181,11 +181,10 @@ export function parseBook(bookcurrent, bookinfo, pars) {
   empty(osource)
   empty(otrns)
 
-  let cnics = _.uniq(pars.map(auth=> { if (!auth.author) return auth.nic }))
-  // log('CNICS', cnics)
+  let cnics = _.compact(_.uniq(pars.map(auth=> { if (!auth.author) return auth.nic })))
   let nic = current.nic
   if (!nic) nic = cnics[0]
-  if (!cnics.includes(nic)) nic = cnics[0]
+  else if (!cnics.includes(nic)) nic = cnics[0]
   current.nic = nic
   // current.nics = cnics
 

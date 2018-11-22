@@ -14,7 +14,7 @@ import { twoPages, parseTitle, parseBook } from './lib/book'
 import { openODS, openDir } from './lib/getfiles'
 
 // getState
-import { setDBState, getInfo, getLib, getText, cleanupDB } from './lib/pouch';
+import { setDBState, getInfo, getLib, getText } from './lib/pouch';
 
 const Mousetrap = require('mousetrap')
 let fse = require('fs-extra')
@@ -38,9 +38,10 @@ let upath = app.getPath("userData")
 
 const PouchDB = require('pouchdb')
 PouchDB.plugin(require('pouchdb-find'))
-let libPath = path.resolve(upath, 'library')
+let dbPath = path.resolve(upath, 'pouch')
+let libPath = path.resolve(upath, 'pouch/library')
 let libdb = new PouchDB(libPath)
-let ftdbPath = path.resolve(upath, 'ftdb')
+let ftdbPath = path.resolve(upath, 'pouch/fulltext')
 let ftdb = new PouchDB(ftdbPath)
 
 let current, info
@@ -79,8 +80,6 @@ ipcRenderer.on('parseDir', function (event, name) {
 
 ipcRenderer.on('re-read', function (event) {
   log('RE-READ!')
-  let progress = q('#progress')
-  progress.style.display = 'inline-block'
   getDir()
 })
 
@@ -100,6 +99,7 @@ window.split = twoPages()
 getState()
 
 function getState() {
+  fse.ensureDirSync(dbPath)
   libdb.get('_local/current')
     .then(function (navpath) {
       current = navpath
@@ -146,7 +146,7 @@ function getBook() {
       getText(current)
         .then(function(res) {
           let pars = _.compact(res.docs)
-          // log('___getBook-pars:', pars.length)
+          log('___getBook-cur:', current)
           if (!pars || !pars.length) log('no texts')
           parseBook(current, curinfo, pars)
         })
@@ -233,7 +233,6 @@ function goLeft() {
 }
 
 function goRight() {
-  log('RO RIGHT')
   if (hstate + 1 >= hstates.length) return
   if (hstate + 1 < hstates.length) hstate++
   let state = hstates[hstate]
@@ -253,23 +252,6 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
           // log('QDOCS', qdocs)
           let qinfos = _.groupBy(qdocs, 'infoid')
           // log('QINFOS', qinfos)
-
-          for (let infoid in qinfos) {
-            let qgroups = _.groupBy(qinfos[infoid], 'fpath')
-            // log('QGRS', infoid, qgroups)
-            for (let fpath in qgroups) {
-              log('FPATH', fpath)
-              let qgroup = qgroups[fpath]
-              let qauth = _.find(qgroup, par=> { return par.author })
-              let {html, percent} = aroundQuery(qauth.text, query)
-              qauth.text = html
-              qgroup.forEach(par=> {
-                if (par.author) return
-                else par.text = textAround(par.text, percent)
-              })
-            }
-          }
-
           current = {_id: '_local/current', section: 'search', qinfos: qinfos, query: query}
           navigate(current)
         })
@@ -309,12 +291,14 @@ function parseQbook(info, qinfo) {
     let qgroup = qgroups[fpath]
     let qpos = _.groupBy(qgroup, 'pos')
     for (let pos in qpos) {
-      let qlines = qpos[pos]
-      // qlines.forEach(par=> {
-        // вычислить процент PROCENT
-        // if (par.author) par.innerHTML = aroundQuery(par.text, current.query)
-        // else par.text = par.text.slice(0, 100)
-      // })
+      let qlines = _.cloneDeep(qpos[pos])
+      let qauth = _.find(qlines, par=> { return par.author })
+      let {html, percent} = aroundQuery(qauth.text, current.query)
+      qauth.text = html
+      qlines.forEach(par=> {
+        if (par.author) return
+        else par.text = textAround(par.text, percent)
+      })
       parseGroup(info._id, fpath, pos, qlines)
     }
   }
@@ -360,15 +344,11 @@ function jumpPos(ev) {
 
 function scrollQueries(ev) {
   if (ev.shiftKey != true) return
-  // let idx = ev.target.getAttribute('pos')
   let el = ev.target
   let parent = el.closest('.qtext')
-  // log('QP', parent)
   if (!parent) return
   let pars = parent.children
-  // log('Qpars', pars)
   let nics = _.map(pars, par=> { return par.getAttribute('nic') })
-  // log('Qnics', nics)
 
   let curpar = _.find(pars, par=> { return !par.classList.contains('hidden') })
   let nic = curpar.getAttribute('nic')
@@ -381,7 +361,6 @@ function scrollQueries(ev) {
 }
 
 function aroundQuery(str, wf) {
-  // это снести в общий метод после структуризации кода
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
   let rePunct = new RegExp(punct, 'g')
 
@@ -405,8 +384,9 @@ function textAround(str, percent) {
   let start = center - 100
   let head = str.substr(start, 100)
   let tail = str.substr(center, 100)
-  log('percent:', percent, 'c', center, head, tail)
+  // log('percent:', percent, 'c', center, head, tail)
   let line = [head, '<=>', tail].join('')
+  // log('line.length:', line.length)
   return line
 }
 
@@ -525,6 +505,8 @@ function getFNS(fns) {
 }
 
 function getDir(bpath) {
+  let progress = q('#progress')
+  progress.style.display = 'inline-block'
   log('getDIR-bpath', bpath)
   if (!bpath) bpath = current.bpath
   if (!bpath) return
@@ -564,9 +546,8 @@ function showCleanup() {
 }
 
 function goCleanup() {
-  cleanupDB()
-    .then(function() {
-      getCurrentWindow().reload()
-      getState()
-    })
+  let fsee = require('fs-extra')
+  fsee.emptyDirSync(dbPath)
+  getCurrentWindow().reload()
+  getState()
 }
