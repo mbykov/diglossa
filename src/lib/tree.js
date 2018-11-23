@@ -20,7 +20,7 @@ export default function tree(data, deftitle) {
     onode.appendChild(osign)
     let otext = create('span', 'tree-node-text')
     otext.textContent = deftitle
-    otext.setAttribute('fpath', '')
+    otext.setAttribute('fpath', data.fpath)
     onode.appendChild(otext)
     otbody.appendChild(onode)
     return otree

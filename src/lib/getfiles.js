@@ -86,13 +86,14 @@ export function openDir(bookpath, cb) {
     let book = parseDir(bookpath)
     cb(book)
   } catch (err) {
-    if (err) log('DIR ERR', err)
+    if (err) log('NO INFO FILE')
     cb(false)
   }
 }
 
-function walk(fns, dname, dtree, tree) {
+function walk(info, fns, dname, dtree, tree) {
   let fpath = dtree.path.split(dname)[1]
+  if (!fpath) fpath = info.book.title
   tree.text = fpath.split('/').slice(-1)[0]
   tree.fpath = fpath.replace(/^\//, '')
   if (!dtree.children) return
@@ -106,7 +107,7 @@ function walk(fns, dname, dtree, tree) {
     if (child.type != 'directory') return
     if (!tree.children) tree.children = []
     tree.children.push({})
-    walk(fns, dname, child, tree.children[idx])
+    walk(info, fns, dname, child, tree.children[idx])
   })
 }
 
@@ -117,15 +118,16 @@ function parseDir(bookpath) {
   // log('=BPATH', bpath, bookpath)
   // log('=DTREE', dtree)
   if (!dtree) return
+  let ipath = path.resolve(bpath, 'info.json')
+  let info = parseInfo(ipath)
+  log('=INFO', info)
+
   let fns = []
   let tree = {}
-  walk(fns, dname, dtree, tree)
-  // log('=TREE', tree)
+  walk(info, fns, dname, dtree, tree)
+  log('=TREE', tree)
   fns = glob.sync('**/*', {cwd: bpath})
 
-  let ipath = path.resolve(bpath, 'info.json')
-  // log('IPATH', ipath)
-  let info = parseInfo(ipath)
   // log('INFO', info)
   fns = _.filter(fns, fn=>{ return fn != ipath })
   // log('FNS', fns.length)
@@ -164,12 +166,6 @@ function parseDir(bookpath) {
 
     let lang
     if (auth) lang = auth.lang
-
-    let textid = ['text', info.book.author, info.book.title, fpath, nic].join('-')
-    // let pane = { _id: textid, lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname, text: clean,
-    // if (auth.author) pane.author = true // , info.book.author = auth.name
-    // if (comment) coms.push(pane)
-    // else texts.push(pane)
 
     rows.forEach((row, idx)=> {
       let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-')

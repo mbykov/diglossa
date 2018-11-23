@@ -256,9 +256,9 @@ function getTitle() {
 function getBook() {
   Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getInfo"])(current.infoid).then(function (curinfo) {
     Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getText"])(current).then(function (res) {
-      let pars = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs);
+      let pars = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs); // log('___getBook-cur:', current)
 
-      log('___getBook-cur:', current);
+
       if (!pars || !pars.length) log('no texts');
       Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, curinfo, pars);
     });
@@ -652,7 +652,8 @@ function getFNS(fns) {
   if (!fns) return;
   let bpath = fns[0];
   getDir(bpath);
-}
+} // BUG если нет info.json
+
 
 function getDir(bpath) {
   let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#progress');
@@ -1307,13 +1308,14 @@ function openDir(bookpath, cb) {
     let book = parseDir(bookpath);
     cb(book);
   } catch (err) {
-    if (err) log('DIR ERR', err);
+    if (err) log('NO INFO FILE');
     cb(false);
   }
 }
 
-function walk(fns, dname, dtree, tree) {
+function walk(info, fns, dname, dtree, tree) {
   let fpath = dtree.path.split(dname)[1];
+  if (!fpath) fpath = info.book.title;
   tree.text = fpath.split('/').slice(-1)[0];
   tree.fpath = fpath.replace(/^\//, '');
   if (!dtree.children) return;
@@ -1327,7 +1329,7 @@ function walk(fns, dname, dtree, tree) {
     if (child.type != 'directory') return;
     if (!tree.children) tree.children = [];
     tree.children.push({});
-    walk(fns, dname, child, tree.children[idx]);
+    walk(info, fns, dname, child, tree.children[idx]);
   });
 }
 
@@ -1339,16 +1341,16 @@ function parseDir(bookpath) {
   // log('=DTREE', dtree)
 
   if (!dtree) return;
+  let ipath = path.resolve(bpath, 'info.json');
+  let info = parseInfo(ipath);
+  log('=INFO', info);
   let fns = [];
   let tree = {};
-  walk(fns, dname, dtree, tree); // log('=TREE', tree)
-
+  walk(info, fns, dname, dtree, tree);
+  log('=TREE', tree);
   fns = glob.sync('**/*', {
     cwd: bpath
-  });
-  let ipath = path.resolve(bpath, 'info.json'); // log('IPATH', ipath)
-
-  let info = parseInfo(ipath); // log('INFO', info)
+  }); // log('INFO', info)
 
   fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
     return fn != ipath;
@@ -1387,11 +1389,6 @@ function parseDir(bookpath) {
     info.sections.push(fpath);
     let lang;
     if (auth) lang = auth.lang;
-    let textid = ['text', info.book.author, info.book.title, fpath, nic].join('-'); // let pane = { _id: textid, lang: lang, nic: nic, fpath: fpath, rows: rows } // fname: fname, text: clean,
-    // if (auth.author) pane.author = true // , info.book.author = auth.name
-    // if (comment) coms.push(pane)
-    // else texts.push(pane)
-
     rows.forEach((row, idx) => {
       let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-');
       let parid = [groupid, nic].join('-'); // let parid = [info.book.author, info.book.title, fpath, idx, nic].join('-')
@@ -1644,7 +1641,7 @@ function tree(data, deftitle) {
     onode.appendChild(osign);
     let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-node-text');
     otext.textContent = deftitle;
-    otext.setAttribute('fpath', '');
+    otext.setAttribute('fpath', data.fpath);
     onode.appendChild(otext);
     otbody.appendChild(onode);
     return otree;

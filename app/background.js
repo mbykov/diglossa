@@ -475,11 +475,6 @@ const helpMenuTemplate = {
       electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'howto-create');
     }
   }, {
-    label: "how to publish the result",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'howto-publish');
-    }
-  }, {
     label: "how to create a dictionary",
     click: () => {
       electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'howto-dict');

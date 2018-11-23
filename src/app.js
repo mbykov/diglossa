@@ -146,7 +146,7 @@ function getBook() {
       getText(current)
         .then(function(res) {
           let pars = _.compact(res.docs)
-          log('___getBook-cur:', current)
+          // log('___getBook-cur:', current)
           if (!pars || !pars.length) log('no texts')
           parseBook(current, curinfo, pars)
         })
@@ -505,6 +505,7 @@ function getFNS(fns) {
   getDir(bpath)
 }
 
+// BUG если нет info.json
 function getDir(bpath) {
   let progress = q('#progress')
   progress.style.display = 'inline-block'
