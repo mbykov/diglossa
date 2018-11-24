@@ -5,35 +5,29 @@ import tree from './tree';
 import { navigate } from '../app';
 import { getText } from './pouch';
 
-// const fse = require('fs-extra')
 const path = require('path')
 const log = console.log
-const Store = require('electron-store')
-const store = new Store()
-// const Apstore = require('./apstore')
-// const store = new Apstore()
-// const elasticlunr = require('elasticlunr');
+// const Store = require('electron-store')
+// const store = new Store()
 const clipboard = require('electron-clipboard-extended')
 
 let current, info
 let limit = 20
-// let apars = []
-// let tpars = []
 
 let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
 let rePunct = new RegExp(punct, 'g')
 
 export function twoPages() {
-  var sizes = store.get('split-sizes')
-  if (sizes) sizes = JSON.parse(sizes)
-  else sizes = [50, 50]
+  // var sizes = store.get('split-sizes')
+  // if (sizes) sizes = JSON.parse(sizes)
+  // else
+  let sizes = [50, 50]
   let split = Split(['#source', '#trns'], {
     sizes: sizes,
     gutterSize: 5,
     cursor: 'col-resize',
     minSize: [0, 0],
     onDragEnd: function (sizes) {
-      // reSetBook()
     }
   })
   let obook = q('#book')
@@ -61,7 +55,6 @@ function scrollPanes(ev) {
       return false
     }
   })
-
   addChunk()
 }
 
@@ -73,11 +66,9 @@ function addChunk() {
     let startpos = start.getAttribute('pos')
     if (startpos > 0) {
       let start = (startpos - limit > 0) ? startpos - limit : 0
-      // log('___START', start)
       current.pos = start
       getText(current, startpos)
         .then(function(res) {
-          // log('___res.docs UP', res.docs)
           setChunk(_.reverse(res.docs), true)
         })
     }
@@ -88,7 +79,6 @@ function addChunk() {
     current.pos = start
     getText(current)
       .then(function(res) {
-        // log('___res.docs', res.docs)
         setChunk(res.docs)
       })
   }
@@ -118,12 +108,41 @@ function keyScroll(ev) {
   // log('KEY CUR', current)
 }
 
+export function parseLib(infos) {
+  window.split.setSizes([100,0])
+  let osource = q('#source')
+  empty(osource)
+  let oul = create('ul')
+  osource.appendChild(oul)
+
+  if (!infos.length) oul.textContent = 'your library is empty'
+  infos.forEach(info => {
+    let ostr = create('li', 'libauth')
+    ostr.infoid = info._id
+    oul.appendChild(ostr)
+    let author = span(info.book.author)
+    let title = span(info.book.title)
+    author.classList.add('lib-auth')
+    title.classList.add('lib-title')
+    ostr.appendChild(author)
+    ostr.appendChild(title)
+  })
+  oul.addEventListener('click', goTitleEvent, false)
+}
+
+function goTitleEvent(ev) {
+  if (ev.target.parentNode.nodeName != 'LI') return
+  let infoid = ev.target.parentNode.infoid
+  navigate({section: 'title', infoid: infoid})
+}
+
+
 export function parseTitle(bookinfo, bookcurrent) {
   // log('========= parse title =============')
   window.split.setSizes([50,50])
   info = bookinfo
   current = bookcurrent
-  log('TITLEinfo', info)
+  // log('TITLEinfo', info)
 
   let osource = q('#source')
   let otrns = q('#trns')
@@ -172,8 +191,6 @@ function goBookEvent(ev) {
 export function parseBook(bookcurrent, bookinfo, pars) {
   info = bookinfo
   current = bookcurrent
-  // log('parseBook_info', info)
-  // log('parseBook_ cur', current)
   if (!pars.length) return
   window.split.setSizes([50,50])
   let osource = q('#source')

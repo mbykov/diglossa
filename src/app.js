@@ -10,11 +10,10 @@ import { remote } from "electron";
 import { shell } from 'electron'
 import { ipcRenderer } from "electron";
 import { q, qs, empty, create, remove, span, p, div, enclitic } from './lib/utils'
-import { twoPages, parseTitle, parseBook } from './lib/book'
+import { twoPages, parseLib, parseTitle, parseBook } from './lib/book'
 import { openODS, openDir } from './lib/getfiles'
-
-// getState
-import { setDBState, getInfo, getLib, getText } from './lib/pouch';
+import { getInfo, getLib, getText } from './lib/pouch';
+import { parseQuery } from './lib/search';
 
 const Mousetrap = require('mousetrap')
 let fse = require('fs-extra')
@@ -121,7 +120,7 @@ function goLib() {
   getLib()
     .then(function (result) {
       let infos = result.rows.map(row=> { return row.doc})
-      log('INFOS', infos)
+      // log('INFOS', infos)
       parseLib(infos)
     }).catch(function (err) {
       log('getLibErr', err);
@@ -155,34 +154,6 @@ function getBook() {
     })
 }
 
-function parseLib(infos) {
-  window.split.setSizes([100,0])
-  let osource = q('#source')
-  empty(osource)
-  let oul = create('ul')
-  osource.appendChild(oul)
-
-  if (!infos.length) oul.textContent = 'your library is empty'
-  infos.forEach(info => {
-    let ostr = create('li', 'libauth')
-    ostr.infoid = info._id
-    oul.appendChild(ostr)
-    let author = span(info.book.author)
-    let title = span(info.book.title)
-    author.classList.add('lib-auth')
-    title.classList.add('lib-title')
-    ostr.appendChild(author)
-    ostr.appendChild(title)
-  })
-  oul.addEventListener('click', goTitleEvent, false)
-}
-
-function goTitleEvent(ev) {
-  if (ev.target.parentNode.nodeName != 'LI') return
-  let infoid = ev.target.parentNode.infoid
-  navigate({section: 'title', infoid: infoid})
-}
-
 export function navigate(navpath) {
   let osource = q('#source')
   let otrns = q('#trns')
@@ -194,41 +165,39 @@ export function navigate(navpath) {
   remove(ohright)
 
   current = navpath
-  let already = _.findIndex(hstates, current) + 1
-  if (!already) {
+  if (!current.old) {
     hstates.push(_.clone(current))
     hstate = hstates.length-1
   }
-  log('HSTATES', hstates)
-  log('Navigate:', current)
+  delete current.old
+
+  // log('HSTATE', hstate)
+  // log('HSTATES', hstates)
+  // log('Navigate:', current)
 
   let sec = current.section
   if (sec == 'lib') goLib()
   else if (sec == 'title') getTitle()
   else if (sec == 'book') getBook()
-  else if (sec == 'search') parseQuery()
+  else if (sec == 'search') parseQuery(current)
   else showSection(sec)
 
   let progress = q('#progress')
   progress.style.display = 'none'
-
 }
 
+// arrows
 Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
   // log('EV', ev.which, hstate, hstates)
-  if (ev.which == 37 && hstate - 1 <= -1) return
-  if (ev.which == 37 && hstate - 1 > -1) hstate--
-  if (ev.which == 39 && hstate + 1 >= hstates.length) return
-  if (ev.which == 39 && hstate + 1 < hstates.length) hstate++
-  let state = hstates[hstate]
-  navigate(state)
+  if (ev.which == 37) goLeft()
+  else if (ev.which == 39) goRight()
 })
 
-// arrows
 function goLeft() {
   if (hstate - 1 <= -1) return
   if (hstate - 1 > -1) hstate--
   let state = hstates[hstate]
+  state.old = true
   navigate(state)
 }
 
@@ -236,6 +205,7 @@ function goRight() {
   if (hstate + 1 >= hstates.length) return
   if (hstate + 1 < hstates.length) hstate++
   let state = hstates[hstate]
+  state.old = true
   navigate(state)
 }
 
@@ -249,146 +219,12 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
       libdb.allDocs(opts)
         .then(function (result) {
           let qdocs = _.compact(result.rows.map(row=> { return row.doc}))
-          // log('QDOCS', qdocs)
           let qinfos = _.groupBy(qdocs, 'infoid')
-          // log('QINFOS', qinfos)
           current = {_id: '_local/current', section: 'search', qinfos: qinfos, query: query}
           navigate(current)
         })
     })
 })
-
-function parseQuery() {
-  window.split.setSizes([100,0])
-  let osource = q('#source')
-  let otrns = q('#trns')
-  let oquery = div('', '')
-  oquery.id = 'qresults'
-  let otitle = div(current.query, 'qtitle')
-  oquery.appendChild(otitle)
-  osource.appendChild(oquery)
-  // унести в help
-  let disclaimer = 'Scroll with Shift, but note: the correspondence between a place of the query in the source and in the translations within the paragraph is very approximate'
-  let odisc = p(disclaimer, 'disclaimer')
-  oquery.appendChild(odisc)
-
-  for (let infoid in current.qinfos) {
-    getInfo(infoid)
-      .then(function (info) {
-        let qinfo = current.qinfos[infoid]
-        parseQbook(info, qinfo)
-      }).catch(function (err) {
-        log('getTitleErr', err);
-      })
-  }
-  oquery.addEventListener("wheel", scrollQueries, false)
-}
-
-function parseQbook(info, qinfo) {
-  let qgroups = _.groupBy(qinfo, 'fpath')
-  // log('QGRS', info._id, qgroups)
-  for (let fpath in qgroups) {
-    let qgroup = qgroups[fpath]
-    let qpos = _.groupBy(qgroup, 'pos')
-    for (let pos in qpos) {
-      let qlines = _.cloneDeep(qpos[pos])
-      let qauth = _.find(qlines, par=> { return par.author })
-      let {html, percent} = aroundQuery(qauth.text, current.query)
-      qauth.text = html
-      qlines.forEach(par=> {
-        if (par.author) return
-        else par.text = textAround(par.text, percent)
-      })
-      parseGroup(info._id, fpath, pos, qlines)
-    }
-  }
-}
-
-
-function parseGroup(infoid, fpath, pos, lines) {
-  // log('__________QGP', fpath, pos)
-  let oresults = q('#qresults')
-
-  let postxt = ['par:', pos].join(' ')
-  let linktxt = [fpath, postxt].join(' - ')
-  let ogroup = div('', '')
-  let olink = div(linktxt, 'qlink')
-  olink.setAttribute('infoid', infoid)
-  olink.setAttribute('fpath', fpath)
-  olink.setAttribute('pos', pos)
-
-  let otext = div('', 'qtext')
-  lines.forEach(par=> {
-    let oline = p(par.text, 'qline')
-    oline.setAttribute('nic', par.nic)
-    oline.setAttribute('pos', par.pos)
-    if (par.author) oline.innerHTML = par.text
-    else oline.classList.add('hidden')
-    otext.appendChild(oline)
-  })
-  ogroup.appendChild(olink)
-  ogroup.appendChild(otext)
-  oresults.appendChild(ogroup)
-  olink.addEventListener('click', jumpPos, false)
-}
-
-function jumpPos(ev) {
-  // log('JUMP', ev.target)
-  let el = ev.target
-  let infoid = el.getAttribute('infoid')
-  let fpath = el.getAttribute('fpath')
-  let pos = el.getAttribute('pos')
-  let newcur = {section: "book", infoid: infoid, fpath: fpath, pos: pos, query: current.query}
-  navigate(newcur)
-}
-
-function scrollQueries(ev) {
-  if (ev.shiftKey != true) return
-  let el = ev.target
-  let parent = el.closest('.qtext')
-  if (!parent) return
-  let pars = parent.children
-  let nics = _.map(pars, par=> { return par.getAttribute('nic') })
-
-  let curpar = _.find(pars, par=> { return !par.classList.contains('hidden') })
-  let nic = curpar.getAttribute('nic')
-  let nicidx = nics.indexOf(nic)
-  let nextnic = (nicidx+1 == nics.length) ? nics[0] : nics[nicidx+1]
-  let next = _.find(pars, par=> { return par.getAttribute('nic') == nextnic })
-  next.classList.remove('hidden')
-  curpar.classList.add('hidden')
-}
-
-function aroundQuery(str, wf) {
-  let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
-  let rePunct = new RegExp(punct, 'g')
-
-  let limit = 100
-  let arr = str.split(wf)
-  let head = arr[0].slice(-limit)
-  let percent = head.length/str.length
-  head =  head.replace(rePunct, "<span class=\"active\">$1<\/span>")
-  if (!arr[1]) {
-    log('NO TAIL !!', wf, 'str:', str)
-    throw new Error('NO SEARCH!')
-  }
-  let tail = arr.slice(1).join('').slice(0,limit)
-  tail =  tail.replace(rePunct, "<span class=\"active\">$1<\/span>")
-  let qspan = ['<span class="query">', wf, '</span>'].join('')
-  let html = [head, qspan, tail] .join('')
-  return {html: html, percent: percent}
-}
-
-function textAround(str, percent) {
-  let center = str.length*percent
-  let start = center - 100
-  let head = str.substr(start, 100)
-  let tail = str.substr(center, 100)
-  // log('percent:', percent, 'c', center, head, tail)
-  let line = [head, tail].join('')
-  // log('line.length:', line.length)
-  return line
-}
 
 
 function showSection(name) {
@@ -481,23 +317,6 @@ function pushMap(ndocs) {
     })
 }
 
-const historyMode_ = event => {
-  const checkArrow = element => {
-    // if (!element.classList.contains("arrow")) return
-    if (element.id === "new-version") {
-      // log('NEW VERS CLICKED')
-    }
-    if (element.id === "arrow-left") {
-      if (hstate - 1 > -1) hstate--
-      // showText(hstates[hstate])
-    } else if (element.id === "arrow-right") {
-      if (hstate + 1 < hstates.length) hstate++
-      // showText(hstates[hstate])
-    }
-  };
-  checkArrow(event.target);
-}
-
 // унести в getFile, и грязно пока
 function getFNS(fns) {
   if (!fns) return
@@ -548,8 +367,8 @@ function showCleanup() {
 }
 
 function goCleanup() {
-  let fsee = require('fs-extra')
-  fsee.emptyDirSync(dbPath)
+  // let fsee = require('fs-extra')
+  fse.emptyDirSync(dbPath)
   getCurrentWindow().reload()
   getState()
 }

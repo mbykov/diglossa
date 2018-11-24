@@ -107,6 +107,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _lib_book__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/book */ "./src/lib/book.js");
 /* harmony import */ var _lib_getfiles__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./lib/getfiles */ "./src/lib/getfiles.js");
 /* harmony import */ var _lib_pouch__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./lib/pouch */ "./src/lib/pouch.js");
+/* harmony import */ var _lib_search__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./lib/search */ "./src/lib/search.js");
 //
 // import "./stylesheets/app.css";
 // import "./stylesheets/main.css";
@@ -118,7 +119,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
- // getState
+
 
 
 
@@ -234,9 +235,9 @@ function goLib() {
   Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getLib"])().then(function (result) {
     let infos = result.rows.map(row => {
       return row.doc;
-    });
-    log('INFOS', infos);
-    parseLib(infos);
+    }); // log('INFOS', infos)
+
+    Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseLib"])(infos);
   }).catch(function (err) {
     log('getLibErr', err);
   });
@@ -267,36 +268,6 @@ function getBook() {
   });
 }
 
-function parseLib(infos) {
-  window.split.setSizes([100, 0]);
-  let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
-  Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(osource);
-  let oul = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["create"])('ul');
-  osource.appendChild(oul);
-  if (!infos.length) oul.textContent = 'your library is empty';
-  infos.forEach(info => {
-    let ostr = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["create"])('li', 'libauth');
-    ostr.infoid = info._id;
-    oul.appendChild(ostr);
-    let author = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])(info.book.author);
-    let title = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["span"])(info.book.title);
-    author.classList.add('lib-auth');
-    title.classList.add('lib-title');
-    ostr.appendChild(author);
-    ostr.appendChild(title);
-  });
-  oul.addEventListener('click', goTitleEvent, false);
-}
-
-function goTitleEvent(ev) {
-  if (ev.target.parentNode.nodeName != 'LI') return;
-  let infoid = ev.target.parentNode.infoid;
-  navigate({
-    section: 'title',
-    infoid: infoid
-  });
-}
-
 function navigate(navpath) {
   let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
   let otrns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#trns');
@@ -307,34 +278,32 @@ function navigate(navpath) {
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["remove"])(ohleft);
   Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["remove"])(ohright);
   current = navpath;
-  let already = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.findIndex(hstates, current) + 1;
 
-  if (!already) {
+  if (!current.old) {
     hstates.push(lodash__WEBPACK_IMPORTED_MODULE_1___default.a.clone(current));
     hstate = hstates.length - 1;
   }
 
-  log('HSTATES', hstates);
-  log('Navigate:', current);
+  delete current.old; // log('HSTATE', hstate)
+  // log('HSTATES', hstates)
+  // log('Navigate:', current)
+
   let sec = current.section;
-  if (sec == 'lib') goLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook();else if (sec == 'search') parseQuery();else showSection(sec);
+  if (sec == 'lib') goLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook();else if (sec == 'search') Object(_lib_search__WEBPACK_IMPORTED_MODULE_8__["parseQuery"])(current);else showSection(sec);
   let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#progress');
   progress.style.display = 'none';
-}
+} // arrows
+
 Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   // log('EV', ev.which, hstate, hstates)
-  if (ev.which == 37 && hstate - 1 <= -1) return;
-  if (ev.which == 37 && hstate - 1 > -1) hstate--;
-  if (ev.which == 39 && hstate + 1 >= hstates.length) return;
-  if (ev.which == 39 && hstate + 1 < hstates.length) hstate++;
-  let state = hstates[hstate];
-  navigate(state);
-}); // arrows
+  if (ev.which == 37) goLeft();else if (ev.which == 39) goRight();
+});
 
 function goLeft() {
   if (hstate - 1 <= -1) return;
   if (hstate - 1 > -1) hstate--;
   let state = hstates[hstate];
+  state.old = true;
   navigate(state);
 }
 
@@ -342,6 +311,7 @@ function goRight() {
   if (hstate + 1 >= hstates.length) return;
   if (hstate + 1 < hstates.length) hstate++;
   let state = hstates[hstate];
+  state.old = true;
   navigate(state);
 } // MAP
 
@@ -357,11 +327,9 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
     libdb.allDocs(opts).then(function (result) {
       let qdocs = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(result.rows.map(row => {
         return row.doc;
-      })); // log('QDOCS', qdocs)
+      }));
 
-
-      let qinfos = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qdocs, 'infoid'); // log('QINFOS', qinfos)
-
+      let qinfos = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qdocs, 'infoid');
 
       current = {
         _id: '_local/current',
@@ -373,163 +341,6 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
     });
   });
 });
-
-function parseQuery() {
-  window.split.setSizes([100, 0]);
-  let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
-  let otrns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#trns');
-  let oquery = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])('', '');
-  oquery.id = 'qresults';
-  let otitle = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])(current.query, 'qtitle');
-  oquery.appendChild(otitle);
-  osource.appendChild(oquery); // унести в help
-
-  let disclaimer = 'Scroll with Shift, but note: the correspondence between a place of the query in the source and in the translations within the paragraph is very approximate';
-  let odisc = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["p"])(disclaimer, 'disclaimer');
-  oquery.appendChild(odisc);
-
-  for (let infoid in current.qinfos) {
-    Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getInfo"])(infoid).then(function (info) {
-      let qinfo = current.qinfos[infoid];
-      parseQbook(info, qinfo);
-    }).catch(function (err) {
-      log('getTitleErr', err);
-    });
-  }
-
-  oquery.addEventListener("wheel", scrollQueries, false);
-}
-
-function parseQbook(info, qinfo) {
-  let qgroups = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qinfo, 'fpath'); // log('QGRS', info._id, qgroups)
-
-
-  for (let fpath in qgroups) {
-    let qgroup = qgroups[fpath];
-
-    let qpos = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.groupBy(qgroup, 'pos');
-
-    for (let pos in qpos) {
-      let qlines = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.cloneDeep(qpos[pos]);
-
-      let qauth = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(qlines, par => {
-        return par.author;
-      });
-
-      let {
-        html,
-        percent
-      } = aroundQuery(qauth.text, current.query);
-      qauth.text = html;
-      qlines.forEach(par => {
-        if (par.author) return;else par.text = textAround(par.text, percent);
-      });
-      parseGroup(info._id, fpath, pos, qlines);
-    }
-  }
-}
-
-function parseGroup(infoid, fpath, pos, lines) {
-  // log('__________QGP', fpath, pos)
-  let oresults = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#qresults');
-  let postxt = ['par:', pos].join(' ');
-  let linktxt = [fpath, postxt].join(' - ');
-  let ogroup = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])('', '');
-  let olink = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])(linktxt, 'qlink');
-  olink.setAttribute('infoid', infoid);
-  olink.setAttribute('fpath', fpath);
-  olink.setAttribute('pos', pos);
-  let otext = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["div"])('', 'qtext');
-  lines.forEach(par => {
-    let oline = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["p"])(par.text, 'qline');
-    oline.setAttribute('nic', par.nic);
-    oline.setAttribute('pos', par.pos);
-    if (par.author) oline.innerHTML = par.text;else oline.classList.add('hidden');
-    otext.appendChild(oline);
-  });
-  ogroup.appendChild(olink);
-  ogroup.appendChild(otext);
-  oresults.appendChild(ogroup);
-  olink.addEventListener('click', jumpPos, false);
-}
-
-function jumpPos(ev) {
-  // log('JUMP', ev.target)
-  let el = ev.target;
-  let infoid = el.getAttribute('infoid');
-  let fpath = el.getAttribute('fpath');
-  let pos = el.getAttribute('pos');
-  let newcur = {
-    section: "book",
-    infoid: infoid,
-    fpath: fpath,
-    pos: pos,
-    query: current.query
-  };
-  navigate(newcur);
-}
-
-function scrollQueries(ev) {
-  if (ev.shiftKey != true) return;
-  let el = ev.target;
-  let parent = el.closest('.qtext');
-  if (!parent) return;
-  let pars = parent.children;
-
-  let nics = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.map(pars, par => {
-    return par.getAttribute('nic');
-  });
-
-  let curpar = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(pars, par => {
-    return !par.classList.contains('hidden');
-  });
-
-  let nic = curpar.getAttribute('nic');
-  let nicidx = nics.indexOf(nic);
-  let nextnic = nicidx + 1 == nics.length ? nics[0] : nics[nicidx + 1];
-
-  let next = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.find(pars, par => {
-    return par.getAttribute('nic') == nextnic;
-  });
-
-  next.classList.remove('hidden');
-  curpar.classList.add('hidden');
-}
-
-function aroundQuery(str, wf) {
-  let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
-  let rePunct = new RegExp(punct, 'g');
-  let limit = 100;
-  let arr = str.split(wf);
-  let head = arr[0].slice(-limit);
-  let percent = head.length / str.length;
-  head = head.replace(rePunct, "<span class=\"active\">$1<\/span>");
-
-  if (!arr[1]) {
-    log('NO TAIL !!', wf, 'str:', str);
-    throw new Error('NO SEARCH!');
-  }
-
-  let tail = arr.slice(1).join('').slice(0, limit);
-  tail = tail.replace(rePunct, "<span class=\"active\">$1<\/span>");
-  let qspan = ['<span class="query">', wf, '</span>'].join('');
-  let html = [head, qspan, tail].join('');
-  return {
-    html: html,
-    percent: percent
-  };
-}
-
-function textAround(str, percent) {
-  let center = str.length * percent;
-  let start = center - 100;
-  let head = str.substr(start, 100);
-  let tail = str.substr(center, 100); // log('percent:', percent, 'c', center, head, tail)
-
-  let line = [head, tail].join(''); // log('line.length:', line.length)
-
-  return line;
-}
 
 function showSection(name) {
   window.split.setSizes([100, 0]);
@@ -629,23 +440,7 @@ function pushMap(ndocs) {
     log('map-cleandocs.length', cleandocs.length);
     return ftdb.bulkDocs(cleandocs);
   });
-}
-
-const historyMode_ = event => {
-  const checkArrow = element => {
-    // if (!element.classList.contains("arrow")) return
-    if (element.id === "new-version") {// log('NEW VERS CLICKED')
-    }
-
-    if (element.id === "arrow-left") {
-      if (hstate - 1 > -1) hstate--; // showText(hstates[hstate])
-    } else if (element.id === "arrow-right") {
-      if (hstate + 1 < hstates.length) hstate++; // showText(hstates[hstate])
-    }
-  };
-
-  checkArrow(event.target);
-}; // унести в getFile, и грязно пока
+} // унести в getFile, и грязно пока
 
 
 function getFNS(fns) {
@@ -694,9 +489,8 @@ function showCleanup() {
 }
 
 function goCleanup() {
-  let fsee = __webpack_require__(/*! fs-extra */ "fs-extra");
-
-  fsee.emptyDirSync(dbPath);
+  // let fsee = require('fs-extra')
+  fse.emptyDirSync(dbPath);
   getCurrentWindow().reload();
   getState();
 }
@@ -707,12 +501,13 @@ function goCleanup() {
 /*!*************************!*\
   !*** ./src/lib/book.js ***!
   \*************************/
-/*! exports provided: twoPages, parseTitle, parseBook */
+/*! exports provided: twoPages, parseLib, parseTitle, parseBook */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "twoPages", function() { return twoPages; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseLib", function() { return parseLib; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseTitle", function() { return parseTitle; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseBook", function() { return parseBook; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
@@ -728,36 +523,30 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
- // const fse = require('fs-extra')
+
 
 const path = __webpack_require__(/*! path */ "path");
 
-const log = console.log;
-
-const Store = __webpack_require__(/*! electron-store */ "electron-store");
-
-const store = new Store(); // const Apstore = require('./apstore')
-// const store = new Apstore()
-// const elasticlunr = require('elasticlunr');
+const log = console.log; // const Store = require('electron-store')
+// const store = new Store()
 
 const clipboard = __webpack_require__(/*! electron-clipboard-extended */ "electron-clipboard-extended");
 
 let current, info;
-let limit = 20; // let apars = []
-// let tpars = []
-
+let limit = 20;
 let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
 let rePunct = new RegExp(punct, 'g');
 function twoPages() {
-  var sizes = store.get('split-sizes');
-  if (sizes) sizes = JSON.parse(sizes);else sizes = [50, 50];
+  // var sizes = store.get('split-sizes')
+  // if (sizes) sizes = JSON.parse(sizes)
+  // else
+  let sizes = [50, 50];
   let split = split_js__WEBPACK_IMPORTED_MODULE_1___default()(['#source', '#trns'], {
     sizes: sizes,
     gutterSize: 5,
     cursor: 'col-resize',
     minSize: [0, 0],
-    onDragEnd: function (sizes) {// reSetBook()
-    }
+    onDragEnd: function (sizes) {}
   });
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
   obook.addEventListener("wheel", scrollPanes, false);
@@ -797,11 +586,9 @@ function addChunk() {
     let startpos = start.getAttribute('pos');
 
     if (startpos > 0) {
-      let start = startpos - limit > 0 ? startpos - limit : 0; // log('___START', start)
-
+      let start = startpos - limit > 0 ? startpos - limit : 0;
       current.pos = start;
       Object(_pouch__WEBPACK_IMPORTED_MODULE_5__["getText"])(current, startpos).then(function (res) {
-        // log('___res.docs UP', res.docs)
         setChunk(lodash__WEBPACK_IMPORTED_MODULE_0___default.a.reverse(res.docs), true);
       });
     }
@@ -811,7 +598,6 @@ function addChunk() {
     let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length;
     current.pos = start;
     Object(_pouch__WEBPACK_IMPORTED_MODULE_5__["getText"])(current).then(function (res) {
-      // log('___res.docs', res.docs)
       setChunk(res.docs);
     });
   }
@@ -840,12 +626,42 @@ function keyScroll(ev) {
   addChunk(); // log('KEY CUR', current)
 }
 
+function parseLib(infos) {
+  window.split.setSizes([100, 0]);
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
+  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
+  let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('ul');
+  osource.appendChild(oul);
+  if (!infos.length) oul.textContent = 'your library is empty';
+  infos.forEach(info => {
+    let ostr = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('li', 'libauth');
+    ostr.infoid = info._id;
+    oul.appendChild(ostr);
+    let author = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["span"])(info.book.author);
+    let title = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["span"])(info.book.title);
+    author.classList.add('lib-auth');
+    title.classList.add('lib-title');
+    ostr.appendChild(author);
+    ostr.appendChild(title);
+  });
+  oul.addEventListener('click', goTitleEvent, false);
+}
+
+function goTitleEvent(ev) {
+  if (ev.target.parentNode.nodeName != 'LI') return;
+  let infoid = ev.target.parentNode.infoid;
+  Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])({
+    section: 'title',
+    infoid: infoid
+  });
+}
+
 function parseTitle(bookinfo, bookcurrent) {
   // log('========= parse title =============')
   window.split.setSizes([50, 50]);
   info = bookinfo;
-  current = bookcurrent;
-  log('TITLEinfo', info);
+  current = bookcurrent; // log('TITLEinfo', info)
+
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   let obookTitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
@@ -891,9 +707,7 @@ function goBookEvent(ev) {
 
 function parseBook(bookcurrent, bookinfo, pars) {
   info = bookinfo;
-  current = bookcurrent; // log('parseBook_info', info)
-  // log('parseBook_ cur', current)
-
+  current = bookcurrent;
   if (!pars.length) return;
   window.split.setSizes([50, 50]);
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
@@ -1604,6 +1418,188 @@ function getText(current, endpos) {
     selector: selector
   }); // sort: ['idx'], , limit: 20
   // return libdb.explain({selector: selector})
+}
+
+/***/ }),
+
+/***/ "./src/lib/search.js":
+/*!***************************!*\
+  !*** ./src/lib/search.js ***!
+  \***************************/
+/*! exports provided: parseQuery */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseQuery", function() { return parseQuery; });
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
+/* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../app */ "./src/app.js");
+/* harmony import */ var _pouch__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./pouch */ "./src/lib/pouch.js");
+
+
+
+ // const path = require('path')
+
+const log = console.log;
+let current;
+function parseQuery(curcurrent) {
+  current = curcurrent;
+  window.split.setSizes([100, 0]);
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#source');
+  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#trns');
+  let oquery = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["div"])('', '');
+  oquery.id = 'qresults';
+  let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["div"])(current.query, 'qtitle');
+  oquery.appendChild(otitle);
+  osource.appendChild(oquery); // унести в help
+
+  let disclaimer = 'Scroll with Shift, but note: the correspondence between a place of the query in the source and in the translations within the paragraph is very approximate';
+  let odisc = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["p"])(disclaimer, 'disclaimer');
+  oquery.appendChild(odisc);
+
+  for (let infoid in current.qinfos) {
+    Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getInfo"])(infoid).then(function (info) {
+      let qinfo = current.qinfos[infoid];
+      parseQbook(info, qinfo);
+    }).catch(function (err) {
+      log('getTitleErr', err);
+    });
+  }
+
+  oquery.addEventListener("wheel", scrollQueries, false);
+}
+
+function parseQbook(info, qinfo) {
+  let qgroups = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(qinfo, 'fpath'); // log('QGRS', info._id, qgroups)
+
+
+  for (let fpath in qgroups) {
+    let qgroup = qgroups[fpath];
+
+    let qpos = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(qgroup, 'pos');
+
+    for (let pos in qpos) {
+      let qlines = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.cloneDeep(qpos[pos]);
+
+      let qauth = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(qlines, par => {
+        return par.author;
+      });
+
+      let {
+        html,
+        percent
+      } = aroundQuery(qauth.text, current.query);
+      qauth.text = html;
+      qlines.forEach(par => {
+        if (par.author) return;else par.text = textAround(par.text, percent);
+      });
+      parseGroup(info._id, fpath, pos, qlines);
+    }
+  }
+}
+
+function parseGroup(infoid, fpath, pos, lines) {
+  // log('__________QGP', fpath, pos)
+  let oresults = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#qresults');
+  let postxt = ['par:', pos].join(' ');
+  let linktxt = [fpath, postxt].join(' - ');
+  let ogroup = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["div"])('', '');
+  let olink = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["div"])(linktxt, 'qlink');
+  olink.setAttribute('infoid', infoid);
+  olink.setAttribute('fpath', fpath);
+  olink.setAttribute('pos', pos);
+  let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["div"])('', 'qtext');
+  lines.forEach(par => {
+    let oline = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["p"])(par.text, 'qline');
+    oline.setAttribute('nic', par.nic);
+    oline.setAttribute('pos', par.pos);
+    if (par.author) oline.innerHTML = par.text;else oline.classList.add('hidden');
+    otext.appendChild(oline);
+  });
+  ogroup.appendChild(olink);
+  ogroup.appendChild(otext);
+  oresults.appendChild(ogroup);
+  olink.addEventListener('click', jumpPos, false);
+}
+
+function jumpPos(ev) {
+  // log('JUMP', ev.target)
+  let el = ev.target;
+  let infoid = el.getAttribute('infoid');
+  let fpath = el.getAttribute('fpath');
+  let pos = el.getAttribute('pos');
+  let newcur = {
+    section: "book",
+    infoid: infoid,
+    fpath: fpath,
+    pos: pos,
+    query: current.query
+  };
+  Object(_app__WEBPACK_IMPORTED_MODULE_2__["navigate"])(newcur);
+}
+
+function scrollQueries(ev) {
+  if (ev.shiftKey != true) return;
+  let el = ev.target;
+  let parent = el.closest('.qtext');
+  if (!parent) return;
+  let pars = parent.children;
+
+  let nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.map(pars, par => {
+    return par.getAttribute('nic');
+  });
+
+  let curpar = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(pars, par => {
+    return !par.classList.contains('hidden');
+  });
+
+  let nic = curpar.getAttribute('nic');
+  let nicidx = nics.indexOf(nic);
+  let nextnic = nicidx + 1 == nics.length ? nics[0] : nics[nicidx + 1];
+
+  let next = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(pars, par => {
+    return par.getAttribute('nic') == nextnic;
+  });
+
+  next.classList.remove('hidden');
+  curpar.classList.add('hidden');
+}
+
+function aroundQuery(str, wf) {
+  let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
+  let rePunct = new RegExp(punct, 'g');
+  let limit = 100;
+  let arr = str.split(wf);
+  let head = arr[0].slice(-limit);
+  let percent = head.length / str.length;
+  head = head.replace(rePunct, "<span class=\"active\">$1<\/span>");
+
+  if (!arr[1]) {
+    log('NO TAIL !!', wf, 'str:', str);
+    throw new Error('NO SEARCH!');
+  }
+
+  let tail = arr.slice(1).join('').slice(0, limit);
+  tail = tail.replace(rePunct, "<span class=\"active\">$1<\/span>");
+  let qspan = ['<span class="query">', wf, '</span>'].join('');
+  let html = [head, qspan, tail].join('');
+  return {
+    html: html,
+    percent: percent
+  };
+}
+
+function textAround(str, percent) {
+  let center = str.length * percent;
+  let start = center - 100;
+  let head = str.substr(start, 100);
+  let tail = str.substr(center, 100); // log('percent:', percent, 'c', center, head, tail)
+
+  let line = [head, tail].join(''); // log('line.length:', line.length)
+
+  return line;
 }
 
 /***/ }),
