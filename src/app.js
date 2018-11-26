@@ -134,10 +134,13 @@ function getTitle() {
 }
 
 function getBook() {
+  // log('CURR___', current)
   getInfo(current.infoid)
     .then(function (curinfo) {
+      // log('CUR-INFO___', curinfo)
       getText(current)
         .then(function(res) {
+          // log('CUR-RES___', res)
           let pars = _.compact(res.docs)
           parseBook(current, curinfo, pars)
         })
@@ -297,9 +300,7 @@ function pushMap(ndocs) {
 function getInfoFile(fns) {
   if (!fns) return
   let infopath = fns[0]
-  // log('infopath', infopath)
   if (!infopath) return
-  // log('FILE', infopath)
   try {
     let progress = q('#progress')
     progress.style.display = 'inline-block'

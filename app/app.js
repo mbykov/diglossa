@@ -253,8 +253,11 @@ function getTitle() {
 }
 
 function getBook() {
+  // log('CURR___', current)
   Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getInfo"])(current.infoid).then(function (curinfo) {
+    // log('CUR-INFO___', curinfo)
     Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getText"])(current).then(function (res) {
+      // log('CUR-RES___', res)
       let pars = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs);
 
       Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, curinfo, pars);
@@ -426,9 +429,8 @@ function pushMap(ndocs) {
 
 function getInfoFile(fns) {
   if (!fns) return;
-  let infopath = fns[0]; // log('infopath', infopath)
-
-  if (!infopath) return; // log('FILE', infopath)
+  let infopath = fns[0];
+  if (!infopath) return;
 
   try {
     let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#progress');
@@ -1038,19 +1040,15 @@ const dirTree = __webpack_require__(/*! directory-tree */ "directory-tree");
 
 const textract = __webpack_require__(/*! textract */ "textract");
 
-const log = console.log;
-
-function extractAllText(str) {
-  const re = /"(.*?)"/g;
-  const results = [];
-  let current;
-
-  while (current == re.exec(str)) {
-    results.push(current.pop());
-  }
-
-  return results;
-}
+const log = console.log; // function extractAllText(str){
+//   const re = /"(.*?)"/g
+//   const results = []
+//   let current
+//   while (current == re.exec(str)) {
+//     results.push(current.pop())
+//   }
+//   return results
+// }
 
 function parseODS(info, cb) {
   let bpath = info.bpath;
@@ -1076,23 +1074,18 @@ function parseCSV(info, str) {
   let pars = [];
   let map = {};
   let rows = str.split('\n');
-  let size = rows[0].length; // let nics = _.keys(info.nicnames)
-  // log('NICS', nics)
+  let size = rows[0].length;
+  let fpath = info.bpath.split('/')[info.bpath.split('/').length - 2]; // log('FPATH', fpath)
 
   rows.forEach((row, idx) => {
     if (row[0] == '#') return;
     if (row == ',,') return;
-    let clean;
-    let strs; // if (/","/.test(row)) strs = row.split('","')
-
+    let strs;
     if (/","|,"|",/.test(row)) strs = row.split(/","|,"|",/);else strs = row.split(',');
     strs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(strs);
-    let fpath = 'FPATH';
     strs.forEach((str, idy) => {
-      let auth = info.auths[idy]; // log('AUTH', idy, auth)
-
-      if (!auth) log('STR', 111, str, 222);
-      if (!auth) log('ROW', idy, row, strs);
+      let auth = info.auths[idy];
+      if (!auth) return;
       let nic = auth.nic;
       let lang = auth.lang;
       let text = str.replace(/"/g, '');
@@ -1111,54 +1104,17 @@ function parseCSV(info, str) {
       pars.push(par);
     });
   });
+  let tree = {
+    text: info.book.title,
+    fpath: fpath
+  };
+  info.tree = tree;
+  info.info = true;
   let mapdocs = [];
   return {
     pars: pars,
     mapdocs: mapdocs
   };
-}
-
-function parseCSV_(info, str) {
-  let rows = str.split('\n');
-  let size = rows[0].length;
-  let book = {};
-  rows.slice(0, 2).forEach((row, idx) => {
-    if (row[0] != '#') return;
-    if (/title/.test(row)) book.title = row.split(',')[0].split(':')[1].trim();else book.nics = row.split(',');
-  });
-  let nics = ['name_a', 'name_b', 'name_c'];
-  if (!book.nics) book.nics = nics.slice(1);
-  book.author = nics[0];
-  let auths = [];
-  nics.forEach((nic, idx) => {
-    let auth = {
-      idx: idx,
-      nic: nic,
-      rows: []
-    };
-    if (nic == book.author) auth.author = true;
-    auths.push(auth);
-  });
-  log('ODS', info);
-  log('ODS', rows.length);
-  log('ODS-1', rows[0]);
-  return;
-  rows.forEach((row, idx) => {
-    if (row[0] == '#') return;
-    if (row == ',,') return;
-    let matches = extractAllText(row);
-    matches.forEach(str => {
-      let corr = str.split(',').join('COMMA');
-      row = row.replace(str, corr);
-    });
-    let cols = row.split(',');
-    cols.forEach((col, idy) => {
-      col = col.split('COMMA').join(',');
-      if (col == ',') return; // if (!auths[idy]) log('ERR', idy, row)
-
-      auths[idy].rows.push(col);
-    });
-  });
 }
 
 function walk(dname, dtree, tree) {
@@ -1187,11 +1143,10 @@ function parseDir(info, cb) {
   let dname = info.bpath.split('/').slice(0, -1).join('/'); // log('=DNAME', dname)
 
   let tree = {};
-  walk(dname, dtree, tree); // log('=TREE', tree)
-
+  walk(dname, dtree, tree);
+  log('=TREE', tree);
   info.tree = tree;
-  info.info = true; // log('=TREEINFO', info)
-
+  info.info = true;
   let fns = glob.sync('**/*', {
     cwd: bpath
   }); // .txt ?
@@ -1318,7 +1273,7 @@ function parseInfo(info) {
       return;
     }
 
-    nicnames[auth.ext] = auth.name;
+    nicnames[auth.nic] = auth.name;
   });
   info.nicnames = nicnames;
   let infoid = ['info', info.book.author, info.book.title].join('-');

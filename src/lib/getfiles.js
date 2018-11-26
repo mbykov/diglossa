@@ -10,15 +10,15 @@ const dirTree = require('directory-tree')
 const textract = require('textract')
 const log = console.log
 
-function extractAllText(str){
-  const re = /"(.*?)"/g
-  const results = []
-  let current
-  while (current == re.exec(str)) {
-    results.push(current.pop())
-  }
-  return results
-}
+// function extractAllText(str){
+//   const re = /"(.*?)"/g
+//   const results = []
+//   let current
+//   while (current == re.exec(str)) {
+//     results.push(current.pop())
+//   }
+//   return results
+// }
 
 export function parseODS(info, cb) {
   let bpath = info.bpath
@@ -41,23 +41,19 @@ function parseCSV(info, str) {
   let map = {}
   let rows = str.split('\n')
   let size = rows[0].length
-  // let nics = _.keys(info.nicnames)
-  // log('NICS', nics)
+  let fpath = info.bpath.split('/')[info.bpath.split('/').length-2]
+  // log('FPATH', fpath)
+
   rows.forEach((row, idx) => {
     if (row[0] == '#') return
     if (row == ',,') return
-    let clean
     let strs
-    // if (/","/.test(row)) strs = row.split('","')
     if (/","|,"|",/.test(row)) strs = row.split(/","|,"|",/)
     else strs = row.split(',')
     strs = _.compact(strs)
-    let fpath = 'FPATH'
     strs.forEach((str, idy)=> {
       let auth = info.auths[idy]
-      // log('AUTH', idy, auth)
-      if (!auth) log('STR', 111, str, 222)
-      if (!auth) log('ROW', idy, row, strs)
+      if (!auth) return
       let nic = auth.nic
       let lang = auth.lang
       let text = str.replace(/"/g, '')
@@ -68,49 +64,11 @@ function parseCSV(info, str) {
       pars.push(par)
     })
   })
+  let tree = {text: info.book.title, fpath: fpath}
+  info.tree = tree
+  info.info = true
   let mapdocs = []
   return {pars: pars, mapdocs: mapdocs}
-}
-
-function parseCSV_(info, str) {
-  let rows = str.split('\n')
-  let size = rows[0].length
-  let book = {}
-  rows.slice(0,2).forEach((row, idx) => {
-    if (row[0] != '#') return
-    if (/title/.test(row)) book.title = row.split(',')[0].split(':')[1].trim()
-    else book.nics = row.split(',')
-  })
-  let nics = ['name_a', 'name_b', 'name_c']
-  if (!book.nics) book.nics = nics.slice(1)
-  book.author = nics[0]
-  let auths = []
-  nics.forEach((nic, idx) => {
-    let auth = { idx: idx, nic: nic, rows: [] }
-    if (nic == book.author) auth.author = true
-    auths.push(auth)
-  })
-  log('ODS', info)
-  log('ODS', rows.length)
-  log('ODS-1', rows[0])
-
-  return
-  rows.forEach((row, idx) => {
-    if (row[0] == '#') return
-    if (row == ',,') return
-    let matches = extractAllText(row)
-    matches.forEach(str => {
-      let corr = str.split(',').join('COMMA')
-      row = row.replace(str, corr)
-    })
-    let cols = row.split(',')
-    cols.forEach((col, idy) => {
-      col = col.split('COMMA').join(',')
-      if (col == ',') return
-      // if (!auths[idy]) log('ERR', idy, row)
-      auths[idy].rows.push(col)
-    })
-  })
 }
 
 function walk(dname, dtree, tree) {
@@ -141,10 +99,9 @@ export function parseDir(info, cb) {
   // log('=DNAME', dname)
   let tree = {}
   walk(dname, dtree, tree)
-  // log('=TREE', tree)
+  log('=TREE', tree)
   info.tree = tree
   info.info = true
-  // log('=TREEINFO', info)
 
   let fns = glob.sync('**/*', {cwd: bpath})
 
@@ -248,7 +205,7 @@ export function parseInfo(info) {
       info.book.author = auth.name
       return
     }
-    nicnames[auth.ext] = auth.name
+    nicnames[auth.nic] = auth.name
   })
   info.nicnames = nicnames
   let infoid = ['info', info.book.author, info.book.title].join('-')
