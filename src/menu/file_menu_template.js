@@ -3,8 +3,7 @@ import { app, BrowserWindow } from "electron";
 export const fileMenuTemplate = {
   label: "File",
   submenu: [
-    { label: "Import from ODS", click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'readODS') } },
-    { label: "Import from TXT", click: () => { BrowserWindow.getFocusedWindow().webContents.send('parseDir', 'readTXT') } },
+    { label: "Import from file", click: () => { BrowserWindow.getFocusedWindow().webContents.send('parseDir') } },
     { label: "Clone from Github", click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'cloneGithub') } },
     { type: "separator" },
     { label: "Re-read Files", accelerator: "CommandOrControl+Shift+R", click: () => { BrowserWindow.getFocusedWindow().webContents.send('re-read') } },

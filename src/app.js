@@ -11,7 +11,7 @@ import { shell } from 'electron'
 import { ipcRenderer } from "electron";
 import { q, qs, empty, create, remove, span, p, div, enclitic } from './lib/utils'
 import { twoPages, parseLib, parseTitle, parseBook } from './lib/book'
-import { parseInfo, parseDir } from './lib/getfiles'
+import { parseInfo, parseDir, parseODS } from './lib/getfiles'
 import { getInfo, getLib, getText } from './lib/pouch';
 import { parseQuery } from './lib/search';
 
@@ -70,9 +70,7 @@ ipcRenderer.on('section', function (event, name) {
   navigate({section: name})
 })
 
-ipcRenderer.on('parseDir', function (event, name) {
-  // dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'book', extensions: ['ods'] }]}, showBook)
-  // dialog.showOpenDialog({properties: ['openDirectory'] }, getFNS)
+ipcRenderer.on('parseDir', function (event) {
   dialog.showOpenDialog({properties: ['openFile'], filters: [{extensions: ['json'] }]}, getInfoFile)
 })
 
@@ -251,7 +249,7 @@ function pushInfo(ndoc) {
 function pushTexts(newdocs) {
   return libdb.allDocs({include_docs: true})
     .then(function(res) {
-      let docs = res.rows.map(row=>{ return row.doc})
+      let docs = res.rows.map(row=>{ return row.doc })
       let cleandocs = []
       let hdoc = {}
       docs.forEach(doc=> { hdoc[doc._id] = doc })
@@ -303,13 +301,15 @@ function getInfoFile(fns) {
   if (!infopath) return
   // log('FILE', infopath)
   try {
+    let progress = q('#progress')
+    progress.style.display = 'inline-block'
+
     let json = fse.readFileSync(infopath)
     let info = JSON.parse(json)
     info = parseInfo(info)
     let dir = path.parse(infopath).dir
     let bpath = path.resolve(dir, info.book.path)
     info.bpath = bpath
-    // log('getINFO', info)
     getDir(info)
   } catch(err) {
     log('INFO JSON ERR:', err)
@@ -317,34 +317,42 @@ function getInfoFile(fns) {
 }
 
 function getDir(info) {
-  let progress = q('#progress')
-  progress.style.display = 'inline-block'
   if (!info.bpath) info.bpath = current.bpath
   if (!info.bpath) return
-  parseDir(info, (book) => {
-    if (!book) return
-    Promise.all([
-      pushInfo(info),
-      pushTexts(book.pars),
-      pushMap(book.mapdocs)
-    ])
-      .then(function(res) {
-        if (res[1].length) {
-          libdb.createIndex({
-            index: {fields: ['fpath', 'pos']},
-            name: 'fpathindex'
-          })
-            .then(function(res) {
-              log('INDEX CREATED')
-            })
-        }
-        navigate(current)
-      }).catch(function(err) {
-        log('ALL RES ERR', err)
-      })
-
-  })
+  if (path.extname(info.bpath) == '.ods') {
+    parseODS(info, (book) => {
+      pushBook(info, book)
+    })
+  }  else {
+    parseDir(info, (book) => {
+      pushBook(info, book)
+    })
+  }
 }
+
+function pushBook(info, book) {
+  if (!book || !book.pars || !book.pars.length) return
+  Promise.all([
+    pushInfo(info),
+    pushTexts(book.pars),
+    pushMap(book.mapdocs)
+  ])
+    .then(function(res) {
+      if (res[1].length) {
+        libdb.createIndex({
+          index: {fields: ['fpath', 'pos']},
+          name: 'fpathindex'
+        })
+          .then(function(res) {
+            log('INDEX CREATED')
+          })
+      }
+      navigate(current)
+    }).catch(function(err) {
+      log('ALL RES ERR', err)
+    })
+}
+
 
 function showCleanup() {
   showSection('cleanup')

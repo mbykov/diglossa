@@ -20,12 +20,15 @@ function extractAllText(str){
   return results
 }
 
-export function openODS(fpath, cb) {
-  if (fpath === undefined) return
+export function parseODS(info, cb) {
+  let bpath = info.bpath
+  if (bpath === undefined) return
   try {
-    textract.fromFileWithPath(fpath, {preserveLineBreaks: true, delimiter: '|'}, function(err, str) {
-      // parseCSV(str)
-      cb(true)
+    textract.fromFileWithPath(bpath, {preserveLineBreaks: true, delimiter: '|'}, function(err, str) {
+      let book = parseCSV(info, str)
+      log('ODS INFO', info)
+      log('ODS BOOK', book)
+      cb(book)
     })
   } catch (err) {
     if (err) log('ODS ERR', err)
@@ -33,7 +36,43 @@ export function openODS(fpath, cb) {
   }
 }
 
-function parseCSV(str) {
+function parseCSV(info, str) {
+  let pars = []
+  let map = {}
+  let rows = str.split('\n')
+  let size = rows[0].length
+  // let nics = _.keys(info.nicnames)
+  // log('NICS', nics)
+  rows.forEach((row, idx) => {
+    if (row[0] == '#') return
+    if (row == ',,') return
+    let clean
+    let strs
+    // if (/","/.test(row)) strs = row.split('","')
+    if (/","|,"|",/.test(row)) strs = row.split(/","|,"|",/)
+    else strs = row.split(',')
+    strs = _.compact(strs)
+    let fpath = 'FPATH'
+    strs.forEach((str, idy)=> {
+      let auth = info.auths[idy]
+      // log('AUTH', idy, auth)
+      if (!auth) log('STR', 111, str, 222)
+      if (!auth) log('ROW', idy, row, strs)
+      let nic = auth.nic
+      let lang = auth.lang
+      let text = str.replace(/"/g, '')
+      let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-')
+      let parid = [groupid, nic].join('-')
+      let par = { _id: parid, infoid: info._id, pos: idx, nic: nic, fpath: fpath, lang: lang, text: text }
+      if (auth.author) par.author = true
+      pars.push(par)
+    })
+  })
+  let mapdocs = []
+  return {pars: pars, mapdocs: mapdocs}
+}
+
+function parseCSV_(info, str) {
   let rows = str.split('\n')
   let size = rows[0].length
   let book = {}
@@ -51,6 +90,11 @@ function parseCSV(str) {
     if (nic == book.author) auth.author = true
     auths.push(auth)
   })
+  log('ODS', info)
+  log('ODS', rows.length)
+  log('ODS-1', rows[0])
+
+  return
   rows.forEach((row, idx) => {
     if (row[0] == '#') return
     if (row == ',,') return
@@ -67,39 +111,7 @@ function parseCSV(str) {
       auths[idy].rows.push(col)
     })
   })
-  // localStorage.setItem('auths', JSON.stringify(auths))
-  // localStorage.setItem('book', JSON.stringify(book))
 }
-
-// export function openDir(bookpath, cb) {
-//   if (!bookpath) return
-//   try {
-//     let book = parseDir(bookpath)
-//     cb(book)
-//   } catch (err) {
-//     if (err) log('NO INFO FILE')
-//     cb(false)
-//   }
-// }
-
-// function walk_OLD(fns, dname, dtree, tree) {
-//   let fpath = dtree.path.split(dname)[1]
-//   tree.text = fpath.split('/').slice(-1)[0]
-//   tree.fpath = fpath.replace(/^\//, '')
-//   if (!dtree.children) return
-//   let hasFiles = false
-//   dtree.children.forEach(child=> {
-//     if (child.type == 'file') hasFiles = true
-//   })
-//   tree.hasFiles = hasFiles
-//   dtree.children.forEach((child, idx)=> {
-//     fns.push(dtree.path)
-//     if (child.type != 'directory') return
-//     if (!tree.children) tree.children = []
-//     tree.children.push({})
-//     walk(fns, dname, child, tree.children[idx])
-//   })
-// }
 
 function walk(dname, dtree, tree) {
   let fpath = dtree.path.split(dname)[1]
@@ -139,8 +151,8 @@ export function parseDir(info, cb) {
   // .txt ?
   fns = _.filter(fns, fn=>{ return path.extname(fn) != '.json' })
 
-  let infoid = ['info', info.book.author, info.book.title].join('-')
-  info._id = infoid
+  // let infoid = ['info', info.book.author, info.book.title].join('-')
+  // info._id = infoid
 
   let nics = []
   let pars = []
@@ -174,7 +186,7 @@ export function parseDir(info, cb) {
     rows.forEach((row, idx)=> {
       let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-')
       let parid = [groupid, nic].join('-')
-      let par = { _id: parid, infoid: infoid, pos: idx, nic: nic, fpath: fpath, lang: lang, text: row }
+      let par = { _id: parid, infoid: info._id, pos: idx, nic: nic, fpath: fpath, lang: lang, text: row }
       if (auth.author) {
         par.author = true
         bookWFMap(map, row, groupid)
@@ -239,6 +251,8 @@ export function parseInfo(info) {
     nicnames[auth.ext] = auth.name
   })
   info.nicnames = nicnames
+  let infoid = ['info', info.book.author, info.book.title].join('-')
+  info._id = infoid
   return info
 }
 

@@ -381,14 +381,9 @@ __webpack_require__.r(__webpack_exports__);
 const fileMenuTemplate = {
   label: "File",
   submenu: [{
-    label: "Import from ODS",
+    label: "Import from file",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'readODS');
-    }
-  }, {
-    label: "Import from TXT",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('parseDir', 'readTXT');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('parseDir');
     }
   }, {
     label: "Clone from Github",
