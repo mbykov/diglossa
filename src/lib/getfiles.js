@@ -10,15 +10,6 @@ const dirTree = require('directory-tree')
 const textract = require('textract')
 const log = console.log
 
-// const Store = require('electron-store')
-// const store = new Store()
-
-// const Apstore = require('./apstore')
-// const apstore = new Apstore()
-
-// const yuno = require('../../../yunodb')
-// const storage = require('electron-json-storage')
-
 function extractAllText(str){
   const re = /"(.*?)"/g
   const results = []
@@ -80,20 +71,38 @@ function parseCSV(str) {
   // localStorage.setItem('book', JSON.stringify(book))
 }
 
-export function openDir(bookpath, cb) {
-  if (!bookpath) return
-  try {
-    let book = parseDir(bookpath)
-    cb(book)
-  } catch (err) {
-    if (err) log('NO INFO FILE')
-    cb(false)
-  }
-}
+// export function openDir(bookpath, cb) {
+//   if (!bookpath) return
+//   try {
+//     let book = parseDir(bookpath)
+//     cb(book)
+//   } catch (err) {
+//     if (err) log('NO INFO FILE')
+//     cb(false)
+//   }
+// }
 
-function walk(info, fns, dname, dtree, tree) {
+// function walk_OLD(fns, dname, dtree, tree) {
+//   let fpath = dtree.path.split(dname)[1]
+//   tree.text = fpath.split('/').slice(-1)[0]
+//   tree.fpath = fpath.replace(/^\//, '')
+//   if (!dtree.children) return
+//   let hasFiles = false
+//   dtree.children.forEach(child=> {
+//     if (child.type == 'file') hasFiles = true
+//   })
+//   tree.hasFiles = hasFiles
+//   dtree.children.forEach((child, idx)=> {
+//     fns.push(dtree.path)
+//     if (child.type != 'directory') return
+//     if (!tree.children) tree.children = []
+//     tree.children.push({})
+//     walk(fns, dname, child, tree.children[idx])
+//   })
+// }
+
+function walk(dname, dtree, tree) {
   let fpath = dtree.path.split(dname)[1]
-  if (!fpath) fpath = info.book.title
   tree.text = fpath.split('/').slice(-1)[0]
   tree.fpath = fpath.replace(/^\//, '')
   if (!dtree.children) return
@@ -103,37 +112,32 @@ function walk(info, fns, dname, dtree, tree) {
   })
   tree.hasFiles = hasFiles
   dtree.children.forEach((child, idx)=> {
-    fns.push(dtree.path)
     if (child.type != 'directory') return
     if (!tree.children) tree.children = []
     tree.children.push({})
-    walk(info, fns, dname, child, tree.children[idx])
+    walk(dname, child, tree.children[idx])
   })
 }
 
-function parseDir(bookpath) {
-  let bpath = path.resolve(__dirname, bookpath)
-  let dname = bookpath.split('/').slice(-1)[0] // + '/'
+export function parseDir(info, cb) {
+  let bpath = info.bpath
   const dtree = dirTree(bpath)
-  // log('=BPATH', bpath, bookpath)
   // log('=DTREE', dtree)
   if (!dtree) return
-  let ipath = path.resolve(bpath, 'info.json')
-  let info = parseInfo(ipath)
-  log('=INFO', info)
 
-  let fns = []
+  let dname = info.bpath.split('/').slice(0,-1).join('/')
+  // log('=DNAME', dname)
   let tree = {}
-  walk(info, fns, dname, dtree, tree)
-  log('=TREE', tree)
-  fns = glob.sync('**/*', {cwd: bpath})
+  walk(dname, dtree, tree)
+  // log('=TREE', tree)
+  info.tree = tree
+  info.info = true
+  // log('=TREEINFO', info)
 
-  // log('INFO', info)
-  fns = _.filter(fns, fn=>{ return fn != ipath })
-  // log('FNS', fns.length)
+  let fns = glob.sync('**/*', {cwd: bpath})
 
-  let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
-  let rePunct = new RegExp(punct, 'g')
+  // .txt ?
+  fns = _.filter(fns, fn=>{ return path.extname(fn) != '.json' })
 
   let infoid = ['info', info.book.author, info.book.title].join('-')
   info._id = infoid
@@ -142,6 +146,7 @@ function parseDir(bookpath) {
   let pars = []
   let map = {}
   info.sections = []
+
   fns.forEach(fn => {
     let comment = false
     let com = fn.split('-')[1]
@@ -154,14 +159,13 @@ function parseDir(bookpath) {
     nics.push(nic)
     let auth = _.find(info.auths, auth=> { return auth.ext == nic}) || nic
 
-    let txt = fse.readFileSync(path.resolve(bpath, fn), 'utf8')
+    let fullpath = path.resolve(bpath, fn)
+    let txt = fse.readFileSync(fullpath, 'utf8')
     let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ')
     let rows = _.compact(clean.split('\n'))
 
-    let fparts = fn.split('/')
-    let fname = fparts.pop()
-    let fpath = fparts.join('/')
-    if (!fpath) fpath = info.book.title
+    let fpath = path.dirname(fullpath).split(dname)[1]
+    fpath = fpath.replace(/^\//, '')
     info.sections.push(fpath)
 
     let lang
@@ -170,13 +174,9 @@ function parseDir(bookpath) {
     rows.forEach((row, idx)=> {
       let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-')
       let parid = [groupid, nic].join('-')
-      // let parid = [info.book.author, info.book.title, fpath, idx, nic].join('-')
       let par = { _id: parid, infoid: infoid, pos: idx, nic: nic, fpath: fpath, lang: lang, text: row }
       if (auth.author) {
-        // let html = row.replace(rePunct, "<span class=\"active\">$1<\/span>")
         par.author = true
-        // par.text = html
-        // bookWFMap_(map, row, fpath, idx) // mango failes use index
         bookWFMap(map, row, groupid)
       }
       // if (comment) coms.push(par)
@@ -186,9 +186,6 @@ function parseDir(bookpath) {
   })
 
   nics = _.uniq(nics)
-  info.tree = tree
-  info.info = true
-  info.bpath = bpath
 
   let mapnics = {}
   for (let wf in map) {
@@ -206,9 +203,9 @@ function parseDir(bookpath) {
     mapdocs.push(mapdoc)
   }
 
-  let book = {info: info, pars: pars, mapdocs: mapdocs}
+  let book = {pars: pars, mapdocs: mapdocs}
   log('GETFILE BOOK:', book)
-  return book
+  cb(book)
 }
 
 function bookWFMap(map, row, groupid) {
@@ -232,14 +229,7 @@ function bookWFMap_(map, row, fpath, pos) {
 }
 
 
-function parseInfo(ipath) {
-  let info
-  try {
-    info = fse.readJsonSync(ipath)
-  } catch (err) {
-    log('ERR INFO', err)
-    throw new Error()
-  }
+export function parseInfo(info) {
   let nicnames = {}
   info.auths.forEach(auth => {
     if (auth.author) {

@@ -123,6 +123,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+const JSON = __webpack_require__(/*! json5 */ "json5");
+
 const Mousetrap = __webpack_require__(/*! mousetrap */ "mousetrap");
 
 let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
@@ -157,12 +159,10 @@ let libPath = path.resolve(upath, 'pouch/library');
 let libdb = new PouchDB(libPath);
 let ftdbPath = path.resolve(upath, 'pouch/fulltext');
 let ftdb = new PouchDB(ftdbPath);
-let current, info; // let limit = 20
-
+let current, info;
 let uf = '\ufff0';
 
 window.onbeforeunload = function (ev) {
-  // log('SAVE:')
   libdb.get('_local/current').then(function (doc) {
     current._id = '_local/current';
     current._rev = doc._rev;
@@ -192,14 +192,16 @@ electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('section', function (eve
   });
 });
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('parseDir', function (event, name) {
-  log('PARSE DIR', name); // dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'book', extensions: ['ods'] }]}, showBook)
-
+  // dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'book', extensions: ['ods'] }]}, showBook)
+  // dialog.showOpenDialog({properties: ['openDirectory'] }, getFNS)
   dialog.showOpenDialog({
-    properties: ['openDirectory']
-  }, getFNS);
+    properties: ['openFile'],
+    filters: [{
+      extensions: ['json']
+    }]
+  }, getInfoFile);
 });
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('re-read', function (event) {
-  log('RE-READ!');
   getDir();
 });
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('action', function (event, action) {
@@ -235,8 +237,7 @@ function goLib() {
   Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getLib"])().then(function (result) {
     let infos = result.rows.map(row => {
       return row.doc;
-    }); // log('INFOS', infos)
-
+    });
     Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseLib"])(infos);
   }).catch(function (err) {
     log('getLibErr', err);
@@ -244,7 +245,6 @@ function goLib() {
 }
 
 function getTitle() {
-  // log('getTitle cur:', current)
   Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getInfo"])(current.infoid).then(function (curinfo) {
     info = curinfo;
     current.bpath = info.bpath;
@@ -257,10 +257,8 @@ function getTitle() {
 function getBook() {
   Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getInfo"])(current.infoid).then(function (curinfo) {
     Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getText"])(current).then(function (res) {
-      let pars = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs); // log('___getBook-cur:', current)
+      let pars = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs);
 
-
-      if (!pars || !pars.length) log('no texts');
       Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, curinfo, pars);
     });
   }).catch(function (err) {
@@ -284,10 +282,7 @@ function navigate(navpath) {
     hstate = hstates.length - 1;
   }
 
-  delete current.old; // log('HSTATE', hstate)
-  // log('HSTATES', hstates)
-  // log('Navigate:', current)
-
+  delete current.old;
   let sec = current.section;
   if (sec == 'lib') goLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook();else if (sec == 'search') Object(_lib_search__WEBPACK_IMPORTED_MODULE_8__["parseQuery"])(current);else showSection(sec);
   let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#progress');
@@ -295,7 +290,6 @@ function navigate(navpath) {
 } // arrows
 
 Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
-  // log('EV', ev.which, hstate, hstates)
   if (ev.which == 37) goLeft();else if (ev.which == 39) goRight();
 });
 
@@ -319,7 +313,6 @@ function goRight() {
 Mousetrap.bind(['ctrl+f'], function (ev) {
   let query = clipboard.readText();
   ftdb.get(query).then(function (wfdoc) {
-    log('WFdoc', query, wfdoc);
     let opts = {
       include_docs: true,
       keys: wfdoc.parids
@@ -357,19 +350,15 @@ function showSection(name) {
 }
 
 function pushInfo(ndoc) {
-  // log('NDOCinfo', ndoc)
   return libdb.get(ndoc._id).catch(function (err) {
     if (err.name === 'not_found') return;else throw err;
   }).then(function (doc) {
-    // log('DOC-old', doc)
     if (doc) {
-      // log('DOC-old', doc)
       let testdoc = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.clone(doc);
 
       delete testdoc._rev;
       if (lodash__WEBPACK_IMPORTED_MODULE_1___default.a.isEqual(ndoc, testdoc)) return;else {
-        ndoc._rev = doc._rev; // log('NDOC-rev', ndoc)
-
+        ndoc._rev = doc._rev;
         return libdb.put(ndoc);
       }
     } else {
@@ -399,7 +388,6 @@ function pushTexts(newdocs) {
         cleandocs.push(newdoc);
       }
     });
-    log('CLD', cleandocs);
     return libdb.bulkDocs(cleandocs);
   });
 } // MAP
@@ -411,19 +399,16 @@ function pushMap(ndocs) {
   }).then(function (res) {
     let docs = res.rows.map(row => {
       return row.doc;
-    }); // log('ODOCS', docs)
-
+    });
     let hdoc = {};
     docs.forEach(doc => {
       hdoc[doc._id] = doc;
     });
-    let cleandocs = []; // log('NDOCS', map)
-
+    let cleandocs = [];
     ndocs.forEach(ndoc => {
       let doc = hdoc[ndoc._id];
 
       if (doc) {
-        // log('DOC-old', doc)
         let testdoc = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.clone(doc);
 
         delete testdoc._rev;
@@ -437,33 +422,39 @@ function pushMap(ndocs) {
         cleandocs.push(ndoc);
       }
     });
-    log('map-cleandocs.length', cleandocs.length);
     return ftdb.bulkDocs(cleandocs);
   });
-} // унести в getFile, и грязно пока
+}
 
-
-function getFNS(fns) {
+function getInfoFile(fns) {
   if (!fns) return;
-  let bpath = fns[0];
-  getDir(bpath);
-} // BUG если нет info.json
+  let infopath = fns[0]; // log('infopath', infopath)
 
+  if (!infopath) return; // log('FILE', infopath)
 
-function getDir(bpath) {
+  try {
+    let json = fse.readFileSync(infopath);
+    let info = JSON.parse(json);
+    info = Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["parseInfo"])(info);
+    let dir = path.parse(infopath).dir;
+    let bpath = path.resolve(dir, info.book.path);
+    info.bpath = bpath; // log('getINFO', info)
+
+    getDir(info);
+  } catch (err) {
+    log('INFO JSON ERR:', err);
+  }
+}
+
+function getDir(info) {
   let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#progress');
   progress.style.display = 'inline-block';
-  log('getDIR-bpath', bpath);
-  if (!bpath) bpath = current.bpath;
-  if (!bpath) return;
-  Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["openDir"])(bpath, book => {
-    if (!book) return; // log('DIR-INFO::', book.info) // то же что book from get
-
-    Promise.all([pushInfo(book.info), pushTexts(book.pars), pushMap(book.mapdocs)]).then(function (res) {
-      log('PUSH ALL RES', res);
-
+  if (!info.bpath) info.bpath = current.bpath;
+  if (!info.bpath) return;
+  Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["parseDir"])(info, book => {
+    if (!book) return;
+    Promise.all([pushInfo(info), pushTexts(book.pars), pushMap(book.mapdocs)]).then(function (res) {
       if (res[1].length) {
-        log('INDEX!');
         libdb.createIndex({
           index: {
             fields: ['fpath', 'pos']
@@ -472,8 +463,7 @@ function getDir(bpath) {
         }).then(function (res) {
           log('INDEX CREATED');
         });
-      } // wtf ?
-
+      }
 
       navigate(current);
     }).catch(function (err) {
@@ -1012,13 +1002,14 @@ document.addEventListener("contextmenu", event => {
 /*!*****************************!*\
   !*** ./src/lib/getfiles.js ***!
   \*****************************/
-/*! exports provided: openODS, openDir */
+/*! exports provided: openODS, parseDir, parseInfo */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "openODS", function() { return openODS; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "openDir", function() { return openDir; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseDir", function() { return parseDir; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseInfo", function() { return parseInfo; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
@@ -1039,12 +1030,7 @@ const dirTree = __webpack_require__(/*! directory-tree */ "directory-tree");
 
 const textract = __webpack_require__(/*! textract */ "textract");
 
-const log = console.log; // const Store = require('electron-store')
-// const store = new Store()
-// const Apstore = require('./apstore')
-// const apstore = new Apstore()
-// const yuno = require('../../../yunodb')
-// const storage = require('electron-json-storage')
+const log = console.log;
 
 function extractAllText(str) {
   const re = /"(.*?)"/g;
@@ -1113,23 +1099,38 @@ function parseCSV(str) {
     });
   }); // localStorage.setItem('auths', JSON.stringify(auths))
   // localStorage.setItem('book', JSON.stringify(book))
-}
+} // export function openDir(bookpath, cb) {
+//   if (!bookpath) return
+//   try {
+//     let book = parseDir(bookpath)
+//     cb(book)
+//   } catch (err) {
+//     if (err) log('NO INFO FILE')
+//     cb(false)
+//   }
+// }
+// function walk_OLD(fns, dname, dtree, tree) {
+//   let fpath = dtree.path.split(dname)[1]
+//   tree.text = fpath.split('/').slice(-1)[0]
+//   tree.fpath = fpath.replace(/^\//, '')
+//   if (!dtree.children) return
+//   let hasFiles = false
+//   dtree.children.forEach(child=> {
+//     if (child.type == 'file') hasFiles = true
+//   })
+//   tree.hasFiles = hasFiles
+//   dtree.children.forEach((child, idx)=> {
+//     fns.push(dtree.path)
+//     if (child.type != 'directory') return
+//     if (!tree.children) tree.children = []
+//     tree.children.push({})
+//     walk(fns, dname, child, tree.children[idx])
+//   })
+// }
 
-function openDir(bookpath, cb) {
-  if (!bookpath) return;
 
-  try {
-    let book = parseDir(bookpath);
-    cb(book);
-  } catch (err) {
-    if (err) log('NO INFO FILE');
-    cb(false);
-  }
-}
-
-function walk(info, fns, dname, dtree, tree) {
+function walk(dname, dtree, tree) {
   let fpath = dtree.path.split(dname)[1];
-  if (!fpath) fpath = info.book.title;
   tree.text = fpath.split('/').slice(-1)[0];
   tree.fpath = fpath.replace(/^\//, '');
   if (!dtree.children) return;
@@ -1139,39 +1140,33 @@ function walk(info, fns, dname, dtree, tree) {
   });
   tree.hasFiles = hasFiles;
   dtree.children.forEach((child, idx) => {
-    fns.push(dtree.path);
     if (child.type != 'directory') return;
     if (!tree.children) tree.children = [];
     tree.children.push({});
-    walk(info, fns, dname, child, tree.children[idx]);
+    walk(dname, child, tree.children[idx]);
   });
 }
 
-function parseDir(bookpath) {
-  let bpath = path.resolve(__dirname, bookpath);
-  let dname = bookpath.split('/').slice(-1)[0]; // + '/'
-
-  const dtree = dirTree(bpath); // log('=BPATH', bpath, bookpath)
-  // log('=DTREE', dtree)
+function parseDir(info, cb) {
+  let bpath = info.bpath;
+  const dtree = dirTree(bpath); // log('=DTREE', dtree)
 
   if (!dtree) return;
-  let ipath = path.resolve(bpath, 'info.json');
-  let info = parseInfo(ipath);
-  log('=INFO', info);
-  let fns = [];
+  let dname = info.bpath.split('/').slice(0, -1).join('/'); // log('=DNAME', dname)
+
   let tree = {};
-  walk(info, fns, dname, dtree, tree);
-  log('=TREE', tree);
-  fns = glob.sync('**/*', {
+  walk(dname, dtree, tree); // log('=TREE', tree)
+
+  info.tree = tree;
+  info.info = true; // log('=TREEINFO', info)
+
+  let fns = glob.sync('**/*', {
     cwd: bpath
-  }); // log('INFO', info)
+  }); // .txt ?
 
   fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
-    return fn != ipath;
-  }); // log('FNS', fns.length)
-
-  let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
-  let rePunct = new RegExp(punct, 'g');
+    return path.extname(fn) != '.json';
+  });
   let infoid = ['info', info.book.author, info.book.title].join('-');
   info._id = infoid;
   let nics = [];
@@ -1191,22 +1186,20 @@ function parseDir(bookpath) {
     let auth = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(info.auths, auth => {
       return auth.ext == nic;
     }) || nic;
-    let txt = fse.readFileSync(path.resolve(bpath, fn), 'utf8');
+    let fullpath = path.resolve(bpath, fn);
+    let txt = fse.readFileSync(fullpath, 'utf8');
     let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ');
 
     let rows = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(clean.split('\n'));
 
-    let fparts = fn.split('/');
-    let fname = fparts.pop();
-    let fpath = fparts.join('/');
-    if (!fpath) fpath = info.book.title;
+    let fpath = path.dirname(fullpath).split(dname)[1];
+    fpath = fpath.replace(/^\//, '');
     info.sections.push(fpath);
     let lang;
     if (auth) lang = auth.lang;
     rows.forEach((row, idx) => {
       let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-');
-      let parid = [groupid, nic].join('-'); // let parid = [info.book.author, info.book.title, fpath, idx, nic].join('-')
-
+      let parid = [groupid, nic].join('-');
       let par = {
         _id: parid,
         infoid: infoid,
@@ -1218,10 +1211,7 @@ function parseDir(bookpath) {
       };
 
       if (auth.author) {
-        // let html = row.replace(rePunct, "<span class=\"active\">$1<\/span>")
-        par.author = true; // par.text = html
-        // bookWFMap_(map, row, fpath, idx) // mango failes use index
-
+        par.author = true;
         bookWFMap(map, row, groupid);
       } // if (comment) coms.push(par)
       // else pars.push(par)
@@ -1231,9 +1221,6 @@ function parseDir(bookpath) {
     });
   });
   nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(nics);
-  info.tree = tree;
-  info.info = true;
-  info.bpath = bpath;
   let mapnics = {};
 
   for (let wf in map) {
@@ -1257,12 +1244,11 @@ function parseDir(bookpath) {
   }
 
   let book = {
-    info: info,
     pars: pars,
     mapdocs: mapdocs
   };
   log('GETFILE BOOK:', book);
-  return book;
+  cb(book);
 }
 
 function bookWFMap(map, row, groupid) {
@@ -1292,16 +1278,7 @@ function bookWFMap_(map, row, fpath, pos) {
   });
 }
 
-function parseInfo(ipath) {
-  let info;
-
-  try {
-    info = fse.readJsonSync(ipath);
-  } catch (err) {
-    log('ERR INFO', err);
-    throw new Error();
-  }
-
+function parseInfo(info) {
   let nicnames = {};
   info.auths.forEach(auth => {
     if (auth.author) {
@@ -1913,6 +1890,17 @@ module.exports = require("fs-extra");
 /***/ (function(module, exports) {
 
 module.exports = require("glob");
+
+/***/ }),
+
+/***/ "json5":
+/*!************************!*\
+  !*** external "json5" ***!
+  \************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("json5");
 
 /***/ }),
 

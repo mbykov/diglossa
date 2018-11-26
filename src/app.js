@@ -11,10 +11,11 @@ import { shell } from 'electron'
 import { ipcRenderer } from "electron";
 import { q, qs, empty, create, remove, span, p, div, enclitic } from './lib/utils'
 import { twoPages, parseLib, parseTitle, parseBook } from './lib/book'
-import { openODS, openDir } from './lib/getfiles'
+import { parseInfo, parseDir } from './lib/getfiles'
 import { getInfo, getLib, getText } from './lib/pouch';
 import { parseQuery } from './lib/search';
 
+const JSON = require('json5')
 const Mousetrap = require('mousetrap')
 let fse = require('fs-extra')
 const log = console.log
@@ -44,11 +45,9 @@ let ftdbPath = path.resolve(upath, 'pouch/fulltext')
 let ftdb = new PouchDB(ftdbPath)
 
 let current, info
-// let limit = 20
 let uf = '\ufff0'
 
 window.onbeforeunload = function (ev) {
-  // log('SAVE:')
   libdb.get('_local/current')
     .then(function(doc) {
       current._id = '_local/current'
@@ -72,13 +71,12 @@ ipcRenderer.on('section', function (event, name) {
 })
 
 ipcRenderer.on('parseDir', function (event, name) {
-  log('PARSE DIR', name)
   // dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'book', extensions: ['ods'] }]}, showBook)
-  dialog.showOpenDialog({properties: ['openDirectory'] }, getFNS)
+  // dialog.showOpenDialog({properties: ['openDirectory'] }, getFNS)
+  dialog.showOpenDialog({properties: ['openFile'], filters: [{extensions: ['json'] }]}, getInfoFile)
 })
 
 ipcRenderer.on('re-read', function (event) {
-  log('RE-READ!')
   getDir()
 })
 
@@ -120,7 +118,6 @@ function goLib() {
   getLib()
     .then(function (result) {
       let infos = result.rows.map(row=> { return row.doc})
-      // log('INFOS', infos)
       parseLib(infos)
     }).catch(function (err) {
       log('getLibErr', err);
@@ -128,7 +125,6 @@ function goLib() {
 }
 
 function getTitle() {
-  // log('getTitle cur:', current)
   getInfo(current.infoid)
     .then(function (curinfo) {
       info = curinfo
@@ -145,8 +141,6 @@ function getBook() {
       getText(current)
         .then(function(res) {
           let pars = _.compact(res.docs)
-          // log('___getBook-cur:', current)
-          if (!pars || !pars.length) log('no texts')
           parseBook(current, curinfo, pars)
         })
     }).catch(function (err) {
@@ -171,10 +165,6 @@ export function navigate(navpath) {
   }
   delete current.old
 
-  // log('HSTATE', hstate)
-  // log('HSTATES', hstates)
-  // log('Navigate:', current)
-
   let sec = current.section
   if (sec == 'lib') goLib()
   else if (sec == 'title') getTitle()
@@ -188,7 +178,6 @@ export function navigate(navpath) {
 
 // arrows
 Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
-  // log('EV', ev.which, hstate, hstates)
   if (ev.which == 37) goLeft()
   else if (ev.which == 39) goRight()
 })
@@ -214,7 +203,6 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
   let query = clipboard.readText()
   ftdb.get(query)
     .then(function (wfdoc) {
-      log('WFdoc', query, wfdoc)
       let opts = { include_docs: true, keys: wfdoc.parids }
       libdb.allDocs(opts)
         .then(function (result) {
@@ -242,20 +230,16 @@ function showSection(name) {
 
 
 function pushInfo(ndoc) {
-  // log('NDOCinfo', ndoc)
   return libdb.get(ndoc._id).catch(function (err) {
     if (err.name === 'not_found') return
     else throw err
   }).then(function (doc) {
-    // log('DOC-old', doc)
     if (doc) {
-      // log('DOC-old', doc)
       let testdoc = _.clone(doc)
       delete testdoc._rev
       if (_.isEqual(ndoc, testdoc)) return
       else {
         ndoc._rev = doc._rev
-        // log('NDOC-rev', ndoc)
         return libdb.put(ndoc)
       }
     } else {
@@ -280,7 +264,6 @@ function pushTexts(newdocs) {
           cleandocs.push(newdoc)
         }
       })
-      log('CLD', cleandocs)
       return libdb.bulkDocs(cleandocs)
     })
 }
@@ -290,16 +273,13 @@ function pushMap(ndocs) {
   return ftdb.allDocs({include_docs: true})
     .then(function(res) {
       let docs = res.rows.map(row=>{ return row.doc})
-      // log('ODOCS', docs)
       let hdoc = {}
       docs.forEach(doc=> { hdoc[doc._id] = doc })
 
       let cleandocs = []
-      // log('NDOCS', map)
       ndocs.forEach(ndoc=> {
         let doc = hdoc[ndoc._id]
         if (doc) {
-          // log('DOC-old', doc)
           let testdoc = _.clone(doc)
           delete testdoc._rev
           if (_.isEqual(ndoc, testdoc)) return
@@ -312,37 +292,44 @@ function pushMap(ndocs) {
           cleandocs.push(ndoc)
         }
       })
-      log('map-cleandocs.length', cleandocs.length)
       return ftdb.bulkDocs(cleandocs)
     })
 }
 
-// унести в getFile, и грязно пока
-function getFNS(fns) {
+function getInfoFile(fns) {
   if (!fns) return
-  let bpath = fns[0]
-  getDir(bpath)
+  let infopath = fns[0]
+  // log('infopath', infopath)
+  if (!infopath) return
+  // log('FILE', infopath)
+  try {
+    let json = fse.readFileSync(infopath)
+    let info = JSON.parse(json)
+    info = parseInfo(info)
+    let dir = path.parse(infopath).dir
+    let bpath = path.resolve(dir, info.book.path)
+    info.bpath = bpath
+    // log('getINFO', info)
+    getDir(info)
+  } catch(err) {
+    log('INFO JSON ERR:', err)
+  }
 }
 
-// BUG если нет info.json
-function getDir(bpath) {
+function getDir(info) {
   let progress = q('#progress')
   progress.style.display = 'inline-block'
-  log('getDIR-bpath', bpath)
-  if (!bpath) bpath = current.bpath
-  if (!bpath) return
-  openDir(bpath, (book) => {
+  if (!info.bpath) info.bpath = current.bpath
+  if (!info.bpath) return
+  parseDir(info, (book) => {
     if (!book) return
-    // log('DIR-INFO::', book.info) // то же что book from get
     Promise.all([
-      pushInfo(book.info),
+      pushInfo(info),
       pushTexts(book.pars),
       pushMap(book.mapdocs)
     ])
       .then(function(res) {
-        log('PUSH ALL RES', res)
         if (res[1].length) {
-          log('INDEX!')
           libdb.createIndex({
             index: {fields: ['fpath', 'pos']},
             name: 'fpathindex'
@@ -351,7 +338,6 @@ function getDir(bpath) {
               log('INDEX CREATED')
             })
         }
-        // wtf ?
         navigate(current)
       }).catch(function(err) {
         log('ALL RES ERR', err)
