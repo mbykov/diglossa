@@ -2,8 +2,7 @@ import _ from 'lodash'
 import Split from 'split.js'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
 import tree from './tree';
-import { navigate } from '../app';
-import { getText } from './pouch';
+import { navigate, getText } from '../app';
 
 const path = require('path')
 const log = console.log
@@ -105,7 +104,6 @@ function keyScroll(ev) {
 
   if (!current || current.section != 'book') return
   addChunk()
-  // log('KEY CUR', current)
 }
 
 export function parseLib(infos) {
@@ -138,11 +136,9 @@ function goTitleEvent(ev) {
 
 
 export function parseTitle(bookinfo, bookcurrent) {
-  // log('========= parse title =============')
   window.split.setSizes([50,50])
   info = bookinfo
   current = bookcurrent
-  // log('TITLEinfo', info)
 
   let osource = q('#source')
   let otrns = q('#trns')
@@ -155,7 +151,6 @@ export function parseTitle(bookinfo, bookcurrent) {
   obookTitle.appendChild(oauthor)
   obookTitle.appendChild(otitle)
 
-  // problem if not all names in nics list ?
   let onics = create('ul')
   for (let nic in info.nicnames) {
     let name = info.nicnames[nic]
@@ -203,7 +198,6 @@ export function parseBook(bookcurrent, bookinfo, pars) {
   if (!nic) nic = cnics[0]
   else if (!cnics.includes(nic)) nic = cnics[0]
   current.nic = nic
-  // current.nics = cnics
 
   setChunk(pars)
   createRightHeader(cnics)
@@ -219,12 +213,9 @@ function setChunk(pars, direction) {
   let otrns = q('#trns')
 
   let apars = _.filter(pars, par=> { return par.author})
-  // log('AP', apars)
   let tpars = _.filter(pars, par=> { return !par.author})
-  // log('Cur Query', current.query)
   apars.forEach(apar=> {
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>")
-    // let oleft = p(apar.text)
     if (current.query) {
       let requery = new RegExp(current.query, 'g')
       html = html.replace(requery, "<span class=\"query\">"+current.query+"<\/span>")
@@ -254,9 +245,7 @@ function setChunk(pars, direction) {
   // position before adding upper chunk:
   if (direction) {
     let firstpos = apars[0].pos
-    // log('F', firstpos)
     let firstel = qs('#source [pos="'+firstpos+'"]')[0]
-    // log('FEL', firstel)
     let offset = firstel.offsetTop
     otrns.scrollTop = osource.scrollTop = offset
   }
@@ -319,7 +308,6 @@ function createLeftHeader() {
 
 function clickLeftHeader(ev) {
   let fpath = ev.target.getAttribute('fpath')
-  // log('LEFT', ev.target)
   let otbody = q('#tree-body')
   if (!otbody) return
   if (fpath) {

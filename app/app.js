@@ -90,12 +90,14 @@
 /*!********************!*\
   !*** ./src/app.js ***!
   \********************/
-/*! exports provided: navigate */
+/*! exports provided: navigate, getText, getLib */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "navigate", function() { return navigate; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getText", function() { return getText; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib", function() { return getLib; });
 /* harmony import */ var _lib_context_menu_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./lib/context_menu.js */ "./src/lib/context_menu.js");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_1__);
@@ -106,8 +108,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./lib/utils */ "./src/lib/utils.js");
 /* harmony import */ var _lib_book__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/book */ "./src/lib/book.js");
 /* harmony import */ var _lib_getfiles__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./lib/getfiles */ "./src/lib/getfiles.js");
-/* harmony import */ var _lib_pouch__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./lib/pouch */ "./src/lib/pouch.js");
-/* harmony import */ var _lib_search__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./lib/search */ "./src/lib/search.js");
+/* harmony import */ var _lib_search__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./lib/search */ "./src/lib/search.js");
 //
 // import "./stylesheets/app.css";
 // import "./stylesheets/main.css";
@@ -119,7 +120,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
+ // import { getLib, getText } from './lib/pouch';
 
 
 
@@ -133,7 +134,7 @@ const log = console.log;
 
 const Store = __webpack_require__(/*! electron-store */ "electron-store");
 
-const store = new Store(); // const elasticlunr = require('elasticlunr')
+const store = new Store();
 
 const path = __webpack_require__(/*! path */ "path");
 
@@ -151,16 +152,20 @@ const app = electron__WEBPACK_IMPORTED_MODULE_3__["remote"].app;
 const apath = app.getAppPath();
 let upath = app.getPath("userData"); // const watch = require('node-watch')
 
+let dbPath = path.resolve(upath, 'pouch');
+fse.ensureDirSync(dbPath);
+
 const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
 
-PouchDB.plugin(__webpack_require__(/*! pouchdb-find */ "pouchdb-find"));
-let dbPath = path.resolve(upath, 'pouch');
-let libPath = path.resolve(upath, 'pouch/library');
-let libdb = new PouchDB(libPath);
+PouchDB.plugin(__webpack_require__(/*! pouchdb-find */ "pouchdb-find")); // let libPath_ = path.resolve(upath, 'pouch/library')
+// let libdb = new PouchDB(libPath_)
+
 let ftdbPath = path.resolve(upath, 'pouch/fulltext');
 let ftdb = new PouchDB(ftdbPath);
+let libPath = path.resolve(upath, 'pouch/library');
+let libdb = new PouchDB(libPath);
 let current, info;
-let uf = '\ufff0';
+let limit = 20; // let uf = '\ufff0'
 
 window.onbeforeunload = function (ev) {
   libdb.get('_local/current').then(function (doc) {
@@ -211,10 +216,9 @@ window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])();
 getState();
 
 function getState() {
-  fse.ensureDirSync(dbPath);
   libdb.get('_local/current').then(function (navpath) {
-    current = navpath;
-    log('INIT CURRENT:', current);
+    current = navpath; // log('INIT CURRENT:', current)
+
     navigate(current);
   }).catch(function (err) {
     if (err.name === 'not_found') {
@@ -222,7 +226,6 @@ function getState() {
         _id: '_local/current',
         section: 'lib'
       }).then(function () {
-        log('SET DEFAULT VALUES');
         navigate({
           section: 'lib'
         });
@@ -232,7 +235,7 @@ function getState() {
 }
 
 function goLib() {
-  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getLib"])().then(function (result) {
+  getLib().then(function (result) {
     let infos = result.rows.map(row => {
       return row.doc;
     });
@@ -243,7 +246,7 @@ function goLib() {
 }
 
 function getTitle() {
-  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getInfo"])(current.infoid).then(function (curinfo) {
+  libdb.get(current.infoid).then(function (curinfo) {
     info = curinfo;
     current.bpath = info.bpath;
     Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])(info, current);
@@ -253,11 +256,8 @@ function getTitle() {
 }
 
 function getBook() {
-  // log('CURR___', current)
-  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getInfo"])(current.infoid).then(function (curinfo) {
-    // log('CUR-INFO___', curinfo)
-    Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_7__["getText"])(current).then(function (res) {
-      // log('CUR-RES___', res)
+  libdb.get(current.infoid).then(function (curinfo) {
+    getText(current).then(function (res) {
       let pars = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs);
 
       Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, curinfo, pars);
@@ -285,7 +285,7 @@ function navigate(navpath) {
 
   delete current.old;
   let sec = current.section;
-  if (sec == 'lib') goLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook();else if (sec == 'search') Object(_lib_search__WEBPACK_IMPORTED_MODULE_8__["parseQuery"])(current);else showSection(sec);
+  if (sec == 'lib') goLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook();else if (sec == 'search') Object(_lib_search__WEBPACK_IMPORTED_MODULE_7__["parseQuery"])(libdb, current);else showSection(sec);
   let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#progress');
   progress.style.display = 'none';
 } // arrows
@@ -339,6 +339,13 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
 function showSection(name) {
   window.split.setSizes([100, 0]);
   let osource = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#source');
+  let otrns = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#trns');
+  Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(osource);
+  Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["empty"])(otrns);
+  let ohleft = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('.hleft');
+  let ohright = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('.hright');
+  Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["remove"])(ohleft);
+  Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["remove"])(ohright);
   let secpath = path.resolve(apath, 'src/sections', [name, 'html'].join('.'));
 
   try {
@@ -471,8 +478,7 @@ function pushBook(info, book) {
           fields: ['fpath', 'pos']
         },
         name: 'fpathindex'
-      }).then(function (res) {
-        log('INDEX CREATED');
+      }).then(function (res) {// log('INDEX CREATED')
       });
     }
 
@@ -493,6 +499,31 @@ function goCleanup() {
   fse.emptyDirSync(dbPath);
   getCurrentWindow().reload();
   getState();
+}
+
+function getText(current, endpos) {
+  let fpath = current.fpath;
+  let start = current.pos * 1 || 0;
+  let end = endpos * 1 || start * 1 + limit * 1;
+  let selector = {
+    fpath: fpath,
+    pos: {
+      $gte: start,
+      $lt: end
+    }
+  };
+  return libdb.find({
+    selector: selector
+  }); // sort: ['idx'], , limit: 20
+  // return libdb.explain({selector: selector})
+}
+function getLib() {
+  let options = {
+    include_docs: true,
+    startkey: 'info',
+    endkey: 'info\ufff0'
+  };
+  return libdb.allDocs(options);
 }
 
 /***/ }),
@@ -517,8 +548,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
 /* harmony import */ var _tree__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./tree */ "./src/lib/tree.js");
 /* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../app */ "./src/app.js");
-/* harmony import */ var _pouch__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./pouch */ "./src/lib/pouch.js");
-
 
 
 
@@ -588,7 +617,7 @@ function addChunk() {
     if (startpos > 0) {
       let start = startpos - limit > 0 ? startpos - limit : 0;
       current.pos = start;
-      Object(_pouch__WEBPACK_IMPORTED_MODULE_5__["getText"])(current, startpos).then(function (res) {
+      Object(_app__WEBPACK_IMPORTED_MODULE_4__["getText"])(current, startpos).then(function (res) {
         setChunk(lodash__WEBPACK_IMPORTED_MODULE_0___default.a.reverse(res.docs), true);
       });
     }
@@ -597,7 +626,7 @@ function addChunk() {
   if (source.scrollHeight - source.scrollTop - source.clientHeight <= 3.0) {
     let start = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source > p').length;
     current.pos = start;
-    Object(_pouch__WEBPACK_IMPORTED_MODULE_5__["getText"])(current).then(function (res) {
+    Object(_app__WEBPACK_IMPORTED_MODULE_4__["getText"])(current).then(function (res) {
       setChunk(res.docs);
     });
   }
@@ -623,7 +652,7 @@ function keyScroll(ev) {
 
   trns.scrollTop = source.scrollTop;
   if (!current || current.section != 'book') return;
-  addChunk(); // log('KEY CUR', current)
+  addChunk();
 }
 
 function parseLib(infos) {
@@ -657,11 +686,9 @@ function goTitleEvent(ev) {
 }
 
 function parseTitle(bookinfo, bookcurrent) {
-  // log('========= parse title =============')
   window.split.setSizes([50, 50]);
   info = bookinfo;
-  current = bookcurrent; // log('TITLEinfo', info)
-
+  current = bookcurrent;
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   let obookTitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
@@ -670,8 +697,7 @@ function parseTitle(bookinfo, bookcurrent) {
   let oauthor = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])(info.book.author, 'author');
   let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])(info.book.title, 'title');
   obookTitle.appendChild(oauthor);
-  obookTitle.appendChild(otitle); // problem if not all names in nics list ?
-
+  obookTitle.appendChild(otitle);
   let onics = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('ul');
 
   for (let nic in info.nicnames) {
@@ -721,8 +747,7 @@ function parseBook(bookcurrent, bookinfo, pars) {
 
   let nic = current.nic;
   if (!nic) nic = cnics[0];else if (!cnics.includes(nic)) nic = cnics[0];
-  current.nic = nic; // current.nics = cnics
-
+  current.nic = nic;
   setChunk(pars);
   createRightHeader(cnics);
   createLeftHeader();
@@ -737,16 +762,14 @@ function setChunk(pars, direction) {
 
   let apars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
     return par.author;
-  }); // log('AP', apars)
-
+  });
 
   let tpars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
     return !par.author;
-  }); // log('Cur Query', current.query)
-
+  });
 
   apars.forEach(apar => {
-    let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>"); // let oleft = p(apar.text)
+    let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>");
 
     if (current.query) {
       let requery = new RegExp(current.query, 'g');
@@ -776,10 +799,8 @@ function setChunk(pars, direction) {
   }); // position before adding upper chunk:
 
   if (direction) {
-    let firstpos = apars[0].pos; // log('F', firstpos)
-
-    let firstel = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source [pos="' + firstpos + '"]')[0]; // log('FEL', firstel)
-
+    let firstpos = apars[0].pos;
+    let firstel = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["qs"])('#source [pos="' + firstpos + '"]')[0];
     let offset = firstel.offsetTop;
     otrns.scrollTop = osource.scrollTop = offset;
   }
@@ -852,8 +873,7 @@ function createLeftHeader() {
 }
 
 function clickLeftHeader(ev) {
-  let fpath = ev.target.getAttribute('fpath'); // log('LEFT', ev.target)
-
+  let fpath = ev.target.getAttribute('fpath');
   let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree-body');
   if (!otbody) return;
 
@@ -1040,16 +1060,7 @@ const dirTree = __webpack_require__(/*! directory-tree */ "directory-tree");
 
 const textract = __webpack_require__(/*! textract */ "textract");
 
-const log = console.log; // function extractAllText(str){
-//   const re = /"(.*?)"/g
-//   const results = []
-//   let current
-//   while (current == re.exec(str)) {
-//     results.push(current.pop())
-//   }
-//   return results
-// }
-
+const log = console.log;
 function parseODS(info, cb) {
   let bpath = info.bpath;
   if (bpath === undefined) return;
@@ -1060,8 +1071,6 @@ function parseODS(info, cb) {
       delimiter: '|'
     }, function (err, str) {
       let book = parseCSV(info, str);
-      log('ODS INFO', info);
-      log('ODS BOOK', book);
       cb(book);
     });
   } catch (err) {
@@ -1075,8 +1084,7 @@ function parseCSV(info, str) {
   let map = {};
   let rows = str.split('\n');
   let size = rows[0].length;
-  let fpath = info.bpath.split('/')[info.bpath.split('/').length - 2]; // log('FPATH', fpath)
-
+  let fpath = info.bpath.split('/')[info.bpath.split('/').length - 2];
   rows.forEach((row, idx) => {
     if (row[0] == '#') return;
     if (row == ',,') return;
@@ -1137,14 +1145,11 @@ function walk(dname, dtree, tree) {
 
 function parseDir(info, cb) {
   let bpath = info.bpath;
-  const dtree = dirTree(bpath); // log('=DTREE', dtree)
-
+  const dtree = dirTree(bpath);
   if (!dtree) return;
-  let dname = info.bpath.split('/').slice(0, -1).join('/'); // log('=DNAME', dname)
-
+  let dname = info.bpath.split('/').slice(0, -1).join('/');
   let tree = {};
   walk(dname, dtree, tree);
-  log('=TREE', tree);
   info.tree = tree;
   info.info = true;
   let fns = glob.sync('**/*', {
@@ -1153,9 +1158,7 @@ function parseDir(info, cb) {
 
   fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
     return path.extname(fn) != '.json';
-  }); // let infoid = ['info', info.book.author, info.book.title].join('-')
-  // info._id = infoid
-
+  });
   let nics = [];
   let pars = [];
   let map = {};
@@ -1170,9 +1173,11 @@ function parseDir(info, cb) {
     if (ext == '.json') return;
     let nic = ext.replace(/^\./, '');
     nics.push(nic);
+
     let auth = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(info.auths, auth => {
-      return auth.ext == nic;
-    }) || nic;
+      return auth.nic == nic;
+    });
+
     let fullpath = path.resolve(bpath, fn);
     let txt = fse.readFileSync(fullpath, 'utf8');
     let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ');
@@ -1234,7 +1239,6 @@ function parseDir(info, cb) {
     pars: pars,
     mapdocs: mapdocs
   };
-  log('GETFILE BOOK:', book);
   cb(book);
 }
 
@@ -1292,13 +1296,11 @@ function done(err) {
 /*!**************************!*\
   !*** ./src/lib/pouch.js ***!
   \**************************/
-/*! exports provided: getState, setDBState, getInfo, getLib, getText */
+/*! exports provided: getInfo, getLib, getText */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getState", function() { return getState; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "setDBState", function() { return setDBState; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getInfo", function() { return getInfo; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib", function() { return getLib; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getText", function() { return getText; });
@@ -1325,42 +1327,13 @@ let ftPath = path.resolve(upath, 'pouch/fulltext');
 
 const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
 
-PouchDB.plugin(__webpack_require__(/*! pouchdb-find */ "pouchdb-find"));
-let libdb = new PouchDB(libPath); // libdb.createIndex({
-//   index: {fields: ['fpath', 'idx']},
-//   name: 'fpathindex'
-// })
+PouchDB.plugin(__webpack_require__(/*! pouchdb-find */ "pouchdb-find")); // let libdb = new PouchDB(libPath)
 
 let limit = 20;
-function getState() {
-  return libdb.get('_local/current').catch(function (err) {
-    if (err.name === 'not_found') {
-      return libdb.put({
-        _id: '_local/current',
-        section: 'lib'
-      });
-    } else throw err;
-  });
-}
-function setDBState(psize) {
-  let dbstate = {
-    psize: psize
-  };
-  return libdb.get('_local/libstate').then(function (doc) {
-    log('DB-DOC:', doc);
-    dbstate._id = '_local/libstate';
-    if (doc) dbstate._rev = doc._rev;
-    return libdb.put(dbstate).then(function (res) {
-      log('DB-STATE:', res);
-    });
-  }).catch(function (err) {
-    log('DB-STATE-ERR:', err);
-  });
-}
 function getInfo(info_id) {
   return libdb.get(info_id);
 }
-function getLib() {
+function getLib(libdb) {
   let options = {
     include_docs: true,
     startkey: 'info',
@@ -1410,7 +1383,7 @@ __webpack_require__.r(__webpack_exports__);
 
 const log = console.log;
 let current;
-function parseQuery(curcurrent) {
+function parseQuery(libdb, curcurrent) {
   current = curcurrent;
   window.split.setSizes([100, 0]);
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#source');
@@ -1426,7 +1399,7 @@ function parseQuery(curcurrent) {
   oquery.appendChild(odisc);
 
   for (let infoid in current.qinfos) {
-    Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getInfo"])(infoid).then(function (info) {
+    libdb.get(infoid).then(function (info) {
       let qinfo = current.qinfos[infoid];
       parseQbook(info, qinfo);
     }).catch(function (err) {

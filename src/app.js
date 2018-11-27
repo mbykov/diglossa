@@ -9,10 +9,11 @@ import Split from 'split.js'
 import { remote } from "electron";
 import { shell } from 'electron'
 import { ipcRenderer } from "electron";
+
 import { q, qs, empty, create, remove, span, p, div, enclitic } from './lib/utils'
 import { twoPages, parseLib, parseTitle, parseBook } from './lib/book'
 import { parseInfo, parseDir, parseODS } from './lib/getfiles'
-import { getInfo, getLib, getText } from './lib/pouch';
+// import { getLib, getText } from './lib/pouch';
 import { parseQuery } from './lib/search';
 
 const JSON = require('json5')
@@ -21,7 +22,6 @@ let fse = require('fs-extra')
 const log = console.log
 const Store = require('electron-store')
 const store = new Store()
-// const elasticlunr = require('elasticlunr')
 
 const path = require('path')
 
@@ -36,16 +36,22 @@ const apath = app.getAppPath()
 let upath = app.getPath("userData")
 // const watch = require('node-watch')
 
+let dbPath = path.resolve(upath, 'pouch')
+fse.ensureDirSync(dbPath)
+
 const PouchDB = require('pouchdb')
 PouchDB.plugin(require('pouchdb-find'))
-let dbPath = path.resolve(upath, 'pouch')
-let libPath = path.resolve(upath, 'pouch/library')
-let libdb = new PouchDB(libPath)
+
+// let libPath_ = path.resolve(upath, 'pouch/library')
+// let libdb = new PouchDB(libPath_)
 let ftdbPath = path.resolve(upath, 'pouch/fulltext')
 let ftdb = new PouchDB(ftdbPath)
+let libPath = path.resolve(upath, 'pouch/library')
+let libdb = new PouchDB(libPath)
 
 let current, info
-let uf = '\ufff0'
+let limit = 20
+// let uf = '\ufff0'
 
 window.onbeforeunload = function (ev) {
   libdb.get('_local/current')
@@ -94,21 +100,20 @@ window.split = twoPages()
 getState()
 
 function getState() {
-  fse.ensureDirSync(dbPath)
   libdb.get('_local/current')
     .then(function (navpath) {
       current = navpath
-      log('INIT CURRENT:', current)
+      // log('INIT CURRENT:', current)
       navigate(current)
-    }).catch(function (err) {
+    })
+    .catch(function (err) {
       if (err.name === 'not_found') {
         libdb.put({ _id: '_local/current', section: 'lib'})
           .then(function() {
-            log('SET DEFAULT VALUES')
             navigate({section: 'lib'})
           })
       }
-    else throw err
+      else throw err
     })
 }
 
@@ -123,7 +128,7 @@ function goLib() {
 }
 
 function getTitle() {
-  getInfo(current.infoid)
+  libdb.get(current.infoid)
     .then(function (curinfo) {
       info = curinfo
       current.bpath = info.bpath
@@ -134,13 +139,10 @@ function getTitle() {
 }
 
 function getBook() {
-  // log('CURR___', current)
-  getInfo(current.infoid)
+  libdb.get(current.infoid)
     .then(function (curinfo) {
-      // log('CUR-INFO___', curinfo)
       getText(current)
         .then(function(res) {
-          // log('CUR-RES___', res)
           let pars = _.compact(res.docs)
           parseBook(current, curinfo, pars)
         })
@@ -170,7 +172,7 @@ export function navigate(navpath) {
   if (sec == 'lib') goLib()
   else if (sec == 'title') getTitle()
   else if (sec == 'book') getBook()
-  else if (sec == 'search') parseQuery(current)
+  else if (sec == 'search') parseQuery(libdb, current)
   else showSection(sec)
 
   let progress = q('#progress')
@@ -219,6 +221,14 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
 function showSection(name) {
   window.split.setSizes([100,0])
   let osource = q('#source')
+  let otrns = q('#trns')
+  empty(osource)
+  empty(otrns)
+  let ohleft = q('.hleft')
+  let ohright = q('.hright')
+  remove(ohleft)
+  remove(ohright)
+
   let secpath = path.resolve(apath, 'src/sections', [name, 'html'].join('.'))
   try {
     const section = fse.readFileSync(secpath)
@@ -228,6 +238,7 @@ function showSection(name) {
     log('NO SECTION ERR')
   }
 }
+
 
 
 function pushInfo(ndoc) {
@@ -345,7 +356,7 @@ function pushBook(info, book) {
           name: 'fpathindex'
         })
           .then(function(res) {
-            log('INDEX CREATED')
+            // log('INDEX CREATED')
           })
       }
       navigate(current)
@@ -366,4 +377,22 @@ function goCleanup() {
   fse.emptyDirSync(dbPath)
   getCurrentWindow().reload()
   getState()
+}
+
+export function getText(current, endpos) {
+  let fpath = current.fpath
+  let start = current.pos*1 || 0
+  let end = endpos*1 || start*1 + limit*1
+  let selector = {fpath: fpath, pos: {$gte: start, $lt: end}}
+  return libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
+  // return libdb.explain({selector: selector})
+}
+
+export function getLib() {
+  let options = {
+    include_docs: true,
+    startkey: 'info',
+    endkey: 'info\ufff0'
+  }
+  return libdb.allDocs(options)
 }

@@ -10,24 +10,12 @@ const dirTree = require('directory-tree')
 const textract = require('textract')
 const log = console.log
 
-// function extractAllText(str){
-//   const re = /"(.*?)"/g
-//   const results = []
-//   let current
-//   while (current == re.exec(str)) {
-//     results.push(current.pop())
-//   }
-//   return results
-// }
-
 export function parseODS(info, cb) {
   let bpath = info.bpath
   if (bpath === undefined) return
   try {
     textract.fromFileWithPath(bpath, {preserveLineBreaks: true, delimiter: '|'}, function(err, str) {
       let book = parseCSV(info, str)
-      log('ODS INFO', info)
-      log('ODS BOOK', book)
       cb(book)
     })
   } catch (err) {
@@ -42,7 +30,6 @@ function parseCSV(info, str) {
   let rows = str.split('\n')
   let size = rows[0].length
   let fpath = info.bpath.split('/')[info.bpath.split('/').length-2]
-  // log('FPATH', fpath)
 
   rows.forEach((row, idx) => {
     if (row[0] == '#') return
@@ -92,14 +79,11 @@ function walk(dname, dtree, tree) {
 export function parseDir(info, cb) {
   let bpath = info.bpath
   const dtree = dirTree(bpath)
-  // log('=DTREE', dtree)
   if (!dtree) return
 
   let dname = info.bpath.split('/').slice(0,-1).join('/')
-  // log('=DNAME', dname)
   let tree = {}
   walk(dname, dtree, tree)
-  log('=TREE', tree)
   info.tree = tree
   info.info = true
 
@@ -107,9 +91,6 @@ export function parseDir(info, cb) {
 
   // .txt ?
   fns = _.filter(fns, fn=>{ return path.extname(fn) != '.json' })
-
-  // let infoid = ['info', info.book.author, info.book.title].join('-')
-  // info._id = infoid
 
   let nics = []
   let pars = []
@@ -126,7 +107,7 @@ export function parseDir(info, cb) {
     if (ext == '.json') return
     let nic = ext.replace(/^\./, '')
     nics.push(nic)
-    let auth = _.find(info.auths, auth=> { return auth.ext == nic}) || nic
+    let auth = _.find(info.auths, auth=> { return auth.nic == nic})
 
     let fullpath = path.resolve(bpath, fn)
     let txt = fse.readFileSync(fullpath, 'utf8')
@@ -173,7 +154,6 @@ export function parseDir(info, cb) {
   }
 
   let book = {pars: pars, mapdocs: mapdocs}
-  log('GETFILE BOOK:', book)
   cb(book)
 }
 

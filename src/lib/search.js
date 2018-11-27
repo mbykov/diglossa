@@ -8,7 +8,7 @@ const log = console.log
 
 let current
 
-export function parseQuery(curcurrent) {
+export function parseQuery(libdb, curcurrent) {
   current = curcurrent
   window.split.setSizes([100,0])
   let osource = q('#source')
@@ -24,7 +24,7 @@ export function parseQuery(curcurrent) {
   oquery.appendChild(odisc)
 
   for (let infoid in current.qinfos) {
-    getInfo(infoid)
+    libdb.get(infoid)
       .then(function (info) {
         let qinfo = current.qinfos[infoid]
         parseQbook(info, qinfo)
