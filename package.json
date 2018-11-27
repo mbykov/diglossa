@@ -1,24 +1,56 @@
 {
   "name": "diglossa.js",
   "productName": "Diglossa.js",
-  "description": "Starter for your Electron application",
-  "version": "0.3.0",
-  "private": true,
-  "author": "Mr. Gumby <mr.gumby@example.com>",
-  "copyright": "© 2017, Gumby inc.",
-  "homepage": "http://example.com",
+  "description": "Bilingual Reader - an application for creating, distributing and reading bi- (many) lingual texts",
+  "author": "Michael Bykov <m.bykov@gmail.com>",
+  "copyright": "© 2018, Michael Bykov",
+  "license": "GPL-3.0",
+  "homepage": "http://diglossa.org/greek",
   "main": "app/background.js",
   "build": {
-    "appId": "com.example.electron-boilerplate",
+    "appId": "org.diglossa.diglossa.js",
     "files": [
       "app/**/*",
-      "node_modules/**/*",
+      "src/**/*",
+      "resources/**/*",
       "package.json"
     ],
     "directories": {
       "buildResources": "resources"
     },
-    "publish": null
+  "dmg": {
+      "contents": [
+        {
+          "x": 410,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        },
+        {
+          "x": 130,
+          "y": 150,
+          "type": "file"
+        }
+      ]
+    },
+    "mac": {
+      "icon": "resources/icon.icns"
+    },
+    "win": {
+      "icon": "resources/icon.ico",
+      "publisherName": "Michael Bykov",
+      "publish": [
+        "github"
+      ]
+    },
+    "linux": {
+      "category": "Educational software",
+      "target": [
+        "deb"
+      ],
+      "icon": "resources/icons"
+    },
+      "publish": "github"
   },
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
@@ -32,11 +64,7 @@
   },
   "dependencies": {
     "directory-tree": "^2.1.0",
-    "elasticlunr": "^0.9.5",
     "electron-clipboard-extended": "^1.1.1",
-    "electron-json-storage": "^4.1.4",
-    "electron-settings": "^3.2.0",
-    "electron-store": "^2.0.0",
     "electron-window-state": "^5.0.2",
     "file-loader": "^2.0.0",
     "franc-all": "^5.0.0",
@@ -45,10 +73,7 @@
     "glob": "^7.1.3",
     "json5": "^2.1.0",
     "lodash": "^4.17.11",
-    "md5": "^2.2.1",
     "mousetrap": "^1.6.2",
-    "node-dir": "^0.1.17",
-    "node-watch": "^0.5.8",
     "pouchdb": "^7.0.0",
     "pouchdb-find": "^7.0.0",
     "split.js": "^1.4.0",
@@ -73,5 +98,12 @@
     "webpack-cli": "^3.1.2",
     "webpack-merge": "^4.1.4",
     "webpack-node-externals": "^1.7.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mbykov/diglossa.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mbykov/diglossa.js/issues"
   }
 }

@@ -98,8 +98,6 @@ export function placePopup (coords, el) {
   el.style.left = left
 }
 
-export function log () { console.log.apply(console, arguments) }
-
 export function plog () {
   var vs = _.values(arguments)
   if (vs.length === 1) vs = vs[0]
@@ -128,19 +126,4 @@ export function getStore(name) {
 export function setStore(name, obj) {
   let oapp = q('#app')
   q('#app').setAttribute()
-}
-
-export function getStore_(name) {
-  let json, obj
-  try {
-    json = localStorage.getItem(name)
-    obj = JSON.parse(json)
-  } catch (err) {
-    log('GET ERR', err)
-  }
-  return obj
-}
-
-export function setStore_(name, obj) {
-  localStorage.setItem(name, JSON.stringify(obj))
 }

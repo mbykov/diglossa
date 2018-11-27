@@ -20,8 +20,8 @@ const JSON = require('json5')
 const Mousetrap = require('mousetrap')
 let fse = require('fs-extra')
 const log = console.log
-const Store = require('electron-store')
-const store = new Store()
+// const Store = require('electron-store')
+// const store = new Store()
 
 const path = require('path')
 

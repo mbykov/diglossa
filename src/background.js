@@ -18,8 +18,8 @@ import { rightMenuTemplate } from "./menu/right_menu_template";
 // import createWindow from "./lib/window";
 const windowStateKeeper = require('electron-window-state');
 
-const Store = require('electron-store')
-const store = new Store()
+// const Store = require('electron-store')
+// const store = new Store()
 
 // Special module holding environment variables which you declared
 // in config/env_xxx.json file.
@@ -77,7 +77,7 @@ app.on("ready", () => {
   );
 
   if (env.name === "development") {
-    win.openDevTools();
+    // win.openDevTools();
   }
 
   globalShortcut.register('CommandOrControl+Shift+R', () => {

@@ -3,7 +3,6 @@ import { q, qs, empty, create, span, p, div, remove } from './utils'
 let log = console.log
 
 export default function tree(data, deftitle) {
-  // log('TREEDATA', data)
   let otree = create('div', 'tree')
   let otitle = create('div', 'tree-title')
   otitle.id = 'tree-title'
@@ -33,7 +32,6 @@ export default function tree(data, deftitle) {
 }
 
 function createNode(node) {
-  // log('NODE', node)
   let onode = create('div', 'tree-text')
   let osign = create('span', 'tree-branch')
   osign.textContent = '▾'

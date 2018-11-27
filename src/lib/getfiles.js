@@ -2,7 +2,6 @@ import _ from 'lodash'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
 import {nav} from '../app';
 
-const md5 = require('md5');
 const fse = require('fs-extra')
 const path = require('path')
 const glob = require('glob')
@@ -191,9 +190,4 @@ export function parseInfo(info) {
   let infoid = ['info', info.book.author, info.book.title].join('-')
   info._id = infoid
   return info
-}
-
-function done (err) {
-  if (err) throw err
-  console.log('successfully added documents')
 }

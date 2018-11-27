@@ -130,11 +130,8 @@ const Mousetrap = __webpack_require__(/*! mousetrap */ "mousetrap");
 
 let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
-const log = console.log;
-
-const Store = __webpack_require__(/*! electron-store */ "electron-store");
-
-const store = new Store();
+const log = console.log; // const Store = require('electron-store')
+// const store = new Store()
 
 const path = __webpack_require__(/*! path */ "path");
 
@@ -1048,8 +1045,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const md5 = __webpack_require__(/*! md5 */ "md5");
-
 const fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
 const path = __webpack_require__(/*! path */ "path");
@@ -1285,80 +1280,6 @@ function parseInfo(info) {
   return info;
 }
 
-function done(err) {
-  if (err) throw err;
-  console.log('successfully added documents');
-}
-
-/***/ }),
-
-/***/ "./src/lib/pouch.js":
-/*!**************************!*\
-  !*** ./src/lib/pouch.js ***!
-  \**************************/
-/*! exports provided: getInfo, getLib, getText */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getInfo", function() { return getInfo; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib", function() { return getLib; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getText", function() { return getText; });
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! electron */ "electron");
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "lodash");
-/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_1__);
-//
-
-
-
-const path = __webpack_require__(/*! path */ "path");
-
-const log = console.log;
-const app = electron__WEBPACK_IMPORTED_MODULE_0__["remote"].app;
-const apath = app.getAppPath();
-let upath = app.getPath("userData");
-
-let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
-
-let dbPath = path.resolve(upath, 'pouch');
-let libPath = path.resolve(upath, 'pouch/library');
-let ftPath = path.resolve(upath, 'pouch/fulltext');
-
-const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
-
-PouchDB.plugin(__webpack_require__(/*! pouchdb-find */ "pouchdb-find")); // let libdb = new PouchDB(libPath)
-
-let limit = 20;
-function getInfo(info_id) {
-  return libdb.get(info_id);
-}
-function getLib(libdb) {
-  let options = {
-    include_docs: true,
-    startkey: 'info',
-    endkey: 'info\ufff0'
-  };
-  return libdb.allDocs(options);
-}
-function getText(current, endpos) {
-  let fpath = current.fpath;
-  let start = current.pos * 1 || 0;
-  let end = endpos * 1 || start * 1 + limit * 1;
-  let selector = {
-    fpath: fpath,
-    pos: {
-      $gte: start,
-      $lt: end
-    } // log('=pouch-text-selector=:', selector)
-
-  };
-  return libdb.find({
-    selector: selector
-  }); // sort: ['idx'], , limit: 20
-  // return libdb.explain({selector: selector})
-}
-
 /***/ }),
 
 /***/ "./src/lib/search.js":
@@ -1375,8 +1296,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
 /* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../app */ "./src/app.js");
-/* harmony import */ var _pouch__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./pouch */ "./src/lib/pouch.js");
-
 
 
  // const path = require('path')
@@ -1411,8 +1330,7 @@ function parseQuery(libdb, curcurrent) {
 }
 
 function parseQbook(info, qinfo) {
-  let qgroups = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(qinfo, 'fpath'); // log('QGRS', info._id, qgroups)
-
+  let qgroups = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(qinfo, 'fpath');
 
   for (let fpath in qgroups) {
     let qgroup = qgroups[fpath];
@@ -1440,7 +1358,6 @@ function parseQbook(info, qinfo) {
 }
 
 function parseGroup(infoid, fpath, pos, lines) {
-  // log('__________QGP', fpath, pos)
   let oresults = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#qresults');
   let postxt = ['par:', pos].join(' ');
   let linktxt = [fpath, postxt].join(' - ');
@@ -1464,7 +1381,6 @@ function parseGroup(infoid, fpath, pos, lines) {
 }
 
 function jumpPos(ev) {
-  // log('JUMP', ev.target)
   let el = ev.target;
   let infoid = el.getAttribute('infoid');
   let fpath = el.getAttribute('fpath');
@@ -1514,12 +1430,6 @@ function aroundQuery(str, wf) {
   let head = arr[0].slice(-limit);
   let percent = head.length / str.length;
   head = head.replace(rePunct, "<span class=\"active\">$1<\/span>");
-
-  if (!arr[1]) {
-    log('NO TAIL !!', wf, 'str:', str);
-    throw new Error('NO SEARCH!');
-  }
-
   let tail = arr.slice(1).join('').slice(0, limit);
   tail = tail.replace(rePunct, "<span class=\"active\">$1<\/span>");
   let qspan = ['<span class="query">', wf, '</span>'].join('');
@@ -1534,10 +1444,8 @@ function textAround(str, percent) {
   let center = str.length * percent;
   let start = center - 100;
   let head = str.substr(start, 100);
-  let tail = str.substr(center, 100); // log('percent:', percent, 'c', center, head, tail)
-
-  let line = [head, tail].join(''); // log('line.length:', line.length)
-
+  let tail = str.substr(center, 100);
+  let line = [head, tail].join('');
   return line;
 }
 
@@ -1558,7 +1466,6 @@ __webpack_require__.r(__webpack_exports__);
 
 let log = console.log;
 function tree(data, deftitle) {
-  // log('TREEDATA', data)
   let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree');
   let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-title');
   otitle.id = 'tree-title';
@@ -1590,7 +1497,6 @@ function tree(data, deftitle) {
 }
 
 function createNode(node) {
-  // log('NODE', node)
   let onode = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-text');
   let osign = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-branch');
   osign.textContent = '▾';
@@ -1625,7 +1531,7 @@ function toggleNode(ev) {
 /*!**************************!*\
   !*** ./src/lib/utils.js ***!
   \**************************/
-/*! exports provided: q, qs, create, recreateDiv, recreate, span, br, div, p, empty, remove, removeAll, findAncestor, placePopup, log, plog, enclitic, getStore, setStore, getStore_, setStore_ */
+/*! exports provided: q, qs, create, recreateDiv, recreate, span, br, div, p, empty, remove, removeAll, findAncestor, placePopup, plog, enclitic, getStore, setStore */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1644,13 +1550,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "removeAll", function() { return removeAll; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "findAncestor", function() { return findAncestor; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "placePopup", function() { return placePopup; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "log", function() { return log; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "plog", function() { return plog; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "enclitic", function() { return enclitic; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getStore", function() { return getStore; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "setStore", function() { return setStore; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getStore_", function() { return getStore_; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "setStore_", function() { return setStore_; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 
@@ -1740,9 +1643,6 @@ function placePopup(coords, el) {
   el.style.top = top;
   el.style.left = left;
 }
-function log() {
-  console.log.apply(console, arguments);
-}
 function plog() {
   var vs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.values(arguments);
 
@@ -1770,21 +1670,6 @@ function getStore(name) {
 function setStore(name, obj) {
   let oapp = q('#app');
   q('#app').setAttribute();
-}
-function getStore_(name) {
-  let json, obj;
-
-  try {
-    json = localStorage.getItem(name);
-    obj = JSON.parse(json);
-  } catch (err) {
-    log('GET ERR', err);
-  }
-
-  return obj;
-}
-function setStore_(name, obj) {
-  localStorage.setItem(name, JSON.stringify(obj));
 }
 
 /***/ }),
@@ -1819,17 +1704,6 @@ module.exports = require("electron");
 /***/ (function(module, exports) {
 
 module.exports = require("electron-clipboard-extended");
-
-/***/ }),
-
-/***/ "electron-store":
-/*!*********************************!*\
-  !*** external "electron-store" ***!
-  \*********************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("electron-store");
 
 /***/ }),
 
@@ -1874,17 +1748,6 @@ module.exports = require("json5");
 /***/ (function(module, exports) {
 
 module.exports = require("lodash");
-
-/***/ }),
-
-/***/ "md5":
-/*!**********************!*\
-  !*** external "md5" ***!
-  \**********************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = require("md5");
 
 /***/ }),
 

@@ -1,7 +1,6 @@
 import _ from 'lodash'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
 import { navigate } from '../app';
-import { getInfo } from './pouch';
 
 // const path = require('path')
 const log = console.log
@@ -37,7 +36,6 @@ export function parseQuery(libdb, curcurrent) {
 
 function parseQbook(info, qinfo) {
   let qgroups = _.groupBy(qinfo, 'fpath')
-  // log('QGRS', info._id, qgroups)
   for (let fpath in qgroups) {
     let qgroup = qgroups[fpath]
     let qpos = _.groupBy(qgroup, 'pos')
@@ -57,7 +55,6 @@ function parseQbook(info, qinfo) {
 
 
 function parseGroup(infoid, fpath, pos, lines) {
-  // log('__________QGP', fpath, pos)
   let oresults = q('#qresults')
 
   let postxt = ['par:', pos].join(' ')
@@ -84,7 +81,6 @@ function parseGroup(infoid, fpath, pos, lines) {
 }
 
 function jumpPos(ev) {
-  // log('JUMP', ev.target)
   let el = ev.target
   let infoid = el.getAttribute('infoid')
   let fpath = el.getAttribute('fpath')
@@ -119,10 +115,6 @@ function aroundQuery(str, wf) {
   let head = arr[0].slice(-limit)
   let percent = head.length/str.length
   head =  head.replace(rePunct, "<span class=\"active\">$1<\/span>")
-  if (!arr[1]) {
-    log('NO TAIL !!', wf, 'str:', str)
-    throw new Error('NO SEARCH!')
-  }
   let tail = arr.slice(1).join('').slice(0,limit)
   tail =  tail.replace(rePunct, "<span class=\"active\">$1<\/span>")
   let qspan = ['<span class="query">', wf, '</span>'].join('')
@@ -135,8 +127,6 @@ function textAround(str, percent) {
   let start = center - 100
   let head = str.substr(start, 100)
   let tail = str.substr(center, 100)
-  // log('percent:', percent, 'c', center, head, tail)
   let line = [head, tail].join('')
-  // log('line.length:', line.length)
   return line
 }
