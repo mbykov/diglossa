@@ -6,6 +6,12 @@ based on electron.js and couchdb
 
 ## v.0.3 in progress
 
+   in this version disabled yet:
+   - cloning from Github
+   - exporting to any form
+   - generating dics for the texts
+   - some other stuff
+
 
 #### learn more:
 
