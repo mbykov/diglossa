@@ -18,6 +18,7 @@ import { parseQuery } from './lib/search';
 
 const JSON = require('json5')
 const Mousetrap = require('mousetrap')
+const axios = require('axios')
 let fse = require('fs-extra')
 const log = console.log
 // const Store = require('electron-store')
@@ -77,7 +78,7 @@ ipcRenderer.on('section', function (event, name) {
 })
 
 ipcRenderer.on('parseDir', function (event) {
-  dialog.showOpenDialog({properties: ['openFile'], filters: [{extensions: ['json'] }]}, getInfoFile)
+  dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'JSON', extensions: ['json'] }]}, getInfoFile)
 })
 
 ipcRenderer.on('re-read', function (event) {
@@ -89,6 +90,22 @@ ipcRenderer.on('action', function (event, action) {
   else if (action == 'goright') goRight()
   else if (action == 'cleanup') showCleanup()
   // navigate({section: name})
+})
+
+ipcRenderer.on('version', function (event, oldver) {
+  axios.get('https://api.github.com/repos/mbykov/morpheus-greek/releases/latest')
+    .then(function (response) {
+      if (!response || !response.data) return
+      let newver = response.data.name
+      if (oldver && newver && newver > oldver) {
+        let over = q("#new-version")
+        let verTxt = ['new version available:', newver].join(' ')
+        over.textContent = verTxt
+      }
+    })
+    .catch(function (error) {
+      console.log('API ERR', error)
+    })
 })
 
 

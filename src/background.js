@@ -84,6 +84,17 @@ app.on("ready", () => {
     // BrowserWindow.getFocusedWindow().webContents.send('re-read')
     win.webContents.send('re-read')
   })
+
+  win.webContents.on('did-finish-load', () => {
+    let pckg = require('../package.json')
+    let name = pckg.name
+    let version = pckg.version
+    // let aversion = pckg.dependencies.antrax.replace('^', '')
+    win.webContents.send('version', { version: version })
+    win.setTitle([name, 'v.', version].join(' '))
+  })
+
+
 });
 
 app.on("window-all-closed", () => {

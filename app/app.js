@@ -128,6 +128,8 @@ const JSON = __webpack_require__(/*! json5 */ "json5");
 
 const Mousetrap = __webpack_require__(/*! mousetrap */ "mousetrap");
 
+const axios = __webpack_require__(/*! axios */ "axios");
+
 let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
 const log = console.log; // const Store = require('electron-store')
@@ -197,6 +199,7 @@ electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('parseDir', function (ev
   dialog.showOpenDialog({
     properties: ['openFile'],
     filters: [{
+      name: 'JSON',
       extensions: ['json']
     }]
   }, getInfoFile);
@@ -206,6 +209,20 @@ electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('re-read', function (eve
 });
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('action', function (event, action) {
   if (action == 'goleft') goLeft();else if (action == 'goright') goRight();else if (action == 'cleanup') showCleanup(); // navigate({section: name})
+});
+electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('version', function (event, oldver) {
+  axios.get('https://api.github.com/repos/mbykov/morpheus-greek/releases/latest').then(function (response) {
+    if (!response || !response.data) return;
+    let newver = response.data.name;
+
+    if (oldver && newver && newver > oldver) {
+      let over = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])("#new-version");
+      let verTxt = ['new version available:', newver].join(' ');
+      over.textContent = verTxt;
+    }
+  }).catch(function (error) {
+    console.log('API ERR', error);
+  });
 });
 let hstates = [];
 let hstate = -1;
@@ -1671,6 +1688,17 @@ function setStore(name, obj) {
   let oapp = q('#app');
   q('#app').setAttribute();
 }
+
+/***/ }),
+
+/***/ "axios":
+/*!************************!*\
+  !*** external "axios" ***!
+  \************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("axios");
 
 /***/ }),
 

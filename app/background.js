@@ -97,6 +97,17 @@ module.exports = {"name":"development","description":"Add here any environment s
 
 /***/ }),
 
+/***/ "./package.json":
+/*!**********************!*\
+  !*** ./package.json ***!
+  \**********************/
+/*! exports provided: name, productName, description, version, author, copyright, license, homepage, main, build, scripts, dependencies, devDependencies, repository, bugs, default */
+/***/ (function(module) {
+
+module.exports = {"name":"diglossa.js","productName":"Diglossa.js","description":"Bilingual Reader - an application for creating, distributing and reading bi-(many) lingual texts","version":"0.3.6","author":"Michael Bykov <m.bykov@gmail.com>","copyright":"© 2018, Michael Bykov","license":"GPL-3.0","homepage":"http://diglossa.org/diglossa.js","main":"app/background.js","build":{"appId":"org.diglossa.diglossa.js","files":["app/**/*","src/**/*","resources/**/*","package.json"],"directories":{"buildResources":"resources"},"dmg":{"contents":[{"x":410,"y":150,"type":"link","path":"/Applications"},{"x":130,"y":150,"type":"file"}]},"mac":{"icon":"resources/icon.icns"},"win":{"icon":"resources/icon.ico","publisherName":"Michael Bykov","publish":["github"]},"linux":{"category":"Educational software","target":["deb"],"icon":"resources/icons"},"publish":"github"},"scripts":{"postinstall":"electron-builder install-app-deps","preunit":"webpack --config=build/webpack.unit.config.js --env=test --display=none","unit":"electron-mocha temp/specs.js --renderer --require source-map-support/register","pree2e":"webpack --config=build/webpack.app.config.js --env=test --display=none && webpack --config=build/webpack.e2e.config.js --env=test --display=none","e2e":"mocha temp/e2e.js --require source-map-support/register","test":"npm run unit && npm run e2e","start":"node build/start.js","release":"webpack --config=build/webpack.app.config.js --env=production && electron-builder"},"dependencies":{"axios":"^0.18.0","directory-tree":"^2.1.0","electron-clipboard-extended":"^1.1.1","electron-window-state":"^5.0.2","file-loader":"^2.0.0","franc-all":"^5.0.0","fs-extra":"^7.0.0","fs-jetpack":"^2.2.0","git-clone":"^0.1.0","glob":"^7.1.3","json5":"^2.1.0","lodash":"^4.17.11","mousetrap":"^1.6.2","pouchdb":"^7.0.0","pouchdb-find":"^7.0.0","split.js":"^1.4.0","textract":"^2.4.0"},"devDependencies":{"@babel/core":"^7.1.2","@babel/preset-env":"^7.1.0","babel-loader":"^8.0.4","babel-plugin-transform-object-rest-spread":"^7.0.0-beta.3","chai":"^4.2.0","css-loader":"^0.28.7","electron":"3.0.2","electron-builder":"^20.28.4","electron-mocha":"^6.0.4","friendly-errors-webpack-plugin":"^1.7.0","mocha":"^5.2.0","source-map-support":"^0.5.9","spectron":"^4.0.0","style-loader":"^0.23.0","webpack":"^4.20.2","webpack-cli":"^3.1.2","webpack-merge":"^4.1.4","webpack-node-externals":"^1.7.2"},"repository":{"type":"git","url":"git+https://github.com/mbykov/diglossa.js.git"},"bugs":{"url":"https://github.com/mbykov/diglossa.js/issues"}};
+
+/***/ }),
+
 /***/ "./src/background.js":
 /*!***************************!*\
   !*** ./src/background.js ***!
@@ -200,6 +211,17 @@ electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("ready", () => {
   electron__WEBPACK_IMPORTED_MODULE_2__["globalShortcut"].register('CommandOrControl+Shift+R', () => {
     // BrowserWindow.getFocusedWindow().webContents.send('re-read')
     win.webContents.send('re-read');
+  });
+  win.webContents.on('did-finish-load', () => {
+    let pckg = __webpack_require__(/*! ../package.json */ "./package.json");
+
+    let name = pckg.name;
+    let version = pckg.version; // let aversion = pckg.dependencies.antrax.replace('^', '')
+
+    win.webContents.send('version', {
+      version: version
+    });
+    win.setTitle([name, 'v.', version].join(' '));
   });
 });
 electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("window-all-closed", () => {
