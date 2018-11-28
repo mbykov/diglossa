@@ -231,6 +231,8 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
           current = {_id: '_local/current', section: 'search', qinfos: qinfos, query: query}
           navigate(current)
         })
+    }).catch(function (err) {
+      log('SEARCH ERR:', err)
     })
 })
 

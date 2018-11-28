@@ -275,6 +275,7 @@ function cyclePar(ev) {
   let selector = '#trns [pos="'+idx+'"]'
   let pars = qs(selector)
   let nics = _.map(pars, par=> { return par.getAttribute('nic') })
+  if (nics.length == 1) return
   let curpar = _.find(pars, par=> { return !par.classList.contains('hidden') })
   let nic = curpar.getAttribute('nic')
   let nicidx = nics.indexOf(nic)

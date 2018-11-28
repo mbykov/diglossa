@@ -347,6 +347,8 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
       };
       navigate(current);
     });
+  }).catch(function (err) {
+    log('SEARCH ERR:', err);
   });
 });
 
@@ -848,6 +850,8 @@ function cyclePar(ev) {
     return par.getAttribute('nic');
   });
 
+  if (nics.length == 1) return;
+
   let curpar = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(pars, par => {
     return !par.classList.contains('hidden');
   });
@@ -1092,6 +1096,7 @@ function parseODS(info, cb) {
 }
 
 function parseCSV(info, str) {
+  let nics = [];
   let pars = [];
   let map = {};
   let rows = str.split('\n');
@@ -1107,6 +1112,7 @@ function parseCSV(info, str) {
       let auth = info.auths[idy];
       if (!auth) return;
       let nic = auth.nic;
+      nics.push(nic);
       let lang = auth.lang;
       let text = str.replace(/"/g, '');
       let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-');
@@ -1120,7 +1126,12 @@ function parseCSV(info, str) {
         lang: lang,
         text: text
       };
-      if (auth.author) par.author = true;
+
+      if (auth.author) {
+        par.author = true;
+        bookWFMap(map, text, groupid);
+      }
+
       pars.push(par);
     });
   });
@@ -1130,7 +1141,29 @@ function parseCSV(info, str) {
   };
   info.tree = tree;
   info.info = true;
+  nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(nics);
+  let mapnics = {};
+
+  for (let wf in map) {
+    map[wf].forEach(groupid => {
+      nics.forEach(nic => {
+        let parid = [groupid, nic].join('-');
+        if (!mapnics[wf]) mapnics[wf] = [];
+        mapnics[wf].push(parid);
+      });
+    });
+  }
+
   let mapdocs = [];
+
+  for (let wf in mapnics) {
+    let mapdoc = {
+      _id: wf,
+      parids: mapnics[wf]
+    };
+    mapdocs.push(mapdoc);
+  }
+
   return {
     pars: pars,
     mapdocs: mapdocs
