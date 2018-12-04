@@ -2,7 +2,7 @@
   "name": "diglossa.js",
   "productName": "Diglossa.js",
   "description": "Bilingual Reader - an application for creating, distributing and reading bi-(many) lingual texts",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "author": "Michael Bykov <m.bykov@gmail.com>",
   "copyright": "© 2018, Michael Bykov",
   "license": "GPL-3.0",
@@ -64,7 +64,6 @@
     "release": "webpack --config=build/webpack.app.config.js --env=production && electron-builder"
   },
   "dependencies": {
-    "antrax": "^0.8.5257",
     "axios": "^0.18.0",
     "directory-tree": "^2.1.0",
     "electron-clipboard-extended": "^1.1.1",
