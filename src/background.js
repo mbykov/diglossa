@@ -28,7 +28,7 @@ import env from "env";
 const setApplicationMenu = () => {
   const menus = [leftMenuTemplate, rightMenuTemplate, libMenuTemplate, fileMenuTemplate, aboutMenuTemplate, authMenuTemplate, helpMenuTemplate];
   if (env.name !== "production") {
-    menus.push(devMenuTemplate);
+    // menus.push(devMenuTemplate);
   }
   Menu.setApplicationMenu(Menu.buildFromTemplate(menus));
 };
@@ -80,10 +80,11 @@ app.on("ready", () => {
     // win.openDevTools();
   }
 
-  globalShortcut.register('CommandOrControl+R', () => {
-    // BrowserWindow.getFocusedWindow().webContents.send('re-read')
-    win.webContents.send('re-read')
-  })
+  // globalShortcut.register('CommandOrControl+R', () => {
+  //   // BrowserWindow.getFocusedWindow().webContents.send('re-read')
+  //   console.log('RR')
+  //   win.webContents.send('re-read')
+  // })
 
   win.webContents.on('did-finish-load', () => {
     let pckg = require('../package.json')

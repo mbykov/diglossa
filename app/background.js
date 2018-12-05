@@ -162,8 +162,7 @@ const windowStateKeeper = __webpack_require__(/*! electron-window-state */ "elec
 const setApplicationMenu = () => {
   const menus = [_menu_left_menu_template__WEBPACK_IMPORTED_MODULE_10__["leftMenuTemplate"], _menu_right_menu_template__WEBPACK_IMPORTED_MODULE_11__["rightMenuTemplate"], _menu_lib_menu_template__WEBPACK_IMPORTED_MODULE_5__["libMenuTemplate"], _menu_file_menu_template__WEBPACK_IMPORTED_MODULE_6__["fileMenuTemplate"], _menu_about_menu_template__WEBPACK_IMPORTED_MODULE_7__["aboutMenuTemplate"], _menu_auth_menu_template__WEBPACK_IMPORTED_MODULE_9__["authMenuTemplate"], _menu_help_menu_template__WEBPACK_IMPORTED_MODULE_8__["helpMenuTemplate"]];
 
-  if (env__WEBPACK_IMPORTED_MODULE_12__.name !== "production") {
-    menus.push(_menu_dev_menu_template__WEBPACK_IMPORTED_MODULE_3__["devMenuTemplate"]);
+  if (env__WEBPACK_IMPORTED_MODULE_12__.name !== "production") {// menus.push(devMenuTemplate);
   }
 
   electron__WEBPACK_IMPORTED_MODULE_2__["Menu"].setApplicationMenu(electron__WEBPACK_IMPORTED_MODULE_2__["Menu"].buildFromTemplate(menus));
@@ -205,13 +204,14 @@ electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("ready", () => {
     slashes: true
   }));
 
-  if (env__WEBPACK_IMPORTED_MODULE_12__.name === "development") {// win.openDevTools();
-  }
+  if (env__WEBPACK_IMPORTED_MODULE_12__.name === "development") {} // win.openDevTools();
+  // globalShortcut.register('CommandOrControl+R', () => {
+  //   // BrowserWindow.getFocusedWindow().webContents.send('re-read')
+  //   console.log('RR')
+  //   win.webContents.send('re-read')
+  // })
 
-  electron__WEBPACK_IMPORTED_MODULE_2__["globalShortcut"].register('CommandOrControl+R', () => {
-    // BrowserWindow.getFocusedWindow().webContents.send('re-read')
-    win.webContents.send('re-read');
-  });
+
   win.webContents.on('did-finish-load', () => {
     let pckg = __webpack_require__(/*! ../package.json */ "./package.json");
 
@@ -252,22 +252,22 @@ const aboutMenuTemplate = {
   submenu: [{
     label: "What does this program do?",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'about');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'about');
     }
   }, {
     label: "Code and Download",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'code');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'code');
     }
   }, {
     label: "License",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'license');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'license');
     }
   }, {
     label: "Acknowledgements",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'acknowledgements');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'acknowledgements');
     }
   }]
 };
@@ -292,12 +292,12 @@ const authMenuTemplate = {
   submenu: [{
     label: "sign in",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'signin');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'signin');
     }
   }, {
     label: "sign up",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'signup');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'signup');
     }
   }]
 };
@@ -408,50 +408,52 @@ const fileMenuTemplate = {
   }, {
     label: "Clone from Github",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'cloneGithub');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'cloneGithub');
     }
   }, {
     type: "separator"
   }, {
     label: "Reload app",
     accelerator: "CommandOrControl+Shift+R",
-    click: () => {}
+    click: () => {
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('reload');
+    }
   }, {
     label: "Re-read Files",
     accelerator: "CommandOrControl+R",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('re-read');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('reread');
     }
   }, {
     type: "separator"
   }, {
     label: "Publish",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'publish');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'publish');
     }
   }, {
     type: "separator"
   }, {
     label: "Export to TXT",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'exportTXT');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'exportTXT');
     }
   }, {
     label: "Export to PDF",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'exportPDF');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'exportPDF');
     }
   }, {
     label: "Export to HTML",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'exportHTML');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'exportHTML');
     }
   }, {
     type: "separator"
   }, {
     label: "Create dictionary for book",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'createDict');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'createDict');
     }
   }, {
     type: "separator"
@@ -491,17 +493,17 @@ const helpMenuTemplate = {
   submenu: [{
     label: "how to create a book",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'howto-create');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'howto-create');
     }
   }, {
     label: "how to create a dictionary",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'howto-dict');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'howto-dict');
     }
   }, {
     label: "hot keys",
     click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('section', 'hotkeys');
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'hotkeys');
     }
   }, {
     label: "Toggle DevTools",
@@ -552,7 +554,7 @@ __webpack_require__.r(__webpack_exports__);
  // export const libMenuTemplate = {
 //   label: "Home",
 //   submenu: [
-//     { label: "Library", click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'library') } }
+//     { label: "Library", click: () => { BrowserWindow.getFocusedWindow().webContents.send('action', 'lib') } }
 //   ]
 // };
 
@@ -560,7 +562,7 @@ const libMenuTemplate = {
   label: "Home",
   accelerator: "CmdOrCtrl+L",
   click: () => {
-    electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('home');
+    electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'lib');
   }
 };
 

@@ -265,6 +265,8 @@ span.active {
 
 .tree-title {
   padding-left: 10px;
+  font-size: 18px;
+  color: maroon;
 }
 
 /* #book > div.hleft.header > div > div:nth-child(2) */

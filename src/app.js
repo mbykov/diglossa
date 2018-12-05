@@ -13,7 +13,6 @@ import { ipcRenderer } from "electron";
 import { q, qs, empty, create, remove, span, p, div, enclitic } from './lib/utils'
 import { twoPages, parseLib, parseTitle, parseBook } from './lib/book'
 import { parseInfo, parseDir, parseODS } from './lib/getfiles'
-// import { getLib, getText } from './lib/pouch';
 import { parseQuery } from './lib/search';
 
 const JSON = require('json5')
@@ -67,31 +66,41 @@ window.onbeforeunload = function (ev) {
     })
 }
 
-ipcRenderer.on('home', function (event) {
-  navigate({section: 'lib'})
-})
-
-ipcRenderer.on('section', function (event, name) {
-  navigate({section: name})
+ipcRenderer.on('reload', function (event) {
+  getCurrentWindow().reload()
 })
 
 ipcRenderer.on('parseDir', function (event) {
   dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'JSON', extensions: ['json'] }]}, getInfoFile)
 })
 
-ipcRenderer.on('re-read', function (event) {
-  getDir()
+ipcRenderer.on('home', function (event) {
+  navigate({section: 'lib'})
+})
+
+ipcRenderer.on('reread', function (event) {
+  libdb.get('_local/current')
+    .then(function (current) {
+      libdb.get(current.infoid)
+        .then(function (info) {
+          getDir(info)
+        })
+    })
+    .catch(function (err) {
+      log('ERR GET INFO DIR')
+    })
 })
 
 ipcRenderer.on('action', function (event, action) {
   if (action == 'goleft') goLeft()
   else if (action == 'goright') goRight()
   else if (action == 'cleanup') showCleanup()
-  // navigate({section: name})
+  else navigate({section: action})
 })
 
+
 ipcRenderer.on('version', function (event, oldver) {
-  axios.get('https://api.github.com/repos/mbykov/morpheus-greek/releases/latest')
+  axios.get('https://api.github.com/repos/mbykov/diglossa.js/releases/latest')
     .then(function (response) {
       if (!response || !response.data) return
       let newver = response.data.name
@@ -102,7 +111,7 @@ ipcRenderer.on('version', function (event, oldver) {
       }
     })
     .catch(function (error) {
-      console.log('API ERR', error)
+      console.log('VERSION ERR')
     })
 })
 
@@ -118,7 +127,6 @@ function getState() {
   libdb.get('_local/current')
     .then(function (navpath) {
       current = navpath
-      // log('INIT CURRENT:', current)
       navigate(current)
     })
     .catch(function (err) {
@@ -346,11 +354,7 @@ function getInfoFile(fns) {
 }
 
 function getDir(info) {
-  log('C', current, info)
-  // BUG: при re-read
-  // if (!info.bpath) info.bpath = current.bpath
   if (!info || !info.bpath) return
-  // ============================ HERE BUG
   if (path.extname(info.bpath) == '.ods') {
     parseODS(info, (book) => {
       pushBook(info, book)
@@ -408,7 +412,7 @@ export function getText(current, endpos) {
   // return libdb.explain({selector: selector})
 }
 
-export function getLib() {
+function getLib() {
   let options = {
     include_docs: true,
     startkey: 'info',

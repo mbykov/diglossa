@@ -90,14 +90,13 @@
 /*!********************!*\
   !*** ./src/app.js ***!
   \********************/
-/*! exports provided: navigate, getText, getLib */
+/*! exports provided: navigate, getText */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "navigate", function() { return navigate; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getText", function() { return getText; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib", function() { return getLib; });
 /* harmony import */ var _lib_context_menu_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./lib/context_menu.js */ "./src/lib/context_menu.js");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_1__);
@@ -120,7 +119,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
- // import { getLib, getText } from './lib/pouch';
 
 
 
@@ -183,15 +181,8 @@ window.onbeforeunload = function (ev) {
   });
 };
 
-electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('home', function (event) {
-  navigate({
-    section: 'lib'
-  });
-});
-electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('section', function (event, name) {
-  navigate({
-    section: name
-  });
+electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('reload', function (event) {
+  getCurrentWindow().reload();
 });
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('parseDir', function (event) {
   dialog.showOpenDialog({
@@ -202,14 +193,27 @@ electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('parseDir', function (ev
     }]
   }, getInfoFile);
 });
-electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('re-read', function (event) {
-  getDir();
+electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('home', function (event) {
+  navigate({
+    section: 'lib'
+  });
+});
+electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('reread', function (event) {
+  libdb.get('_local/current').then(function (current) {
+    libdb.get(current.infoid).then(function (info) {
+      getDir(info);
+    });
+  }).catch(function (err) {
+    log('ERR GET INFO DIR');
+  });
 });
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('action', function (event, action) {
-  if (action == 'goleft') goLeft();else if (action == 'goright') goRight();else if (action == 'cleanup') showCleanup(); // navigate({section: name})
+  if (action == 'goleft') goLeft();else if (action == 'goright') goRight();else if (action == 'cleanup') showCleanup();else navigate({
+    section: action
+  });
 });
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('version', function (event, oldver) {
-  axios.get('https://api.github.com/repos/mbykov/morpheus-greek/releases/latest').then(function (response) {
+  axios.get('https://api.github.com/repos/mbykov/diglossa.js/releases/latest').then(function (response) {
     if (!response || !response.data) return;
     let newver = response.data.name;
 
@@ -219,7 +223,7 @@ electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('version', function (eve
       over.textContent = verTxt;
     }
   }).catch(function (error) {
-    console.log('API ERR', error);
+    console.log('VERSION ERR');
   });
 });
 let hstates = [];
@@ -229,8 +233,7 @@ getState();
 
 function getState() {
   libdb.get('_local/current').then(function (navpath) {
-    current = navpath; // log('INIT CURRENT:', current)
-
+    current = navpath;
     navigate(current);
   }).catch(function (err) {
     if (err.name === 'not_found') {
@@ -469,10 +472,7 @@ function getInfoFile(fns) {
 }
 
 function getDir(info) {
-  log('C', current, info); // BUG: при re-read
-  // if (!info.bpath) info.bpath = current.bpath
-
-  if (!info || !info.bpath) return; // ============================ HERE BUG
+  if (!info || !info.bpath) return;
 
   if (path.extname(info.bpath) == '.ods') {
     Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["parseODS"])(info, book => {
@@ -533,6 +533,7 @@ function getText(current, endpos) {
   }); // sort: ['idx'], , limit: 20
   // return libdb.explain({selector: selector})
 }
+
 function getLib() {
   let options = {
     include_docs: true,
