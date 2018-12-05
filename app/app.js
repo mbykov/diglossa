@@ -156,9 +156,7 @@ fse.ensureDirSync(dbPath);
 
 const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
 
-PouchDB.plugin(__webpack_require__(/*! pouchdb-find */ "pouchdb-find")); // let libPath_ = path.resolve(upath, 'pouch/library')
-// let libdb = new PouchDB(libPath_)
-
+PouchDB.plugin(__webpack_require__(/*! pouchdb-find */ "pouchdb-find"));
 let ftdbPath = path.resolve(upath, 'pouch/fulltext');
 let ftdb = new PouchDB(ftdbPath);
 let libPath = path.resolve(upath, 'pouch/library');
@@ -325,7 +323,7 @@ function goRight() {
 } // MAP
 
 
-Mousetrap.bind(['ctrl+f'], function (ev) {
+Mousetrap.bind(['f'], function (ev) {
   let query = clipboard.readText();
   ftdb.get(query).then(function (wfdoc) {
     let opts = {
@@ -471,8 +469,10 @@ function getInfoFile(fns) {
 }
 
 function getDir(info) {
-  if (!info.bpath) info.bpath = current.bpath;
-  if (!info.bpath) return;
+  log('C', current, info); // BUG: при re-read
+  // if (!info.bpath) info.bpath = current.bpath
+
+  if (!info || !info.bpath) return; // ============================ HERE BUG
 
   if (path.extname(info.bpath) == '.ods') {
     Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["parseODS"])(info, book => {
@@ -1261,7 +1261,8 @@ function parseDir(info, cb) {
   let mapnics = {};
 
   for (let wf in map) {
-    map[wf].forEach(groupid => {
+    // вариант для бедных - сохраняю только первое вхождение в параграфе:
+    lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(map[wf]).forEach(groupid => {
       nics.forEach(nic => {
         let parid = [groupid, nic].join('-');
         if (!mapnics[wf]) mapnics[wf] = [];
@@ -1355,8 +1356,8 @@ let current;
 function parseQuery(libdb, curcurrent) {
   current = curcurrent;
   window.split.setSizes([100, 0]);
-  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#source');
-  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#trns');
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#source'); // let otrns = q('#trns')
+
   let oquery = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["div"])('', '');
   oquery.id = 'qresults';
   let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["div"])(current.query, 'qtitle');
@@ -1390,19 +1391,24 @@ function parseQbook(info, qinfo) {
     for (let pos in qpos) {
       let qlines = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.cloneDeep(qpos[pos]);
 
-      let qauth = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(qlines, par => {
+      if (pos == 10) log('=>', qlines.length);
+
+      let qauths = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(qlines, par => {
         return par.author;
       });
 
-      let {
-        html,
-        percent
-      } = aroundQuery(qauth.text, current.query);
-      qauth.text = html;
-      qlines.forEach(par => {
-        if (par.author) return;else par.text = textAround(par.text, percent);
+      qauths.forEach((qauth, idx) => {
+        let {
+          html,
+          percent
+        } = aroundQuery(qauth.text, current.query, idx);
+        if (pos == 10) log('=>', percent);
+        qauth.text = html;
+        qlines.forEach(par => {
+          if (par.author) return;else par.text = textAround(par.text, percent);
+        });
+        parseGroup(info._id, fpath, pos, qlines);
       });
-      parseGroup(info._id, fpath, pos, qlines);
     }
   }
 }
@@ -1472,15 +1478,15 @@ function scrollQueries(ev) {
   curpar.classList.add('hidden');
 }
 
-function aroundQuery(str, wf) {
+function aroundQuery(str, wf, idx) {
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
   let rePunct = new RegExp(punct, 'g');
   let limit = 100;
   let arr = str.split(wf);
-  let head = arr[0].slice(-limit);
+  let head = arr.slice(0, idx + 1).join('').slice(-limit);
   let percent = head.length / str.length;
   head = head.replace(rePunct, "<span class=\"active\">$1<\/span>");
-  let tail = arr.slice(1).join('').slice(0, limit);
+  let tail = arr.slice(idx + 1).join('').slice(0, limit);
   tail = tail.replace(rePunct, "<span class=\"active\">$1<\/span>");
   let qspan = ['<span class="query">', wf, '</span>'].join('');
   let html = [head, qspan, tail].join('');

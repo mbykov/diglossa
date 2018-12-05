@@ -11,7 +11,7 @@ export function parseQuery(libdb, curcurrent) {
   current = curcurrent
   window.split.setSizes([100,0])
   let osource = q('#source')
-  let otrns = q('#trns')
+  // let otrns = q('#trns')
   let oquery = div('', '')
   oquery.id = 'qresults'
   let otitle = div(current.query, 'qtitle')
@@ -41,14 +41,18 @@ function parseQbook(info, qinfo) {
     let qpos = _.groupBy(qgroup, 'pos')
     for (let pos in qpos) {
       let qlines = _.cloneDeep(qpos[pos])
-      let qauth = _.find(qlines, par=> { return par.author })
-      let {html, percent} = aroundQuery(qauth.text, current.query)
-      qauth.text = html
-      qlines.forEach(par=> {
-        if (par.author) return
-        else par.text = textAround(par.text, percent)
+      if (pos == 10) log('=>', qlines.length)
+      let qauths = _.filter(qlines, par=> { return par.author })
+      qauths.forEach((qauth, idx)=> {
+        let { html, percent } = aroundQuery(qauth.text, current.query, idx)
+        if (pos == 10) log('=>', percent)
+        qauth.text = html
+        qlines.forEach(par=> {
+          if (par.author) return
+          else par.text = textAround(par.text, percent)
+        })
+        parseGroup(info._id, fpath, pos, qlines)
       })
-      parseGroup(info._id, fpath, pos, qlines)
     }
   }
 }
@@ -106,16 +110,16 @@ function scrollQueries(ev) {
   curpar.classList.add('hidden')
 }
 
-function aroundQuery(str, wf) {
+function aroundQuery(str, wf, idx) {
   let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
   let rePunct = new RegExp(punct, 'g')
 
   let limit = 100
   let arr = str.split(wf)
-  let head = arr[0].slice(-limit)
+  let head = arr.slice(0, idx+1).join('').slice(-limit)
   let percent = head.length/str.length
   head =  head.replace(rePunct, "<span class=\"active\">$1<\/span>")
-  let tail = arr.slice(1).join('').slice(0,limit)
+  let tail = arr.slice(idx+1).join('').slice(0,limit)
   tail =  tail.replace(rePunct, "<span class=\"active\">$1<\/span>")
   let qspan = ['<span class="query">', wf, '</span>'].join('')
   let html = [head, qspan, tail] .join('')

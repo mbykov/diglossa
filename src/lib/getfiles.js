@@ -70,6 +70,7 @@ function parseCSV(info, str) {
       })
     })
   }
+
   let mapdocs = []
   for (let wf in mapnics) {
     let mapdoc = {_id: wf, parids: mapnics[wf]}
@@ -159,7 +160,8 @@ export function parseDir(info, cb) {
 
   let mapnics = {}
   for (let wf in map) {
-    map[wf].forEach(groupid=> {
+    // вариант для бедных - сохраняю только первое вхождение в параграфе:
+    _.uniq(map[wf]).forEach(groupid=> {
       nics.forEach(nic=> {
         let parid = [groupid, nic].join('-')
         if (!mapnics[wf]) mapnics[wf] = []
@@ -167,6 +169,7 @@ export function parseDir(info, cb) {
       })
     })
   }
+
   let mapdocs = []
   for (let wf in mapnics) {
     let mapdoc = {_id: wf, parids: mapnics[wf]}

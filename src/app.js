@@ -43,8 +43,6 @@ fse.ensureDirSync(dbPath)
 const PouchDB = require('pouchdb')
 PouchDB.plugin(require('pouchdb-find'))
 
-// let libPath_ = path.resolve(upath, 'pouch/library')
-// let libdb = new PouchDB(libPath_)
 let ftdbPath = path.resolve(upath, 'pouch/fulltext')
 let ftdb = new PouchDB(ftdbPath)
 let libPath = path.resolve(upath, 'pouch/library')
@@ -219,7 +217,7 @@ function goRight() {
 }
 
 // MAP
-Mousetrap.bind(['ctrl+f'], function(ev) {
+Mousetrap.bind(['f'], function(ev) {
   let query = clipboard.readText()
   ftdb.get(query)
     .then(function (wfdoc) {
@@ -301,7 +299,7 @@ function pushTexts(newdocs) {
 
 // MAP
 function pushMap(ndocs) {
-  return ftdb.allDocs({include_docs: true})
+  return ftdb.allDocs({ include_docs: true })
     .then(function(res) {
       let docs = res.rows.map(row=>{ return row.doc})
       let hdoc = {}
@@ -348,8 +346,11 @@ function getInfoFile(fns) {
 }
 
 function getDir(info) {
-  if (!info.bpath) info.bpath = current.bpath
-  if (!info.bpath) return
+  log('C', current, info)
+  // BUG: при re-read
+  // if (!info.bpath) info.bpath = current.bpath
+  if (!info || !info.bpath) return
+  // ============================ HERE BUG
   if (path.extname(info.bpath) == '.ods') {
     parseODS(info, (book) => {
       pushBook(info, book)

@@ -80,7 +80,7 @@ app.on("ready", () => {
     // win.openDevTools();
   }
 
-  globalShortcut.register('CommandOrControl+Shift+R', () => {
+  globalShortcut.register('CommandOrControl+R', () => {
     // BrowserWindow.getFocusedWindow().webContents.send('re-read')
     win.webContents.send('re-read')
   })
