@@ -80,7 +80,8 @@ function parseCSV(info, str) {
 }
 
 function walk(dname, dtree, tree) {
-  let fpath = dtree.path.split(dname)[1]
+  let dpath = dtree.path.replace(/\\/g, '/')
+  let fpath = dpath.split(dname)[1]
   tree.text = fpath.split('/').slice(-1)[0]
   tree.fpath = fpath.replace(/^\//, '')
   if (!dtree.children) return
@@ -101,7 +102,6 @@ export function parseDir(info, cb) {
   let bpath = info.bpath
   const dtree = dirTree(bpath)
   if (!dtree) return
-  log('DTREE', dtree)
 
   let dname = info.bpath.split('/').slice(0,-1).join('/')
   let tree = {}
