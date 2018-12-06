@@ -101,6 +101,7 @@ export function parseDir(info, cb) {
   let bpath = info.bpath
   const dtree = dirTree(bpath)
   if (!dtree) return
+  log('DTREE', dtree)
 
   let dname = info.bpath.split('/').slice(0,-1).join('/')
   let tree = {}
