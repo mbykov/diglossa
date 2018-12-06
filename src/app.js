@@ -11,7 +11,7 @@ import { shell } from 'electron'
 import { ipcRenderer } from "electron";
 
 import { q, qs, empty, create, remove, span, p, div, enclitic } from './lib/utils'
-import { twoPages, parseLib, parseTitle, parseBook } from './lib/book'
+import { bookData, scrollPanes, keyPanes, parseLib, parseTitle, parseBook } from './lib/book'
 import { parseInfo, parseDir, parseODS } from './lib/getfiles'
 import { parseQuery } from './lib/search';
 
@@ -74,13 +74,14 @@ ipcRenderer.on('parseDir', function (event) {
   dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'JSON', extensions: ['json'] }]}, getInfoFile)
 })
 
-ipcRenderer.on('home', function (event) {
-  navigate({section: 'lib'})
-})
+// ipcRenderer.on('home', function (event) {
+//   navigate({section: 'lib'})
+// })
 
 ipcRenderer.on('reread', function (event) {
   libdb.get('_local/current')
     .then(function (current) {
+      if (!current.infoid) return
       libdb.get(current.infoid)
         .then(function (info) {
           getDir(info)
@@ -140,6 +141,25 @@ function getState() {
     })
 }
 
+function twoPages() {
+  // var sizes = store.get('split-sizes')
+  // if (sizes) sizes = JSON.parse(sizes)
+  // else
+  let sizes = [50, 50]
+  let split = Split(['#source', '#trns'], {
+    sizes: sizes,
+    gutterSize: 5,
+    cursor: 'col-resize',
+    minSize: [0, 0],
+    onDragEnd: function (sizes) {
+    }
+  })
+  let obook = q('#book')
+  obook.addEventListener("wheel", scrollPanes, false)
+  document.addEventListener("keydown", keyPanes, false)
+  return split
+}
+
 function goLib() {
   getLib()
     .then(function (result) {
@@ -155,7 +175,7 @@ function getTitle() {
     .then(function (curinfo) {
       info = curinfo
       current.bpath = info.bpath
-      parseTitle(info, current)
+      parseTitle(info)
     }).catch(function (err) {
       log('getTitleErr', err);
     })
@@ -167,7 +187,7 @@ function getBook() {
       getText(current)
         .then(function(res) {
           let pars = _.compact(res.docs)
-          parseBook(current, curinfo, pars)
+          parseBook(curinfo, pars)
         })
     }).catch(function (err) {
       log('getTitleErr', err);
@@ -190,6 +210,7 @@ export function navigate(navpath) {
     hstate = hstates.length-1
   }
   delete current.old
+  bookData(current)
 
   let sec = current.section
   if (sec == 'lib') goLib()
@@ -209,6 +230,7 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
 })
 
 function goLeft() {
+  if (current) delete current.query
   if (hstate - 1 <= -1) return
   if (hstate - 1 > -1) hstate--
   let state = hstates[hstate]
@@ -217,6 +239,7 @@ function goLeft() {
 }
 
 function goRight() {
+  if (current) delete current.query
   if (hstate + 1 >= hstates.length) return
   if (hstate + 1 < hstates.length) hstate++
   let state = hstates[hstate]

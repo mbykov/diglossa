@@ -13,29 +13,14 @@ const clipboard = require('electron-clipboard-extended')
 let current, info
 let limit = 20
 
+export function bookData(newcurrent) {
+  current = newcurrent
+}
+
 let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
 let rePunct = new RegExp(punct, 'g')
 
-export function twoPages() {
-  // var sizes = store.get('split-sizes')
-  // if (sizes) sizes = JSON.parse(sizes)
-  // else
-  let sizes = [50, 50]
-  let split = Split(['#source', '#trns'], {
-    sizes: sizes,
-    gutterSize: 5,
-    cursor: 'col-resize',
-    minSize: [0, 0],
-    onDragEnd: function (sizes) {
-    }
-  })
-  let obook = q('#book')
-  obook.addEventListener("wheel", scrollPanes, false)
-  document.addEventListener("keydown", keyScroll, false)
-  return split
-}
-
-function scrollPanes(ev) {
+export function scrollPanes(ev) {
   if (ev.shiftKey == true) return;
   let delta = (ev.deltaY > 0) ? 24 : -24
   let source = q('#source')
@@ -58,6 +43,7 @@ function scrollPanes(ev) {
 }
 
 function addChunk() {
+  if (current && current.section != 'book') return
   let source = q('#source')
   if (source.scrollTop == 0) {
     let start = qs('#source > p')[0]
@@ -83,7 +69,7 @@ function addChunk() {
   }
 }
 
-function keyScroll(ev) {
+export function keyPanes(ev) {
   let source = q('#source')
   let trns = q('#trns')
   if (!source || !trns) return
@@ -135,10 +121,9 @@ function goTitleEvent(ev) {
 }
 
 
-export function parseTitle(bookinfo, bookcurrent) {
+export function parseTitle(bookinfo) {
   window.split.setSizes([50,50])
   info = bookinfo
-  current = bookcurrent
 
   let osource = q('#source')
   let otrns = q('#trns')
@@ -183,9 +168,9 @@ function goBookEvent(ev) {
   navigate(current)
 }
 
-export function parseBook(bookcurrent, bookinfo, pars) {
+export function parseBook(bookinfo, pars) {
   info = bookinfo
-  current = bookcurrent
+  // current = bookcurrent
   if (!pars.length) return
   window.split.setSizes([50,50])
   let osource = q('#source')

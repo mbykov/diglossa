@@ -192,14 +192,13 @@ electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('parseDir', function (ev
       extensions: ['json']
     }]
   }, getInfoFile);
-});
-electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('home', function (event) {
-  navigate({
-    section: 'lib'
-  });
-});
+}); // ipcRenderer.on('home', function (event) {
+//   navigate({section: 'lib'})
+// })
+
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('reread', function (event) {
   libdb.get('_local/current').then(function (current) {
+    if (!current.infoid) return;
     libdb.get(current.infoid).then(function (info) {
       getDir(info);
     });
@@ -228,7 +227,7 @@ electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('version', function (eve
 });
 let hstates = [];
 let hstate = -1;
-window.split = Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["twoPages"])();
+window.split = twoPages();
 getState();
 
 function getState() {
@@ -249,6 +248,24 @@ function getState() {
   });
 }
 
+function twoPages() {
+  // var sizes = store.get('split-sizes')
+  // if (sizes) sizes = JSON.parse(sizes)
+  // else
+  let sizes = [50, 50];
+  let split = split_js__WEBPACK_IMPORTED_MODULE_2___default()(['#source', '#trns'], {
+    sizes: sizes,
+    gutterSize: 5,
+    cursor: 'col-resize',
+    minSize: [0, 0],
+    onDragEnd: function (sizes) {}
+  });
+  let obook = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#book');
+  obook.addEventListener("wheel", _lib_book__WEBPACK_IMPORTED_MODULE_5__["scrollPanes"], false);
+  document.addEventListener("keydown", _lib_book__WEBPACK_IMPORTED_MODULE_5__["keyPanes"], false);
+  return split;
+}
+
 function goLib() {
   getLib().then(function (result) {
     let infos = result.rows.map(row => {
@@ -264,7 +281,7 @@ function getTitle() {
   libdb.get(current.infoid).then(function (curinfo) {
     info = curinfo;
     current.bpath = info.bpath;
-    Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])(info, current);
+    Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseTitle"])(info);
   }).catch(function (err) {
     log('getTitleErr', err);
   });
@@ -275,7 +292,7 @@ function getBook() {
     getText(current).then(function (res) {
       let pars = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs);
 
-      Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(current, curinfo, pars);
+      Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(curinfo, pars);
     });
   }).catch(function (err) {
     log('getTitleErr', err);
@@ -299,6 +316,7 @@ function navigate(navpath) {
   }
 
   delete current.old;
+  Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["bookData"])(current);
   let sec = current.section;
   if (sec == 'lib') goLib();else if (sec == 'title') getTitle();else if (sec == 'book') getBook();else if (sec == 'search') Object(_lib_search__WEBPACK_IMPORTED_MODULE_7__["parseQuery"])(libdb, current);else showSection(sec);
   let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#progress');
@@ -310,6 +328,7 @@ Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
 });
 
 function goLeft() {
+  if (current) delete current.query;
   if (hstate - 1 <= -1) return;
   if (hstate - 1 > -1) hstate--;
   let state = hstates[hstate];
@@ -318,6 +337,7 @@ function goLeft() {
 }
 
 function goRight() {
+  if (current) delete current.query;
   if (hstate + 1 >= hstates.length) return;
   if (hstate + 1 < hstates.length) hstate++;
   let state = hstates[hstate];
@@ -549,12 +569,14 @@ function getLib() {
 /*!*************************!*\
   !*** ./src/lib/book.js ***!
   \*************************/
-/*! exports provided: twoPages, parseLib, parseTitle, parseBook */
+/*! exports provided: bookData, scrollPanes, keyPanes, parseLib, parseTitle, parseBook */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "twoPages", function() { return twoPages; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "bookData", function() { return bookData; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "scrollPanes", function() { return scrollPanes; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "keyPanes", function() { return keyPanes; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseLib", function() { return parseLib; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseTitle", function() { return parseTitle; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseBook", function() { return parseBook; });
@@ -580,26 +602,11 @@ const clipboard = __webpack_require__(/*! electron-clipboard-extended */ "electr
 
 let current, info;
 let limit = 20;
+function bookData(newcurrent) {
+  current = newcurrent;
+}
 let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
 let rePunct = new RegExp(punct, 'g');
-function twoPages() {
-  // var sizes = store.get('split-sizes')
-  // if (sizes) sizes = JSON.parse(sizes)
-  // else
-  let sizes = [50, 50];
-  let split = split_js__WEBPACK_IMPORTED_MODULE_1___default()(['#source', '#trns'], {
-    sizes: sizes,
-    gutterSize: 5,
-    cursor: 'col-resize',
-    minSize: [0, 0],
-    onDragEnd: function (sizes) {}
-  });
-  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book');
-  obook.addEventListener("wheel", scrollPanes, false);
-  document.addEventListener("keydown", keyScroll, false);
-  return split;
-}
-
 function scrollPanes(ev) {
   if (ev.shiftKey == true) return;
   let delta = ev.deltaY > 0 ? 24 : -24;
@@ -624,6 +631,7 @@ function scrollPanes(ev) {
 }
 
 function addChunk() {
+  if (current && current.section != 'book') return;
   let source = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
 
   if (source.scrollTop == 0) {
@@ -649,7 +657,7 @@ function addChunk() {
   }
 }
 
-function keyScroll(ev) {
+function keyPanes(ev) {
   let source = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let trns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   if (!source || !trns) return;
@@ -671,7 +679,6 @@ function keyScroll(ev) {
   if (!current || current.section != 'book') return;
   addChunk();
 }
-
 function parseLib(infos) {
   window.split.setSizes([100, 0]);
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
@@ -702,10 +709,9 @@ function goTitleEvent(ev) {
   });
 }
 
-function parseTitle(bookinfo, bookcurrent) {
+function parseTitle(bookinfo) {
   window.split.setSizes([50, 50]);
   info = bookinfo;
-  current = bookcurrent;
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   let obookTitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
@@ -748,9 +754,9 @@ function goBookEvent(ev) {
   Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])(current);
 }
 
-function parseBook(bookcurrent, bookinfo, pars) {
-  info = bookinfo;
-  current = bookcurrent;
+function parseBook(bookinfo, pars) {
+  info = bookinfo; // current = bookcurrent
+
   if (!pars.length) return;
   window.split.setSizes([50, 50]);
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
