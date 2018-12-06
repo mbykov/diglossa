@@ -369,6 +369,7 @@ function getInfoFile(fns) {
     info = parseInfo(info)
     let dir = path.parse(infopath).dir
     let bpath = path.resolve(dir, info.book.path)
+    bpath = bpath.replace(/\\/g, '/')
     info.bpath = bpath
     getDir(info)
   } catch(err) {
