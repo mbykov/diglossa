@@ -100,7 +100,8 @@ function walk(dname, dtree, tree) {
 
 export function parseDir(info, cb) {
   let bpath = info.bpath
-  const dtree = dirTree(bpath)
+  const dtree = dirTree(bpath, { normalizePath: true })
+  log('DTREE', dtree)
   if (!dtree) return
 
   let dname = info.bpath.split('/').slice(0,-1).join('/')
