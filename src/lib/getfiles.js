@@ -124,9 +124,7 @@ export function parseDir(info, cb) {
   let map = {}
   info.sections = []
 
-  fns.forEach(fnsl => {
-    let fn = slash(fnsl)
-    log('FN', fn)
+  fns.forEach(fn => {
     let comment = false
     let ext = path.extname(fn)
     if (!ext) return
@@ -145,6 +143,7 @@ export function parseDir(info, cb) {
 
     let fpath = path.dirname(fullpath).split(dname)[1]
     fpath = fpath.replace(/^\//, '')
+    fpath = slash(fpath)
     info.sections.push(fpath)
 
     let lang
