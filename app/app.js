@@ -1185,11 +1185,7 @@ function parseCSV(info, str) {
 
 function walk(dname, dtree, tree) {
   let dpath = slash(dtree.path);
-  log('____w:', dname, dtree, tree);
   let fpath = dpath.split(dname)[1];
-  log('wdpath:', dpath);
-  log('wfpath:', fpath);
-  log('wtree:', tree);
   tree.text = fpath.split('/').slice(-1)[0];
   tree.fpath = fpath.replace(/^\//, '');
   if (!dtree.children) return;
@@ -1204,11 +1200,11 @@ function walk(dname, dtree, tree) {
   });
 
   if (!dchildren.length) return;
+  log('D', dchildren);
+  dchildren = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.sortBy(dchildren, 'name');
   dchildren.forEach((child, idx) => {
-    // if (child.type != 'directory') return
     if (!tree.children) tree.children = [];
-    if (!tree.children[idx]) tree.children.push({}); // if (!tree.children[idx]) log('NOCH!', idx, 'tree', tree, 'dt', dtree)
-
+    if (!tree.children[idx]) tree.children.push({});
     walk(dname, child, tree.children[idx]);
   });
 }

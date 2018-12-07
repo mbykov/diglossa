@@ -82,11 +82,7 @@ function parseCSV(info, str) {
 
 function walk(dname, dtree, tree) {
   let dpath = slash(dtree.path)
-  log('____w:', dname, dtree, tree)
   let fpath = dpath.split(dname)[1]
-  log('wdpath:', dpath)
-  log('wfpath:', fpath)
-  log('wtree:', tree)
   tree.text = fpath.split('/').slice(-1)[0]
   tree.fpath = fpath.replace(/^\//, '')
   if (!dtree.children) return
@@ -97,11 +93,10 @@ function walk(dname, dtree, tree) {
   tree.hasFiles = hasFiles
   let dchildren = _.filter(dtree.children, child=> { return child.type == 'directory'})
   if (!dchildren.length) return
+  dchildren = _.sortBy(dchildren, 'name')
   dchildren.forEach((child, idx)=> {
-    // if (child.type != 'directory') return
     if (!tree.children) tree.children = []
     if (!tree.children[idx]) tree.children.push({})
-    // if (!tree.children[idx]) log('NOCH!', idx, 'tree', tree, 'dt', dtree)
     walk(dname, child, tree.children[idx])
   })
 }
@@ -109,15 +104,15 @@ function walk(dname, dtree, tree) {
 export function parseDir(info, cb) {
   let bpath = info.bpath
   const dtree = dirTree(bpath, { normalizePath: true })
-  log('INFO', info)
-  log('DTREE', dtree)
+  // log('INFO', info)
+  // log('DTREE', dtree)
   if (!dtree) return
 
   let dname = info.bpath.split('/').slice(0,-1).join('/')
-  log('DNAME', dname)
+  // log('DNAME', dname)
   let tree = {}
   walk(dname, dtree, tree)
-  log('TREE', tree)
+  // log('TREE', tree)
   info.tree = tree
   info.info = true
 
@@ -132,6 +127,7 @@ export function parseDir(info, cb) {
   info.sections = []
 
   fns.forEach(fn => {
+    fn = slash(fn)
     let comment = false
     let com = fn.split('-')[1]
     if (com && com == 'com') comment = true, fn = fn.replace('-com', '')
