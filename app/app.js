@@ -1237,14 +1237,14 @@ function parseDir(info, cb) {
   let map = {};
   info.sections = [];
   fns.forEach(fn => {
-    fn = slash(fn);
     let comment = false;
-    let com = fn.split('-')[1];
-    if (com && com == 'com') comment = true, fn = fn.replace('-com', '');
     let ext = path.extname(fn);
     if (!ext) return;
-    if (ext == '.info') return;
-    if (ext == '.json') return;
+    let com = ext.split('-')[1];
+    if (com && com == 'com') comment = true, fn = fn.replace('-com', ''), ext = path.extname(fn);
+    if (comment) return; // COMMENT
+
+    if (['.info', '.josn', '.txt'].includes(ext)) return;
     let nic = ext.replace(/^\./, '');
     nics.push(nic);
 
@@ -1259,6 +1259,7 @@ function parseDir(info, cb) {
     let rows = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(clean.split('\n'));
 
     let fpath = path.dirname(fullpath).split(dname)[1];
+    fpath = slash(fpath);
     fpath = fpath.replace(/^\//, '');
     info.sections.push(fpath);
     let lang;

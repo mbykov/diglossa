@@ -131,17 +131,11 @@ function getState() {
       current = navpath
       navigate(current)
     })
-    .then(function () {
-      libdb.close() // Windows feature
-    })
     .catch(function (err) {
       if (err.name === 'not_found') {
         libdb.put({ _id: '_local/current', section: 'lib'})
           .then(function() {
             navigate({section: 'lib'})
-          })
-          .then(function () {
-            libdb.close() // Windows feature
           })
       }
       else throw err
@@ -172,9 +166,6 @@ function goLib() {
     .then(function (result) {
       let infos = result.rows.map(row=> { return row.doc})
       parseLib(infos)
-    })
-    .then(function () {
-      libdb.close() // Windows feature
     })
     .catch(function (err) {
       log('getLibErr', err);
