@@ -294,6 +294,7 @@ function getBook() {
     getText(current).then(function (res) {
       let pars = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs);
 
+      log('Bcur', current);
       log('Binfo', curinfo);
       log('Bpars', pars);
       Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(curinfo, pars);
@@ -552,6 +553,7 @@ function getText(current, endpos) {
       $lt: end
     }
   };
+  log('selector:', selector);
   return libdb.find({
     selector: selector
   }); // sort: ['idx'], , limit: 20
@@ -1200,7 +1202,6 @@ function walk(dname, dtree, tree) {
   });
 
   if (!dchildren.length) return;
-  log('D', dchildren);
   dchildren = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.sortBy(dchildren, 'name');
   dchildren.forEach((child, idx) => {
     if (!tree.children) tree.children = [];
@@ -1213,29 +1214,30 @@ function parseDir(info, cb) {
   let bpath = info.bpath;
   const dtree = dirTree(bpath, {
     normalizePath: true
-  });
-  log('INFO', info);
-  log('DTREE', dtree);
+  }); // log('INFO', info)
+  // log('DTREE', dtree)
+
   if (!dtree) return;
   let dname = info.bpath.split('/').slice(0, -1).join('/');
   log('DNAME', dname);
   let tree = {};
-  walk(dname, dtree, tree);
-  log('TREE', tree);
+  walk(dname, dtree, tree); // log('TREE', tree)
+
   info.tree = tree;
   info.info = true;
   let fns = glob.sync('**/*', {
     cwd: bpath
-  }); // .txt ?
-
+  });
   fns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(fns, fn => {
     return path.extname(fn) != '.json';
-  });
+  }); // .txt ?
+
   let nics = [];
   let pars = [];
   let map = {};
   info.sections = [];
   fns.forEach(fn => {
+    fn = slash(fn);
     let comment = false;
     let com = fn.split('-')[1];
     if (com && com == 'com') comment = true, fn = fn.replace('-com', '');
@@ -1312,6 +1314,7 @@ function parseDir(info, cb) {
     pars: pars,
     mapdocs: mapdocs
   };
+  log('GETBOOK', book);
   cb(book);
 }
 

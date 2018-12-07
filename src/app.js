@@ -188,6 +188,7 @@ function getBook() {
       getText(current)
         .then(function(res) {
           let pars = _.compact(res.docs)
+          log('Bcur', current)
           log('Binfo', curinfo)
           log('Bpars', pars)
           parseBook(curinfo, pars)
@@ -434,6 +435,7 @@ export function getText(current, endpos) {
   let start = current.pos*1 || 0
   let end = endpos*1 || start*1 + limit*1
   let selector = {fpath: fpath, pos: {$gte: start, $lt: end}}
+  log('selector:', selector)
   return libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
   // return libdb.explain({selector: selector})
 }

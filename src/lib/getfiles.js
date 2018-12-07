@@ -109,7 +109,7 @@ export function parseDir(info, cb) {
   if (!dtree) return
 
   let dname = info.bpath.split('/').slice(0,-1).join('/')
-  // log('DNAME', dname)
+  log('DNAME', dname)
   let tree = {}
   walk(dname, dtree, tree)
   // log('TREE', tree)
@@ -117,9 +117,7 @@ export function parseDir(info, cb) {
   info.info = true
 
   let fns = glob.sync('**/*', {cwd: bpath})
-
-  // .txt ?
-  fns = _.filter(fns, fn=>{ return path.extname(fn) != '.json' })
+  fns = _.filter(fns, fn=>{ return path.extname(fn) != '.json' }) // .txt ?
 
   let nics = []
   let pars = []
@@ -186,6 +184,7 @@ export function parseDir(info, cb) {
   }
 
   let book = {pars: pars, mapdocs: mapdocs}
+  log('GETBOOK', book)
   cb(book)
 }
 
