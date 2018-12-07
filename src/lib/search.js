@@ -41,11 +41,9 @@ function parseQbook(info, qinfo) {
     let qpos = _.groupBy(qgroup, 'pos')
     for (let pos in qpos) {
       let qlines = _.cloneDeep(qpos[pos])
-      if (pos == 10) log('=>', qlines.length)
       let qauths = _.filter(qlines, par=> { return par.author })
       qauths.forEach((qauth, idx)=> {
         let { html, percent } = aroundQuery(qauth.text, current.query, idx)
-        if (pos == 10) log('=>', percent)
         qauth.text = html
         qlines.forEach(par=> {
           if (par.author) return

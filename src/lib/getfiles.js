@@ -82,10 +82,11 @@ function parseCSV(info, str) {
 
 function walk(dname, dtree, tree) {
   let dpath = slash(dtree.path)
-  log('wdpath:', dpath)
-  log('w:', dname, dtree, tree)
+  log('____w:', dname, dtree, tree)
   let fpath = dpath.split(dname)[1]
+  log('wdpath:', dpath)
   log('wfpath:', fpath)
+  log('wtree:', tree)
   tree.text = fpath.split('/').slice(-1)[0]
   tree.fpath = fpath.replace(/^\//, '')
   if (!dtree.children) return
@@ -94,8 +95,10 @@ function walk(dname, dtree, tree) {
     if (child.type == 'file') hasFiles = true
   })
   tree.hasFiles = hasFiles
-  dtree.children.forEach((child, idx)=> {
-    if (child.type != 'directory') return
+  let dchildren = _.filter(dtree.children, child=> { return child.type == 'directory'})
+  if (!dchildren.length) return
+  dchildren.forEach((child, idx)=> {
+    // if (child.type != 'directory') return
     if (!tree.children) tree.children = []
     if (!tree.children[idx]) tree.children.push({})
     // if (!tree.children[idx]) log('NOCH!', idx, 'tree', tree, 'dt', dtree)

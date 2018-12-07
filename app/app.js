@@ -1183,10 +1183,11 @@ function parseCSV(info, str) {
 
 function walk(dname, dtree, tree) {
   let dpath = slash(dtree.path);
-  log('wdpath:', dpath);
-  log('w:', dname, dtree, tree);
+  log('____w:', dname, dtree, tree);
   let fpath = dpath.split(dname)[1];
+  log('wdpath:', dpath);
   log('wfpath:', fpath);
+  log('wtree:', tree);
   tree.text = fpath.split('/').slice(-1)[0];
   tree.fpath = fpath.replace(/^\//, '');
   if (!dtree.children) return;
@@ -1195,11 +1196,17 @@ function walk(dname, dtree, tree) {
     if (child.type == 'file') hasFiles = true;
   });
   tree.hasFiles = hasFiles;
-  dtree.children.forEach((child, idx) => {
-    if (child.type != 'directory') return;
+
+  let dchildren = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(dtree.children, child => {
+    return child.type == 'directory';
+  });
+
+  if (!dchildren.length) return;
+  dchildren.forEach((child, idx) => {
+    // if (child.type != 'directory') return
     if (!tree.children) tree.children = [];
-    tree.children.push({});
-    if (!tree.children[idx]) log('NOCH!', idx, 'tree', tree, 'dt', dtree);
+    if (!tree.children[idx]) tree.children.push({}); // if (!tree.children[idx]) log('NOCH!', idx, 'tree', tree, 'dt', dtree)
+
     walk(dname, child, tree.children[idx]);
   });
 }
@@ -1413,8 +1420,6 @@ function parseQbook(info, qinfo) {
     for (let pos in qpos) {
       let qlines = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.cloneDeep(qpos[pos]);
 
-      if (pos == 10) log('=>', qlines.length);
-
       let qauths = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(qlines, par => {
         return par.author;
       });
@@ -1424,7 +1429,6 @@ function parseQbook(info, qinfo) {
           html,
           percent
         } = aroundQuery(qauth.text, current.query, idx);
-        if (pos == 10) log('=>', percent);
         qauth.text = html;
         qlines.forEach(par => {
           if (par.author) return;else par.text = textAround(par.text, percent);
