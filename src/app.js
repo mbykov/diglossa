@@ -422,12 +422,13 @@ function showCleanup() {
 }
 
 function goCleanup() {
-  libdb.close()
-    .then(function () {
-      fse.emptyDirSync(dbPath)
-      getCurrentWindow().reload()
-      // getState()
-    })
+  Promise.all([
+    libdb.close(),
+    ftdb.close()
+  ]).then(function () {
+    fse.emptyDirSync(dbPath)
+    getCurrentWindow().reload()
+  })
 }
 
 export function getText(current, endpos) {
