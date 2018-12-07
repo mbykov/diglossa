@@ -19,6 +19,7 @@ const JSON = require('json5')
 const Mousetrap = require('mousetrap')
 const axios = require('axios')
 let fse = require('fs-extra')
+const slash = require('slash')
 const log = console.log
 // const Store = require('electron-store')
 // const store = new Store()
@@ -369,8 +370,7 @@ function getInfoFile(fns) {
     info = parseInfo(info)
     let dir = path.parse(infopath).dir
     let bpath = path.resolve(dir, info.book.path)
-    bpath = bpath.replace(/\\/g, '/')
-    info.bpath = bpath
+    info.bpath = slash(bpath)
     getDir(info)
   } catch(err) {
     log('INFO JSON ERR:', err)

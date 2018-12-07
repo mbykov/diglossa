@@ -2,7 +2,7 @@
   "name": "diglossa.js",
   "productName": "Diglossa.js",
   "description": "Bilingual Reader - an application for creating, distributing and reading bi-(many) lingual texts",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "author": "Michael Bykov <m.bykov@gmail.com>",
   "copyright": "© 2018, Michael Bykov",
   "license": "GPL-3.0",
@@ -79,6 +79,7 @@
     "mousetrap": "^1.6.2",
     "pouchdb": "^7.0.0",
     "pouchdb-find": "^7.0.0",
+    "slash": "^2.0.0",
     "split.js": "^1.4.0",
     "textract": "^2.4.0"
   },

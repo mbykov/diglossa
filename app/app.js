@@ -130,6 +130,8 @@ const axios = __webpack_require__(/*! axios */ "axios");
 
 let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
+const slash = __webpack_require__(/*! slash */ "slash");
+
 const log = console.log; // const Store = require('electron-store')
 // const store = new Store()
 
@@ -484,8 +486,7 @@ function getInfoFile(fns) {
     info = Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_6__["parseInfo"])(info);
     let dir = path.parse(infopath).dir;
     let bpath = path.resolve(dir, info.book.path);
-    bpath = bpath.replace(/\\/g, '/');
-    info.bpath = bpath;
+    info.bpath = slash(bpath);
     getDir(info);
   } catch (err) {
     log('INFO JSON ERR:', err);
@@ -1078,6 +1079,8 @@ const fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
 const path = __webpack_require__(/*! path */ "path");
 
+const slash = __webpack_require__(/*! slash */ "slash");
+
 const glob = __webpack_require__(/*! glob */ "glob");
 
 const dirTree = __webpack_require__(/*! directory-tree */ "directory-tree");
@@ -1179,7 +1182,7 @@ function parseCSV(info, str) {
 }
 
 function walk(dname, dtree, tree) {
-  let dpath = dtree.path.replace(/\\/g, '/');
+  let dpath = slash(dtree.path);
   let fpath = dpath.split(dname)[1];
   tree.text = fpath.split('/').slice(-1)[0];
   tree.fpath = fpath.replace(/^\//, '');
@@ -1199,9 +1202,12 @@ function walk(dname, dtree, tree) {
 
 function parseDir(info, cb) {
   let bpath = info.bpath;
-  const dtree = dirTree(bpath);
-  if (!dtree) return;
+  const dtree = dirTree(bpath, {
+    normalizePath: true
+  });
+  log('INFO', info);
   log('DTREE', dtree);
+  if (!dtree) return;
   let dname = info.bpath.split('/').slice(0, -1).join('/');
   let tree = {};
   walk(dname, dtree, tree);
@@ -1869,6 +1875,17 @@ module.exports = require("pouchdb");
 /***/ (function(module, exports) {
 
 module.exports = require("pouchdb-find");
+
+/***/ }),
+
+/***/ "slash":
+/*!************************!*\
+  !*** external "slash" ***!
+  \************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("slash");
 
 /***/ }),
 

@@ -4,6 +4,7 @@ import {nav} from '../app';
 
 const fse = require('fs-extra')
 const path = require('path')
+const slash = require('slash')
 const glob = require('glob')
 const dirTree = require('directory-tree')
 const textract = require('textract')
@@ -80,7 +81,7 @@ function parseCSV(info, str) {
 }
 
 function walk(dname, dtree, tree) {
-  let dpath = dtree.path.replace(/\\/g, '/')
+  let dpath = slash(dtree.path)
   let fpath = dpath.split(dname)[1]
   tree.text = fpath.split('/').slice(-1)[0]
   tree.fpath = fpath.replace(/^\//, '')
@@ -101,6 +102,7 @@ function walk(dname, dtree, tree) {
 export function parseDir(info, cb) {
   let bpath = info.bpath
   const dtree = dirTree(bpath, { normalizePath: true })
+  log('INFO', info)
   log('DTREE', dtree)
   if (!dtree) return
 
