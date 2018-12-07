@@ -97,8 +97,8 @@ function walk(dname, dtree, tree) {
   dtree.children.forEach((child, idx)=> {
     if (child.type != 'directory') return
     if (!tree.children) tree.children = []
-    tree.children.push({})
-    if (!tree.children[idx]) log('NOCH!', idx, 'tree', tree, 'dt', dtree)
+    if (!tree.children[idx]) tree.children.push({})
+    // if (!tree.children[idx]) log('NOCH!', idx, 'tree', tree, 'dt', dtree)
     walk(dname, child, tree.children[idx])
   })
 }
