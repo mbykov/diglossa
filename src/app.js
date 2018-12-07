@@ -188,6 +188,8 @@ function getBook() {
       getText(current)
         .then(function(res) {
           let pars = _.compact(res.docs)
+          log('Binfo', curinfo)
+          log('Bpars', pars)
           parseBook(curinfo, pars)
         })
     }).catch(function (err) {

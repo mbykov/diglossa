@@ -294,6 +294,8 @@ function getBook() {
     getText(current).then(function (res) {
       let pars = lodash__WEBPACK_IMPORTED_MODULE_1___default.a.compact(res.docs);
 
+      log('Binfo', curinfo);
+      log('Bpars', pars);
       Object(_lib_book__WEBPACK_IMPORTED_MODULE_5__["parseBook"])(curinfo, pars);
     });
   }).catch(function (err) {
