@@ -137,8 +137,9 @@ export function parseDir(info, cb) {
     let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ')
     let rows = _.compact(clean.split('\n'))
 
-    let fpath = path.dirname(fullpath).split(dname)[1]
-    if (!fpath) log('NO FP full:', fullpath, 'dn:', dname)
+    let dirname = path.dirname(fullpath)
+    dirname = slash(dirname)
+    let fpath = dirname.split(dname)[1]
     fpath = slash(fpath)
     fpath = fpath.replace(/^\//, '')
     info.sections.push(fpath)
