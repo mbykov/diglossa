@@ -104,15 +104,11 @@ function walk(dname, dtree, tree) {
 export function parseDir(info, cb) {
   let bpath = info.bpath
   const dtree = dirTree(bpath, { normalizePath: true })
-  // log('INFO', info)
-  // log('DTREE', dtree)
   if (!dtree) return
 
   let dname = info.bpath.split('/').slice(0,-1).join('/')
-  log('DNAME', dname)
   let tree = {}
   walk(dname, dtree, tree)
-  // log('TREE', tree)
   info.tree = tree
   info.info = true
 
@@ -184,7 +180,6 @@ export function parseDir(info, cb) {
   }
 
   let book = {pars: pars, mapdocs: mapdocs}
-  log('GETBOOK', book)
   cb(book)
 }
 
