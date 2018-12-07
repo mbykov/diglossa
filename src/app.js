@@ -75,10 +75,6 @@ ipcRenderer.on('parseDir', function (event) {
   dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'JSON', extensions: ['json'] }]}, getInfoFile)
 })
 
-// ipcRenderer.on('home', function (event) {
-//   navigate({section: 'lib'})
-// })
-
 ipcRenderer.on('reread', function (event) {
   libdb.get('_local/current')
     .then(function (current) {
@@ -423,11 +419,13 @@ function showCleanup() {
 
 function goCleanup() {
   Promise.all([
-    libdb.close(),
-    ftdb.close()
+    libdb.destroy(),
+    ftdb.destroy()
   ]).then(function () {
-    fse.emptyDirSync(dbPath)
+    // fse.emptyDirSync(dbPath)
     getCurrentWindow().reload()
+  }).catch(function (err) {
+    log('DESTROY ERR:', err)
   })
 }
 

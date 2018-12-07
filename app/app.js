@@ -194,10 +194,7 @@ electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('parseDir', function (ev
       extensions: ['json']
     }]
   }, getInfoFile);
-}); // ipcRenderer.on('home', function (event) {
-//   navigate({section: 'lib'})
-// })
-
+});
 electron__WEBPACK_IMPORTED_MODULE_3__["ipcRenderer"].on('reread', function (event) {
   libdb.get('_local/current').then(function (current) {
     if (!current.infoid) return;
@@ -533,9 +530,11 @@ function showCleanup() {
 }
 
 function goCleanup() {
-  libdb.close().then(function () {
-    fse.emptyDirSync(dbPath);
-    getCurrentWindow().reload(); // getState()
+  Promise.all([libdb.destroy(), ftdb.destroy()]).then(function () {
+    // fse.emptyDirSync(dbPath)
+    getCurrentWindow().reload();
+  }).catch(function (err) {
+    log('DESTROY ERR:', err);
   });
 }
 
@@ -1251,6 +1250,7 @@ function parseDir(info, cb) {
     let rows = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(clean.split('\n'));
 
     let fpath = path.dirname(fullpath).split(dname)[1];
+    if (!fpath) log('NO FP full:', fullpath, 'dn:', dname);
     fpath = slash(fpath);
     fpath = fpath.replace(/^\//, '');
     info.sections.push(fpath);
