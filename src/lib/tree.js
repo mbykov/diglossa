@@ -4,27 +4,23 @@ let log = console.log
 
 export default function tree(data, deftitle) {
   let otree = create('div', 'tree')
-  let otitle = create('div', 'tree-title')
-  otitle.id = 'tree-title'
-  otitle.textContent = 'content'
-  otree.appendChild(otitle)
   let otbody = create('div', 'tree-body')
   otbody.id = 'tree-body'
   otree.appendChild(otbody)
   let children = data.children
-  if (!children) {
+  if (data.title) {
     let onode = create('div', 'tree-text')
     let osign = create('span', 'tree-branch')
     osign.textContent = '▾'
     onode.appendChild(osign)
     let otext = create('span', 'tree-node-text')
-    otext.textContent = deftitle
-    otext.setAttribute('fpath', data.fpath)
+    otext.textContent = data.title
+    // otext.setAttribute('fpath', data.fpath)
     onode.appendChild(otext)
     otbody.appendChild(onode)
-    return otree
+    // return otree
   }
-  children.forEach(node=> {
+  data.children.forEach(node=> {
     let onode = createNode(node)
     otbody.appendChild(onode)
   })

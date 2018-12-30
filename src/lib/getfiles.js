@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
-// import {nav} from '../app';
+import {navigate} from './nav'
 
 const fse = require('fs-extra')
 const JSON = require('json5')
@@ -48,11 +48,22 @@ function parseInfo(info) {
   return info
 }
 
+function getDir(info) {
+  // здесь тип файла
+  const dtree = dirTree(info.bpath);
+  log('T', dtree)
+  let tree = walk(dtree.children)
+  log('T1', tree)
+  info.tree = tree
+  let state = { section: 'title', info: info }
+  navigate(state)
+}
+
 function walk(children) {
   let dirs = _.filter(children, child=> { return child.type == 'directory' })
   let files = _.filter(children, child=> { return child.type == 'file' })
-  log('D', dirs)
-  log('F', files)
+  // log('D', dirs)
+  // log('F', files)
   let grDirs = []
   dirs.forEach(dir=> {
     if (!dir.children.length) return
@@ -63,7 +74,7 @@ function walk(children) {
   children = []
   if (grDirs.length) children.push(grDirs)
   if (fileGrs.length) children.push(fileGrs)
-  return children
+  return _.flatten(children)
 }
 
 function groupByName(fns) {
@@ -76,50 +87,4 @@ function groupByName(fns) {
     children.push(child)
   }
   return children
-}
-
-function getDir(info) {
-  const dtree = dirTree(info.bpath);
-  log('T', dtree)
-  let tree = walk(dtree.children)
-  log('T1', tree)
-
-  return
-
-  // log('BPATH', info.bpath)
-  // let strs = glob.sync('**', {
-  //   cwd: info.bpath,
-  //   dot: true,
-  //   mark: true,
-  //   strict: true
-  // })
-  // log('GLOB', strs)
-  // let tree = []
-  // let dir = {text: null, children: []}
-  // strs.forEach(str=> {
-  //   if (_.last(str) == '/') {
-  //     if (dir.children.length) {
-  //       tree.push(_.clone(dir))
-  //       dir = {text: null, children: []}
-  //     }
-  //     dir.text = str.slice(0,-1)
-  //   } else {
-  //     dir.children.push(str)
-  //   }
-  // })
-
-  // if (dir.children.length) {
-  //   if (!dir.text) {
-  //     let last = _.last(info.bpath.split('/'))
-  //     dir.text = last
-  //   }
-  //   dir.children = groupByName(dir.children)
-  // }
-  // // let hasFiles = false
-  // // dir.children.forEach(child=> {
-  // //   if (_.last(child.fn) == '/') hasFiles = true
-  // // })
-  // // dir.hasFiles = hasFiles
-  // tree.push(_.clone(dir))
-  // log('TREE', tree)
 }

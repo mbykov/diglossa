@@ -2,6 +2,8 @@
 import _ from "lodash";
 import { q, qs, empty, create, remove, span, p, div, enclitic } from './utils'
 import Split from 'split.js'
+// import { bookData, scrollPanes, keyPanes, parseLib, parseTitle, parseBook } from './lib/book'
+import { parseTitle } from './book'
 
 const log = console.log
 const settings = require('electron').remote.require('electron-settings')
@@ -14,21 +16,6 @@ const slash = require('slash')
 let init = {section: 'home'}
 let history = [init]
 let hstate = 0
-
-// document.body.addEventListener('click', (event) => {
-//   // log('CLICK-DOC', event.target.dataset)
-//   if (event.target.dataset.section) {
-//     const section = event.target.dataset.section
-//     // log('CLICK', event.target.dataset)
-
-//     // TODO:
-//     let fn = '/home/michael/diglossa.texts/Xuanzang/datangxiyuji.json'
-//     let fns = [fn]
-//     if (section == 'readInfo') getInfoFile(fns)
-//     else
-//       navigate({section: section})
-//   }
-// })
 
 function hideAll () {
   const sections = document.querySelectorAll('.section.is-shown')
@@ -87,31 +74,6 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
   else if (ev.which == 39) goRight()
 })
 
-export function navigate(state) {
-  log('NAV-state', state)
-  let section = state.section
-  sectionTrigger(section)
-  // current.section = section
-  if (!state.old) {
-    history.push(_.clone(state))
-    hstate = history.length-1
-  }
-  delete state.old
-  // log('STATES', hstate, history)
-  // bookData(current)
-
-  if (section == 'title') twoPages()
-
-  // if (sec == 'lib') goLib()
-  // else if (sec == 'title') getTitle()
-  // else if (sec == 'book') getBook()
-  // else if (sec == 'search') parseQuery(libdb, current)
-  // else showSection(sec)
-
-  let progress = q('#progress')
-  // progress.style.display = 'none'
-}
-
 function sectionTrigger (section) {
   log('TRIG', section)
   hideAll ()
@@ -152,4 +114,29 @@ export function parseInfo(info) {
   let infoid = ['info', info.book.author, info.book.title].join('-')
   info._id = infoid
   return info
+}
+
+export function navigate(state) {
+  log('NAV-state', state)
+  let section = state.section
+  sectionTrigger(section)
+  // current.section = section
+  if (!state.old) {
+    history.push(_.clone(state))
+    hstate = history.length-1
+  }
+  delete state.old
+  // log('STATES', hstate, history)
+  // bookData(current)
+
+  if (section == 'title') twoPages()
+
+  if (section == 'lib') log('SEC FAKE') // goLib()
+  else if (section == 'title') parseTitle(state.info)
+  // else if (section == 'book') getBook()
+  // else if (section == 'search') parseQuery(libdb, current)
+  // else showSection(section)
+
+  let progress = q('#progress')
+  // progress.style.display = 'none'
 }
