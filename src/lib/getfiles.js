@@ -1,8 +1,9 @@
 import _ from 'lodash'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
-import {nav} from '../app';
+// import {nav} from '../app';
 
 const fse = require('fs-extra')
+const JSON = require('json5')
 const path = require('path')
 const slash = require('slash')
 const glob = require('glob')
@@ -10,203 +11,29 @@ const dirTree = require('directory-tree')
 const textract = require('textract')
 const log = console.log
 
-export function parseODS(info, cb) {
-  let bpath = info.bpath
-  if (bpath === undefined) return
+export function getInfoFiles(fns) {
+  if (!fns || !fns.length) return
+  let infopath = fns[0]
+  let info
   try {
-    textract.fromFileWithPath(bpath, {preserveLineBreaks: true, delimiter: '|'}, function(err, str) {
-      let book = parseCSV(info, str)
-      cb(book)
-    })
-  } catch (err) {
-    if (err) log('ODS ERR', err)
-    cb(false)
+    let progress = q('#progress')
+    progress.classList.add('is-shown')
+
+    let json = fse.readFileSync(infopath)
+    let info = JSON.parse(json)
+    info = parseInfo(info)
+    let dir = path.parse(infopath).dir
+    let bpath = path.resolve(dir, info.book.path)
+    info.bpath = slash(bpath)
+    log('INFO', info)
+    getDir(info)
+  } catch(err) {
+    log('INFO JSON ERR:', err)
   }
+  return
 }
 
-function parseCSV(info, str) {
-  let nics = []
-  let pars = []
-  let map = {}
-  let rows = str.split('\n')
-  let size = rows[0].length
-  let fpath = info.bpath.split('/')[info.bpath.split('/').length-2]
-
-  rows.forEach((row, idx) => {
-    if (row[0] == '#') return
-    if (row == ',,') return
-    let strs
-    if (/","|,"|",/.test(row)) strs = row.split(/","|,"|",/)
-    else strs = row.split(',')
-    strs = _.compact(strs)
-    strs.forEach((str, idy)=> {
-      let auth = info.auths[idy]
-      if (!auth) return
-      let nic = auth.nic
-      nics.push(nic)
-      let lang = auth.lang
-      let text = str.replace(/"/g, '')
-      let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-')
-      let parid = [groupid, nic].join('-')
-      let par = { _id: parid, infoid: info._id, pos: idx, nic: nic, fpath: fpath, lang: lang, text: text }
-      if (auth.author) {
-        par.author = true
-        bookWFMap(map, text, groupid)
-      }
-      pars.push(par)
-    })
-  })
-  let tree = {text: info.book.title, fpath: fpath}
-  info.tree = tree
-  info.info = true
-
-  nics = _.uniq(nics)
-  let mapnics = {}
-  for (let wf in map) {
-    map[wf].forEach(groupid=> {
-      nics.forEach(nic=> {
-        let parid = [groupid, nic].join('-')
-        if (!mapnics[wf]) mapnics[wf] = []
-        mapnics[wf].push(parid)
-      })
-    })
-  }
-
-  let mapdocs = []
-  for (let wf in mapnics) {
-    let mapdoc = {_id: wf, parids: mapnics[wf]}
-    mapdocs.push(mapdoc)
-  }
-  return {pars: pars, mapdocs: mapdocs}
-}
-
-function walk(dname, dtree, tree) {
-  let dpath = slash(dtree.path)
-  let fpath = dpath.split(dname)[1]
-  tree.text = fpath.split('/').slice(-1)[0]
-  tree.fpath = fpath.replace(/^\//, '')
-  if (!dtree.children) return
-  let hasFiles = false
-  dtree.children.forEach(child=> {
-    if (child.type == 'file') hasFiles = true
-  })
-  tree.hasFiles = hasFiles
-  let dchildren = _.filter(dtree.children, child=> { return child.type == 'directory'})
-  if (!dchildren.length) return
-  dchildren = _.sortBy(dchildren, 'name')
-  dchildren.forEach((child, idx)=> {
-    if (!tree.children) tree.children = []
-    if (!tree.children[idx]) tree.children.push({})
-    walk(dname, child, tree.children[idx])
-  })
-}
-
-export function parseDir(info, cb) {
-  let bpath = info.bpath
-  const dtree = dirTree(bpath, { normalizePath: true })
-  if (!dtree) return
-
-  let dname = info.bpath.split('/').slice(0,-1).join('/')
-  let tree = {}
-  walk(dname, dtree, tree)
-  info.tree = tree
-  info.info = true
-
-  let fns = glob.sync('**/*', {cwd: bpath})
-  fns = _.filter(fns, fn=>{ return path.extname(fn) != '.json' }) // .txt ?
-
-  let nics = []
-  let pars = []
-  let map = {}
-  info.sections = []
-
-  fns.forEach(fn => {
-    let comment = false
-    let ext = path.extname(fn)
-    if (!ext) return
-    let com = ext.split('-')[1]
-    if (com && com == 'com') comment = true, fn = fn.replace('-com', ''), ext = path.extname(fn)
-    if (comment) return // COMMENT
-    if (['.info', '.josn', '.txt'].includes(ext)) return
-    let nic = ext.replace(/^\./, '')
-    nics.push(nic)
-    let auth = _.find(info.auths, auth=> { return auth.nic == nic})
-
-    let fullpath = path.resolve(bpath, fn)
-    let txt = fse.readFileSync(fullpath, 'utf8')
-    let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ')
-    let rows = _.compact(clean.split('\n'))
-
-    let dirname = path.dirname(fullpath)
-    dirname = slash(dirname)
-    let fpath = dirname.split(dname)[1]
-    fpath = slash(fpath)
-    fpath = fpath.replace(/^\//, '')
-    info.sections.push(fpath)
-
-    let lang
-    if (auth) lang = auth.lang
-
-    rows.forEach((row, idx)=> {
-      let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-')
-      let parid = [groupid, nic].join('-')
-      let par = { _id: parid, infoid: info._id, pos: idx, nic: nic, fpath: fpath, lang: lang, text: row }
-      if (auth.author) {
-        par.author = true
-        bookWFMap(map, row, groupid)
-      }
-      // if (comment) coms.push(par)
-      // else pars.push(par)
-      if (!comment) pars.push(par)
-    })
-  })
-
-  nics = _.uniq(nics)
-
-  let mapnics = {}
-  for (let wf in map) {
-    // вариант для бедных - сохраняю только первое вхождение в параграфе:
-    _.uniq(map[wf]).forEach(groupid=> {
-      nics.forEach(nic=> {
-        let parid = [groupid, nic].join('-')
-        if (!mapnics[wf]) mapnics[wf] = []
-        mapnics[wf].push(parid)
-      })
-    })
-  }
-
-  let mapdocs = []
-  for (let wf in mapnics) {
-    let mapdoc = {_id: wf, parids: mapnics[wf]}
-    mapdocs.push(mapdoc)
-  }
-
-  let book = {pars: pars, mapdocs: mapdocs}
-  cb(book)
-}
-
-function bookWFMap(map, row, groupid) {
-  let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
-  let wfs = _.compact(punctless.split(' '))
-  wfs.forEach(wf=> {
-    if (!map[wf]) map[wf] = []
-    map[wf].push(groupid)
-  })
-}
-
-// mango-find can not use indexes with $or
-function bookWFMap_(map, row, fpath, pos) {
-  let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
-  let wfs = _.compact(punctless.split(' '))
-  wfs.forEach(wf=> {
-    if (!map[wf]) map[wf] = []
-    let mdoc = { fpath: fpath, pos: pos }
-    map[wf].push(mdoc)
-  })
-}
-
-
-export function parseInfo(info) {
+function parseInfo(info) {
   let nicnames = {}
   info.auths.forEach(auth => {
     if (auth.author) {
@@ -219,4 +46,80 @@ export function parseInfo(info) {
   let infoid = ['info', info.book.author, info.book.title].join('-')
   info._id = infoid
   return info
+}
+
+function walk(children) {
+  let dirs = _.filter(children, child=> { return child.type == 'directory' })
+  let files = _.filter(children, child=> { return child.type == 'file' })
+  log('D', dirs)
+  log('F', files)
+  let grDirs = []
+  dirs.forEach(dir=> {
+    if (!dir.children.length) return
+    let grDir = walk(dir.children)
+    grDirs.push({text: dir.name, children: grDir})
+  })
+  let fileGrs = groupByName(files)
+  children = []
+  if (grDirs.length) children.push(grDirs)
+  if (fileGrs.length) children.push(fileGrs)
+  return children
+}
+
+function groupByName(fns) {
+  let children = []
+  let names = fns.map(fn=> { return {name: _.first(_.last(fn.path.split('/')).split('.')), fn: fn}})
+  let grouped = _.groupBy(names, 'name')
+  // log('GR', grouped)
+  for (let name in grouped) {
+    let child = {text: name, children: grouped[name].map(obj=> { return obj.fn.path}), file: true}
+    children.push(child)
+  }
+  return children
+}
+
+function getDir(info) {
+  const dtree = dirTree(info.bpath);
+  log('T', dtree)
+  let tree = walk(dtree.children)
+  log('T1', tree)
+
+  return
+
+  // log('BPATH', info.bpath)
+  // let strs = glob.sync('**', {
+  //   cwd: info.bpath,
+  //   dot: true,
+  //   mark: true,
+  //   strict: true
+  // })
+  // log('GLOB', strs)
+  // let tree = []
+  // let dir = {text: null, children: []}
+  // strs.forEach(str=> {
+  //   if (_.last(str) == '/') {
+  //     if (dir.children.length) {
+  //       tree.push(_.clone(dir))
+  //       dir = {text: null, children: []}
+  //     }
+  //     dir.text = str.slice(0,-1)
+  //   } else {
+  //     dir.children.push(str)
+  //   }
+  // })
+
+  // if (dir.children.length) {
+  //   if (!dir.text) {
+  //     let last = _.last(info.bpath.split('/'))
+  //     dir.text = last
+  //   }
+  //   dir.children = groupByName(dir.children)
+  // }
+  // // let hasFiles = false
+  // // dir.children.forEach(child=> {
+  // //   if (_.last(child.fn) == '/') hasFiles = true
+  // // })
+  // // dir.hasFiles = hasFiles
+  // tree.push(_.clone(dir))
+  // log('TREE', tree)
 }

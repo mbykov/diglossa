@@ -6,17 +6,18 @@
 import path from "path";
 import url from "url";
 import { app, BrowserWindow, Menu, ipcMain, globalShortcut } from "electron";
-import { devMenuTemplate } from "./menu/dev_menu_template";
+// import { devMenuTemplate } from "./menu/dev_menu_template";
 import { editMenuTemplate } from "./menu/edit_menu_template";
 import { libMenuTemplate } from "./menu/lib_menu_template";
 import { fileMenuTemplate } from "./menu/file_menu_template";
 import { aboutMenuTemplate } from "./menu/about_menu_template";
 import { helpMenuTemplate } from "./menu/help_menu_template";
 import { authMenuTemplate } from "./menu/auth_menu_template";
-import { leftMenuTemplate } from "./menu/left_menu_template";
-import { rightMenuTemplate } from "./menu/right_menu_template";
+// import { leftMenuTemplate } from "./menu/left_menu_template";
+// import { rightMenuTemplate } from "./menu/right_menu_template";
 // import createWindow from "./lib/window";
 const windowStateKeeper = require('electron-window-state');
+const settings = require('electron-settings');
 
 // const Store = require('electron-store')
 // const store = new Store()
@@ -26,7 +27,7 @@ const windowStateKeeper = require('electron-window-state');
 import env from "env";
 
 const setApplicationMenu = () => {
-  const menus = [leftMenuTemplate, rightMenuTemplate, libMenuTemplate, fileMenuTemplate, aboutMenuTemplate, authMenuTemplate, helpMenuTemplate];
+  const menus = [libMenuTemplate, fileMenuTemplate, aboutMenuTemplate, authMenuTemplate, helpMenuTemplate];
   if (env.name !== "production") {
     // menus.push(devMenuTemplate);
   }
@@ -55,7 +56,10 @@ app.on("ready", () => {
     'x': mainWindowState.x,
     'y': mainWindowState.y,
     'width': mainWindowState.width,
-    'height': mainWindowState.height
+    'height': mainWindowState.height,
+    webPreferences: {
+      nodeIntegration: true
+    }
   });
 
   // Let us register listeners on the window, so we can update the state
@@ -77,14 +81,8 @@ app.on("ready", () => {
   );
 
   if (env.name === "development") {
-    // win.openDevTools();
+    win.openDevTools();
   }
-
-  // globalShortcut.register('CommandOrControl+R', () => {
-  //   // BrowserWindow.getFocusedWindow().webContents.send('re-read')
-  //   console.log('RR')
-  //   win.webContents.send('re-read')
-  // })
 
   win.webContents.on('did-finish-load', () => {
     let pckg = require('../package.json')
@@ -95,7 +93,7 @@ app.on("ready", () => {
     win.setTitle([name, 'v.', version].join(' '))
   })
 
-
+  globalShortcut.register('Ctrl+R', () => win.reload());
 });
 
 app.on("window-all-closed", () => {

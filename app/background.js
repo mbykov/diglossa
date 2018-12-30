@@ -104,7 +104,7 @@ module.exports = {"name":"development","description":"Add here any environment s
 /*! exports provided: name, productName, description, version, author, copyright, license, homepage, main, build, scripts, dependencies, devDependencies, repository, bugs, default */
 /***/ (function(module) {
 
-module.exports = {"name":"diglossa.js","productName":"Diglossa.js","description":"Bilingual Reader - an application for creating, distributing and reading bi-(many) lingual texts","version":"0.4.20","author":"Michael  Bykov <m.bykov@gmail.com>","copyright":"© 2018, Michael Bykov","license":"GPL-3.0","homepage":"http://diglossa.org/diglossa.js","main":"app/background.js","build":{"appId":"org.diglossa.diglossa.js","files":["app/**/*","src/**/*","resources/**/*","package.json"],"directories":{"buildResources":"resources"},"dmg":{"contents":[{"x":410,"y":150,"type":"link","path":"/Applications"},{"x":130,"y":150,"type":"file"}]},"mac":{"icon":"resources/icon.icns"},"win":{"icon":"resources/icon.ico","publisherName":"Michael Bykov","publish":["github"]},"linux":{"category":"Educational software","target":["deb"],"icon":"resources/icons"},"publish":"github"},"scripts":{"postinstall":"electron-builder install-app-deps","preunit":"webpack --config=build/webpack.unit.config.js --env=test --display=none","unit":"electron-mocha temp/specs.js --renderer --require source-map-support/register","pree2e":"webpack --config=build/webpack.app.config.js --env=test --display=none && webpack --config=build/webpack.e2e.config.js --env=test --display=none","e2e":"mocha temp/e2e.js --require source-map-support/register","test":"npm run unit && npm run e2e","start":"node build/start.js","release":"webpack --config=build/webpack.app.config.js --env=production && electron-builder"},"dependencies":{"axios":"^0.18.0","directory-tree":"^2.1.0","electron-clipboard-extended":"^1.1.1","electron-window-state":"^5.0.2","file-loader":"^2.0.0","franc-all":"^5.0.0","fs-extra":"^7.0.0","fs-jetpack":"^2.2.0","git-clone":"^0.1.0","glob":"^7.1.3","json5":"^2.1.0","lodash":"^4.17.11","mousetrap":"^1.6.2","pouchdb":"^7.0.0","pouchdb-find":"^7.0.0","slash":"^2.0.0","split.js":"^1.4.0","textract":"^2.4.0"},"devDependencies":{"@babel/core":"^7.1.2","@babel/preset-env":"^7.1.0","babel-loader":"^8.0.4","babel-plugin-transform-object-rest-spread":"^7.0.0-beta.3","chai":"^4.2.0","css-loader":"^0.28.7","electron":"3.0.2","electron-builder":"^20.28.4","electron-mocha":"^6.0.4","friendly-errors-webpack-plugin":"^1.7.0","mocha":"^5.2.0","source-map-support":"^0.5.9","spectron":"^4.0.0","style-loader":"^0.23.0","webpack":"^4.20.2","webpack-cli":"^3.1.2","webpack-merge":"^4.1.4","webpack-node-externals":"^1.7.2"},"repository":{"type":"git","url":"git+https://github.com/mbykov/diglossa.js.git"},"bugs":{"url":"https://github.com/mbykov/diglossa.js/issues"}};
+module.exports = {"name":"diglossa.js","productName":"Diglossa.js","description":"Bilingual Reader - an application for creating, distributing and reading bi-(many) lingual texts","version":"0.4.21","author":"Michael  Bykov <m.bykov@gmail.com>","copyright":"© 2018, Michael Bykov","license":"GPL-3.0","homepage":"http://diglossa.org/diglossa.js","main":"app/background.js","build":{"appId":"org.diglossa.diglossa.js","files":["app/**/*","src/**/*","resources/**/*","package.json"],"directories":{"buildResources":"resources"},"dmg":{"contents":[{"x":410,"y":150,"type":"link","path":"/Applications"},{"x":130,"y":150,"type":"file"}]},"mac":{"icon":"resources/icon.icns"},"win":{"icon":"resources/icon.ico","publisherName":"Michael Bykov","publish":["github"]},"linux":{"category":"Educational software","target":["deb"],"icon":"resources/icons"},"publish":"github"},"scripts":{"postinstall":"electron-builder install-app-deps","preunit":"webpack --config=build/webpack.unit.config.js --env=test --display=none","unit":"electron-mocha temp/specs.js --renderer --require source-map-support/register","pree2e":"webpack --config=build/webpack.app.config.js --env=test --display=none && webpack --config=build/webpack.e2e.config.js --env=test --display=none","e2e":"mocha temp/e2e.js --require source-map-support/register","test":"npm run unit && npm run e2e","start":"node build/start.js","release":"webpack --config=build/webpack.app.config.js --env=production && electron-builder"},"dependencies":{"axios":"^0.18.0","directory-tree":"^2.1.0","electron-clipboard-extended":"^1.1.1","electron-settings":"^3.2.0","electron-window-state":"^5.0.2","file-loader":"^2.0.0","franc-all":"^5.0.0","fs-extra":"^7.0.1","fs-jetpack":"^2.2.0","git-clone":"^0.1.0","glob":"^7.1.3","json5":"^2.1.0","lodash":"^4.17.11","mousetrap":"^1.6.2","pouchdb":"^7.0.0","pouchdb-find":"^7.0.0","slash":"^2.0.0","split.js":"^1.4.0","textract":"^2.4.0"},"devDependencies":{"@babel/core":"^7.1.2","@babel/preset-env":"^7.1.0","babel-loader":"^8.0.4","babel-plugin-transform-object-rest-spread":"^7.0.0-beta.3","chai":"^4.2.0","css-loader":"^0.28.7","electron":"4.0.0","electron-builder":"^20.28.4","electron-mocha":"^6.0.4","friendly-errors-webpack-plugin":"^1.7.0","mocha":"^5.2.0","source-map-support":"^0.5.9","spectron":"^4.0.0","style-loader":"^0.23.0","webpack":"^4.20.2","webpack-cli":"^3.1.2","webpack-merge":"^4.1.4","webpack-node-externals":"^1.7.2"},"repository":{"type":"git","url":"git+https://github.com/mbykov/diglossa.js.git"},"bugs":{"url":"https://github.com/mbykov/diglossa.js/issues"}};
 
 /***/ }),
 
@@ -123,35 +123,34 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var url__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(url__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! electron */ "electron");
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _menu_dev_menu_template__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./menu/dev_menu_template */ "./src/menu/dev_menu_template.js");
-/* harmony import */ var _menu_edit_menu_template__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./menu/edit_menu_template */ "./src/menu/edit_menu_template.js");
-/* harmony import */ var _menu_lib_menu_template__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./menu/lib_menu_template */ "./src/menu/lib_menu_template.js");
-/* harmony import */ var _menu_file_menu_template__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./menu/file_menu_template */ "./src/menu/file_menu_template.js");
-/* harmony import */ var _menu_about_menu_template__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./menu/about_menu_template */ "./src/menu/about_menu_template.js");
-/* harmony import */ var _menu_help_menu_template__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./menu/help_menu_template */ "./src/menu/help_menu_template.js");
-/* harmony import */ var _menu_auth_menu_template__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./menu/auth_menu_template */ "./src/menu/auth_menu_template.js");
-/* harmony import */ var _menu_left_menu_template__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./menu/left_menu_template */ "./src/menu/left_menu_template.js");
-/* harmony import */ var _menu_right_menu_template__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./menu/right_menu_template */ "./src/menu/right_menu_template.js");
-/* harmony import */ var env__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! env */ "./config/env_development.json");
-var env__WEBPACK_IMPORTED_MODULE_12___namespace = /*#__PURE__*/__webpack_require__.t(/*! env */ "./config/env_development.json", 1);
+/* harmony import */ var _menu_edit_menu_template__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./menu/edit_menu_template */ "./src/menu/edit_menu_template.js");
+/* harmony import */ var _menu_lib_menu_template__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./menu/lib_menu_template */ "./src/menu/lib_menu_template.js");
+/* harmony import */ var _menu_file_menu_template__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./menu/file_menu_template */ "./src/menu/file_menu_template.js");
+/* harmony import */ var _menu_about_menu_template__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./menu/about_menu_template */ "./src/menu/about_menu_template.js");
+/* harmony import */ var _menu_help_menu_template__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./menu/help_menu_template */ "./src/menu/help_menu_template.js");
+/* harmony import */ var _menu_auth_menu_template__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./menu/auth_menu_template */ "./src/menu/auth_menu_template.js");
+/* harmony import */ var env__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! env */ "./config/env_development.json");
+var env__WEBPACK_IMPORTED_MODULE_9___namespace = /*#__PURE__*/__webpack_require__.t(/*! env */ "./config/env_development.json", 1);
 // This is main process of Electron, started as first thing when your
 // app starts. It runs through entire life of your application.
 // It doesn't have any windows which you can see on screen, but we can open
 // window from here.
 
 
+ // import { devMenuTemplate } from "./menu/dev_menu_template";
 
 
 
 
 
 
+ // import { leftMenuTemplate } from "./menu/left_menu_template";
+// import { rightMenuTemplate } from "./menu/right_menu_template";
+// import createWindow from "./lib/window";
 
+const windowStateKeeper = __webpack_require__(/*! electron-window-state */ "electron-window-state");
 
-
- // import createWindow from "./lib/window";
-
-const windowStateKeeper = __webpack_require__(/*! electron-window-state */ "electron-window-state"); // const Store = require('electron-store')
+const settings = __webpack_require__(/*! electron-settings */ "electron-settings"); // const Store = require('electron-store')
 // const store = new Store()
 // Special module holding environment variables which you declared
 // in config/env_xxx.json file.
@@ -160,9 +159,9 @@ const windowStateKeeper = __webpack_require__(/*! electron-window-state */ "elec
 
 
 const setApplicationMenu = () => {
-  const menus = [_menu_left_menu_template__WEBPACK_IMPORTED_MODULE_10__["leftMenuTemplate"], _menu_right_menu_template__WEBPACK_IMPORTED_MODULE_11__["rightMenuTemplate"], _menu_lib_menu_template__WEBPACK_IMPORTED_MODULE_5__["libMenuTemplate"], _menu_file_menu_template__WEBPACK_IMPORTED_MODULE_6__["fileMenuTemplate"], _menu_about_menu_template__WEBPACK_IMPORTED_MODULE_7__["aboutMenuTemplate"], _menu_auth_menu_template__WEBPACK_IMPORTED_MODULE_9__["authMenuTemplate"], _menu_help_menu_template__WEBPACK_IMPORTED_MODULE_8__["helpMenuTemplate"]];
+  const menus = [_menu_lib_menu_template__WEBPACK_IMPORTED_MODULE_4__["libMenuTemplate"], _menu_file_menu_template__WEBPACK_IMPORTED_MODULE_5__["fileMenuTemplate"], _menu_about_menu_template__WEBPACK_IMPORTED_MODULE_6__["aboutMenuTemplate"], _menu_auth_menu_template__WEBPACK_IMPORTED_MODULE_8__["authMenuTemplate"], _menu_help_menu_template__WEBPACK_IMPORTED_MODULE_7__["helpMenuTemplate"]];
 
-  if (env__WEBPACK_IMPORTED_MODULE_12__.name !== "production") {// menus.push(devMenuTemplate);
+  if (env__WEBPACK_IMPORTED_MODULE_9__.name !== "production") {// menus.push(devMenuTemplate);
   }
 
   electron__WEBPACK_IMPORTED_MODULE_2__["Menu"].setApplicationMenu(electron__WEBPACK_IMPORTED_MODULE_2__["Menu"].buildFromTemplate(menus));
@@ -171,9 +170,9 @@ const setApplicationMenu = () => {
 // on same machine like those are two separate apps.
 
 
-if (env__WEBPACK_IMPORTED_MODULE_12__.name !== "production") {
+if (env__WEBPACK_IMPORTED_MODULE_9__.name !== "production") {
   const userDataPath = electron__WEBPACK_IMPORTED_MODULE_2__["app"].getPath("userData");
-  electron__WEBPACK_IMPORTED_MODULE_2__["app"].setPath("userData", `${userDataPath} (${env__WEBPACK_IMPORTED_MODULE_12__.name})`);
+  electron__WEBPACK_IMPORTED_MODULE_2__["app"].setPath("userData", `${userDataPath} (${env__WEBPACK_IMPORTED_MODULE_9__.name})`);
 }
 
 electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("ready", () => {
@@ -188,7 +187,10 @@ electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("ready", () => {
     'x': mainWindowState.x,
     'y': mainWindowState.y,
     'width': mainWindowState.width,
-    'height': mainWindowState.height
+    'height': mainWindowState.height,
+    webPreferences: {
+      nodeIntegration: true
+    }
   }); // Let us register listeners on the window, so we can update the state
   // automatically (the listeners will be removed when the window is closed)
   // and restore the maximized or full screen state
@@ -204,13 +206,9 @@ electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("ready", () => {
     slashes: true
   }));
 
-  if (env__WEBPACK_IMPORTED_MODULE_12__.name === "development") {} // win.openDevTools();
-  // globalShortcut.register('CommandOrControl+R', () => {
-  //   // BrowserWindow.getFocusedWindow().webContents.send('re-read')
-  //   console.log('RR')
-  //   win.webContents.send('re-read')
-  // })
-
+  if (env__WEBPACK_IMPORTED_MODULE_9__.name === "development") {
+    win.openDevTools();
+  }
 
   win.webContents.on('did-finish-load', () => {
     let pckg = __webpack_require__(/*! ../package.json */ "./package.json");
@@ -223,6 +221,7 @@ electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("ready", () => {
     });
     win.setTitle([name, 'v.', version].join(' '));
   });
+  electron__WEBPACK_IMPORTED_MODULE_2__["globalShortcut"].register('Ctrl+R', () => win.reload());
 });
 electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("window-all-closed", () => {
   electron__WEBPACK_IMPORTED_MODULE_2__["app"].quit();
@@ -304,44 +303,6 @@ const authMenuTemplate = {
 
 /***/ }),
 
-/***/ "./src/menu/dev_menu_template.js":
-/*!***************************************!*\
-  !*** ./src/menu/dev_menu_template.js ***!
-  \***************************************/
-/*! exports provided: devMenuTemplate */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "devMenuTemplate", function() { return devMenuTemplate; });
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! electron */ "electron");
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_0__);
-
-const devMenuTemplate = {
-  label: "Development",
-  submenu: [{
-    label: "Reload",
-    accelerator: "CmdOrCtrl+R",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.reloadIgnoringCache();
-    }
-  }, {
-    label: "Toggle DevTools",
-    accelerator: "Alt+CmdOrCtrl+I",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().toggleDevTools();
-    }
-  }, {
-    label: "Quit",
-    accelerator: "CmdOrCtrl+Q",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["app"].quit();
-    }
-  }]
-};
-
-/***/ }),
-
 /***/ "./src/menu/edit_menu_template.js":
 /*!****************************************!*\
   !*** ./src/menu/edit_menu_template.js ***!
@@ -412,19 +373,9 @@ const fileMenuTemplate = {
     }
   }, {
     type: "separator"
-  }, {
-    label: "Reload app",
-    accelerator: "CommandOrControl+Shift+R",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('reload');
-    }
-  }, {
-    label: "Re-read Files",
-    accelerator: "CommandOrControl+R",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('reread');
-    }
-  }, {
+  }, // { label: "Reload app", accelerator: "CommandOrControl+Shift+R", click: () => { BrowserWindow.getFocusedWindow().webContents.send('reload') } },
+  // { label: "Re-read Files", accelerator: "CommandOrControl+R", click: () => { BrowserWindow.getFocusedWindow().webContents.send('reread') } },
+  {
     type: "separator"
   }, {
     label: "Publish",
@@ -464,6 +415,10 @@ const fileMenuTemplate = {
     }
   }, {
     type: "separator"
+  }, {
+    role: 'reload'
+  }, {
+    role: 'forcereload'
   }, {
     label: "Quit",
     accelerator: "CmdOrCtrl+Q",
@@ -516,29 +471,6 @@ const helpMenuTemplate = {
 
 /***/ }),
 
-/***/ "./src/menu/left_menu_template.js":
-/*!****************************************!*\
-  !*** ./src/menu/left_menu_template.js ***!
-  \****************************************/
-/*! exports provided: leftMenuTemplate */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "leftMenuTemplate", function() { return leftMenuTemplate; });
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! electron */ "electron");
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_0__);
-
-const leftMenuTemplate = {
-  label: "<--",
-  // accelerator: "Alt+LeftArrow",
-  click: () => {
-    electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'goleft');
-  }
-};
-
-/***/ }),
-
 /***/ "./src/menu/lib_menu_template.js":
 /*!***************************************!*\
   !*** ./src/menu/lib_menu_template.js ***!
@@ -562,28 +494,6 @@ const libMenuTemplate = {
 
 /***/ }),
 
-/***/ "./src/menu/right_menu_template.js":
-/*!*****************************************!*\
-  !*** ./src/menu/right_menu_template.js ***!
-  \*****************************************/
-/*! exports provided: rightMenuTemplate */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "rightMenuTemplate", function() { return rightMenuTemplate; });
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! electron */ "electron");
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_0__);
-
-const rightMenuTemplate = {
-  label: "-->",
-  click: () => {
-    electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'goright');
-  }
-};
-
-/***/ }),
-
 /***/ "electron":
 /*!***************************!*\
   !*** external "electron" ***!
@@ -592,6 +502,17 @@ const rightMenuTemplate = {
 /***/ (function(module, exports) {
 
 module.exports = require("electron");
+
+/***/ }),
+
+/***/ "electron-settings":
+/*!************************************!*\
+  !*** external "electron-settings" ***!
+  \************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("electron-settings");
 
 /***/ }),
 

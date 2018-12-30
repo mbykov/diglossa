@@ -1,6 +1,5 @@
 html,
 body {
-  /* width: 100%; */
   height: 100%;
   padding-left: 10px;
   margin: 0;
@@ -9,18 +8,12 @@ body {
   font-family: 'Source Sans Pro', sans-serif;
 }
 
-#app {
+#container {
   margin: 0;
   height: 100%;
   overflow-y: hidden;
   overflow-x: hidden;
 }
-
-/* .container { */
-/*     height: 100%; */
-/*     width: 100%; */
-/*     margin-left: 0; */
-/* } */
 
 h2 {
     color: maroon;
