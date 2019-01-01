@@ -18,7 +18,7 @@ export default function tree(data, deftitle) {
     // otext.setAttribute('fpath', data.fpath)
     onode.appendChild(otext)
     otbody.appendChild(onode)
-    // return otree
+    return otree
   }
   data.children.forEach(node=> {
     let onode = createNode(node)
@@ -36,7 +36,7 @@ function createNode(node) {
   let otext = create('span', navclass)
   otext.textContent = node.text
   otext.setAttribute('fpath', node.fpath)
-  // otext.addEventListener('click', goNode, false)
+  otext.addEventListener('click', goNode, false)
   if (node.children) onode.appendChild(osign)
   onode.appendChild(otext)
   if (node.children) {
@@ -53,4 +53,8 @@ function createNode(node) {
 function toggleNode(ev) {
   let parent = ev.target.parentNode
   parent.classList.toggle('tree-collapse')
+}
+
+function goNode(ev) {
+  log('GONODE', ev.target)
 }

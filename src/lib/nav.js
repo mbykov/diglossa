@@ -81,25 +81,25 @@ function sectionTrigger (section) {
   q(sectionId).classList.add('is-shown')
 }
 
-function getInfoFile(fns) {
-  if (!fns) return
-  let infopath = fns[0]
-  if (!infopath) return
-  try {
-    let progress = q('#progress')
-    progress.style.display = 'inline-block'
+// function getInfoFile(fns) {
+//   if (!fns) return
+//   let infopath = fns[0]
+//   if (!infopath) return
+//   try {
+//     let progress = q('#progress')
+//     progress.style.display = 'inline-block'
 
-    let json = fse.readFileSync(infopath)
-    let info = JSON.parse(json)
-    info = parseInfo(info)
-    let dir = path.parse(infopath).dir
-    let bpath = path.resolve(dir, info.book.path)
-    info.bpath = slash(bpath)
-    // getDir(info)
-  } catch(err) {
-    log('INFO JSON ERR:', err)
-  }
-}
+//     let json = fse.readFileSync(infopath)
+//     let info = JSON.parse(json)
+//     info = parseInfo(info)
+//     let dir = path.parse(infopath).dir
+//     let bpath = path.resolve(dir, info.book.path)
+//     info.bpath = slash(bpath)
+//     // getDir(info)
+//   } catch(err) {
+//     log('INFO JSON ERR:', err)
+//   }
+// }
 
 export function parseInfo(info) {
   let nicnames = {}

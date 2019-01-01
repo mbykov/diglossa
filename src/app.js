@@ -62,7 +62,10 @@ document.body.addEventListener('click', (event) => {
     // let fn = '/home/michael/diglossa.texts/Xuanzang/datangxiyuji.json'
     let fn = '/home/michael/diglossa.texts/Plato/dialogues.json'
     let fns = [fn]
-    if (section == 'readInfo') getInfoFiles(fns)
+    if (section == 'readInfo') {
+      getInfoFiles(fns)
+      // navigate({section: 'lib'})
+    }
     else
       navigate({section: section})
   }

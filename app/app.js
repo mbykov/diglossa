@@ -170,7 +170,10 @@ document.body.addEventListener('click', event => {
 
     let fn = '/home/michael/diglossa.texts/Plato/dialogues.json';
     let fns = [fn];
-    if (section == 'readInfo') Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["getInfoFiles"])(fns);else Object(_lib_nav__WEBPACK_IMPORTED_MODULE_6__["navigate"])({
+
+    if (section == 'readInfo') {
+      Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["getInfoFiles"])(fns); // navigate({section: 'lib'})
+    } else Object(_lib_nav__WEBPACK_IMPORTED_MODULE_6__["navigate"])({
       section: section
     });
   }
@@ -195,12 +198,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(split_js__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
 /* harmony import */ var _tree__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./tree */ "./src/lib/tree.js");
-/* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../app */ "./src/app.js");
 
 
 
-
-
+ // import { navigate, getText } from '../app';
 
 const path = __webpack_require__(/*! path */ "path");
 
@@ -235,7 +236,7 @@ function parseLib(info) {
 function goTitleEvent(ev) {
   if (ev.target.parentNode.nodeName != 'LI') return;
   let infoid = ev.target.parentNode.infoid;
-  Object(_app__WEBPACK_IMPORTED_MODULE_4__["navigate"])({
+  navigate({
     section: 'title',
     infoid: infoid
   });
@@ -703,6 +704,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
 /* harmony import */ var _nav__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./nav */ "./src/lib/nav.js");
+/* harmony import */ var _pouch__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./pouch */ "./src/lib/pouch.js");
+
 
 
 
@@ -724,55 +727,124 @@ const textract = __webpack_require__(/*! textract */ "textract");
 const log = console.log;
 function getInfoFiles(fns) {
   if (!fns || !fns.length) return;
-  let infopath = fns[0];
   let info;
+  let book;
+  let progress = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#progress');
+  progress.classList.add('is-shown');
+  let infopath = fns[0];
 
   try {
-    let progress = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#progress');
-    progress.classList.add('is-shown');
     let json = fse.readFileSync(infopath);
-    let info = JSON.parse(json);
+    info = JSON.parse(json);
     info = parseInfo(info);
     let dir = path.parse(infopath).dir;
     let bpath = path.resolve(dir, info.book.path);
-    info.bpath = slash(bpath);
+    info.bpath = slash(bpath); // info.sections = []
+
+    info.nics = [];
     log('INFO', info);
-    getDir(info);
+    book = getDir(info);
   } catch (err) {
     log('INFO JSON ERR:', err);
   }
 
-  return;
-}
+  log('BOOK', book.pars[10]);
 
-function parseInfo(info) {
-  let nicnames = {};
-  info.auths.forEach(auth => {
-    if (auth.author) {
-      info.book.author = auth.name;
-      return;
-    }
-
-    nicnames[auth.nic] = auth.name;
+  let aups = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(book.pars, par => {
+    return par.author;
   });
-  info.nicnames = nicnames;
-  let infoid = ['info', info.book.author, info.book.title].join('-');
-  info._id = infoid;
-  return info;
+
+  log('AUPS', aups[100]);
+  log('INFO', info);
+  return;
 }
 
 function getDir(info) {
   // здесь тип файла
   const dtree = dirTree(info.bpath);
-  log('T', dtree);
+  log('TD', dtree);
   let tree = walk(dtree.children);
-  log('T1', tree);
   info.tree = tree;
-  let state = {
-    section: 'title',
-    info: info
+  log('TREE', tree); // let dpath = info.bpath.split('/').slice(0,-1).join('/')
+  // info.dpath = dpath
+  // log('DPATH', dpath)
+
+  let pars = [];
+  let map = {};
+  let book = walkRead(info, tree, pars);
+  return book;
+}
+
+function walkRead(info, children, pars) {
+  children.forEach(child => {
+    if (child.file) {
+      child.children.forEach(fn => {
+        readFile(info, fn, pars);
+      });
+    } else {
+      walkRead(info, child.children, pars);
+    }
+  });
+  info.nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(info.nics); // let book = {pars: pars, mapdocs: mapdocs}
+
+  let book = {
+    pars: pars
   };
-  Object(_nav__WEBPACK_IMPORTED_MODULE_2__["navigate"])(state);
+  return book;
+}
+
+function readFile(info, fn, pars) {
+  let ext = path.extname(fn);
+  if (!ext) return;
+  if (['.info', '.json', '.txt'].includes(ext)) return;
+  let nic = ext.replace(/^\./, '');
+  info.nics.push(nic);
+
+  let auth = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(info.auths, auth => {
+    return auth.nic == nic;
+  });
+
+  let lang = auth && auth.lang ? auth.lang : 'lang';
+  let txt;
+
+  try {
+    txt = fse.readFileSync(fn, 'utf8');
+  } catch (err) {
+    txt = ['can not read file:', fn].join(' ');
+    log('TXT ERR:', txt);
+  }
+
+  let dirname = path.dirname(fn);
+  dirname = slash(dirname); // let fpath = dirname.split(info.bpath)[1]
+  // если тае определить fpath, то при одинаковых basename в разных директориях - конфликт
+
+  let fpath = path.basename(fn).split('.')[0];
+  fpath = slash(fpath);
+  fpath = fpath.replace(/^\//, ''); // info.sections.push(fpath)
+
+  let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ');
+
+  let rows = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(clean.split('\n'));
+
+  rows.forEach((row, idx) => {
+    let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-');
+    let parid = [groupid, nic].join('-');
+    let par = {
+      _id: parid,
+      infoid: info._id,
+      pos: idx,
+      nic: nic,
+      fpath: fpath,
+      lang: lang,
+      text: row
+    };
+
+    if (auth && auth.author) {
+      par.author = true; // bookWFMap(map, row, groupid)
+    }
+
+    pars.push(par);
+  });
 }
 
 function walk(children) {
@@ -826,6 +898,22 @@ function groupByName(fns) {
   }
 
   return children;
+}
+
+function parseInfo(info) {
+  let nicnames = {};
+  info.auths.forEach(auth => {
+    if (auth.author) {
+      info.book.author = auth.name;
+      return;
+    }
+
+    nicnames[auth.nic] = auth.name;
+  });
+  info.nicnames = nicnames;
+  let infoid = ['info', info.book.author, info.book.title].join('-');
+  info._id = infoid;
+  return info;
 }
 
 /***/ }),
@@ -933,26 +1021,25 @@ function sectionTrigger(section) {
   hideAll();
   const sectionId = ['#', section].join('');
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(sectionId).classList.add('is-shown');
-}
+} // function getInfoFile(fns) {
+//   if (!fns) return
+//   let infopath = fns[0]
+//   if (!infopath) return
+//   try {
+//     let progress = q('#progress')
+//     progress.style.display = 'inline-block'
+//     let json = fse.readFileSync(infopath)
+//     let info = JSON.parse(json)
+//     info = parseInfo(info)
+//     let dir = path.parse(infopath).dir
+//     let bpath = path.resolve(dir, info.book.path)
+//     info.bpath = slash(bpath)
+//     // getDir(info)
+//   } catch(err) {
+//     log('INFO JSON ERR:', err)
+//   }
+// }
 
-function getInfoFile(fns) {
-  if (!fns) return;
-  let infopath = fns[0];
-  if (!infopath) return;
-
-  try {
-    let progress = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#progress');
-    progress.style.display = 'inline-block';
-    let json = fse.readFileSync(infopath);
-    let info = JSON.parse(json);
-    info = parseInfo(info);
-    let dir = path.parse(infopath).dir;
-    let bpath = path.resolve(dir, info.book.path);
-    info.bpath = slash(bpath); // getDir(info)
-  } catch (err) {
-    log('INFO JSON ERR:', err);
-  }
-}
 
 function parseInfo(info) {
   let nicnames = {};
@@ -993,6 +1080,86 @@ function navigate(state) {
 
 /***/ }),
 
+/***/ "./src/lib/pouch.js":
+/*!**************************!*\
+  !*** ./src/lib/pouch.js ***!
+  \**************************/
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! electron */ "electron");
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_1__);
+//
+
+
+const log = console.log;
+
+const path = __webpack_require__(/*! path */ "path");
+
+let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
+
+const isDev = __webpack_require__(/*! electron-is-dev */ "electron-is-dev"); // const isDev = false
+// const isDev = true
+
+
+log('=====IS-DEV', isDev);
+const app = electron__WEBPACK_IMPORTED_MODULE_1__["remote"].app;
+const apath = app.getAppPath();
+let upath = app.getPath("userData");
+let dbPath = path.resolve(upath, 'pouch');
+fse.ensureDirSync(dbPath);
+
+const PouchDB = __webpack_require__(/*! pouchdb */ "pouchdb");
+
+PouchDB.plugin(__webpack_require__(/*! pouchdb-find */ "pouchdb-find"));
+let ftdbPath = path.resolve(upath, 'pouch/fulltext');
+let ftdb = new PouchDB(ftdbPath);
+let libPath = path.resolve(upath, 'pouch/library');
+let libdb = new PouchDB(libPath);
+
+function pushBook(info, book) {
+  if (!book || !book.pars || !book.pars.length) return;
+  Promise.all([pushInfo(info), pushTexts(book.pars), pushMap(book.mapdocs)]).then(function (res) {
+    if (res[1].length) {
+      libdb.createIndex({
+        index: {
+          fields: ['fpath', 'pos']
+        },
+        name: 'fpathindex'
+      }).then(function (res) {// log('INDEX CREATED')
+      });
+    }
+
+    navigate(current);
+  }).catch(function (err) {
+    log('ALL RES ERR', err);
+  });
+}
+
+function pushInfo(ndoc) {
+  return libdb.get(ndoc._id).catch(function (err) {
+    if (err.name === 'not_found') return;else throw err;
+  }).then(function (doc) {
+    if (doc) {
+      let testdoc = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.clone(doc);
+
+      delete testdoc._rev;
+      if (lodash__WEBPACK_IMPORTED_MODULE_0___default.a.isEqual(ndoc, testdoc)) return;else {
+        ndoc._rev = doc._rev;
+        return libdb.put(ndoc);
+      }
+    } else {
+      return libdb.put(ndoc);
+    }
+  });
+}
+
+/***/ }),
+
 /***/ "./src/lib/tree.js":
 /*!*************************!*\
   !*** ./src/lib/tree.js ***!
@@ -1023,7 +1190,8 @@ function tree(data, deftitle) {
     otext.textContent = data.title; // otext.setAttribute('fpath', data.fpath)
 
     onode.appendChild(otext);
-    otbody.appendChild(onode); // return otree
+    otbody.appendChild(onode);
+    return otree;
   }
 
   data.children.forEach(node => {
@@ -1041,8 +1209,8 @@ function createNode(node) {
   let navclass = node.hasFiles ? 'tree-node-text' : 'tree-node-empty';
   let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', navclass);
   otext.textContent = node.text;
-  otext.setAttribute('fpath', node.fpath); // otext.addEventListener('click', goNode, false)
-
+  otext.setAttribute('fpath', node.fpath);
+  otext.addEventListener('click', goNode, false);
   if (node.children) onode.appendChild(osign);
   onode.appendChild(otext);
 
@@ -1060,6 +1228,10 @@ function createNode(node) {
 function toggleNode(ev) {
   let parent = ev.target.parentNode;
   parent.classList.toggle('tree-collapse');
+}
+
+function goNode(ev) {
+  log('GONODE', ev.target);
 }
 
 /***/ }),
@@ -1255,6 +1427,17 @@ module.exports = require("electron-clipboard-extended");
 
 /***/ }),
 
+/***/ "electron-is-dev":
+/*!**********************************!*\
+  !*** external "electron-is-dev" ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("electron-is-dev");
+
+/***/ }),
+
 /***/ "fs-extra":
 /*!***************************!*\
   !*** external "fs-extra" ***!
@@ -1318,6 +1501,28 @@ module.exports = require("mousetrap");
 /***/ (function(module, exports) {
 
 module.exports = require("path");
+
+/***/ }),
+
+/***/ "pouchdb":
+/*!**************************!*\
+  !*** external "pouchdb" ***!
+  \**************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("pouchdb");
+
+/***/ }),
+
+/***/ "pouchdb-find":
+/*!*******************************!*\
+  !*** external "pouchdb-find" ***!
+  \*******************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("pouchdb-find");
 
 /***/ }),
 

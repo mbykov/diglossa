@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
-import {navigate} from './nav'
+import { navigate } from './nav'
+import { pushBook } from './pouch'
 
 const fse = require('fs-extra')
 const JSON = require('json5')
@@ -13,50 +14,99 @@ const log = console.log
 
 export function getInfoFiles(fns) {
   if (!fns || !fns.length) return
-  let infopath = fns[0]
   let info
+  let book
+  let progress = q('#progress')
+  progress.classList.add('is-shown')
+  let infopath = fns[0]
   try {
-    let progress = q('#progress')
-    progress.classList.add('is-shown')
-
     let json = fse.readFileSync(infopath)
-    let info = JSON.parse(json)
+    info = JSON.parse(json)
     info = parseInfo(info)
     let dir = path.parse(infopath).dir
     let bpath = path.resolve(dir, info.book.path)
     info.bpath = slash(bpath)
+    // info.sections = []
+    info.nics = []
     log('INFO', info)
-    getDir(info)
+    book = getDir(info)
   } catch(err) {
     log('INFO JSON ERR:', err)
   }
+  log('BOOK', book.pars[10])
+  let aups = _.filter(book.pars, par=> { return par.author })
+  log('AUPS', aups[100])
+  log('INFO', info)
   return
-}
-
-function parseInfo(info) {
-  let nicnames = {}
-  info.auths.forEach(auth => {
-    if (auth.author) {
-      info.book.author = auth.name
-      return
-    }
-    nicnames[auth.nic] = auth.name
-  })
-  info.nicnames = nicnames
-  let infoid = ['info', info.book.author, info.book.title].join('-')
-  info._id = infoid
-  return info
 }
 
 function getDir(info) {
   // здесь тип файла
   const dtree = dirTree(info.bpath);
-  log('T', dtree)
+  log('TD', dtree)
   let tree = walk(dtree.children)
-  log('T1', tree)
   info.tree = tree
-  let state = { section: 'title', info: info }
-  navigate(state)
+  log('TREE', tree)
+  // let dpath = info.bpath.split('/').slice(0,-1).join('/')
+  // info.dpath = dpath
+  // log('DPATH', dpath)
+  let pars = []
+  let map = {}
+  let book = walkRead(info, tree, pars)
+  return book
+}
+
+function walkRead(info, children, pars) {
+  children.forEach(child=> {
+    if (child.file) {
+      child.children.forEach(fn=> {
+        readFile(info, fn, pars)
+      })
+    } else {
+      walkRead(info, child.children, pars)
+    }
+  })
+  info.nics = _.uniq(info.nics)
+  // let book = {pars: pars, mapdocs: mapdocs}
+  let book = {pars: pars}
+  return book
+}
+
+function readFile(info, fn, pars) {
+  let ext = path.extname(fn)
+  if (!ext) return
+  if (['.info', '.json', '.txt'].includes(ext)) return
+  let nic = ext.replace(/^\./, '')
+  info.nics.push(nic)
+  let auth = _.find(info.auths, auth=> { return auth.nic == nic})
+  let lang = (auth && auth.lang) ? auth.lang : 'lang'
+  let txt
+  try {
+    txt = fse.readFileSync(fn, 'utf8')
+  } catch(err) {
+    txt = ['can not read file:', fn].join(' ')
+    log('TXT ERR:', txt)
+  }
+  let dirname = path.dirname(fn)
+  dirname = slash(dirname)
+  // let fpath = dirname.split(info.bpath)[1]
+  // если тае определить fpath, то при одинаковых basename в разных директориях - конфликт
+  let fpath = path.basename(fn).split('.')[0]
+  fpath = slash(fpath)
+  fpath = fpath.replace(/^\//, '')
+  // info.sections.push(fpath)
+  let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ')
+  let rows = _.compact(clean.split('\n'))
+  rows.forEach((row, idx)=> {
+    let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-')
+    let parid = [groupid, nic].join('-')
+    let par = { _id: parid, infoid: info._id, pos: idx, nic: nic, fpath: fpath, lang: lang, text: row }
+    if (auth && auth.author) {
+      par.author = true
+      // bookWFMap(map, row, groupid)
+    }
+    pars.push(par)
+  })
 }
 
 function walk(children) {
@@ -87,4 +137,19 @@ function groupByName(fns) {
     children.push(child)
   }
   return children
+}
+
+function parseInfo(info) {
+  let nicnames = {}
+  info.auths.forEach(auth => {
+    if (auth.author) {
+      info.book.author = auth.name
+      return
+    }
+    nicnames[auth.nic] = auth.name
+  })
+  info.nicnames = nicnames
+  let infoid = ['info', info.book.author, info.book.title].join('-')
+  info._id = infoid
+  return info
 }
