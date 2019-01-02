@@ -3,37 +3,33 @@ import Split from 'split.js'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
 import tree from './tree';
 // import { navigate, getText } from '../app';
+import { navigate } from './nav';
 
 const path = require('path')
 const log = console.log
-// const Store = require('electron-store')
-// const store = new Store()
 const clipboard = require('electron-clipboard-extended')
 
-// а еще нужно отдельно addBook?
-export function parseLib(info) {
-  log('==>> LIB INFO', info)
-  return
+export function parseLib(infos) {
+  log('==>> LIB INFOs', infos)
 
-  // window.split.setSizes([100,0])
-  // let osource = q('#source')
-  // empty(osource)
-  // let oul = create('ul')
-  // osource.appendChild(oul)
+  let osource = q('#home')
+  empty(osource)
+  let oul = create('ul')
+  osource.appendChild(oul)
 
-  // if (!infos.length) oul.textContent = 'your library is empty'
-  // infos.forEach(info => {
-  //   let ostr = create('li', 'libauth')
-  //   ostr.infoid = info._id
-  //   oul.appendChild(ostr)
-  //   let author = span(info.book.author)
-  //   let title = span(info.book.title)
-  //   author.classList.add('lib-auth')
-  //   title.classList.add('lib-title')
-  //   ostr.appendChild(author)
-  //   ostr.appendChild(title)
-  // })
-  // oul.addEventListener('click', goTitleEvent, false)
+  if (!infos.length) oul.textContent = 'your library is empty'
+  infos.forEach(info => {
+    let ostr = create('li', 'libauth')
+    ostr.infoid = info._id
+    oul.appendChild(ostr)
+    let author = span(info.book.author)
+    let title = span(info.book.title)
+    author.classList.add('lib-auth')
+    title.classList.add('lib-title')
+    ostr.appendChild(author)
+    ostr.appendChild(title)
+  })
+  oul.addEventListener('click', goTitleEvent, false)
 }
 
 function goTitleEvent(ev) {

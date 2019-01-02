@@ -12,7 +12,7 @@ const dirTree = require('directory-tree')
 const textract = require('textract')
 const log = console.log
 
-export function getInfoFiles(fns) {
+export function getInfoFiles(fns, cb) {
   if (!fns || !fns.length) return
   let info
   let book
@@ -23,16 +23,26 @@ export function getInfoFiles(fns) {
     let json = fse.readFileSync(infopath)
     info = JSON.parse(json)
     info = parseInfo(info)
-    let dir = path.parse(infopath).dir
-    let bpath = path.resolve(dir, info.book.path)
-    info.bpath = slash(bpath)
-    // info.sections = []
-    info.nics = []
-    log('INFO', info)
-    book = getDir(info)
   } catch(err) {
     log('INFO JSON ERR:', err)
   }
+
+  let dir = path.parse(infopath).dir
+  let bpath = path.resolve(dir, info.book.path)
+  info.bpath = slash(bpath)
+  // info.sections = []
+  info.nics = []
+  log('INFO', info)
+  book = getDir(info)
+  pushBook(info, book)
+    .then(function(res) {
+      log('PUSH BOOK OK')
+      cb(true)
+    })
+    .catch(function(err) {
+        log('PUSH BOOK ERR:', err)
+    })
+
   log('BOOK', book.pars[10])
   let aups = _.filter(book.pars, par=> { return par.author })
   log('AUPS', aups[100])

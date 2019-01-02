@@ -26,12 +26,28 @@ let ftdb = new PouchDB(ftdbPath)
 let libPath = path.resolve(upath, 'pouch/library')
 let libdb = new PouchDB(libPath)
 
-function pushBook(info, book) {
+export function pushBook(info, book) {
+  return Promise.all([
+    pushInfo(info),
+    // pushTexts(book.pars),
+    // pushMap(book.mapdocs)
+  ])
+    // .then(function(res) {
+    //   if (res[1].length) {
+    //     libdb.createIndex({
+    //       index: {fields: ['fpath', 'pos']},
+    //       name: 'fpathindex'
+    //     })
+    //   }
+    // })
+}
+
+function pushBook_(info, book) {
   if (!book || !book.pars || !book.pars.length) return
   Promise.all([
     pushInfo(info),
-    pushTexts(book.pars),
-    pushMap(book.mapdocs)
+    // pushTexts(book.pars),
+    // pushMap(book.mapdocs)
   ])
     .then(function(res) {
       if (res[1].length) {
@@ -43,7 +59,7 @@ function pushBook(info, book) {
             // log('INDEX CREATED')
           })
       }
-      navigate(current)
+      // navigate(current)
     }).catch(function(err) {
       log('ALL RES ERR', err)
     })
@@ -66,4 +82,13 @@ function pushInfo(ndoc) {
       return libdb.put(ndoc)
     }
   })
+}
+
+export function getLib() {
+  let options = {
+    include_docs: true,
+    startkey: 'info',
+    endkey: 'info\ufff0'
+  }
+  return libdb.allDocs(options)
 }

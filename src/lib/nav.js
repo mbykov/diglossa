@@ -3,7 +3,9 @@ import _ from "lodash";
 import { q, qs, empty, create, remove, span, p, div, enclitic } from './utils'
 import Split from 'split.js'
 // import { bookData, scrollPanes, keyPanes, parseLib, parseTitle, parseBook } from './lib/book'
-import { parseTitle } from './book'
+import { parseLib, parseTitle } from './book'
+import { getLib } from './pouch'
+
 
 const log = console.log
 const settings = require('electron').remote.require('electron-settings')
@@ -75,31 +77,11 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
 })
 
 function sectionTrigger (section) {
-  log('TRIG', section)
+  log('TRIGger section', section)
   hideAll ()
   const sectionId = ['#', section].join('')
   q(sectionId).classList.add('is-shown')
 }
-
-// function getInfoFile(fns) {
-//   if (!fns) return
-//   let infopath = fns[0]
-//   if (!infopath) return
-//   try {
-//     let progress = q('#progress')
-//     progress.style.display = 'inline-block'
-
-//     let json = fse.readFileSync(infopath)
-//     let info = JSON.parse(json)
-//     info = parseInfo(info)
-//     let dir = path.parse(infopath).dir
-//     let bpath = path.resolve(dir, info.book.path)
-//     info.bpath = slash(bpath)
-//     // getDir(info)
-//   } catch(err) {
-//     log('INFO JSON ERR:', err)
-//   }
-// }
 
 export function parseInfo(info) {
   let nicnames = {}
@@ -131,12 +113,23 @@ export function navigate(state) {
 
   if (section == 'title') twoPages()
 
-  if (section == 'lib') log('SEC FAKE') // goLib()
+  if (section == 'home')  goLib()
   else if (section == 'title') parseTitle(state.info)
   // else if (section == 'book') getBook()
   // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)
 
   let progress = q('#progress')
-  // progress.style.display = 'none'
+  progress.classList.remove('is-shown')
+}
+
+function goLib() {
+  getLib()
+    .then(function (result) {
+      let infos = result.rows.map(row=> { return row.doc})
+      parseLib(infos)
+    })
+    .catch(function (err) {
+      log('getLibErr', err);
+    })
 }

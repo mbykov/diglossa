@@ -63,8 +63,10 @@ document.body.addEventListener('click', (event) => {
     let fn = '/home/michael/diglossa.texts/Plato/dialogues.json'
     let fns = [fn]
     if (section == 'readInfo') {
-      getInfoFiles(fns)
-      // navigate({section: 'lib'})
+      getInfoFiles(fns, function(res) {
+        log('APP BOOK PUSHED')
+        navigate({section: 'home'})
+      })
     }
     else
       navigate({section: section})
