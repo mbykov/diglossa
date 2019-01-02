@@ -54,16 +54,32 @@ function getDir(info) {
   // здесь тип файла
   const dtree = dirTree(info.bpath);
   log('TD', dtree)
-  let tree = walk(dtree.children)
-  info.tree = tree
-  log('TREE', tree)
-  // let dpath = info.bpath.split('/').slice(0,-1).join('/')
-  // info.dpath = dpath
-  // log('DPATH', dpath)
+  let fulltree = walk(dtree.children)
   let pars = []
   let map = {}
-  let book = walkRead(info, tree, pars)
+  let book = walkRead(info, fulltree, pars)
+  let children = _.clone(fulltree)
+  let tree = shortTree(children, info.bpath)
+  info.tree = tree
+  log('TREE', tree)
   return book
+}
+
+function shortTree(children, bpath) {
+  children.forEach(child=> {
+    if (child.children && child.file) {
+      let fpath = child.children[0].split(bpath)[1].split('.')[0]
+      child.fpath = fpath.replace(/^\//, '')
+      child.children = child.children.length
+    } else if (child.children) {
+      shortTree(child.children, bpath)
+      child.children.forEach(child=> {
+      })
+    } else {
+      log('CANT BE')
+    }
+  })
+  return children
 }
 
 function walkRead(info, children, pars) {

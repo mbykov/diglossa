@@ -1,6 +1,7 @@
 //
 import _ from "lodash";
 import { remote } from "electron";
+import { parseLib, parseTitle } from './book'
 
 const log = console.log
 const path = require('path')
@@ -84,11 +85,39 @@ function pushInfo(ndoc) {
   })
 }
 
+// export function getLib() {
+//   let options = {
+//     include_docs: true,
+//     startkey: 'info',
+//     endkey: 'info\ufff0'
+//   }
+//   return libdb.allDocs(options)
+// }
+
 export function getLib() {
   let options = {
     include_docs: true,
     startkey: 'info',
     endkey: 'info\ufff0'
   }
-  return libdb.allDocs(options)
+  libdb.allDocs(options)
+    .then(function (result) {
+      let infos = result.rows.map(row=> { return row.doc})
+      parseLib(infos)
+    })
+    .catch(function (err) {
+      log('getLibErr', err);
+    })
+}
+
+export function getTitle(state) {
+  log('T', state)
+  if (!state.infoid) return
+  libdb.get(state.infoid)
+    .then(function (info) {
+      log('T-info', info)
+      parseTitle(info)
+    }).catch(function (err) {
+      log('getTitleErr', err);
+    })
 }

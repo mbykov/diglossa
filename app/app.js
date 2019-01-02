@@ -248,9 +248,11 @@ function goTitleEvent(ev) {
 }
 
 function parseTitle(info) {
-  log('TITLE INFO', info);
+  log('TITLE INFO', info.tree);
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
+  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
+  Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns);
   let obookTitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
   obookTitle.classList.add('bookTitle');
   osource.appendChild(obookTitle);
@@ -281,15 +283,12 @@ function parseTitle(info) {
   ocontent.id = 'book-content';
   ocontent.textContent = 'content';
   otrns.appendChild(ocontent); // let otree = tree(info.tree, info.book.title)
+  // let otreeTitle = treeTitle(info.book.title)
 
-  let treedata = {
-    title: info.book.title,
-    children: info.tree
-  };
-  let otree = Object(_tree__WEBPACK_IMPORTED_MODULE_3__["default"])(treedata); // let otree = tree(info.tree, 'kukuku')
-
+  let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('div', 'tree');
+  otree.id = 'tree-body';
   otrns.appendChild(otree);
-  let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#tree-body');
+  Object(_tree__WEBPACK_IMPORTED_MODULE_3__["tree"])(info.tree, otree);
   otree.addEventListener('click', goBookEvent, false);
 }
 
@@ -774,16 +773,33 @@ function getDir(info) {
   // здесь тип файла
   const dtree = dirTree(info.bpath);
   log('TD', dtree);
-  let tree = walk(dtree.children);
-  info.tree = tree;
-  log('TREE', tree); // let dpath = info.bpath.split('/').slice(0,-1).join('/')
-  // info.dpath = dpath
-  // log('DPATH', dpath)
-
+  let fulltree = walk(dtree.children);
   let pars = [];
   let map = {};
-  let book = walkRead(info, tree, pars);
+  let book = walkRead(info, fulltree, pars);
+
+  let children = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.clone(fulltree);
+
+  let tree = shortTree(children, info.bpath);
+  info.tree = tree;
+  log('TREE', tree);
   return book;
+}
+
+function shortTree(children, bpath) {
+  children.forEach(child => {
+    if (child.children && child.file) {
+      let fpath = child.children[0].split(bpath)[1].split('.')[0];
+      child.fpath = fpath.replace(/^\//, '');
+      child.children = child.children.length;
+    } else if (child.children) {
+      shortTree(child.children, bpath);
+      child.children.forEach(child => {});
+    } else {
+      log('CANT BE');
+    }
+  });
+  return children;
 }
 
 function walkRead(info, children, pars) {
@@ -945,13 +961,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
 /* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! split.js */ "split.js");
 /* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(split_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _book__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./book */ "./src/lib/book.js");
-/* harmony import */ var _pouch__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./pouch */ "./src/lib/pouch.js");
+/* harmony import */ var _pouch__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./pouch */ "./src/lib/pouch.js");
 //
 
 
  // import { bookData, scrollPanes, keyPanes, parseLib, parseTitle, parseBook } from './lib/book'
-
+// import { parseLib, parseTitle } from './book'
 
 
 const log = console.log;
@@ -1065,24 +1080,22 @@ function navigate(state) {
   // bookData(current)
 
   if (section == 'title') twoPages();
-  if (section == 'home') goLib();else if (section == 'title') Object(_book__WEBPACK_IMPORTED_MODULE_3__["parseTitle"])(state.info); // else if (section == 'book') getBook()
+  if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getLib"])();else if (section == 'title') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getTitle"])(state); // else if (section == 'book') getBook()
   // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)
 
   let progress = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#progress');
   progress.classList.remove('is-shown');
-}
-
-function goLib() {
-  Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getLib"])().then(function (result) {
-    let infos = result.rows.map(row => {
-      return row.doc;
-    });
-    Object(_book__WEBPACK_IMPORTED_MODULE_3__["parseLib"])(infos);
-  }).catch(function (err) {
-    log('getLibErr', err);
-  });
-}
+} // function goLib() {
+//   getLib()
+//     .then(function (result) {
+//       let infos = result.rows.map(row=> { return row.doc})
+//       parseLib(infos)
+//     })
+//     .catch(function (err) {
+//       log('getLibErr', err);
+//     })
+// }
 
 /***/ }),
 
@@ -1090,18 +1103,21 @@ function goLib() {
 /*!**************************!*\
   !*** ./src/lib/pouch.js ***!
   \**************************/
-/*! exports provided: pushBook, getLib */
+/*! exports provided: pushBook, getLib, getTitle */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pushBook", function() { return pushBook; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib", function() { return getLib; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTitle", function() { return getTitle; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! electron */ "electron");
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _book__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./book */ "./src/lib/book.js");
 //
+
 
 
 const log = console.log;
@@ -1173,7 +1189,15 @@ function pushInfo(ndoc) {
       return libdb.put(ndoc);
     }
   });
-}
+} // export function getLib() {
+//   let options = {
+//     include_docs: true,
+//     startkey: 'info',
+//     endkey: 'info\ufff0'
+//   }
+//   return libdb.allDocs(options)
+// }
+
 
 function getLib() {
   let options = {
@@ -1181,7 +1205,24 @@ function getLib() {
     startkey: 'info',
     endkey: 'info\ufff0'
   };
-  return libdb.allDocs(options);
+  libdb.allDocs(options).then(function (result) {
+    let infos = result.rows.map(row => {
+      return row.doc;
+    });
+    Object(_book__WEBPACK_IMPORTED_MODULE_2__["parseLib"])(infos);
+  }).catch(function (err) {
+    log('getLibErr', err);
+  });
+}
+function getTitle(state) {
+  log('T', state);
+  if (!state.infoid) return;
+  libdb.get(state.infoid).then(function (info) {
+    log('T-info', info);
+    Object(_book__WEBPACK_IMPORTED_MODULE_2__["parseTitle"])(info);
+  }).catch(function (err) {
+    log('getTitleErr', err);
+  });
 }
 
 /***/ }),
@@ -1190,44 +1231,60 @@ function getLib() {
 /*!*************************!*\
   !*** ./src/lib/tree.js ***!
   \*************************/
-/*! exports provided: default */
+/*! exports provided: default, tree */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return tree; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return treeTitle; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "tree", function() { return tree; });
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
 //
 
 let log = console.log;
-function tree(data, deftitle) {
-  let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree');
-  let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-body');
-  otbody.id = 'tree-body';
-  otree.appendChild(otbody);
-  let children = data.children;
-
-  if (data.title) {
-    let onode = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-text');
-    let osign = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-branch');
-    osign.textContent = '▾';
-    onode.appendChild(osign);
-    let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-node-text');
-    otext.textContent = data.title; // otext.setAttribute('fpath', data.fpath)
-
-    onode.appendChild(otext);
-    otbody.appendChild(onode);
-    return otree;
-  }
-
-  data.children.forEach(node => {
-    let onode = createNode(node);
-    otbody.appendChild(onode);
+function treeTitle(deftitle) {}
+function tree(children, otree) {
+  children.forEach(node => {
+    if (node.fpath) {
+      let onode = createNode(node);
+      otree.appendChild(onode);
+    } else {
+      let obranch = createBranch(node);
+      otree.appendChild(obranch);
+      tree(node.children, obranch);
+    }
   });
+  otree.addEventListener('click', goNode, false);
+  log('OTREE', otree);
   return otree;
 }
 
 function createNode(node) {
+  log('NODE', node);
+  let onode = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-text');
+  let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-node-text');
+  otext.textContent = node.text;
+  otext.setAttribute('fpath', node.fpath);
+  onode.appendChild(otext);
+  return onode;
+}
+
+function createBranch(node) {
+  log('BRANCH', node);
+  let onode = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-branch');
+  let osign = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-sign');
+  osign.textContent = '▾';
+  osign.addEventListener('click', toggleNode, false);
+  onode.appendChild(osign);
+  let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-node-branch');
+  otext.textContent = node.text;
+  otext.setAttribute('fpath', node.fpath);
+  onode.appendChild(otext);
+  return onode;
+}
+
+function createNode_(node) {
+  log('NODE', node);
   let onode = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-text');
   let osign = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-branch');
   osign.textContent = '▾';
@@ -1304,7 +1361,6 @@ function qs(sel) {
 function create(tag, style) {
   let el = document.createElement(tag);
   if (style) el.classList.add(style);
-  if (style) el.id = style;
   return el;
 }
 function recreateDiv(sel) {

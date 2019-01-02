@@ -2,32 +2,52 @@
 import { q, qs, empty, create, span, p, div, remove } from './utils'
 let log = console.log
 
-export default function tree(data, deftitle) {
-  let otree = create('div', 'tree')
-  let otbody = create('div', 'tree-body')
-  otbody.id = 'tree-body'
-  otree.appendChild(otbody)
-  let children = data.children
-  if (data.title) {
-    let onode = create('div', 'tree-text')
-    let osign = create('span', 'tree-branch')
-    osign.textContent = '▾'
-    onode.appendChild(osign)
-    let otext = create('span', 'tree-node-text')
-    otext.textContent = data.title
-    // otext.setAttribute('fpath', data.fpath)
-    onode.appendChild(otext)
-    otbody.appendChild(onode)
-    return otree
-  }
-  data.children.forEach(node=> {
-    let onode = createNode(node)
-    otbody.appendChild(onode)
+export default function treeTitle(deftitle) {
+}
+
+export function tree(children, otree) {
+  children.forEach(node=> {
+    if (node.fpath) {
+      let onode = createNode(node)
+      otree.appendChild(onode)
+    }
+    else {
+      let obranch = createBranch(node)
+      otree.appendChild(obranch)
+      tree(node.children, obranch)
+    }
   })
+  otree.addEventListener('click', goNode, false)
+  log('OTREE', otree)
   return otree
 }
 
 function createNode(node) {
+  log('NODE', node)
+  let onode = create('div', 'tree-text')
+  let otext = create('span', 'tree-node-text')
+  otext.textContent = node.text
+  otext.setAttribute('fpath', node.fpath)
+  onode.appendChild(otext)
+  return onode
+}
+
+function createBranch(node) {
+  log('BRANCH', node)
+  let onode = create('div', 'tree-branch')
+  let osign = create('span', 'tree-sign')
+  osign.textContent = '▾'
+  osign.addEventListener('click', toggleNode, false)
+  onode.appendChild(osign)
+  let otext = create('span', 'tree-node-branch')
+  otext.textContent = node.text
+  otext.setAttribute('fpath', node.fpath)
+  onode.appendChild(otext)
+  return onode
+}
+
+function createNode_(node) {
+  log('NODE', node)
   let onode = create('div', 'tree-text')
   let osign = create('span', 'tree-branch')
   osign.textContent = '▾'

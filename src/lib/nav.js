@@ -3,8 +3,8 @@ import _ from "lodash";
 import { q, qs, empty, create, remove, span, p, div, enclitic } from './utils'
 import Split from 'split.js'
 // import { bookData, scrollPanes, keyPanes, parseLib, parseTitle, parseBook } from './lib/book'
-import { parseLib, parseTitle } from './book'
-import { getLib } from './pouch'
+// import { parseLib, parseTitle } from './book'
+import { getLib, getTitle } from './pouch'
 
 
 const log = console.log
@@ -113,8 +113,8 @@ export function navigate(state) {
 
   if (section == 'title') twoPages()
 
-  if (section == 'home')  goLib()
-  else if (section == 'title') parseTitle(state.info)
+  if (section == 'home')  getLib()
+  else if (section == 'title') getTitle(state)
   // else if (section == 'book') getBook()
   // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)
@@ -123,13 +123,13 @@ export function navigate(state) {
   progress.classList.remove('is-shown')
 }
 
-function goLib() {
-  getLib()
-    .then(function (result) {
-      let infos = result.rows.map(row=> { return row.doc})
-      parseLib(infos)
-    })
-    .catch(function (err) {
-      log('getLibErr', err);
-    })
-}
+// function goLib() {
+//   getLib()
+//     .then(function (result) {
+//       let infos = result.rows.map(row=> { return row.doc})
+//       parseLib(infos)
+//     })
+//     .catch(function (err) {
+//       log('getLibErr', err);
+//     })
+// }

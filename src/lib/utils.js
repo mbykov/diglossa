@@ -13,7 +13,6 @@ export function qs (sel) {
 export function create (tag, style) {
   let el = document.createElement(tag)
   if (style) el.classList.add(style)
-  if (style) el.id = style
   return el
 }
 

@@ -1,14 +1,27 @@
 .tree-text,
 .tree-leaf {
-  padding-left: 20px;
-  cursor: pointer;
+    padding-left: 20px;
+    cursor: pointer;
 }
+
 .tree-branch {
-  position: relative;
-  /* margin-left: 20px; */
-  margin-left: 5px;
-  margin-right: 5px;
+    margin-left: 5px;
+    /* padding-left: 10px; */
 }
+
+.tree-sign {
+    position: relative;
+    /* margin-left: 20px; */
+    margin-left: 5px;
+    margin-right: 5px;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
 /* .tree-text::before{ */
 /*   position: absolute; */
 /*   top: 0px; */
@@ -16,6 +29,7 @@
 /*   font-size: 1em; */
 /*   content: '▾'; */
 /* } */
+
 ul.tree-list {
   margin: 0px;
   padding: 0px;
@@ -36,11 +50,11 @@ ul.tree-list {
 .tree-collapse .tree-text::before {
   content: '▸';
 }
-.tree-branch {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
+/* .tree-branch { */
+/*   -webkit-touch-callout: none; */
+/*   -webkit-user-select: none; */
+/*   -khtml-user-select: none; */
+/*   -moz-user-select: none; */
+/*   -ms-user-select: none; */
+/*   user-select: none; */
+/* } */

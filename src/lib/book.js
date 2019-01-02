@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import Split from 'split.js'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
-import tree from './tree';
+import { tree } from './tree';
 // import { navigate, getText } from '../app';
 import { navigate } from './nav';
 
@@ -40,10 +40,11 @@ function goTitleEvent(ev) {
 
 
 export function parseTitle(info) {
-  log('TITLE INFO', info)
-
+  log('TITLE INFO', info.tree)
   let osource = q('#source')
   let otrns = q('#trns')
+  empty(osource)
+  empty(otrns)
   let obookTitle = div('')
   obookTitle.classList.add('bookTitle')
   osource.appendChild(obookTitle)
@@ -77,11 +78,11 @@ export function parseTitle(info) {
   otrns.appendChild(ocontent)
 
   // let otree = tree(info.tree, info.book.title)
-  let treedata = {title: info.book.title, children: info.tree}
-  let otree = tree(treedata)
-  // let otree = tree(info.tree, 'kukuku')
+  // let otreeTitle = treeTitle(info.book.title)
+  let otree = create('div', 'tree')
+  otree.id = 'tree-body'
   otrns.appendChild(otree)
-  let otbody = q('#tree-body')
+  tree(info.tree, otree)
   otree.addEventListener('click', goBookEvent, false)
 }
 
