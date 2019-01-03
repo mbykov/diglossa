@@ -22,6 +22,9 @@
     user-select: none;
 }
 
+.tbody {
+    padding-left: 15px;
+}
 /* .tree-text::before{ */
 /*   position: absolute; */
 /*   top: 0px; */

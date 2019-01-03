@@ -11,7 +11,6 @@ const clipboard = require('electron-clipboard-extended')
 
 export function parseLib(infos) {
   log('==>> LIB INFOs', infos)
-
   let osource = q('#home')
   empty(osource)
   let oul = create('ul')
@@ -40,7 +39,7 @@ function goTitleEvent(ev) {
 
 
 export function parseTitle(info) {
-  log('TITLE INFO', info.tree)
+  // log('TITLE INFO', info.tree)
   let osource = q('#source')
   let otrns = q('#trns')
   empty(osource)
@@ -48,6 +47,7 @@ export function parseTitle(info) {
   let obookTitle = div('')
   obookTitle.classList.add('bookTitle')
   osource.appendChild(obookTitle)
+  osource.setAttribute('infoid', info._id)
 
   let oauthor = div(info.book.author, 'author')
   let otitle = div(info.book.title, 'title')
@@ -74,25 +74,27 @@ export function parseTitle(info) {
   otrns.appendChild(obookCont)
   let ocontent = create('div', 'book-content')
   ocontent.id = 'book-content'
-  ocontent.textContent = 'content'
+  ocontent.textContent = 'Content:'
   otrns.appendChild(ocontent)
 
-  // let otree = tree(info.tree, info.book.title)
-  // let otreeTitle = treeTitle(info.book.title)
   let otree = create('div', 'tree')
-  otree.id = 'tree-body'
+  otree.id = 'tree'
+  let tbody = create('div', 'tbody')
+  otree.appendChild(tbody)
   otrns.appendChild(otree)
   tree(info.tree, otree)
+
   otree.addEventListener('click', goBookEvent, false)
 }
 
 function goBookEvent(ev) {
-  if (!ev.target.classList.contains('tree-node-text')) return
   let fpath = ev.target.getAttribute('fpath')
-  log('EV', ev.target)
-  // current.fpath = fpath
-  // current.section = 'book'
-  // navigate(current)
+  if (!fpath) return
+  log('FPATH', fpath)
+  let osource = q('#source')
+  let infoid  = osource.getAttribute('infoid')
+  // log('EV-INFO', info)
+  navigate({section: 'book', infoid: infoid, fpath: fpath})
 }
 
 

@@ -115,9 +115,23 @@ export function getTitle(state) {
   if (!state.infoid) return
   libdb.get(state.infoid)
     .then(function (info) {
-      log('T-info', info)
+      // log('T-info', info)
       parseTitle(info)
     }).catch(function (err) {
       log('getTitleErr', err);
     })
+}
+
+export function getBook(state) {
+  log('GB', state)
+  // libdb.get(current.infoid)
+  //   .then(function (curinfo) {
+  //     getText(current)
+  //       .then(function(res) {
+  //         let pars = _.compact(res.docs)
+  //         parseBook(curinfo, pars)
+  //       })
+  //   }).catch(function (err) {
+  //     log('getTitleErr', err);
+  //   })
 }

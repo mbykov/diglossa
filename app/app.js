@@ -173,7 +173,7 @@ document.body.addEventListener('click', event => {
 
     if (section == 'readInfo') {
       Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["getInfoFiles"])(fns, function (res) {
-        log('APP BOOK PUSHED');
+        // log('APP BOOK PUSHED')
         Object(_lib_nav__WEBPACK_IMPORTED_MODULE_6__["navigate"])({
           section: 'home'
         });
@@ -248,7 +248,7 @@ function goTitleEvent(ev) {
 }
 
 function parseTitle(info) {
-  log('TITLE INFO', info.tree);
+  // log('TITLE INFO', info.tree)
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
@@ -256,6 +256,7 @@ function parseTitle(info) {
   let obookTitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
   obookTitle.classList.add('bookTitle');
   osource.appendChild(obookTitle);
+  osource.setAttribute('infoid', info._id);
   let oauthor = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])(info.book.author, 'author');
   let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])(info.book.title, 'title');
   obookTitle.appendChild(oauthor);
@@ -281,23 +282,29 @@ function parseTitle(info) {
   otrns.appendChild(obookCont);
   let ocontent = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('div', 'book-content');
   ocontent.id = 'book-content';
-  ocontent.textContent = 'content';
-  otrns.appendChild(ocontent); // let otree = tree(info.tree, info.book.title)
-  // let otreeTitle = treeTitle(info.book.title)
-
+  ocontent.textContent = 'Content:';
+  otrns.appendChild(ocontent);
   let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('div', 'tree');
-  otree.id = 'tree-body';
+  otree.id = 'tree';
+  let tbody = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["create"])('div', 'tbody');
+  otree.appendChild(tbody);
   otrns.appendChild(otree);
   Object(_tree__WEBPACK_IMPORTED_MODULE_3__["tree"])(info.tree, otree);
   otree.addEventListener('click', goBookEvent, false);
 }
 
 function goBookEvent(ev) {
-  if (!ev.target.classList.contains('tree-node-text')) return;
   let fpath = ev.target.getAttribute('fpath');
-  log('EV', ev.target); // current.fpath = fpath
-  // current.section = 'book'
-  // navigate(current)
+  if (!fpath) return;
+  log('FPATH', fpath);
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
+  let infoid = osource.getAttribute('infoid'); // log('EV-INFO', info)
+
+  Object(_nav__WEBPACK_IMPORTED_MODULE_4__["navigate"])({
+    section: 'book',
+    infoid: infoid,
+    fpath: fpath
+  });
 } // let current, info
 // let limit = 20
 // export function bookData(newcurrent) {
@@ -749,30 +756,26 @@ function getInfoFiles(fns, cb) {
   let bpath = path.resolve(dir, info.book.path);
   info.bpath = slash(bpath); // info.sections = []
 
-  info.nics = [];
-  log('INFO', info);
+  info.nics = []; // log('INFO', info)
+
   book = getDir(info);
   Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["pushBook"])(info, book).then(function (res) {
-    log('PUSH BOOK OK');
+    // log('PUSH BOOK OK')
     cb(true);
   }).catch(function (err) {
     log('PUSH BOOK ERR:', err);
-  });
-  log('BOOK', book.pars[10]);
+  }); // log('BOOK', book.pars[10])
+  // let aups = _.filter(book.pars, par=> { return par.author })
+  // log('AUPS', aups[100])
+  // log('INFO', info)
 
-  let aups = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(book.pars, par => {
-    return par.author;
-  });
-
-  log('AUPS', aups[100]);
-  log('INFO', info);
   return;
 }
 
 function getDir(info) {
-  // здесь тип файла
-  const dtree = dirTree(info.bpath);
-  log('TD', dtree);
+  // TODO: здесь тип файла
+  const dtree = dirTree(info.bpath); // log('TD', dtree)
+
   let fulltree = walk(dtree.children);
   let pars = [];
   let map = {};
@@ -781,8 +784,8 @@ function getDir(info) {
   let children = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.clone(fulltree);
 
   let tree = shortTree(children, info.bpath);
-  info.tree = tree;
-  log('TREE', tree);
+  info.tree = tree; // log('TREE', tree)
+
   return book;
 }
 
@@ -794,9 +797,8 @@ function shortTree(children, bpath) {
       child.children = child.children.length;
     } else if (child.children) {
       shortTree(child.children, bpath);
-      child.children.forEach(child => {});
-    } else {
-      log('CANT BE');
+      child.children.forEach(child => {}); // } else {
+      // log('CANT BE')
     }
   });
   return children;
@@ -881,9 +883,7 @@ function walk(children) {
 
   let files = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(children, child => {
     return child.type == 'file';
-  }); // log('D', dirs)
-  // log('F', files)
-
+  });
 
   let grDirs = [];
   dirs.forEach(dir => {
@@ -910,8 +910,7 @@ function groupByName(fns) {
     };
   });
 
-  let grouped = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(names, 'name'); // log('GR', grouped)
-
+  let grouped = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(names, 'name');
 
   for (let name in grouped) {
     let child = {
@@ -1045,7 +1044,7 @@ Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
 });
 
 function sectionTrigger(section) {
-  log('TRIGger section', section);
+  // log('TRIGGER section', section)
   hideAll();
   const sectionId = ['#', section].join('');
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(sectionId).classList.add('is-shown');
@@ -1080,8 +1079,7 @@ function navigate(state) {
   // bookData(current)
 
   if (section == 'title') twoPages();
-  if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getLib"])();else if (section == 'title') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getTitle"])(state); // else if (section == 'book') getBook()
-  // else if (section == 'search') parseQuery(libdb, current)
+  if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getLib"])();else if (section == 'title') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getTitle"])(state);else if (section == 'book') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getBook"])(state); // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)
 
   let progress = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#progress');
@@ -1103,7 +1101,7 @@ function navigate(state) {
 /*!**************************!*\
   !*** ./src/lib/pouch.js ***!
   \**************************/
-/*! exports provided: pushBook, getLib, getTitle */
+/*! exports provided: pushBook, getLib, getTitle, getBook */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1111,6 +1109,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pushBook", function() { return pushBook; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib", function() { return getLib; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTitle", function() { return getTitle; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getBook", function() { return getBook; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! electron */ "electron");
@@ -1224,6 +1223,18 @@ function getTitle(state) {
     log('getTitleErr', err);
   });
 }
+function getBook(state) {
+  log('GB', state); // libdb.get(current.infoid)
+  //   .then(function (curinfo) {
+  //     getText(current)
+  //       .then(function(res) {
+  //         let pars = _.compact(res.docs)
+  //         parseBook(curinfo, pars)
+  //       })
+  //   }).catch(function (err) {
+  //     log('getTitleErr', err);
+  //   })
+}
 
 /***/ }),
 
@@ -1244,23 +1255,22 @@ __webpack_require__.r(__webpack_exports__);
 let log = console.log;
 function treeTitle(deftitle) {}
 function tree(children, otree) {
+  let tbody = otree.lastChild;
   children.forEach(node => {
     if (node.fpath) {
       let onode = createNode(node);
-      otree.appendChild(onode);
+      tbody.appendChild(onode);
     } else {
       let obranch = createBranch(node);
-      otree.appendChild(obranch);
+      tbody.appendChild(obranch);
       tree(node.children, obranch);
     }
-  });
-  otree.addEventListener('click', goNode, false);
-  log('OTREE', otree);
+  }); // otree.addEventListener('click', goNode, false)
+
   return otree;
 }
 
 function createNode(node) {
-  log('NODE', node);
   let onode = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-text');
   let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-node-text');
   otext.textContent = node.text;
@@ -1270,7 +1280,6 @@ function createNode(node) {
 }
 
 function createBranch(node) {
-  log('BRANCH', node);
   let onode = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-branch');
   let osign = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-sign');
   osign.textContent = '▾';
@@ -1280,31 +1289,8 @@ function createBranch(node) {
   otext.textContent = node.text;
   otext.setAttribute('fpath', node.fpath);
   onode.appendChild(otext);
-  return onode;
-}
-
-function createNode_(node) {
-  log('NODE', node);
-  let onode = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-text');
-  let osign = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-branch');
-  osign.textContent = '▾';
-  osign.addEventListener('click', toggleNode, false);
-  let navclass = node.hasFiles ? 'tree-node-text' : 'tree-node-empty';
-  let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', navclass);
-  otext.textContent = node.text;
-  otext.setAttribute('fpath', node.fpath);
-  otext.addEventListener('click', goNode, false);
-  if (node.children) onode.appendChild(osign);
-  onode.appendChild(otext);
-
-  if (node.children) {
-    node.children.forEach(child => {
-      let ochild = createNode(child);
-      onode.appendChild(ochild);
-    });
-  } // let texts = qs('.tree-text')
-
-
+  let tbody = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tbody');
+  onode.appendChild(tbody);
   return onode;
 }
 

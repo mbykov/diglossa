@@ -32,28 +32,28 @@ export function getInfoFiles(fns, cb) {
   info.bpath = slash(bpath)
   // info.sections = []
   info.nics = []
-  log('INFO', info)
+  // log('INFO', info)
   book = getDir(info)
   pushBook(info, book)
     .then(function(res) {
-      log('PUSH BOOK OK')
+      // log('PUSH BOOK OK')
       cb(true)
     })
     .catch(function(err) {
         log('PUSH BOOK ERR:', err)
     })
 
-  log('BOOK', book.pars[10])
-  let aups = _.filter(book.pars, par=> { return par.author })
-  log('AUPS', aups[100])
-  log('INFO', info)
+  // log('BOOK', book.pars[10])
+  // let aups = _.filter(book.pars, par=> { return par.author })
+  // log('AUPS', aups[100])
+  // log('INFO', info)
   return
 }
 
 function getDir(info) {
-  // здесь тип файла
+  // TODO: здесь тип файла
   const dtree = dirTree(info.bpath);
-  log('TD', dtree)
+  // log('TD', dtree)
   let fulltree = walk(dtree.children)
   let pars = []
   let map = {}
@@ -61,7 +61,7 @@ function getDir(info) {
   let children = _.clone(fulltree)
   let tree = shortTree(children, info.bpath)
   info.tree = tree
-  log('TREE', tree)
+  // log('TREE', tree)
   return book
 }
 
@@ -75,8 +75,8 @@ function shortTree(children, bpath) {
       shortTree(child.children, bpath)
       child.children.forEach(child=> {
       })
-    } else {
-      log('CANT BE')
+    // } else {
+      // log('CANT BE')
     }
   })
   return children
@@ -138,8 +138,6 @@ function readFile(info, fn, pars) {
 function walk(children) {
   let dirs = _.filter(children, child=> { return child.type == 'directory' })
   let files = _.filter(children, child=> { return child.type == 'file' })
-  // log('D', dirs)
-  // log('F', files)
   let grDirs = []
   dirs.forEach(dir=> {
     if (!dir.children.length) return
@@ -157,7 +155,6 @@ function groupByName(fns) {
   let children = []
   let names = fns.map(fn=> { return {name: _.first(_.last(fn.path.split('/')).split('.')), fn: fn}})
   let grouped = _.groupBy(names, 'name')
-  // log('GR', grouped)
   for (let name in grouped) {
     let child = {text: name, children: grouped[name].map(obj=> { return obj.fn.path}), file: true}
     children.push(child)

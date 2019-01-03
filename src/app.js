@@ -64,7 +64,7 @@ document.body.addEventListener('click', (event) => {
     let fns = [fn]
     if (section == 'readInfo') {
       getInfoFiles(fns, function(res) {
-        log('APP BOOK PUSHED')
+        // log('APP BOOK PUSHED')
         navigate({section: 'home'})
       })
     }

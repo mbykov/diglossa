@@ -4,7 +4,7 @@ import { q, qs, empty, create, remove, span, p, div, enclitic } from './utils'
 import Split from 'split.js'
 // import { bookData, scrollPanes, keyPanes, parseLib, parseTitle, parseBook } from './lib/book'
 // import { parseLib, parseTitle } from './book'
-import { getLib, getTitle } from './pouch'
+import { getLib, getTitle, getBook } from './pouch'
 
 
 const log = console.log
@@ -77,7 +77,7 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
 })
 
 function sectionTrigger (section) {
-  log('TRIGger section', section)
+  // log('TRIGGER section', section)
   hideAll ()
   const sectionId = ['#', section].join('')
   q(sectionId).classList.add('is-shown')
@@ -115,7 +115,7 @@ export function navigate(state) {
 
   if (section == 'home')  getLib()
   else if (section == 'title') getTitle(state)
-  // else if (section == 'book') getBook()
+  else if (section == 'book') getBook(state)
   // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)
 
