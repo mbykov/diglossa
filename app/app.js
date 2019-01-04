@@ -355,8 +355,8 @@ function parseBook(state, info, pars) {
   state.nic = nic;
   state.cnics = cnics;
   setChunk(state, pars);
-  createRightHeader(state, info); // createLeftHeader()
-  // osource.addEventListener("mouseover", copyToClipboard, false)
+  createRightHeader(state, info);
+  createLeftHeader(state, info); // osource.addEventListener("mouseover", copyToClipboard, false)
   // otrns.addEventListener("wheel", cyclePar, false)
 
   hideProgress();
@@ -437,8 +437,8 @@ function createRightHeader(state, info) {
   let arect = obook.getBoundingClientRect();
   let ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["div"])();
   ohright.classList.add('hright');
-  ohright.style.left = arect.width * 0.70 + 'px';
-  log('HEADER', state);
+  ohright.style.left = arect.width * 0.70 + 'px'; // log('HEADER', state)
+
   settings.set('state', state);
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('ul');
   oul.setAttribute('id', 'namelist');
@@ -503,6 +503,50 @@ function expandRightHeader() {
     oli.classList.remove('hidden');
     oli.classList.remove('active');
   });
+}
+
+function createLeftHeader(state, info) {
+  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#book');
+  let arect = obook.getBoundingClientRect();
+  let ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["div"])();
+  obook.appendChild(ohleft);
+  ohleft.classList.add('hleft');
+  ohleft.style.left = arect.width * 0.15 + 'px';
+  ohleft.addEventListener("click", clickLeftHeader, false);
+  let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tree');
+  otree.id = 'tree';
+  let tbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tbody');
+  otree.appendChild(tbody);
+  ohleft.appendChild(otree);
+  Object(_tree__WEBPACK_IMPORTED_MODULE_2__["tree"])(info.tree, otree); // let otitle = q('#tree-title')
+  // let otbody = q('#tree-body')
+  // if (state.fpath) {
+  //   otitle.textContent = state.fpath
+  //   otbody.classList.add('tree-collapse')
+  // } else {
+  //   otitle.textContent = info.book.title
+  //   remove(otbody)
+  // }
+}
+
+function clickLeftHeader(ev) {
+  let fpath = ev.target.getAttribute('fpath');
+  let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#tree-body');
+  if (!otbody) return;
+
+  if (fpath) {
+    if (ev.target.classList.contains('tree-node-empty')) return;
+    let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#tree-title');
+    current.fpath = fpath;
+    current.pos = 0;
+    otitle.textContent = current.fpath;
+    otbody.classList.add('tree-collapse');
+    Object(_nav__WEBPACK_IMPORTED_MODULE_3__["navigate"])(current);
+  } else {
+    otbody.classList.remove('tree-collapse');
+    let ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('.hleft');
+    ohleft.classList.add('header');
+  }
 }
 
 /***/ }),

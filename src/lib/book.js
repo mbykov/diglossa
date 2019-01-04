@@ -126,7 +126,7 @@ export function parseBook(state, info, pars) {
 
   setChunk(state, pars)
   createRightHeader(state, info)
-  // createLeftHeader()
+  createLeftHeader(state, info)
 
   // osource.addEventListener("mouseover", copyToClipboard, false)
   // otrns.addEventListener("wheel", cyclePar, false)
@@ -201,7 +201,7 @@ function createRightHeader(state, info) {
   let ohright = div()
   ohright.classList.add('hright')
   ohright.style.left = arect.width*0.70 + 'px'
-  log('HEADER', state)
+  // log('HEADER', state)
   settings.set('state', state)
 
   let oul = create('ul')
@@ -267,4 +267,50 @@ function expandRightHeader() {
     oli.classList.remove('hidden')
     oli.classList.remove('active')
   })
+}
+
+function createLeftHeader(state, info) {
+  let obook = q('#book')
+  let arect = obook.getBoundingClientRect()
+  let ohleft = div()
+  obook.appendChild(ohleft)
+  ohleft.classList.add('hleft')
+  ohleft.style.left = arect.width*0.15 + 'px'
+  ohleft.addEventListener("click", clickLeftHeader, false)
+
+  let otree = create('div', 'tree')
+  otree.id = 'tree'
+  let tbody = create('div', 'tbody')
+  otree.appendChild(tbody)
+  ohleft.appendChild(otree)
+  tree(info.tree, otree)
+
+  // let otitle = q('#tree-title')
+  // let otbody = q('#tree-body')
+  // if (state.fpath) {
+  //   otitle.textContent = state.fpath
+  //   otbody.classList.add('tree-collapse')
+  // } else {
+  //   otitle.textContent = info.book.title
+  //   remove(otbody)
+  // }
+}
+
+function clickLeftHeader(ev) {
+  let fpath = ev.target.getAttribute('fpath')
+  let otbody = q('#tree-body')
+  if (!otbody) return
+  if (fpath) {
+    if (ev.target.classList.contains('tree-node-empty')) return
+    let otitle = q('#tree-title')
+    current.fpath = fpath
+    current.pos = 0
+    otitle.textContent = current.fpath
+    otbody.classList.add('tree-collapse')
+    navigate(current)
+  } else {
+    otbody.classList.remove('tree-collapse')
+    let ohleft = q('.hleft')
+    ohleft.classList.add('header')
+  }
 }
