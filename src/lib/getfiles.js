@@ -115,11 +115,10 @@ function readFile(info, fn, pars) {
   }
   let dirname = path.dirname(fn)
   dirname = slash(dirname)
-  // let fpath = dirname.split(info.bpath)[1]
-  // если тае определить fpath, то при одинаковых basename в разных директориях - конфликт
-  let fpath = path.basename(fn).split('.')[0]
+  let fpath = fn.split(info.bpath)[1].split('.')[0]
   fpath = slash(fpath)
   fpath = fpath.replace(/^\//, '')
+
   // info.sections.push(fpath)
   let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ')
   let rows = _.compact(clean.split('\n'))

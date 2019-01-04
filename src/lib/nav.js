@@ -27,8 +27,7 @@ function hideAll () {
 }
 
 function goLeft() {
-  // if (current) delete current.query
-  log('<<=== LEFT', hstate)
+  // log('<<=== LEFT', hstate)
   if (hstate - 1 < 0) return
   if (hstate - 1 >= 0) hstate--
   let state = history[hstate]
@@ -37,8 +36,7 @@ function goLeft() {
 }
 
 function goRight() {
-  log('===>> RIGHT', hstate)
-  // if (current) delete current.query
+  // log('===>> RIGHT', hstate)
   if (hstate + 1 >= history.length) return
   if (hstate + 1 < history.length) hstate++
   let state = history[hstate]
@@ -53,11 +51,8 @@ function twoPageTitle() {
   let split = Split(['#book-title', '#book-contents'], {
     sizes: sizes,
     gutterSize: 5,
-    cursor: 'col-resize',
-    minSize: [0, 0],
-    onDragEnd: function (sizes) {
-      settings.set('split-sizes', sizes)
-    }
+    // cursor: 'col-resize',
+    minSize: [0, 0]
   })
   return split
 }
@@ -67,7 +62,6 @@ function twoPage() {
   if (ogutter) return
   let sizes = settings.get('split-sizes')
   if (!sizes) sizes = [50, 50]
-  // log('SIZES', sizes)
   let split = Split(['#source', '#trns'], {
     sizes: sizes,
     gutterSize: 5,
@@ -131,20 +125,10 @@ export function navigate(state) {
   if (section == 'home')  getLib()
   else if (section == 'title') getTitle(state)
   else if (section == 'book') getBook(state)
+  // else if (section == 'cleanup') goCleanup(state)
   // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)
 
   let progress = q('#progress')
   progress.classList.remove('is-shown')
 }
-
-// function goLib() {
-//   getLib()
-//     .then(function (result) {
-//       let infos = result.rows.map(row=> { return row.doc})
-//       parseLib(infos)
-//     })
-//     .catch(function (err) {
-//       log('getLibErr', err);
-//     })
-// }

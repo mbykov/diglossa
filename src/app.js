@@ -16,6 +16,8 @@ import { q, qs, empty, create, remove, span, p, div, enclitic } from './lib/util
 // import { parseQuery } from './lib/search';
 import { getInfoFiles } from './lib/getfiles'
 import { navigate } from './lib/nav';
+import { cleanup } from './lib/pouch'
+
 // require('./lib/nav')
 const settings = require('electron').remote.require('electron-settings')
 
@@ -71,4 +73,26 @@ document.body.addEventListener('click', (event) => {
     else
       navigate({section: section})
   }
+  else if (event.target.id == 'cleanupdb') {
+    log('DESTROYED CLICKED')
+    cleanup()
+      .then(function () {
+        log('DB DESTROYED')
+        getCurrentWindow().reload()
+      }).catch(function (err) {
+        log('DESTROY ERR:', err)
+      })
+  }
 })
+
+ipcRenderer.on('action', function (event, action) {
+  // if (action == 'cleanup') showCleanup()
+  // else
+  navigate({section: action})
+})
+
+// function showCleanup() {
+//   showSection('cleanup')
+//   let ocleanup = q('#cleanup')
+//   ocleanup.addEventListener("click", goCleanup, false)
+// }

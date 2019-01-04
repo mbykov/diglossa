@@ -1,7 +1,8 @@
 //
 import _ from "lodash";
 import { remote } from "electron";
-import { parseLib, parseTitle } from './book'
+import { parseLib, parseTitle, parseBook } from './book'
+const { getCurrentWindow } = require('electron').remote
 
 const log = console.log
 const path = require('path')
@@ -11,10 +12,11 @@ const isDev = require('electron-is-dev')
 // const isDev = false
 // const isDev = true
 log('=====IS-DEV', isDev)
+const limit = 20
 
 const app = remote.app;
 const apath = app.getAppPath()
-let upath = app.getPath("userData")
+const upath = app.getPath("userData")
 
 let dbPath = path.resolve(upath, 'pouch')
 fse.ensureDirSync(dbPath)
@@ -30,7 +32,7 @@ let libdb = new PouchDB(libPath)
 export function pushBook(info, book) {
   return Promise.all([
     pushInfo(info),
-    // pushTexts(book.pars),
+    pushTexts(book.pars),
     // pushMap(book.mapdocs)
   ])
     // .then(function(res) {
@@ -41,29 +43,6 @@ export function pushBook(info, book) {
     //     })
     //   }
     // })
-}
-
-function pushBook_(info, book) {
-  if (!book || !book.pars || !book.pars.length) return
-  Promise.all([
-    pushInfo(info),
-    // pushTexts(book.pars),
-    // pushMap(book.mapdocs)
-  ])
-    .then(function(res) {
-      if (res[1].length) {
-        libdb.createIndex({
-          index: {fields: ['fpath', 'pos']},
-          name: 'fpathindex'
-        })
-          .then(function(res) {
-            // log('INDEX CREATED')
-          })
-      }
-      // navigate(current)
-    }).catch(function(err) {
-      log('ALL RES ERR', err)
-    })
 }
 
 function pushInfo(ndoc) {
@@ -83,6 +62,28 @@ function pushInfo(ndoc) {
       return libdb.put(ndoc)
     }
   })
+}
+
+function pushTexts(newdocs) {
+  return libdb.allDocs({include_docs: true})
+    .then(function(res) {
+      let docs = res.rows.map(row=>{ return row.doc })
+      log('========= DOCS', docs[0])
+      let cleandocs = []
+      let hdoc = {}
+      docs.forEach(doc=> { hdoc[doc._id] = doc })
+      newdocs.forEach(newdoc=> {
+        let doc = hdoc[newdoc._id]
+        if (doc) {
+          if (newdoc.text == doc.text) return
+          else doc.text = newdoc.text, cleandocs.push(doc)
+        } else {
+          cleandocs.push(newdoc)
+        }
+      })
+      log('========= CLEANDOCS', cleandocs[0])
+      return libdb.bulkDocs(cleandocs)
+    })
 }
 
 // export function getLib() {
@@ -124,14 +125,34 @@ export function getTitle(state) {
 
 export function getBook(state) {
   log('GB', state)
-  // libdb.get(current.infoid)
-  //   .then(function (curinfo) {
-  //     getText(current)
-  //       .then(function(res) {
-  //         let pars = _.compact(res.docs)
-  //         parseBook(curinfo, pars)
-  //       })
-  //   }).catch(function (err) {
-  //     log('getTitleErr', err);
-  //   })
+  libdb.get(state.infoid)
+    .then(function (info) {
+      getText(state)
+        .then(function(res) {
+          let pars = _.compact(res.docs)
+          parseBook(state, info, pars)
+        })
+    }).catch(function (err) {
+      log('getBookErr', err);
+    })
+}
+
+export function getText(state, endpos) {
+  // log('GETTXT', state)
+  let fpath = state.fpath
+  let start = state.pos*1 || 0
+  let end = endpos*1 || start*1 + limit*1
+  let selector = {fpath: fpath, pos: {$gte: start, $lt: end}}
+  log('SELECT', selector)
+  return libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
+  // return libdb.explain({selector: selector})
+}
+
+
+export function cleanup() {
+  log('before destroy')
+  return Promise.all([
+    libdb.destroy(),
+    ftdb.destroy()
+  ])
 }
