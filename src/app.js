@@ -22,7 +22,7 @@ import { cleanup } from './lib/pouch'
 const settings = require('electron').remote.require('electron-settings')
 
 const JSON = require('json5')
-const Mousetrap = require('mousetrap')
+// const Mousetrap = require('mousetrap')
 const axios = require('axios')
 let fse = require('fs-extra')
 const slash = require('slash')

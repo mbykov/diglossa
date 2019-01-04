@@ -19,13 +19,6 @@ let init = {section: 'home'}
 let history = [init]
 let hstate = 0
 
-function hideAll () {
-  const sections = document.querySelectorAll('.section.is-shown')
-  Array.prototype.forEach.call(sections, (section) => {
-    section.classList.remove('is-shown')
-  })
-}
-
 function goLeft() {
   // log('<<=== LEFT', hstate)
   if (hstate - 1 < 0) return
@@ -44,33 +37,41 @@ function goRight() {
   navigate(state)
 }
 
-function twoPageTitle() {
-  let osource = q('#book-title')
-  let otrns = q('#book-contents')
-  empty(osource)
-  empty(otrns)
-  let ogutter = q('#title > .gutter')
-  if (ogutter) return
-  let sizes = [50, 50]
-  let split = Split(['#book-title', '#book-contents'], {
-    sizes: sizes,
-    gutterSize: 5,
-    // cursor: 'col-resize',
-    minSize: [0, 0]
-  })
-  return split
-}
+// function twoPageTitle() {
+//   let osource = q('#book-title')
+//   let otrns = q('#book-contents')
+//   empty(osource)
+//   empty(otrns)
+//   let ogutter = q('#title > .gutter')
+//   if (ogutter) return
+//   let sizes = [50, 50]
+//   let split = Split(['#book-title', '#book-contents'], {
+//     sizes: sizes,
+//     gutterSize: 5,
+//     // cursor: 'col-resize',
+//     minSize: [0, 0]
+//   })
+//   return split
+// }
 
-function twoPage() {
-  let osource = q('#source')
-  let otrns = q('#trns')
+function twoPage(state) {
+  let srcsel = ['#', state.section, '> #source'].join('')
+  let trnsel = ['#', state.section, '> #trns'].join('')
+  let osource = q(srcsel)
+  let otrns = q(trnsel)
+  // let osource = q('#source')
+  // let otrns = q('#trns')
   empty(osource)
   empty(otrns)
-  let ogutter = q('#book > .gutter')
+
+  let gutsel = ['#', state.section, '> .gutter'].join('')
+  let ogutter = q(gutsel)
+  // let ogutter = q('#book > .gutter')
   if (ogutter) return
   let sizes = settings.get('split-sizes')
   if (!sizes) sizes = [50, 50]
-  let split = Split(['#source', '#trns'], {
+  // let split = Split(['#source', '#trns'], {
+  let split = Split([srcsel, trnsel], {
     sizes: sizes,
     gutterSize: 5,
     cursor: 'col-resize',
@@ -92,15 +93,28 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
   else if (ev.which == 39) goRight()
 })
 
+Mousetrap.bind(['alt+1', 'alt+2'], function(ev) {
+  if (ev.which == 49) log('----1')
+  else if (ev.which == 50) log('----2')
+})
+
+function hideAll () {
+  const sections = document.querySelectorAll('.section.is-shown')
+  Array.prototype.forEach.call(sections, (section) => {
+    section.classList.remove('is-shown')
+  })
+}
+
 function sectionTrigger (section) {
-  // log('TRIGGER section', section)
-  hideAll ()
+  hideAll()
   const sectionId = ['#', section].join('')
   q(sectionId).classList.add('is-shown')
 }
 
 export function navigate(state) {
   log('NAV-state', state)
+  let progress = q('#progress')
+  progress.classList.add('is-shown')
   let section = state.section
   sectionTrigger(section)
   // current.section = section
@@ -111,8 +125,9 @@ export function navigate(state) {
   delete state.old
   // log('STATES', hstate, history)
 
-  if (section == 'title') twoPageTitle()
-  else if (section == 'book') twoPage()
+  // if (section == 'title') twoPageTitle(state)
+  // else if (section == 'book') twoPage(state)
+  if (['title', 'book'].includes(state.section)) twoPage(state)
 
   if (section == 'home')  getLib()
   else if (section == 'title') getTitle(state)
@@ -120,22 +135,6 @@ export function navigate(state) {
   // else if (section == 'cleanup') goCleanup(state)
   // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)
+  settings.set('state', state)
 
-  // let progress = q('#progress')
-  // progress.classList.remove('is-shown')
 }
-
-// export function parseInfo(info) {
-//   let nicnames = {}
-//   info.auths.forEach(auth => {
-//     if (auth.author) {
-//       info.book.author = auth.name
-//       return
-//     }
-//     nicnames[auth.nic] = auth.name
-//   })
-//   info.nicnames = nicnames
-//   let infoid = ['info', info.book.author, info.book.title].join('-')
-//   info._id = infoid
-//   return info
-// }

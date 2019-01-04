@@ -120,9 +120,10 @@ function readFile(info, fn, pars) {
   fpath = fpath.replace(/^\//, '')
 
   // info.sections.push(fpath)
-  let clean = txt.trim().replace(/\n+/, '\n').replace(/\s+/, ' ')
+  let clean = txt.trim().replace(/\n+/, '\n') //.replace(/\s+/, ' ')
   let rows = _.compact(clean.split('\n'))
   rows.forEach((row, idx)=> {
+    if (idx == 0) log('ROW', row)
     let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-')
     let parid = [groupid, nic].join('-')
     let par = { _id: parid, infoid: info._id, pos: idx, nic: nic, fpath: fpath, lang: lang, text: row }

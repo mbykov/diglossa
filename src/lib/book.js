@@ -1,9 +1,10 @@
 import _ from 'lodash'
-import Split from 'split.js'
+// import Split from 'split.js'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
 import { tree } from './tree';
 import { navigate } from './nav';
 
+const settings = require('electron').remote.require('electron-settings')
 const path = require('path')
 const log = console.log
 const clipboard = require('electron-clipboard-extended')
@@ -31,6 +32,7 @@ export function parseLib(infos) {
     ostr.appendChild(title)
   })
   oul.addEventListener('click', goTitleEvent, false)
+  hideProgress()
 }
 
 function goTitleEvent(ev) {
@@ -40,16 +42,20 @@ function goTitleEvent(ev) {
 }
 
 
-export function parseTitle(info) {
+export function parseTitle(state, info) {
   // log('TITLE INFO', info.tree)
-  let osource = q('#book-title')
-  let otrns = q('#book-contents')
+  // let osource = q('#title > #source')
+  // let otrns = q('#title > #trns')
+
+  let srcsel = ['#', state.section, '> #source'].join('')
+  let trnsel = ['#', state.section, '> #trns'].join('')
+  let osource = q(srcsel)
+  let otrns = q(trnsel)
   empty(osource)
   empty(otrns)
   let obookTitle = div('')
   obookTitle.classList.add('bookTitle')
   osource.appendChild(obookTitle)
-  osource.setAttribute('infoid', info._id)
 
   let oauthor = div(info.book.author, 'author')
   let otitle = div(info.book.title, 'title')
@@ -78,6 +84,7 @@ export function parseTitle(info) {
   ocontent.id = 'book-content'
   ocontent.textContent = 'Content:'
   otrns.appendChild(ocontent)
+  ocontent.setAttribute('infoid', info._id)
 
   let otree = create('div', 'tree')
   otree.id = 'tree'
@@ -87,23 +94,26 @@ export function parseTitle(info) {
   tree(info.tree, otree)
 
   otree.addEventListener('click', goBookEvent, false)
+  hideProgress()
 }
 
 function goBookEvent(ev) {
   let fpath = ev.target.getAttribute('fpath')
   if (!fpath) return
-  let osource = q('#book-title')
+  let osource = q('#book-content')
   let infoid  = osource.getAttribute('infoid')
   navigate({section: 'book', infoid: infoid, fpath: fpath})
 }
 
-
 export function parseBook(state, info, pars) {
-  log('parseBOOK', pars.length)
+  // log('parseBOOK', pars.length)
   if (!pars.length) return
-
-  let osource = q('#source')
-  let otrns = q('#trns')
+  // let osource = q('#source')
+  // let otrns = q('#trns')
+  let srcsel = ['#', state.section, '> #source'].join('')
+  let trnsel = ['#', state.section, '> #trns'].join('')
+  let osource = q(srcsel)
+  let otrns = q(trnsel)
   empty(osource)
   empty(otrns)
 
@@ -112,29 +122,33 @@ export function parseBook(state, info, pars) {
   if (!nic) nic = cnics[0]
   else if (!cnics.includes(nic)) nic = cnics[0]
   state.nic = nic
+  state.cnics = cnics
 
   setChunk(state, pars)
-  // createRightHeader(cnics)
+  createRightHeader(state, info)
   // createLeftHeader()
 
   // osource.addEventListener("mouseover", copyToClipboard, false)
   // otrns.addEventListener("wheel", cyclePar, false)
-  let progress = q('#progress')
-  progress.classList.remove('is-shown')
+  hideProgress()
 }
 
 function setChunk(state, pars, direction) {
   let nic = state.nic
-  let osource = q('#source')
-  let otrns = q('#trns')
+  // let osource = q('#source')
+  // let otrns = q('#trns')
+  let srcsel = ['#', state.section, '> #source'].join('')
+  let trnsel = ['#', state.section, '> #trns'].join('')
+  let osource = q(srcsel)
+  let otrns = q(trnsel)
 
   let apars = _.filter(pars, par=> { return par.author})
   let tpars = _.filter(pars, par=> { return !par.author})
   apars.forEach(apar=> {
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>")
     if (state.query) {
-      let requery = new RegExp(current.query, 'g')
-      html = html.replace(requery, "<span class=\"query\">"+current.query+"<\/span>")
+      let requery = new RegExp(state.query, 'g')
+      html = html.replace(requery, "<span class=\"query\">"+state.query+"<\/span>")
     }
     let oleft = p()
     oleft.innerHTML = html
@@ -173,5 +187,84 @@ function alignPars(pars) {
   let max = _.max(heights) + 12
   pars.forEach(par => {
     par.style.height = max + 'px'
+  })
+}
+
+function hideProgress() {
+  let progress = q('#progress')
+  progress.classList.remove('is-shown')
+}
+
+function createRightHeader(state, info) {
+  let obook = q('#book')
+  let arect = obook.getBoundingClientRect()
+  let ohright = div()
+  ohright.classList.add('hright')
+  ohright.style.left = arect.width*0.70 + 'px'
+  log('HEADER', state)
+  settings.set('state', state)
+
+  let oul = create('ul')
+  oul.setAttribute('id', 'namelist')
+  oul.addEventListener("click", clickRightHeader, false)
+  ohright.appendChild(oul)
+  obook.appendChild(ohright)
+  createNameList(state, info)
+  collapseRightHeader(state.nic)
+}
+
+function createNameList(state, info) {
+  let nicnames = info.nicnames
+  let oul = q('#namelist')
+  empty(oul)
+  oul.setAttribute('nics', state.cnics)
+  state.cnics.forEach(nic=> {
+    let oli = create('li')
+    let name = nicnames[nic] ? nicnames[nic] : nic
+    oli.textContent = name
+    oli.setAttribute('nic', nic)
+    oul.appendChild(oli)
+  })
+}
+
+function clickRightHeader(ev) {
+  if (ev.target.classList.contains('active')) {
+    expandRightHeader()
+  } else {
+    let nic = ev.target.getAttribute('nic')
+    if (!nic) return
+    let state = settings.get('state')
+    state.nic = nic
+    settings.set('state', state)
+    collapseRightHeader(nic)
+    otherNic(nic)
+  }
+}
+
+function otherNic(nic) {
+  let pars = qs('#trns > p')
+  pars.forEach((par, idx) => {
+    if (par.getAttribute('nic') == nic) par.setAttribute('active', true), par.classList.remove('hidden')
+    else par.classList.add('hidden')
+  })
+}
+
+function collapseRightHeader(nic) {
+  let oright = q('.hright')
+  oright.classList.remove('header')
+  let olis = qs('#namelist > li')
+  _.each(olis, oli=> {
+    if (oli.getAttribute('nic') == nic) oli.classList.add('active')
+    else oli.classList.add('hidden')
+  })
+}
+
+function expandRightHeader() {
+  let oright = q('.hright')
+  oright.classList.add('header')
+  let olis = qs('#namelist > li')
+  _.each(olis, oli=> {
+    oli.classList.remove('hidden')
+    oli.classList.remove('active')
   })
 }

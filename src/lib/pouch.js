@@ -36,14 +36,14 @@ export function pushBook(info, book) {
     pushTexts(book.pars),
     // pushMap(book.mapdocs)
   ])
-    // .then(function(res) {
-    //   if (res[1].length) {
-    //     libdb.createIndex({
-    //       index: {fields: ['fpath', 'pos']},
-    //       name: 'fpathindex'
-    //     })
-    //   }
-    // })
+    .then(function(res) {
+      // if (res[1].length) {
+      libdb.createIndex({
+        index: {fields: ['fpath', 'pos']},
+        name: 'fpathindex'
+      })
+      // }
+    })
 }
 
 function pushInfo(ndoc) {
@@ -87,15 +87,6 @@ function pushTexts(newdocs) {
     })
 }
 
-// export function getLib() {
-//   let options = {
-//     include_docs: true,
-//     startkey: 'info',
-//     endkey: 'info\ufff0'
-//   }
-//   return libdb.allDocs(options)
-// }
-
 export function getLib() {
   let options = {
     include_docs: true,
@@ -113,25 +104,23 @@ export function getLib() {
 }
 
 export function getTitle(state) {
-  log('T', state)
   if (!state.infoid) return
   libdb.get(state.infoid)
     .then(function (info) {
-      // log('T-info', info)
-      parseTitle(info)
+      parseTitle(state, info)
     }).catch(function (err) {
       log('getTitleErr', err);
     })
 }
 
 export function getBook(state) {
-  let progress = q('#progress')
-  progress.classList.add('is-shown')
+  // log('PARS GOT BEFORE')
   libdb.get(state.infoid)
     .then(function (info) {
       getText(state)
         .then(function(res) {
           let pars = _.compact(res.docs)
+          // log('PARS.LENGTH', pars.length)
           parseBook(state, info, pars)
         })
     }).catch(function (err) {
@@ -140,12 +129,11 @@ export function getBook(state) {
 }
 
 export function getText(state, endpos) {
-  // log('GETTXT', state)
   let fpath = state.fpath
   let start = state.pos*1 || 0
   let end = endpos*1 || start*1 + limit*1
   let selector = {fpath: fpath, pos: {$gte: start, $lt: end}}
-  log('SELECT', selector)
+  // log('SELECTOR', selector)
   return libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
   // return libdb.explain({selector: selector})
 }
