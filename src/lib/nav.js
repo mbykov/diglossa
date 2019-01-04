@@ -46,11 +46,25 @@ function goRight() {
   navigate(state)
 }
 
-function twoPages() {
-  // log('TWO PAGES')
-  let gutter = q('.gutter')
-  // log('GUTTER', gutter)
-  if (gutter) return
+function twoPageTitle() {
+  let ogutter = q('#title > .gutter')
+  if (ogutter) return
+  let sizes = [50, 50]
+  let split = Split(['#book-title', '#book-contents'], {
+    sizes: sizes,
+    gutterSize: 5,
+    cursor: 'col-resize',
+    minSize: [0, 0],
+    onDragEnd: function (sizes) {
+      settings.set('split-sizes', sizes)
+    }
+  })
+  return split
+}
+
+function twoPage() {
+  let ogutter = q('#book > .gutter')
+  if (ogutter) return
   let sizes = settings.get('split-sizes')
   if (!sizes) sizes = [50, 50]
   // log('SIZES', sizes)
@@ -111,7 +125,8 @@ export function navigate(state) {
   // log('STATES', hstate, history)
   // bookData(current)
 
-  if (section == 'title') twoPages()
+  if (section == 'title') twoPageTitle()
+  else if (section == 'book') twoPage()
 
   if (section == 'home')  getLib()
   else if (section == 'title') getTitle(state)

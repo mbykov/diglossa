@@ -40,8 +40,8 @@ function goTitleEvent(ev) {
 
 export function parseTitle(info) {
   // log('TITLE INFO', info.tree)
-  let osource = q('#source')
-  let otrns = q('#trns')
+  let osource = q('#book-title')
+  let otrns = q('#book-contents')
   empty(osource)
   empty(otrns)
   let obookTitle = div('')

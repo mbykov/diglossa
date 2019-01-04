@@ -5,7 +5,7 @@
 
 import "./lib/context_menu.js";
 import _ from "lodash";
-import Split from 'split.js'
+// import Split from 'split.js'
 import { remote } from "electron";
 import { shell } from 'electron'
 import { ipcRenderer } from "electron";

@@ -98,18 +98,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _lib_context_menu_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./lib/context_menu.js */ "./src/lib/context_menu.js");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! split.js */ "split.js");
-/* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(split_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! electron */ "electron");
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./lib/utils */ "./src/lib/utils.js");
-/* harmony import */ var _lib_getfiles__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/getfiles */ "./src/lib/getfiles.js");
-/* harmony import */ var _lib_nav__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./lib/nav */ "./src/lib/nav.js");
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! electron */ "electron");
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./lib/utils */ "./src/lib/utils.js");
+/* harmony import */ var _lib_getfiles__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./lib/getfiles */ "./src/lib/getfiles.js");
+/* harmony import */ var _lib_nav__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/nav */ "./src/lib/nav.js");
 //
 // import "./stylesheets/app.css";
 // import "./stylesheets/main.css";
 
-
+ // import Split from 'split.js'
 
 
 
@@ -148,18 +146,18 @@ const {
 
 
 const isDev = true;
-const app = electron__WEBPACK_IMPORTED_MODULE_3__["remote"].app;
+const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app;
 const apath = app.getAppPath();
 let upath = app.getPath("userData"); // const watch = require('node-watch')
 
-let container = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#container');
-let imports = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["qs"])('link[rel="import"]');
+let container = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#container');
+let imports = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["qs"])('link[rel="import"]');
 imports.forEach(link => {
   let content = link.import;
   let section = content.querySelector('.section');
   container.appendChild(section.cloneNode(true));
 });
-let home = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_4__["q"])('#home');
+let home = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#home');
 home.classList.add('is-shown');
 document.body.addEventListener('click', event => {
   // log('CLICK-DOC', event.target.dataset)
@@ -172,13 +170,13 @@ document.body.addEventListener('click', event => {
     let fns = [fn];
 
     if (section == 'readInfo') {
-      Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_5__["getInfoFiles"])(fns, function (res) {
+      Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_4__["getInfoFiles"])(fns, function (res) {
         // log('APP BOOK PUSHED')
-        Object(_lib_nav__WEBPACK_IMPORTED_MODULE_6__["navigate"])({
+        Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])({
           section: 'home'
         });
       });
-    } else Object(_lib_nav__WEBPACK_IMPORTED_MODULE_6__["navigate"])({
+    } else Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])({
       section: section
     });
   }
@@ -249,8 +247,8 @@ function goTitleEvent(ev) {
 
 function parseTitle(info) {
   // log('TITLE INFO', info.tree)
-  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#source');
-  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#trns');
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book-title');
+  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["q"])('#book-contents');
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(osource);
   Object(_utils__WEBPACK_IMPORTED_MODULE_2__["empty"])(otrns);
   let obookTitle = Object(_utils__WEBPACK_IMPORTED_MODULE_2__["div"])('');
@@ -1014,11 +1012,25 @@ function goRight() {
   navigate(state);
 }
 
-function twoPages() {
-  // log('TWO PAGES')
-  let gutter = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('.gutter'); // log('GUTTER', gutter)
+function twoPageTitle() {
+  let ogutter = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#title > .gutter');
+  if (ogutter) return;
+  let sizes = [50, 50];
+  let split = split_js__WEBPACK_IMPORTED_MODULE_2___default()(['#book-title', '#book-contents'], {
+    sizes: sizes,
+    gutterSize: 5,
+    cursor: 'col-resize',
+    minSize: [0, 0],
+    onDragEnd: function (sizes) {
+      settings.set('split-sizes', sizes);
+    }
+  });
+  return split;
+}
 
-  if (gutter) return;
+function twoPage() {
+  let ogutter = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#book > .gutter');
+  if (ogutter) return;
   let sizes = settings.get('split-sizes');
   if (!sizes) sizes = [50, 50]; // log('SIZES', sizes)
 
@@ -1078,7 +1090,7 @@ function navigate(state) {
   delete state.old; // log('STATES', hstate, history)
   // bookData(current)
 
-  if (section == 'title') twoPages();
+  if (section == 'title') twoPageTitle();else if (section == 'book') twoPage();
   if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getLib"])();else if (section == 'title') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getTitle"])(state);else if (section == 'book') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getBook"])(state); // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)
 
@@ -1217,7 +1229,7 @@ function getTitle(state) {
   log('T', state);
   if (!state.infoid) return;
   libdb.get(state.infoid).then(function (info) {
-    log('T-info', info);
+    // log('T-info', info)
     Object(_book__WEBPACK_IMPORTED_MODULE_2__["parseTitle"])(info);
   }).catch(function (err) {
     log('getTitleErr', err);
