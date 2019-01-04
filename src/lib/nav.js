@@ -45,6 +45,10 @@ function goRight() {
 }
 
 function twoPageTitle() {
+  let osource = q('#book-title')
+  let otrns = q('#book-contents')
+  empty(osource)
+  empty(otrns)
   let ogutter = q('#title > .gutter')
   if (ogutter) return
   let sizes = [50, 50]
@@ -58,6 +62,10 @@ function twoPageTitle() {
 }
 
 function twoPage() {
+  let osource = q('#source')
+  let otrns = q('#trns')
+  empty(osource)
+  empty(otrns)
   let ogutter = q('#book > .gutter')
   if (ogutter) return
   let sizes = settings.get('split-sizes')
@@ -91,21 +99,6 @@ function sectionTrigger (section) {
   q(sectionId).classList.add('is-shown')
 }
 
-export function parseInfo(info) {
-  let nicnames = {}
-  info.auths.forEach(auth => {
-    if (auth.author) {
-      info.book.author = auth.name
-      return
-    }
-    nicnames[auth.nic] = auth.name
-  })
-  info.nicnames = nicnames
-  let infoid = ['info', info.book.author, info.book.title].join('-')
-  info._id = infoid
-  return info
-}
-
 export function navigate(state) {
   log('NAV-state', state)
   let section = state.section
@@ -117,7 +110,6 @@ export function navigate(state) {
   }
   delete state.old
   // log('STATES', hstate, history)
-  // bookData(current)
 
   if (section == 'title') twoPageTitle()
   else if (section == 'book') twoPage()
@@ -129,6 +121,21 @@ export function navigate(state) {
   // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)
 
-  let progress = q('#progress')
-  progress.classList.remove('is-shown')
+  // let progress = q('#progress')
+  // progress.classList.remove('is-shown')
 }
+
+// export function parseInfo(info) {
+//   let nicnames = {}
+//   info.auths.forEach(auth => {
+//     if (auth.author) {
+//       info.book.author = auth.name
+//       return
+//     }
+//     nicnames[auth.nic] = auth.name
+//   })
+//   info.nicnames = nicnames
+//   let infoid = ['info', info.book.author, info.book.title].join('-')
+//   info._id = infoid
+//   return info
+// }

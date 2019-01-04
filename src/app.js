@@ -51,8 +51,9 @@ imports.forEach(link=> {
   container.appendChild(section.cloneNode(true))
 })
 
-let home = q('#home')
-home.classList.add('is-shown')
+// let home = q('#home')
+// home.classList.add('is-shown')
+navigate({section: 'home'})
 
 document.body.addEventListener('click', (event) => {
   // log('CLICK-DOC', event.target.dataset)

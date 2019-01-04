@@ -1,6 +1,7 @@
 //
 import _ from "lodash";
 import { remote } from "electron";
+import { q } from './utils'
 import { parseLib, parseTitle, parseBook } from './book'
 const { getCurrentWindow } = require('electron').remote
 
@@ -68,7 +69,7 @@ function pushTexts(newdocs) {
   return libdb.allDocs({include_docs: true})
     .then(function(res) {
       let docs = res.rows.map(row=>{ return row.doc })
-      log('========= DOCS', docs[0])
+      // log('========= DOCS', docs[0])
       let cleandocs = []
       let hdoc = {}
       docs.forEach(doc=> { hdoc[doc._id] = doc })
@@ -81,7 +82,7 @@ function pushTexts(newdocs) {
           cleandocs.push(newdoc)
         }
       })
-      log('========= CLEANDOCS', cleandocs[0])
+      // log('========= CLEANDOCS', cleandocs)
       return libdb.bulkDocs(cleandocs)
     })
 }
@@ -124,7 +125,8 @@ export function getTitle(state) {
 }
 
 export function getBook(state) {
-  log('GB', state)
+  let progress = q('#progress')
+  progress.classList.add('is-shown')
   libdb.get(state.infoid)
     .then(function (info) {
       getText(state)

@@ -2,7 +2,6 @@ import _ from 'lodash'
 import Split from 'split.js'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
 import { tree } from './tree';
-// import { navigate, getText } from '../app';
 import { navigate } from './nav';
 
 const path = require('path')
@@ -120,6 +119,8 @@ export function parseBook(state, info, pars) {
 
   // osource.addEventListener("mouseover", copyToClipboard, false)
   // otrns.addEventListener("wheel", cyclePar, false)
+  let progress = q('#progress')
+  progress.classList.remove('is-shown')
 }
 
 function setChunk(state, pars, direction) {
