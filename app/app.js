@@ -119,7 +119,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
- // require('./lib/nav')
+
 
 const settings = __webpack_require__(/*! electron */ "electron").remote.require('electron-settings');
 
@@ -192,6 +192,49 @@ document.body.addEventListener('click', event => {
       log('DESTROY ERR:', err);
     });
   }
+}); // window.onbeforeunload = function (ev) {
+//   let state = settings.get('state')
+//   libdb.get('_local/current')
+//     .then(function(doc) {
+//       current._id = '_local/current'
+//       current._rev = doc._rev
+//       libdb.put(current).then(function() {
+//         ev.returnValue = false
+//       })
+//     }).catch(function (err) {
+//       libdb.put({ _id: '_local/current', section: 'lib'}).then(function() {
+//         navigate({section: 'lib'})
+//       })
+//     })
+// }
+// R+Shift
+
+electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('reload', function (event) {
+  getCurrentWindow().reload();
+});
+electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('parseDir', function (event) {
+  dialog.showOpenDialog({
+    properties: ['openFile'],
+    filters: [{
+      name: 'JSON',
+      extensions: ['json']
+    }]
+  }, getInfoFile);
+});
+electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('reread', function (event) {
+  log('RE-READ');
+  let state = settings.get('state');
+  Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state); // libdb.get('_local/current')
+  //   .then(function (current) {
+  //     if (!current.infoid) return
+  //     libdb.get(current.infoid)
+  //       .then(function (info) {
+  //         getDir(info)
+  //       })
+  //   })
+  //   .catch(function (err) {
+  //     log('ERR GET INFO DIR')
+  //   })
 });
 electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('action', function (event, action) {
   // if (action == 'cleanup') showCleanup()
@@ -273,8 +316,6 @@ function goTitleEvent(ev) {
 
 function parseTitle(state, info) {
   // log('TITLE INFO', info.tree)
-  // let osource = q('#title > #source')
-  // let otrns = q('#title > #trns')
   let srcsel = ['#', state.section, '> #source'].join('');
   let trnsel = ['#', state.section, '> #trns'].join('');
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(srcsel);
@@ -336,9 +377,7 @@ function goBookEvent(ev) {
 
 function parseBook(state, info, pars) {
   // log('parseBOOK', pars.length)
-  if (!pars.length) return; // let osource = q('#source')
-  // let otrns = q('#trns')
-
+  if (!pars.length) return;
   let srcsel = ['#', state.section, '> #source'].join('');
   let trnsel = ['#', state.section, '> #trns'].join('');
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(srcsel);
@@ -363,9 +402,7 @@ function parseBook(state, info, pars) {
 }
 
 function setChunk(state, pars, direction) {
-  let nic = state.nic; // let osource = q('#source')
-  // let otrns = q('#trns')
-
+  let nic = state.nic;
   let srcsel = ['#', state.section, '> #source'].join('');
   let trnsel = ['#', state.section, '> #trns'].join('');
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(srcsel);
@@ -437,8 +474,7 @@ function createRightHeader(state, info) {
   let arect = obook.getBoundingClientRect();
   let ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["div"])();
   ohright.classList.add('hright');
-  ohright.style.left = arect.width * 0.70 + 'px'; // log('HEADER', state)
-
+  ohright.style.left = arect.width * 0.70 + 'px';
   settings.set('state', state);
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('ul');
   oul.setAttribute('id', 'namelist');
@@ -533,26 +569,12 @@ function createLeftHeader(state, info) {
 }
 
 function clickLeftHeader(ev) {
-  log('CLICK LEFT', ev.target);
   let fpath = ev.target.getAttribute('fpath');
   let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('.hleft .tbody');
   if (!otbody) return;
   otbody.classList.toggle('tree-collapse');
   let ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('.hleft');
-  ohleft.classList.toggle('header'); // return
-  // if (fpath) {
-  //   if (ev.target.classList.contains('tree-node-empty')) return
-  //   let otitle = q('#tree-title')
-  //   current.fpath = fpath
-  //   current.pos = 0
-  //   otitle.textContent = current.fpath
-  //   otbody.classList.add('tree-collapse')
-  //   navigate(current)
-  // } else {
-  //   otbody.classList.remove('tree-collapse')
-  //   let ohleft = q('.hleft')
-  //   ohleft.classList.add('header')
-  // }
+  ohleft.classList.toggle('header');
 }
 
 /***/ }),
@@ -921,23 +943,7 @@ function goRight() {
   let state = history[hstate];
   state.old = true;
   navigate(state);
-} // function twoPageTitle() {
-//   let osource = q('#book-title')
-//   let otrns = q('#book-contents')
-//   empty(osource)
-//   empty(otrns)
-//   let ogutter = q('#title > .gutter')
-//   if (ogutter) return
-//   let sizes = [50, 50]
-//   let split = Split(['#book-title', '#book-contents'], {
-//     sizes: sizes,
-//     gutterSize: 5,
-//     // cursor: 'col-resize',
-//     minSize: [0, 0]
-//   })
-//   return split
-// }
-
+}
 
 function twoPage(state) {
   let srcsel = ['#', state.section, '> #source'].join('');
@@ -989,6 +995,7 @@ function hideAll() {
 function sectionTrigger(section) {
   hideAll();
   const sectionId = ['#', section].join('');
+  log('SECID', sectionId);
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(sectionId).classList.add('is-shown');
 }
 

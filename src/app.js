@@ -18,7 +18,6 @@ import { getInfoFiles } from './lib/getfiles'
 import { navigate } from './lib/nav';
 import { cleanup } from './lib/pouch'
 
-// require('./lib/nav')
 const settings = require('electron').remote.require('electron-settings')
 
 const JSON = require('json5')
@@ -86,6 +85,49 @@ document.body.addEventListener('click', (event) => {
   }
 })
 
+// window.onbeforeunload = function (ev) {
+//   let state = settings.get('state')
+
+//   libdb.get('_local/current')
+//     .then(function(doc) {
+//       current._id = '_local/current'
+//       current._rev = doc._rev
+//       libdb.put(current).then(function() {
+//         ev.returnValue = false
+//       })
+//     }).catch(function (err) {
+//       libdb.put({ _id: '_local/current', section: 'lib'}).then(function() {
+//         navigate({section: 'lib'})
+//       })
+//     })
+// }
+
+
+// R+Shift
+ipcRenderer.on('reload', function (event) {
+  getCurrentWindow().reload()
+})
+
+ipcRenderer.on('parseDir', function (event) {
+  dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'JSON', extensions: ['json'] }]}, getInfoFile)
+})
+
+ipcRenderer.on('reread', function (event) {
+  log('RE-READ')
+  let state = settings.get('state')
+  navigate(state)
+  // libdb.get('_local/current')
+  //   .then(function (current) {
+  //     if (!current.infoid) return
+  //     libdb.get(current.infoid)
+  //       .then(function (info) {
+  //         getDir(info)
+  //       })
+  //   })
+  //   .catch(function (err) {
+  //     log('ERR GET INFO DIR')
+  //   })
+})
 ipcRenderer.on('action', function (event, action) {
   // if (action == 'cleanup') showCleanup()
   // else

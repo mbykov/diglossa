@@ -37,23 +37,6 @@ function goRight() {
   navigate(state)
 }
 
-// function twoPageTitle() {
-//   let osource = q('#book-title')
-//   let otrns = q('#book-contents')
-//   empty(osource)
-//   empty(otrns)
-//   let ogutter = q('#title > .gutter')
-//   if (ogutter) return
-//   let sizes = [50, 50]
-//   let split = Split(['#book-title', '#book-contents'], {
-//     sizes: sizes,
-//     gutterSize: 5,
-//     // cursor: 'col-resize',
-//     minSize: [0, 0]
-//   })
-//   return split
-// }
-
 function twoPage(state) {
   let srcsel = ['#', state.section, '> #source'].join('')
   let trnsel = ['#', state.section, '> #trns'].join('')
@@ -105,9 +88,10 @@ function hideAll () {
   })
 }
 
-function sectionTrigger (section) {
+function sectionTrigger(section) {
   hideAll()
   const sectionId = ['#', section].join('')
+  log('SECID', sectionId)
   q(sectionId).classList.add('is-shown')
 }
 
@@ -136,5 +120,4 @@ export function navigate(state) {
   // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)
   settings.set('state', state)
-
 }

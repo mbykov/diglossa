@@ -44,9 +44,6 @@ function goTitleEvent(ev) {
 
 export function parseTitle(state, info) {
   // log('TITLE INFO', info.tree)
-  // let osource = q('#title > #source')
-  // let otrns = q('#title > #trns')
-
   let srcsel = ['#', state.section, '> #source'].join('')
   let trnsel = ['#', state.section, '> #trns'].join('')
   let osource = q(srcsel)
@@ -108,8 +105,6 @@ function goBookEvent(ev) {
 export function parseBook(state, info, pars) {
   // log('parseBOOK', pars.length)
   if (!pars.length) return
-  // let osource = q('#source')
-  // let otrns = q('#trns')
   let srcsel = ['#', state.section, '> #source'].join('')
   let trnsel = ['#', state.section, '> #trns'].join('')
   let osource = q(srcsel)
@@ -135,8 +130,6 @@ export function parseBook(state, info, pars) {
 
 function setChunk(state, pars, direction) {
   let nic = state.nic
-  // let osource = q('#source')
-  // let otrns = q('#trns')
   let srcsel = ['#', state.section, '> #source'].join('')
   let trnsel = ['#', state.section, '> #trns'].join('')
   let osource = q(srcsel)
@@ -201,7 +194,6 @@ function createRightHeader(state, info) {
   let ohright = div()
   ohright.classList.add('hright')
   ohright.style.left = arect.width*0.70 + 'px'
-  // log('HEADER', state)
   settings.set('state', state)
 
   let oul = create('ul')
@@ -299,25 +291,10 @@ function createLeftHeader(state, info) {
 }
 
 function clickLeftHeader(ev) {
-  log('CLICK LEFT', ev.target)
   let fpath = ev.target.getAttribute('fpath')
   let otbody = q('.hleft .tbody')
   if (!otbody) return
   otbody.classList.toggle('tree-collapse')
   let ohleft = q('.hleft')
   ohleft.classList.toggle('header')
-  // return
-  // if (fpath) {
-  //   if (ev.target.classList.contains('tree-node-empty')) return
-  //   let otitle = q('#tree-title')
-  //   current.fpath = fpath
-  //   current.pos = 0
-  //   otitle.textContent = current.fpath
-  //   otbody.classList.add('tree-collapse')
-  //   navigate(current)
-  // } else {
-  //   otbody.classList.remove('tree-collapse')
-  //   let ohleft = q('.hleft')
-  //   ohleft.classList.add('header')
-  // }
 }
