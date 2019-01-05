@@ -278,39 +278,46 @@ function createLeftHeader(state, info) {
   ohleft.style.left = arect.width*0.15 + 'px'
   ohleft.addEventListener("click", clickLeftHeader, false)
 
+
   let otree = create('div', 'tree')
   otree.id = 'tree'
-  let tbody = create('div', 'tbody')
-  otree.appendChild(tbody)
+  otree.setAttribute('tree', info.tree)
+  let otitle = q('.hleft .tree-title')
+  if (!otitle) {
+    otitle = create('div', 'tree-title')
+    otree.appendChild(otitle)
+  }
+  otitle.textContent = state.fpath
+
+  let otbody = create('div', 'tbody')
+  otree.appendChild(otbody)
   ohleft.appendChild(otree)
   tree(info.tree, otree)
+  otree.addEventListener('click', goBookEvent, false)
 
-  // let otitle = q('#tree-title')
-  // let otbody = q('#tree-body')
-  // if (state.fpath) {
-  //   otitle.textContent = state.fpath
-  //   otbody.classList.add('tree-collapse')
-  // } else {
-  //   otitle.textContent = info.book.title
-  //   remove(otbody)
-  // }
+  otbody.classList.add('tree-collapse')
 }
 
 function clickLeftHeader(ev) {
+  log('CLICK LEFT', ev.target)
   let fpath = ev.target.getAttribute('fpath')
-  let otbody = q('#tree-body')
+  let otbody = q('.hleft .tbody')
   if (!otbody) return
-  if (fpath) {
-    if (ev.target.classList.contains('tree-node-empty')) return
-    let otitle = q('#tree-title')
-    current.fpath = fpath
-    current.pos = 0
-    otitle.textContent = current.fpath
-    otbody.classList.add('tree-collapse')
-    navigate(current)
-  } else {
-    otbody.classList.remove('tree-collapse')
-    let ohleft = q('.hleft')
-    ohleft.classList.add('header')
-  }
+  otbody.classList.toggle('tree-collapse')
+  let ohleft = q('.hleft')
+  ohleft.classList.toggle('header')
+  // return
+  // if (fpath) {
+  //   if (ev.target.classList.contains('tree-node-empty')) return
+  //   let otitle = q('#tree-title')
+  //   current.fpath = fpath
+  //   current.pos = 0
+  //   otitle.textContent = current.fpath
+  //   otbody.classList.add('tree-collapse')
+  //   navigate(current)
+  // } else {
+  //   otbody.classList.remove('tree-collapse')
+  //   let ohleft = q('.hleft')
+  //   ohleft.classList.add('header')
+  // }
 }

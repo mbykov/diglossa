@@ -50,7 +50,6 @@ export function div (str, style) {
   let el = document.createElement('div')
   el.textContent = str
   if (style) el.classList.add(style)
-  // if (style) el.id = style
   return el
 }
 

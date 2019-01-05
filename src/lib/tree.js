@@ -39,7 +39,7 @@ function createBranch(node) {
   onode.appendChild(osign)
   let otext = create('span', 'tree-node-branch')
   otext.textContent = node.text
-  otext.setAttribute('fpath', node.fpath)
+  if (node.fpath) otext.setAttribute('fpath', node.fpath)
   onode.appendChild(otext)
   let tbody = create('div', 'tbody')
   onode.appendChild(tbody)

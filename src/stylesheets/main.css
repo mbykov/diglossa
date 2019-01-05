@@ -201,6 +201,7 @@ input[type='file'] {
 .header {
   box-shadow: 0.15em 0.15em 1em rgba(0, 0, 0, 0.75);
   background: white;
+  padding: 5px;
 }
 
 /* #headers { */

@@ -515,38 +515,44 @@ function createLeftHeader(state, info) {
   ohleft.addEventListener("click", clickLeftHeader, false);
   let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tree');
   otree.id = 'tree';
-  let tbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tbody');
-  otree.appendChild(tbody);
+  otree.setAttribute('tree', info.tree);
+  let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('.hleft .tree-title');
+
+  if (!otitle) {
+    otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tree-title');
+    otree.appendChild(otitle);
+  }
+
+  otitle.textContent = state.fpath;
+  let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tbody');
+  otree.appendChild(otbody);
   ohleft.appendChild(otree);
-  Object(_tree__WEBPACK_IMPORTED_MODULE_2__["tree"])(info.tree, otree); // let otitle = q('#tree-title')
-  // let otbody = q('#tree-body')
-  // if (state.fpath) {
-  //   otitle.textContent = state.fpath
-  //   otbody.classList.add('tree-collapse')
-  // } else {
-  //   otitle.textContent = info.book.title
-  //   remove(otbody)
-  // }
+  Object(_tree__WEBPACK_IMPORTED_MODULE_2__["tree"])(info.tree, otree);
+  otree.addEventListener('click', goBookEvent, false);
+  otbody.classList.add('tree-collapse');
 }
 
 function clickLeftHeader(ev) {
+  log('CLICK LEFT', ev.target);
   let fpath = ev.target.getAttribute('fpath');
-  let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#tree-body');
+  let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('.hleft .tbody');
   if (!otbody) return;
-
-  if (fpath) {
-    if (ev.target.classList.contains('tree-node-empty')) return;
-    let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#tree-title');
-    current.fpath = fpath;
-    current.pos = 0;
-    otitle.textContent = current.fpath;
-    otbody.classList.add('tree-collapse');
-    Object(_nav__WEBPACK_IMPORTED_MODULE_3__["navigate"])(current);
-  } else {
-    otbody.classList.remove('tree-collapse');
-    let ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('.hleft');
-    ohleft.classList.add('header');
-  }
+  otbody.classList.toggle('tree-collapse');
+  let ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('.hleft');
+  ohleft.classList.toggle('header'); // return
+  // if (fpath) {
+  //   if (ev.target.classList.contains('tree-node-empty')) return
+  //   let otitle = q('#tree-title')
+  //   current.fpath = fpath
+  //   current.pos = 0
+  //   otitle.textContent = current.fpath
+  //   otbody.classList.add('tree-collapse')
+  //   navigate(current)
+  // } else {
+  //   otbody.classList.remove('tree-collapse')
+  //   let ohleft = q('.hleft')
+  //   ohleft.classList.add('header')
+  // }
 }
 
 /***/ }),
@@ -1234,7 +1240,7 @@ function createBranch(node) {
   onode.appendChild(osign);
   let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-node-branch');
   otext.textContent = node.text;
-  otext.setAttribute('fpath', node.fpath);
+  if (node.fpath) otext.setAttribute('fpath', node.fpath);
   onode.appendChild(otext);
   let tbody = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tbody');
   onode.appendChild(tbody);
@@ -1324,8 +1330,7 @@ function br() {
 function div(str, style) {
   let el = document.createElement('div');
   el.textContent = str;
-  if (style) el.classList.add(style); // if (style) el.id = style
-
+  if (style) el.classList.add(style);
   return el;
 }
 function p(str, style) {
