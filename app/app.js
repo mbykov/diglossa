@@ -267,8 +267,7 @@ const clipboard = __webpack_require__(/*! electron-clipboard-extended */ "electr
 let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
 let rePunct = new RegExp(punct, 'g');
 function parseLib(infos) {
-  log('==>> LIB INFOs', infos);
-  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#home');
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#library');
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(osource);
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('ul');
   osource.appendChild(oul);
@@ -926,7 +925,7 @@ let init = {
   section: 'home'
 };
 let history = [init];
-let hstate = 0;
+let hstate = 0; // let split
 
 function goLeft() {
   // log('<<=== LEFT', hstate)
@@ -947,6 +946,7 @@ function goRight() {
 }
 
 function twoPage(state) {
+  log('====================================TWO PAGES');
   let srcsel = ['#', state.section, '> #source'].join('');
   let trnsel = ['#', state.section, '> #trns'].join('');
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(srcsel);
@@ -955,9 +955,22 @@ function twoPage(state) {
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(otrns);
   let gutsel = ['#', state.section, '> .gutter'].join('');
   let ogutter = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(gutsel);
-  if (ogutter) return;
+  if (ogutter) return; // херня полная
+  // let sizes
+  // if (split) {
+  //   sizes = settings.get('split-sizes')
+  //   if (state.cnics && state.cnics.length == 1) sizes = [100, 0]
+  //   split.setSizes(sizes)
+  //   return
+  // } else {
+  //   if (!sizes) sizes = [50, 50]
+  //   settings.set('split-sizes', sizes)
+  // }
+
   let sizes = settings.get('split-sizes');
   if (!sizes) sizes = [50, 50];
+  settings.set('split-sizes', sizes);
+  if (state.cnics && state.cnics.length == 1) log('SIZE 100');
   let split = split_js__WEBPACK_IMPORTED_MODULE_2___default()([srcsel, trnsel], {
     sizes: sizes,
     gutterSize: 5,
@@ -1003,7 +1016,8 @@ function navigate(state) {
   sectionTrigger(section);
 
   if (!state.old) {
-    history.push(lodash__WEBPACK_IMPORTED_MODULE_0___default.a.clone(state));
+    // history.push(_.clone(state))
+    history.push(state);
     hstate = history.length - 1;
   }
 

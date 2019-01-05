@@ -18,6 +18,7 @@ const slash = require('slash')
 let init = {section: 'home'}
 let history = [init]
 let hstate = 0
+// let split
 
 function goLeft() {
   // log('<<=== LEFT', hstate)
@@ -38,6 +39,7 @@ function goRight() {
 }
 
 function twoPage(state) {
+  log('====================================TWO PAGES')
   let srcsel = ['#', state.section, '> #source'].join('')
   let trnsel = ['#', state.section, '> #trns'].join('')
   let osource = q(srcsel)
@@ -48,8 +50,24 @@ function twoPage(state) {
   let gutsel = ['#', state.section, '> .gutter'].join('')
   let ogutter = q(gutsel)
   if (ogutter) return
+
+  // херня полная
+  // let sizes
+  // if (split) {
+  //   sizes = settings.get('split-sizes')
+  //   if (state.cnics && state.cnics.length == 1) sizes = [100, 0]
+  //   split.setSizes(sizes)
+  //   return
+  // } else {
+  //   if (!sizes) sizes = [50, 50]
+  //   settings.set('split-sizes', sizes)
+  // }
   let sizes = settings.get('split-sizes')
   if (!sizes) sizes = [50, 50]
+  settings.set('split-sizes', sizes)
+
+
+  if (state.cnics && state.cnics.length == 1) log('SIZE 100')
   let split = Split([srcsel, trnsel], {
     sizes: sizes,
     gutterSize: 5,
@@ -97,7 +115,8 @@ export function navigate(state) {
   let section = state.section
   sectionTrigger(section)
   if (!state.old) {
-    history.push(_.clone(state))
+    // history.push(_.clone(state))
+    history.push(state)
     hstate = history.length-1
   }
   delete state.old

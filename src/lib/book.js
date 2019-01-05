@@ -13,8 +13,7 @@ let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
 let rePunct = new RegExp(punct, 'g')
 
 export function parseLib(infos) {
-  log('==>> LIB INFOs', infos)
-  let osource = q('#home')
+  let osource = q('#library')
   empty(osource)
   let oul = create('ul')
   osource.appendChild(oul)
