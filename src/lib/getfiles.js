@@ -71,6 +71,7 @@ function shortTree(children, bpath) {
       let fpath = child.children[0].split(bpath)[1].split('.')[0]
       child.fpath = fpath.replace(/^\//, '')
       child.children = child.children.length
+      if (child.children.length == 1) child.mono = true
     } else if (child.children) {
       shortTree(child.children, bpath)
       child.children.forEach(child=> {

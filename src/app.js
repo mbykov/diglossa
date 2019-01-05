@@ -50,9 +50,9 @@ imports.forEach(link=> {
   container.appendChild(section.cloneNode(true))
 })
 
-// let home = q('#home')
-// home.classList.add('is-shown')
-navigate({section: 'home'})
+let home = q('#home')
+home.classList.add('is-shown')
+// navigate({section: 'home'})
 
 document.body.addEventListener('click', (event) => {
   // log('CLICK-DOC', event.target.dataset)
@@ -85,24 +85,6 @@ document.body.addEventListener('click', (event) => {
   }
 })
 
-// window.onbeforeunload = function (ev) {
-//   let state = settings.get('state')
-
-//   libdb.get('_local/current')
-//     .then(function(doc) {
-//       current._id = '_local/current'
-//       current._rev = doc._rev
-//       libdb.put(current).then(function() {
-//         ev.returnValue = false
-//       })
-//     }).catch(function (err) {
-//       libdb.put({ _id: '_local/current', section: 'lib'}).then(function() {
-//         navigate({section: 'lib'})
-//       })
-//     })
-// }
-
-
 // R+Shift
 ipcRenderer.on('reload', function (event) {
   getCurrentWindow().reload()
@@ -128,6 +110,7 @@ ipcRenderer.on('reread', function (event) {
   //     log('ERR GET INFO DIR')
   //   })
 })
+
 ipcRenderer.on('action', function (event, action) {
   // if (action == 'cleanup') showCleanup()
   // else

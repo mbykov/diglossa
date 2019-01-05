@@ -119,7 +119,10 @@ export function parseBook(state, info, pars) {
   state.nic = nic
   state.cnics = cnics
 
-  setChunk(state, pars)
+  if (state.cnics.length == 1)
+    setMono(state, pars)
+  else
+    setChunk(state, pars)
   createRightHeader(state, info)
   createLeftHeader(state, info)
 
@@ -138,6 +141,7 @@ function setChunk(state, pars, direction) {
   let apars = _.filter(pars, par=> { return par.author})
   let tpars = _.filter(pars, par=> { return !par.author})
   apars.forEach(apar=> {
+    // log('APAR', apar)
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>")
     if (state.query) {
       let requery = new RegExp(state.query, 'g')
@@ -172,6 +176,23 @@ function setChunk(state, pars, direction) {
     let offset = firstel.offsetTop
     otrns.scrollTop = osource.scrollTop = offset
   }
+}
+
+function setMono(state, pars, direction) {
+  let nic = state.nic
+  let srcsel = ['#', state.section, '> #source'].join('')
+  let trnsel = ['#', state.section, '> #trns'].join('')
+  let osource = q(srcsel)
+  let otrns = q(trnsel)
+
+  log('APARs', pars.length)
+  pars.forEach(par=> {
+    // log('APAR', apar)
+    let oleft = p(par.text)
+    oleft.setAttribute('pos', par.pos)
+    oleft.setAttribute('nic', par.nic)
+    osource.appendChild(oleft)
+  })
 }
 
 

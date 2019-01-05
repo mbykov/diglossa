@@ -42,18 +42,14 @@ function twoPage(state) {
   let trnsel = ['#', state.section, '> #trns'].join('')
   let osource = q(srcsel)
   let otrns = q(trnsel)
-  // let osource = q('#source')
-  // let otrns = q('#trns')
   empty(osource)
   empty(otrns)
 
   let gutsel = ['#', state.section, '> .gutter'].join('')
   let ogutter = q(gutsel)
-  // let ogutter = q('#book > .gutter')
   if (ogutter) return
   let sizes = settings.get('split-sizes')
   if (!sizes) sizes = [50, 50]
-  // let split = Split(['#source', '#trns'], {
   let split = Split([srcsel, trnsel], {
     sizes: sizes,
     gutterSize: 5,
@@ -91,7 +87,6 @@ function hideAll () {
 function sectionTrigger(section) {
   hideAll()
   const sectionId = ['#', section].join('')
-  log('SECID', sectionId)
   q(sectionId).classList.add('is-shown')
 }
 
@@ -101,7 +96,6 @@ export function navigate(state) {
   progress.classList.add('is-shown')
   let section = state.section
   sectionTrigger(section)
-  // current.section = section
   if (!state.old) {
     history.push(_.clone(state))
     hstate = history.length-1
@@ -109,8 +103,6 @@ export function navigate(state) {
   delete state.old
   // log('STATES', hstate, history)
 
-  // if (section == 'title') twoPageTitle(state)
-  // else if (section == 'book') twoPage(state)
   if (['title', 'book'].includes(state.section)) twoPage(state)
 
   if (section == 'home')  getLib()

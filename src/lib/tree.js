@@ -2,8 +2,8 @@
 import { q, qs, empty, create, span, p, div, remove } from './utils'
 let log = console.log
 
-export default function treeTitle(deftitle) {
-}
+// export default function treeTitle(deftitle) {
+// }
 
 export function tree(children, otree) {
   let tbody = otree.lastChild
@@ -18,7 +18,6 @@ export function tree(children, otree) {
       tree(node.children, obranch)
     }
   })
-  // otree.addEventListener('click', goNode, false)
   return otree
 }
 
@@ -27,6 +26,7 @@ function createNode(node) {
   let otext = create('span', 'tree-node-text')
   otext.textContent = node.text
   otext.setAttribute('fpath', node.fpath)
+  if (node.mono) otext.setAttribute('mono', true)
   onode.appendChild(otext)
   return onode
 }
@@ -49,8 +49,4 @@ function createBranch(node) {
 function toggleNode(ev) {
   let parent = ev.target.parentNode
   parent.classList.toggle('tree-collapse')
-}
-
-function goNode(ev) {
-  log('GONODE', ev.target)
 }
