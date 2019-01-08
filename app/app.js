@@ -332,24 +332,26 @@ function parseTitle(state, info) {
   let ocontent = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'book-content');
   ocontent.id = 'book-content';
   ocontent.textContent = 'Content:';
-  otrns.appendChild(ocontent);
-  ocontent.setAttribute('infoid', info._id);
+  otrns.appendChild(ocontent); // ocontent.setAttribute('infoid', info._id)
+
   let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tree');
   otree.id = 'tree';
   let tbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tbody');
   otree.appendChild(tbody);
   otrns.appendChild(otree);
-  Object(_tree__WEBPACK_IMPORTED_MODULE_2__["tree"])(info.tree, otree);
-  otree.addEventListener('click', goBookEvent, false);
+  Object(_tree__WEBPACK_IMPORTED_MODULE_2__["tree"])(info.tree, otree); // otree.addEventListener('click', goBookEvent, false)
+
+  otree.addEventListener("click", function (ev) {
+    goBookEvent(ev, info);
+  }, false);
   hideProgress();
 }
 
-function goBookEvent(ev) {
+function goBookEvent(ev, info) {
   let fpath = ev.target.getAttribute('fpath');
   if (!fpath) return;
   let mono = ev.target.getAttribute('mono');
-  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#book-content');
-  let infoid = osource.getAttribute('infoid');
+  let infoid = info._id;
   let state = {
     section: 'book',
     infoid: infoid,
@@ -467,15 +469,17 @@ function createRightHeader(state, info) {
   ohright.classList.add('hright');
   ohright.style.left = arect.width * 0.70 + 'px';
   obook.appendChild(ohright);
+  let current = {};
+  current = readTree(current, info.tree, state.fpath);
+  log('CURRENT', current);
+  if (!current.nic) current.nic = current.cnics[0]; // это нужно убрать, nic всегда должен быть
+
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('ul');
   oul.setAttribute('id', 'namelist'); // oul.addEventListener("click", clickRightHeader, false)
 
   oul.addEventListener("click", function (ev) {
-    clickRightHeader(ev, info);
+    clickRightHeader(ev, info, state.fpath);
   }, false);
-  let current = {};
-  current = readTree(current, info.tree, state.fpath);
-  log('CURRENT', current);
   ohright.appendChild(oul);
   createNameList(current.cnics, info.nicnames);
   collapseRightHeader(current.nic);
@@ -486,6 +490,12 @@ function readTree(current, children, fpath) {
     if (child.fpath && child.fpath == fpath) current = child;else if (!child.file) current = readTree(current, child.children, fpath);
   });
   return current;
+}
+
+function writeTree(children, fpath, nic) {
+  children.forEach(child => {
+    if (child.fpath && child.fpath == fpath) child.nic = nic;else if (!child.file) writeTree(child.children, fpath, nic);
+  });
 }
 
 function createNameList(cnics, nicnames) {
@@ -501,17 +511,18 @@ function createNameList(cnics, nicnames) {
   });
 }
 
-function clickRightHeader(ev, info) {
-  log('========================>', ev.target, info);
+function clickRightHeader(ev, info, fpath) {
+  log('=========== R SAVE INFO =>', info.tree);
 
   if (ev.target.classList.contains('active')) {
     expandRightHeader();
   } else {
     let nic = ev.target.getAttribute('nic');
-    if (!nic) return;
-    info.nic = nic;
+    writeTree(info.tree, fpath, nic);
+    log('=========== R SAVE INFO 2 =>', info.tree);
     Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["pushInfo"])(info).then(function (res) {
       log('INFO SAVED NIC', nic);
+      log('INFO SAVED info', info);
       collapseRightHeader(nic);
       otherNic(nic);
     });
@@ -520,7 +531,7 @@ function clickRightHeader(ev, info) {
 
 function otherNic(nic) {
   let pars = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])('#trns > p');
-  pars.forEach((par, idx) => {
+  pars.forEach(par => {
     if (par.getAttribute('nic') == nic) par.setAttribute('active', true), par.classList.remove('hidden');else par.classList.add('hidden');
   });
 }

@@ -78,7 +78,7 @@ export function parseTitle(state, info) {
   ocontent.id = 'book-content'
   ocontent.textContent = 'Content:'
   otrns.appendChild(ocontent)
-  ocontent.setAttribute('infoid', info._id)
+  // ocontent.setAttribute('infoid', info._id)
 
   let otree = create('div', 'tree')
   otree.id = 'tree'
@@ -87,16 +87,19 @@ export function parseTitle(state, info) {
   otrns.appendChild(otree)
   tree(info.tree, otree)
 
-  otree.addEventListener('click', goBookEvent, false)
+  // otree.addEventListener('click', goBookEvent, false)
+  otree.addEventListener("click", function(ev){
+    goBookEvent(ev, info)
+  }, false)
+
   hideProgress()
 }
 
-function goBookEvent(ev) {
+function goBookEvent(ev, info) {
   let fpath = ev.target.getAttribute('fpath')
   if (!fpath) return
   let mono = ev.target.getAttribute('mono')
-  let osource = q('#book-content')
-  let infoid  = osource.getAttribute('infoid')
+  let infoid = info._id
   let state = {section: 'book', infoid: infoid, fpath: fpath}
   if (mono) state.mono = true
   navigate(state)
@@ -208,15 +211,17 @@ function createRightHeader(state, info) {
   ohright.style.left = arect.width*0.70 + 'px'
   obook.appendChild(ohright)
 
+  let current = {}
+  current = readTree(current, info.tree, state.fpath)
+  log('CURRENT', current)
+  if (!current.nic) current.nic = current.cnics[0] // это нужно убрать, nic всегда должен быть
+
   let oul = create('ul')
   oul.setAttribute('id', 'namelist')
   // oul.addEventListener("click", clickRightHeader, false)
   oul.addEventListener("click", function(ev){
-    clickRightHeader(ev, info)
+    clickRightHeader(ev, info, state.fpath)
   }, false)
-  let current = {}
-  current = readTree(current, info.tree, state.fpath)
-  log('CURRENT', current)
   ohright.appendChild(oul)
   createNameList(current.cnics, info.nicnames)
   collapseRightHeader(current.nic)
@@ -228,6 +233,13 @@ function readTree(current, children, fpath) {
     else if (!child.file) current = readTree(current, child.children, fpath)
   })
   return current
+}
+
+function writeTree(children, fpath, nic) {
+  children.forEach(child=> {
+    if (child.fpath && child.fpath == fpath) child.nic = nic
+    else if (!child.file) writeTree(child.children, fpath, nic)
+  })
 }
 
 function createNameList(cnics, nicnames) {
@@ -243,18 +255,18 @@ function createNameList(cnics, nicnames) {
   })
 }
 
-
-function clickRightHeader(ev, info) {
-  log('========================>', ev.target, info)
+function clickRightHeader(ev, info, fpath) {
+  log('=========== R SAVE INFO =>', info.tree)
   if (ev.target.classList.contains('active')) {
     expandRightHeader()
   } else {
     let nic = ev.target.getAttribute('nic')
-    if (!nic) return
-    info.nic = nic
+    writeTree(info.tree, fpath, nic)
+    log('=========== R SAVE INFO 2 =>', info.tree)
     pushInfo(info)
       .then(function(res) {
         log('INFO SAVED NIC', nic)
+        log('INFO SAVED info', info)
         collapseRightHeader(nic)
         otherNic(nic)
       })
@@ -263,7 +275,7 @@ function clickRightHeader(ev, info) {
 
 function otherNic(nic) {
   let pars = qs('#trns > p')
-  pars.forEach((par, idx) => {
+  pars.forEach(par => {
     if (par.getAttribute('nic') == nic) par.setAttribute('active', true), par.classList.remove('hidden')
     else par.classList.add('hidden')
   })
