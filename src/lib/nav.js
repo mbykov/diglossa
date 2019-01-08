@@ -18,7 +18,7 @@ const slash = require('slash')
 let init = {section: 'home'}
 let history = [init]
 let hstate = 0
-// let split
+let split
 
 function goLeft() {
   // log('<<=== LEFT', hstate)
@@ -38,37 +38,20 @@ function goRight() {
   navigate(state)
 }
 
-function twoPage(state) {
-  log('====================================TWO PAGES')
-  let srcsel = ['#', state.section, '> #source'].join('')
-  let trnsel = ['#', state.section, '> #trns'].join('')
-  let osource = q(srcsel)
-  let otrns = q(trnsel)
+function twoPanes(state) {
+  let osource = q('#booksource')
+  let otrns = q('#booktrns')
   empty(osource)
   empty(otrns)
 
-  let gutsel = ['#', state.section, '> .gutter'].join('')
-  let ogutter = q(gutsel)
-  if (ogutter) return
+  let sizes = settings.get('split-sizes') || [50, 50]
+  if (split && state.mono) split.collapse(1)
+  else if (split) split.setSizes(sizes)
+  if (split) return
 
-  // херня полная
-  // let sizes
-  // if (split) {
-  //   sizes = settings.get('split-sizes')
-  //   if (state.cnics && state.cnics.length == 1) sizes = [100, 0]
-  //   split.setSizes(sizes)
-  //   return
-  // } else {
-  //   if (!sizes) sizes = [50, 50]
-  //   settings.set('split-sizes', sizes)
-  // }
-  let sizes = settings.get('split-sizes')
-  if (!sizes) sizes = [50, 50]
   settings.set('split-sizes', sizes)
 
-
-  if (state.cnics && state.cnics.length == 1) log('SIZE 100')
-  let split = Split([srcsel, trnsel], {
+  split = Split(['#booksource', '#booktrns'], {
     sizes: sizes,
     gutterSize: 5,
     cursor: 'col-resize',
@@ -78,10 +61,30 @@ function twoPage(state) {
       settings.set('split-sizes', sizes)
     }
   })
+  if (state.mono) split.collapse(1)
+
   // let obook = q('#book')
   // obook.addEventListener("wheel", scrollPanes, false)
   // document.addEventListener("keydown", keyPanes, false)
-  return split
+  // return split
+}
+
+function twoPanesTitle(state) {
+  let osource = q('#titlesource')
+  let otrns = q('#titletrns')
+  empty(osource)
+  empty(otrns)
+
+  let gutsel = ['#title > .gutter'].join('')
+  let ogutter = q(gutsel)
+  if (ogutter) return
+
+  Split(['#titlesource', '#titletrns'], {
+    sizes: [50, 50],
+    gutterSize: 5,
+    cursor: 'col-resize',
+    minSize: [0, 0]
+  })
 }
 
 // arrows
@@ -118,15 +121,17 @@ export function navigate(state) {
     // history.push(_.clone(state))
     history.push(state)
     hstate = history.length-1
+  } else {
+    log('OLD STATE', state)
+    delete state.old
   }
-  delete state.old
   // log('STATES', hstate, history)
 
-  if (['title', 'book'].includes(state.section)) twoPage(state)
+  // if (['title', 'book'].includes(state.section)) twoPage(state)
 
   if (section == 'home')  getLib()
-  else if (section == 'title') getTitle(state)
-  else if (section == 'book') getBook(state)
+  else if (section == 'title') twoPanesTitle(state), getTitle(state)
+  else if (section == 'book') twoPanes(state), getBook(state)
   // else if (section == 'cleanup') goCleanup(state)
   // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)

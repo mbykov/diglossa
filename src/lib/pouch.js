@@ -46,7 +46,7 @@ export function pushBook(info, book) {
     })
 }
 
-function pushInfo(ndoc) {
+export function pushInfo(ndoc) {
   return libdb.get(ndoc._id).catch(function (err) {
     if (err.name === 'not_found') return
     else throw err

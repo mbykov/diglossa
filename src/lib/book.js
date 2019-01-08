@@ -3,6 +3,7 @@ import _ from 'lodash'
 import { q, qs, empty, create, span, p, div, remove } from './utils'
 import { tree } from './tree';
 import { navigate } from './nav';
+import { pushInfo } from './pouch'
 
 const settings = require('electron').remote.require('electron-settings')
 const path = require('path')
@@ -42,11 +43,8 @@ function goTitleEvent(ev) {
 
 
 export function parseTitle(state, info) {
-  // log('TITLE INFO', info.tree)
-  let srcsel = ['#', state.section, '> #source'].join('')
-  let trnsel = ['#', state.section, '> #trns'].join('')
-  let osource = q(srcsel)
-  let otrns = q(trnsel)
+  let osource = q('#titlesource')
+  let otrns = q('#titletrns')
   empty(osource)
   empty(otrns)
   let obookTitle = div('')
@@ -96,32 +94,34 @@ export function parseTitle(state, info) {
 function goBookEvent(ev) {
   let fpath = ev.target.getAttribute('fpath')
   if (!fpath) return
+  let mono = ev.target.getAttribute('mono')
   let osource = q('#book-content')
   let infoid  = osource.getAttribute('infoid')
-  navigate({section: 'book', infoid: infoid, fpath: fpath})
+  let state = {section: 'book', infoid: infoid, fpath: fpath}
+  if (mono) state.mono = true
+  navigate(state)
 }
 
 export function parseBook(state, info, pars) {
-  // log('parseBOOK', pars.length)
+  log('parseBOOK', info)
+  log('parseBOOKs', state)
   if (!pars.length) return
-  let srcsel = ['#', state.section, '> #source'].join('')
-  let trnsel = ['#', state.section, '> #trns'].join('')
-  let osource = q(srcsel)
-  let otrns = q(trnsel)
+  let osource = q('#booksource')
+  let otrns = q('#booktrns')
   empty(osource)
   empty(otrns)
 
-  let cnics = _.compact(_.uniq(pars.map(auth=> { if (!auth.author) return auth.nic })))
-  let nic = state.nic
-  if (!nic) nic = cnics[0]
-  else if (!cnics.includes(nic)) nic = cnics[0]
-  state.nic = nic
-  state.cnics = cnics
+  // let cnics = _.compact(_.uniq(pars.map(auth=> { if (!auth.author) return auth.nic })))
+  let nic //  = info.nic
+  // if (!nic) nic = cnics[0]
+  // else if (!cnics.includes(nic)) nic = cnics[0]
+  // // state.nic = nic
+  // state.cnics = cnics
 
-  if (state.cnics.length == 1)
-    setMono(state, pars)
+  if (state.mono)
+    setMono(nic, state, pars)
   else
-    setChunk(state, pars)
+    setChunk(nic, state, pars)
   createRightHeader(state, info)
   createLeftHeader(state, info)
 
@@ -130,12 +130,9 @@ export function parseBook(state, info, pars) {
   hideProgress()
 }
 
-function setChunk(state, pars, direction) {
-  let nic = state.nic
-  let srcsel = ['#', state.section, '> #source'].join('')
-  let trnsel = ['#', state.section, '> #trns'].join('')
-  let osource = q(srcsel)
-  let otrns = q(trnsel)
+function setChunk(nic, state, pars, direction) {
+  let osource = q('#booksource')
+  let otrns = q('#booktrns')
 
   let apars = _.filter(pars, par=> { return par.author})
   let tpars = _.filter(pars, par=> { return !par.author})
@@ -177,16 +174,10 @@ function setChunk(state, pars, direction) {
   }
 }
 
-function setMono(state, pars, direction) {
-  let nic = state.nic
-  let srcsel = ['#', state.section, '> #source'].join('')
-  let trnsel = ['#', state.section, '> #trns'].join('')
-  let osource = q(srcsel)
-  let otrns = q(trnsel)
-
-  log('APARs', pars.length)
+function setMono(nic, state, pars, direction) {
+  let osource = q('#booksource')
+  // log('APARs', pars.length)
   pars.forEach(par=> {
-    // log('APAR', apar)
     let oleft = p(par.text)
     oleft.setAttribute('pos', par.pos)
     oleft.setAttribute('nic', par.nic)
@@ -209,28 +200,41 @@ function hideProgress() {
 }
 
 function createRightHeader(state, info) {
+  log('========================> CREATE H', state.fpath, info.tree)
   let obook = q('#book')
   let arect = obook.getBoundingClientRect()
   let ohright = div()
   ohright.classList.add('hright')
   ohright.style.left = arect.width*0.70 + 'px'
-  settings.set('state', state)
+  obook.appendChild(ohright)
 
   let oul = create('ul')
   oul.setAttribute('id', 'namelist')
-  oul.addEventListener("click", clickRightHeader, false)
+  // oul.addEventListener("click", clickRightHeader, false)
+  oul.addEventListener("click", function(ev){
+    clickRightHeader(ev, info)
+  }, false)
+  let current = {}
+  current = readTree(current, info.tree, state.fpath)
+  log('CURRENT', current)
   ohright.appendChild(oul)
-  obook.appendChild(ohright)
-  createNameList(state, info)
-  collapseRightHeader(state.nic)
+  createNameList(current.cnics, info.nicnames)
+  collapseRightHeader(current.nic)
 }
 
-function createNameList(state, info) {
-  let nicnames = info.nicnames
+function readTree(current, children, fpath) {
+  children.forEach(child=> {
+    if (child.fpath && child.fpath == fpath) current = child
+    else if (!child.file) current = readTree(current, child.children, fpath)
+  })
+  return current
+}
+
+function createNameList(cnics, nicnames) {
   let oul = q('#namelist')
   empty(oul)
-  oul.setAttribute('nics', state.cnics)
-  state.cnics.forEach(nic=> {
+  oul.setAttribute('nics', cnics)
+  cnics.forEach(nic=> {
     let oli = create('li')
     let name = nicnames[nic] ? nicnames[nic] : nic
     oli.textContent = name
@@ -239,17 +243,21 @@ function createNameList(state, info) {
   })
 }
 
-function clickRightHeader(ev) {
+
+function clickRightHeader(ev, info) {
+  log('========================>', ev.target, info)
   if (ev.target.classList.contains('active')) {
     expandRightHeader()
   } else {
     let nic = ev.target.getAttribute('nic')
     if (!nic) return
-    let state = settings.get('state')
-    state.nic = nic
-    settings.set('state', state)
-    collapseRightHeader(nic)
-    otherNic(nic)
+    info.nic = nic
+    pushInfo(info)
+      .then(function(res) {
+        log('INFO SAVED NIC', nic)
+        collapseRightHeader(nic)
+        otherNic(nic)
+      })
   }
 }
 

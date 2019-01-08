@@ -250,7 +250,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
 /* harmony import */ var _tree__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./tree */ "./src/lib/tree.js");
 /* harmony import */ var _nav__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./nav */ "./src/lib/nav.js");
+/* harmony import */ var _pouch__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./pouch */ "./src/lib/pouch.js");
  // import Split from 'split.js'
+
 
 
 
@@ -297,11 +299,8 @@ function goTitleEvent(ev) {
 }
 
 function parseTitle(state, info) {
-  // log('TITLE INFO', info.tree)
-  let srcsel = ['#', state.section, '> #source'].join('');
-  let trnsel = ['#', state.section, '> #trns'].join('');
-  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(srcsel);
-  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(trnsel);
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#titlesource');
+  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#titletrns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(osource);
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(otrns);
   let obookTitle = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["div"])('');
@@ -348,34 +347,34 @@ function parseTitle(state, info) {
 function goBookEvent(ev) {
   let fpath = ev.target.getAttribute('fpath');
   if (!fpath) return;
+  let mono = ev.target.getAttribute('mono');
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#book-content');
   let infoid = osource.getAttribute('infoid');
-  Object(_nav__WEBPACK_IMPORTED_MODULE_3__["navigate"])({
+  let state = {
     section: 'book',
     infoid: infoid,
     fpath: fpath
-  });
+  };
+  if (mono) state.mono = true;
+  Object(_nav__WEBPACK_IMPORTED_MODULE_3__["navigate"])(state);
 }
 
 function parseBook(state, info, pars) {
-  // log('parseBOOK', pars.length)
+  log('parseBOOK', info);
+  log('parseBOOKs', state);
   if (!pars.length) return;
-  let srcsel = ['#', state.section, '> #source'].join('');
-  let trnsel = ['#', state.section, '> #trns'].join('');
-  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(srcsel);
-  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(trnsel);
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booksource');
+  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booktrns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(osource);
-  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(otrns);
+  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(otrns); // let cnics = _.compact(_.uniq(pars.map(auth=> { if (!auth.author) return auth.nic })))
 
-  let cnics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(pars.map(auth => {
-    if (!auth.author) return auth.nic;
-  })));
+  let nic; //  = info.nic
+  // if (!nic) nic = cnics[0]
+  // else if (!cnics.includes(nic)) nic = cnics[0]
+  // // state.nic = nic
+  // state.cnics = cnics
 
-  let nic = state.nic;
-  if (!nic) nic = cnics[0];else if (!cnics.includes(nic)) nic = cnics[0];
-  state.nic = nic;
-  state.cnics = cnics;
-  if (state.cnics.length == 1) setMono(state, pars);else setChunk(state, pars);
+  if (state.mono) setMono(nic, state, pars);else setChunk(nic, state, pars);
   createRightHeader(state, info);
   createLeftHeader(state, info); // osource.addEventListener("mouseover", copyToClipboard, false)
   // otrns.addEventListener("wheel", cyclePar, false)
@@ -383,12 +382,9 @@ function parseBook(state, info, pars) {
   hideProgress();
 }
 
-function setChunk(state, pars, direction) {
-  let nic = state.nic;
-  let srcsel = ['#', state.section, '> #source'].join('');
-  let trnsel = ['#', state.section, '> #trns'].join('');
-  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(srcsel);
-  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(trnsel);
+function setChunk(nic, state, pars, direction) {
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booksource');
+  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booktrns');
 
   let apars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
     return par.author;
@@ -437,15 +433,10 @@ function setChunk(state, pars, direction) {
   }
 }
 
-function setMono(state, pars, direction) {
-  let nic = state.nic;
-  let srcsel = ['#', state.section, '> #source'].join('');
-  let trnsel = ['#', state.section, '> #trns'].join('');
-  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(srcsel);
-  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(trnsel);
-  log('APARs', pars.length);
+function setMono(nic, state, pars, direction) {
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booksource'); // log('APARs', pars.length)
+
   pars.forEach(par => {
-    // log('APAR', apar)
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["p"])(par.text);
     oleft.setAttribute('pos', par.pos);
     oleft.setAttribute('nic', par.nic);
@@ -469,27 +460,39 @@ function hideProgress() {
 }
 
 function createRightHeader(state, info) {
+  log('========================> CREATE H', state.fpath, info.tree);
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#book');
   let arect = obook.getBoundingClientRect();
   let ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["div"])();
   ohright.classList.add('hright');
   ohright.style.left = arect.width * 0.70 + 'px';
-  settings.set('state', state);
-  let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('ul');
-  oul.setAttribute('id', 'namelist');
-  oul.addEventListener("click", clickRightHeader, false);
-  ohright.appendChild(oul);
   obook.appendChild(ohright);
-  createNameList(state, info);
-  collapseRightHeader(state.nic);
+  let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('ul');
+  oul.setAttribute('id', 'namelist'); // oul.addEventListener("click", clickRightHeader, false)
+
+  oul.addEventListener("click", function (ev) {
+    clickRightHeader(ev, info);
+  }, false);
+  let current = {};
+  current = readTree(current, info.tree, state.fpath);
+  log('CURRENT', current);
+  ohright.appendChild(oul);
+  createNameList(current.cnics, info.nicnames);
+  collapseRightHeader(current.nic);
 }
 
-function createNameList(state, info) {
-  let nicnames = info.nicnames;
+function readTree(current, children, fpath) {
+  children.forEach(child => {
+    if (child.fpath && child.fpath == fpath) current = child;else if (!child.file) current = readTree(current, child.children, fpath);
+  });
+  return current;
+}
+
+function createNameList(cnics, nicnames) {
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#namelist');
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(oul);
-  oul.setAttribute('nics', state.cnics);
-  state.cnics.forEach(nic => {
+  oul.setAttribute('nics', cnics);
+  cnics.forEach(nic => {
     let oli = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('li');
     let name = nicnames[nic] ? nicnames[nic] : nic;
     oli.textContent = name;
@@ -498,17 +501,20 @@ function createNameList(state, info) {
   });
 }
 
-function clickRightHeader(ev) {
+function clickRightHeader(ev, info) {
+  log('========================>', ev.target, info);
+
   if (ev.target.classList.contains('active')) {
     expandRightHeader();
   } else {
     let nic = ev.target.getAttribute('nic');
     if (!nic) return;
-    let state = settings.get('state');
-    state.nic = nic;
-    settings.set('state', state);
-    collapseRightHeader(nic);
-    otherNic(nic);
+    info.nic = nic;
+    Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["pushInfo"])(info).then(function (res) {
+      log('INFO SAVED NIC', nic);
+      collapseRightHeader(nic);
+      otherNic(nic);
+    });
   }
 }
 
@@ -714,19 +720,17 @@ function getInfoFiles(fns, cb) {
 }
 
 function getDir(info) {
-  // TODO: здесь тип файла
-  const dtree = dirTree(info.bpath); // log('TD', dtree)
-
+  const dtree = dirTree(info.bpath);
   let fulltree = walk(dtree.children);
   let pars = [];
   let map = {};
-  let book = walkRead(info, fulltree, pars);
 
   let children = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.clone(fulltree);
 
   let tree = shortTree(children, info.bpath);
-  info.tree = tree; // log('TREE', tree)
-
+  info.tree = tree;
+  log('SHORT TREE', tree);
+  let book = walkRead(info, fulltree, pars);
   return book;
 }
 
@@ -735,12 +739,18 @@ function shortTree(children, bpath) {
     if (child.children && child.file) {
       let fpath = child.children[0].split(bpath)[1].split('.')[0];
       child.fpath = fpath.replace(/^\//, '');
-      child.children = child.children.length;
-      if (child.children.length == 1) child.mono = true;
+
+      let children = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(child.children, child => {
+        return !child.author;
+      });
+
+      child.cnics = children.map(fn => {
+        return path.extname(fn).replace('.', '');
+      });
+      child.nic = child.cnics[0];
+      if (child.cnics.length == 1) child.mono = true; // delete child.children
     } else if (child.children) {
       shortTree(child.children, bpath);
-      child.children.forEach(child => {}); // } else {
-      // log('CANT BE')
     }
   });
   return children;
@@ -796,7 +806,7 @@ function readFile(info, fn, pars) {
   let rows = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(clean.split('\n'));
 
   rows.forEach((row, idx) => {
-    if (idx == 0) log('ROW', row);
+    // if (idx == 0) log('ROW', row)
     let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-');
     let parid = [groupid, nic].join('-');
     let par = {
@@ -925,7 +935,8 @@ let init = {
   section: 'home'
 };
 let history = [init];
-let hstate = 0; // let split
+let hstate = 0;
+let split;
 
 function goLeft() {
   // log('<<=== LEFT', hstate)
@@ -945,33 +956,16 @@ function goRight() {
   navigate(state);
 }
 
-function twoPage(state) {
-  log('====================================TWO PAGES');
-  let srcsel = ['#', state.section, '> #source'].join('');
-  let trnsel = ['#', state.section, '> #trns'].join('');
-  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(srcsel);
-  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(trnsel);
+function twoPanes(state) {
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booksource');
+  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booktrns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(osource);
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(otrns);
-  let gutsel = ['#', state.section, '> .gutter'].join('');
-  let ogutter = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(gutsel);
-  if (ogutter) return; // херня полная
-  // let sizes
-  // if (split) {
-  //   sizes = settings.get('split-sizes')
-  //   if (state.cnics && state.cnics.length == 1) sizes = [100, 0]
-  //   split.setSizes(sizes)
-  //   return
-  // } else {
-  //   if (!sizes) sizes = [50, 50]
-  //   settings.set('split-sizes', sizes)
-  // }
-
-  let sizes = settings.get('split-sizes');
-  if (!sizes) sizes = [50, 50];
+  let sizes = settings.get('split-sizes') || [50, 50];
+  if (split && state.mono) split.collapse(1);else if (split) split.setSizes(sizes);
+  if (split) return;
   settings.set('split-sizes', sizes);
-  if (state.cnics && state.cnics.length == 1) log('SIZE 100');
-  let split = split_js__WEBPACK_IMPORTED_MODULE_2___default()([srcsel, trnsel], {
+  split = split_js__WEBPACK_IMPORTED_MODULE_2___default()(['#booksource', '#booktrns'], {
     sizes: sizes,
     gutterSize: 5,
     cursor: 'col-resize',
@@ -980,11 +974,27 @@ function twoPage(state) {
       // log('RESIZED', sizes)
       settings.set('split-sizes', sizes);
     }
-  }); // let obook = q('#book')
+  });
+  if (state.mono) split.collapse(1); // let obook = q('#book')
   // obook.addEventListener("wheel", scrollPanes, false)
   // document.addEventListener("keydown", keyPanes, false)
+  // return split
+}
 
-  return split;
+function twoPanesTitle(state) {
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#titlesource');
+  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#titletrns');
+  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(osource);
+  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(otrns);
+  let gutsel = ['#title > .gutter'].join('');
+  let ogutter = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(gutsel);
+  if (ogutter) return;
+  split_js__WEBPACK_IMPORTED_MODULE_2___default()(['#titlesource', '#titletrns'], {
+    sizes: [50, 50],
+    gutterSize: 5,
+    cursor: 'col-resize',
+    minSize: [0, 0]
+  });
 } // arrows
 
 
@@ -1019,12 +1029,14 @@ function navigate(state) {
     // history.push(_.clone(state))
     history.push(state);
     hstate = history.length - 1;
-  }
+  } else {
+    log('OLD STATE', state);
+    delete state.old;
+  } // log('STATES', hstate, history)
+  // if (['title', 'book'].includes(state.section)) twoPage(state)
 
-  delete state.old; // log('STATES', hstate, history)
 
-  if (['title', 'book'].includes(state.section)) twoPage(state);
-  if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getLib"])();else if (section == 'title') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getTitle"])(state);else if (section == 'book') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getBook"])(state); // else if (section == 'cleanup') goCleanup(state)
+  if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getLib"])();else if (section == 'title') twoPanesTitle(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getTitle"])(state);else if (section == 'book') twoPanes(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getBook"])(state); // else if (section == 'cleanup') goCleanup(state)
   // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)
 
@@ -1037,12 +1049,13 @@ function navigate(state) {
 /*!**************************!*\
   !*** ./src/lib/pouch.js ***!
   \**************************/
-/*! exports provided: pushBook, getLib, getTitle, getBook, getText, cleanup */
+/*! exports provided: pushBook, pushInfo, getLib, getTitle, getBook, getText, cleanup */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pushBook", function() { return pushBook; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pushInfo", function() { return pushInfo; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib", function() { return getLib; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTitle", function() { return getTitle; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getBook", function() { return getBook; });
@@ -1100,7 +1113,6 @@ function pushBook(info, book) {
     }); // }
   });
 }
-
 function pushInfo(ndoc) {
   return libdb.get(ndoc._id).catch(function (err) {
     if (err.name === 'not_found') return;else throw err;

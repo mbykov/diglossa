@@ -51,17 +51,15 @@ export function getInfoFiles(fns, cb) {
 }
 
 function getDir(info) {
-  // TODO: здесь тип файла
   const dtree = dirTree(info.bpath);
-  // log('TD', dtree)
   let fulltree = walk(dtree.children)
   let pars = []
   let map = {}
-  let book = walkRead(info, fulltree, pars)
   let children = _.clone(fulltree)
   let tree = shortTree(children, info.bpath)
   info.tree = tree
-  // log('TREE', tree)
+  log('SHORT TREE', tree)
+  let book = walkRead(info, fulltree, pars)
   return book
 }
 
@@ -70,14 +68,13 @@ function shortTree(children, bpath) {
     if (child.children && child.file) {
       let fpath = child.children[0].split(bpath)[1].split('.')[0]
       child.fpath = fpath.replace(/^\//, '')
-      child.children = child.children.length
-      if (child.children.length == 1) child.mono = true
+      let children = _.filter(child.children, child=> { return !child.author })
+      child.cnics = children.map(fn=> { return path.extname(fn).replace('.', '') })
+      child.nic = child.cnics[0]
+      if (child.cnics.length == 1) child.mono = true
+      // delete child.children
     } else if (child.children) {
       shortTree(child.children, bpath)
-      child.children.forEach(child=> {
-      })
-    // } else {
-      // log('CANT BE')
     }
   })
   return children
@@ -124,7 +121,7 @@ function readFile(info, fn, pars) {
   let clean = txt.trim().replace(/\n+/, '\n') //.replace(/\s+/, ' ')
   let rows = _.compact(clean.split('\n'))
   rows.forEach((row, idx)=> {
-    if (idx == 0) log('ROW', row)
+    // if (idx == 0) log('ROW', row)
     let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-')
     let parid = [groupid, nic].join('-')
     let par = { _id: parid, infoid: info._id, pos: idx, nic: nic, fpath: fpath, lang: lang, text: row }

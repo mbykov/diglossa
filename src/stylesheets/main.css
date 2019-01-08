@@ -63,7 +63,7 @@ h4 {
     float: left;
 }
 
-#source {
+#booksource {
     font-family: "Helvetica Neue", Helvetica, Arial;
     font-size: 14px;
     padding-left: 15px;
@@ -74,7 +74,7 @@ h4 {
     /* overflow-x: hidden; */
 }
 
-#trns {
+#booktrns {
     font-family: "Helvetica Neue", Helvetica, Arial;
     font-size: 14px;
     padding-left: 15px;
@@ -83,32 +83,6 @@ h4 {
     /* margin-top: -50px; */
     overflow-y: hidden;
     overflow-x: hidden;
-}
-
-
-#hsource_ {
-  font-family: "Helvetica Neue", Helvetica, Arial;
-  font-size: 16px;
-  /* padding: 15px; */
-  margin-top: 15px;
-  margin-bottom: 25px;
-  /* padding: 50px; */
-  padding-top: 15px;
-  padding-bottom: 25px;
-  /* -webkit-app-region: drag; */
-  overflow-y: hidden;
-  /* overflow-x: hidden; */
-}
-
-#thrns_ {
-  font-family: "Helvetica Neue", Helvetica, Arial;
-  font-size: 14px;
-  padding-left: 15px;
-  padding-top: 25px;
-  padding-bottom: 25px;
-  /* margin-top: -50px; */
-  overflow-y: hidden;
-  overflow-x: hidden;
 }
 
 .link {
