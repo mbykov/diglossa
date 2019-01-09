@@ -168,12 +168,10 @@ document.body.addEventListener('click', event => {
     // TODO:
     // let fn = '/home/michael/diglossa.texts/Xuanzang/datangxiyuji.json'
 
-    let fn = '/home/michael/diglossa.texts/Plato/dialogues.json';
-    let fns = [fn];
+    let fn = '/home/michael/diglossa.texts/Plato/dialogues.json'; // let fns = [fn]
 
     if (section == 'readInfo') {
-      Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_4__["getInfoFiles"])(fns, function (res) {
-        // log('APP BOOK PUSHED')
+      Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_4__["getInfoFiles"])(fn, function (res) {
         Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])({
           section: 'home'
         });
@@ -182,9 +180,7 @@ document.body.addEventListener('click', event => {
       section: section
     });
   } else if (event.target.id == 'cleanupdb') {
-    log('DESTROYED CLICKED');
     Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_6__["cleanup"])().then(function () {
-      log('DB DESTROYED');
       getCurrentWindow().reload();
     }).catch(function (err) {
       log('DESTROY ERR:', err);
@@ -202,8 +198,21 @@ electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('parseDir', function (ev
       name: 'JSON',
       extensions: ['json']
     }]
-  }, getInfoFile);
+  }, parseDir);
 });
+
+function parseDir(fns) {
+  if (!fns || !fns.length) return;
+  let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#progress');
+  progress.classList.add('is-shown');
+  let infopath = fns[0];
+  Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_4__["getInfoFiles"])(infopath, function (res) {
+    Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])({
+      section: 'home'
+    });
+  });
+}
+
 electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('reread', function (event) {
   log('RE-READ');
   let state = settings.get('state');
@@ -690,13 +699,11 @@ const dirTree = __webpack_require__(/*! directory-tree */ "directory-tree");
 const textract = __webpack_require__(/*! textract */ "textract");
 
 const log = console.log;
-function getInfoFiles(fns, cb) {
-  if (!fns || !fns.length) return;
+function getInfoFiles(infopath, cb) {
+  // if (!fns || !fns.length) return
+  // let progress = q('#progress')
+  // progress.classList.add('is-shown')
   let info;
-  let book;
-  let progress = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#progress');
-  progress.classList.add('is-shown');
-  let infopath = fns[0];
 
   try {
     let json = fse.readFileSync(infopath);
@@ -708,22 +715,15 @@ function getInfoFiles(fns, cb) {
 
   let dir = path.parse(infopath).dir;
   let bpath = path.resolve(dir, info.book.path);
-  info.bpath = slash(bpath); // info.sections = []
-
-  info.nics = []; // log('INFO', info)
-
-  book = getDir(info);
+  info.bpath = slash(bpath);
+  info.nics = [];
+  let book = getDir(info);
   Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["pushBook"])(info, book).then(function (res) {
-    // log('PUSH BOOK OK')
+    log('BOOK PUSHED OK');
     cb(true);
   }).catch(function (err) {
     log('PUSH BOOK ERR:', err);
-  }); // log('BOOK', book.pars[10])
-  // let aups = _.filter(book.pars, par=> { return par.author })
-  // log('AUPS', aups[100])
-  // log('INFO', info)
-
-  return;
+  });
 }
 
 function getDir(info) {

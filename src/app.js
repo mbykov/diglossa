@@ -63,10 +63,9 @@ document.body.addEventListener('click', (event) => {
     // TODO:
     // let fn = '/home/michael/diglossa.texts/Xuanzang/datangxiyuji.json'
     let fn = '/home/michael/diglossa.texts/Plato/dialogues.json'
-    let fns = [fn]
+    // let fns = [fn]
     if (section == 'readInfo') {
-      getInfoFiles(fns, function(res) {
-        // log('APP BOOK PUSHED')
+      getInfoFiles(fn, function(res) {
         navigate({section: 'home'})
       })
     }
@@ -74,10 +73,8 @@ document.body.addEventListener('click', (event) => {
       navigate({section: section})
   }
   else if (event.target.id == 'cleanupdb') {
-    log('DESTROYED CLICKED')
     cleanup()
       .then(function () {
-        log('DB DESTROYED')
         getCurrentWindow().reload()
       }).catch(function (err) {
         log('DESTROY ERR:', err)
@@ -91,8 +88,18 @@ ipcRenderer.on('reload', function (event) {
 })
 
 ipcRenderer.on('parseDir', function (event) {
-  dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'JSON', extensions: ['json'] }]}, getInfoFile)
+  dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'JSON', extensions: ['json'] }]}, parseDir)
 })
+
+function parseDir(fns) {
+  if (!fns || !fns.length) return
+  let progress = q('#progress')
+  progress.classList.add('is-shown')
+  let infopath = fns[0]
+  getInfoFiles(infopath, function(res) {
+    navigate({section: 'home'})
+  })
+}
 
 ipcRenderer.on('reread', function (event) {
   log('RE-READ')
