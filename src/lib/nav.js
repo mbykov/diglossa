@@ -112,7 +112,7 @@ function sectionTrigger(section) {
 }
 
 export function navigate(state) {
-  log('NAV-state', state)
+  log('NAV-state', JSON.stringify(state))
   let progress = q('#progress')
   progress.classList.add('is-shown')
   let section = state.section

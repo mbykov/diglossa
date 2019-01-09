@@ -28,6 +28,7 @@ export function getInfoFiles(infopath, cb) {
   let dir = path.parse(infopath).dir
   let bpath = path.resolve(dir, info.book.path)
   info.bpath = slash(bpath)
+  info.infopath = slash(infopath)
   info.nics = []
   let book = getDir(info)
   pushBook(info, book)

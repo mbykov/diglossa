@@ -157,10 +157,12 @@ imports.forEach(link => {
   let content = link.import;
   let section = content.querySelector('.section');
   container.appendChild(section.cloneNode(true));
-});
-let home = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#home');
-home.classList.add('is-shown'); // navigate({section: 'home'})
+}); // let home = q('#home')
+// home.classList.add('is-shown')
+// navigate({section: 'home'})
 
+let state = settings.get('state');
+Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
 document.body.addEventListener('click', event => {
   // log('CLICK-DOC', event.target.dataset)
   if (event.target.dataset.section) {
@@ -186,10 +188,6 @@ document.body.addEventListener('click', event => {
       log('DESTROY ERR:', err);
     });
   }
-}); // R+Shift
-
-electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('reload', function (event) {
-  getCurrentWindow().reload();
 });
 electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('parseDir', function (event) {
   dialog.showOpenDialog({
@@ -214,19 +212,32 @@ function parseDir(fns) {
 }
 
 electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('reread', function (event) {
-  log('RE-READ');
+  let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#progress');
+  progress.classList.add('is-shown');
   let state = settings.get('state');
-  Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state); // libdb.get('_local/current')
-  //   .then(function (current) {
-  //     if (!current.infoid) return
-  //     libdb.get(current.infoid)
-  //       .then(function (info) {
-  //         getDir(info)
-  //       })
-  //   })
-  //   .catch(function (err) {
-  //     log('ERR GET INFO DIR')
-  //   })
+  log('RE-READ', JSON.stringify(state));
+
+  if (!state.infoid) {
+    Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
+    return;
+  }
+
+  Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_6__["getInfo"])(state.infoid).then(function (info) {
+    log('GET INFO', info.infopath);
+    Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_4__["getInfoFiles"])(info.infopath, function (res) {
+      log('REREAD BOOK OK state', state);
+      Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
+    });
+  }).catch(function (err) {
+    log('RE-READ BOOK ERR:', err);
+  });
+}); // R+Shift
+
+electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('reload', function (event) {
+  let state = settings.get('state');
+  getCurrentWindow().reload();
+  log('RE-LOAD', JSON.stringify(state));
+  Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
 });
 electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('action', function (event, action) {
   // if (action == 'cleanup') showCleanup()
@@ -716,6 +727,7 @@ function getInfoFiles(infopath, cb) {
   let dir = path.parse(infopath).dir;
   let bpath = path.resolve(dir, info.book.path);
   info.bpath = slash(bpath);
+  info.infopath = slash(infopath);
   info.nics = [];
   let book = getDir(info);
   Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["pushBook"])(info, book).then(function (res) {
@@ -1026,7 +1038,7 @@ function sectionTrigger(section) {
 }
 
 function navigate(state) {
-  log('NAV-state', state);
+  log('NAV-state', JSON.stringify(state));
   let progress = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#progress');
   progress.classList.add('is-shown');
   let section = state.section;
@@ -1054,7 +1066,7 @@ function navigate(state) {
 /*!**************************!*\
   !*** ./src/lib/pouch.js ***!
   \**************************/
-/*! exports provided: pushBook, pushInfo, getLib, getTitle, getBook, getText, cleanup */
+/*! exports provided: pushBook, pushInfo, getLib, getInfo, getTitle, getBook, getText, cleanup */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1062,6 +1074,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pushBook", function() { return pushBook; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pushInfo", function() { return pushInfo; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getLib", function() { return getLib; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getInfo", function() { return getInfo; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTitle", function() { return getTitle; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getBook", function() { return getBook; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getText", function() { return getText; });
@@ -1176,6 +1189,11 @@ function getLib() {
     Object(_book__WEBPACK_IMPORTED_MODULE_3__["parseLib"])(infos);
   }).catch(function (err) {
     log('getLibErr', err);
+  });
+}
+function getInfo(infoid) {
+  return libdb.get(infoid).catch(function (err) {
+    log('getTitleErr', err);
   });
 }
 function getTitle(state) {

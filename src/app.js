@@ -16,7 +16,7 @@ import { q, qs, empty, create, remove, span, p, div, enclitic } from './lib/util
 // import { parseQuery } from './lib/search';
 import { getInfoFiles } from './lib/getfiles'
 import { navigate } from './lib/nav';
-import { cleanup } from './lib/pouch'
+import { getInfo, cleanup } from './lib/pouch'
 
 const settings = require('electron').remote.require('electron-settings')
 
@@ -50,9 +50,11 @@ imports.forEach(link=> {
   container.appendChild(section.cloneNode(true))
 })
 
-let home = q('#home')
-home.classList.add('is-shown')
+// let home = q('#home')
+// home.classList.add('is-shown')
 // navigate({section: 'home'})
+let state = settings.get('state')
+navigate(state)
 
 document.body.addEventListener('click', (event) => {
   // log('CLICK-DOC', event.target.dataset)
@@ -82,11 +84,6 @@ document.body.addEventListener('click', (event) => {
   }
 })
 
-// R+Shift
-ipcRenderer.on('reload', function (event) {
-  getCurrentWindow().reload()
-})
-
 ipcRenderer.on('parseDir', function (event) {
   dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'JSON', extensions: ['json'] }]}, parseDir)
 })
@@ -102,20 +99,32 @@ function parseDir(fns) {
 }
 
 ipcRenderer.on('reread', function (event) {
-  log('RE-READ')
+  let progress = q('#progress')
+  progress.classList.add('is-shown')
   let state = settings.get('state')
+  log('RE-READ', JSON.stringify(state))
+  if (!state.infoid) {
+    navigate(state)
+    return
+  }
+  getInfo(state.infoid)
+    .then(function (info) {
+      log('GET INFO', info.infopath)
+      getInfoFiles(info.infopath, function(res) {
+        log('REREAD BOOK OK state', state)
+        navigate(state)
+      })
+    }).catch(function(err) {
+      log('RE-READ BOOK ERR:', err)
+    })
+})
+
+// R+Shift
+ipcRenderer.on('reload', function (event) {
+  let state = settings.get('state')
+  getCurrentWindow().reload()
+  log('RE-LOAD', JSON.stringify(state))
   navigate(state)
-  // libdb.get('_local/current')
-  //   .then(function (current) {
-  //     if (!current.infoid) return
-  //     libdb.get(current.infoid)
-  //       .then(function (info) {
-  //         getDir(info)
-  //       })
-  //   })
-  //   .catch(function (err) {
-  //     log('ERR GET INFO DIR')
-  //   })
 })
 
 ipcRenderer.on('action', function (event, action) {

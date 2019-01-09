@@ -103,6 +103,13 @@ export function getLib() {
     })
 }
 
+export function getInfo(infoid) {
+  return libdb.get(infoid)
+    .catch(function (err) {
+      log('getTitleErr', err);
+    })
+}
+
 export function getTitle(state) {
   if (!state.infoid) return
   libdb.get(state.infoid)
