@@ -1,6 +1,6 @@
 import _ from 'lodash'
 // import Split from 'split.js'
-import { q, qs, empty, create, span, p, div, remove } from './utils'
+import { q, qs, empty, create, recreate, span, p, div, remove } from './utils'
 import { tree } from './tree';
 import { navigate } from './nav';
 import { pushInfo } from './pouch'
@@ -88,7 +88,7 @@ export function parseTitle(state, info) {
   tree(info.tree, otree)
 
   // otree.addEventListener('click', goBookEvent, false)
-  otree.addEventListener("click", function(ev){
+  otree.addEventListener("click", function(ev) {
     goBookEvent(ev, info)
   }, false)
 
@@ -106,20 +106,16 @@ function goBookEvent(ev, info) {
 }
 
 export function parseBook(state, info, pars) {
-  log('parseBOOK', info)
-  log('parseBOOKs', state)
   if (!pars.length) return
   let osource = q('#booksource')
   let otrns = q('#booktrns')
   empty(osource)
   empty(otrns)
 
-  // let cnics = _.compact(_.uniq(pars.map(auth=> { if (!auth.author) return auth.nic })))
-  let nic //  = info.nic
-  // if (!nic) nic = cnics[0]
-  // else if (!cnics.includes(nic)) nic = cnics[0]
-  // // state.nic = nic
-  // state.cnics = cnics
+  let cnics = _.compact(_.uniq(pars.map(auth=> { if (!auth.author) return auth.nic })))
+  let current = {}
+  current = readTree(current, info.tree, state.fpath)
+  let nic = current.nic || cnics[0]
 
   if (state.mono)
     setMono(nic, state, pars)
@@ -140,7 +136,6 @@ function setChunk(nic, state, pars, direction) {
   let apars = _.filter(pars, par=> { return par.author})
   let tpars = _.filter(pars, par=> { return !par.author})
   apars.forEach(apar=> {
-    // log('APAR', apar)
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>")
     if (state.query) {
       let requery = new RegExp(state.query, 'g')
@@ -179,7 +174,6 @@ function setChunk(nic, state, pars, direction) {
 
 function setMono(nic, state, pars, direction) {
   let osource = q('#booksource')
-  // log('APARs', pars.length)
   pars.forEach(par=> {
     let oleft = p(par.text)
     oleft.setAttribute('pos', par.pos)
@@ -203,24 +197,24 @@ function hideProgress() {
 }
 
 function createRightHeader(state, info) {
-  log('========================> CREATE H', state.fpath, info.tree)
   let obook = q('#book')
   let arect = obook.getBoundingClientRect()
-  let ohright = div()
-  ohright.classList.add('hright')
+  let ohright = q('.hright')
+  if (ohright) remove(ohright)
+  ohright = create('div', 'hright')
   ohright.style.left = arect.width*0.70 + 'px'
   obook.appendChild(ohright)
 
   let current = {}
   current = readTree(current, info.tree, state.fpath)
-  log('CURRENT', current)
-  if (!current.nic) current.nic = current.cnics[0] // это нужно убрать, nic всегда должен быть
 
   let oul = create('ul')
   oul.setAttribute('id', 'namelist')
+  oul.setAttribute('fpath', current.fpath)
   // oul.addEventListener("click", clickRightHeader, false)
-  oul.addEventListener("click", function(ev){
-    clickRightHeader(ev, info, state.fpath)
+  let fpath = current.fpath
+  oul.addEventListener("click", function(ev) {
+    clickRightHeader(ev, info)
   }, false)
   ohright.appendChild(oul)
   createNameList(current.cnics, info.nicnames)
@@ -255,18 +249,16 @@ function createNameList(cnics, nicnames) {
   })
 }
 
-function clickRightHeader(ev, info, fpath) {
-  log('=========== R SAVE INFO =>', info.tree)
+function clickRightHeader(ev, info) {
   if (ev.target.classList.contains('active')) {
     expandRightHeader()
   } else {
     let nic = ev.target.getAttribute('nic')
+    let oul = q('#namelist')
+    let fpath = oul.getAttribute('fpath')
     writeTree(info.tree, fpath, nic)
-    log('=========== R SAVE INFO 2 =>', info.tree)
     pushInfo(info)
       .then(function(res) {
-        log('INFO SAVED NIC', nic)
-        log('INFO SAVED info', info)
         collapseRightHeader(nic)
         otherNic(nic)
       })
@@ -274,7 +266,7 @@ function clickRightHeader(ev, info, fpath) {
 }
 
 function otherNic(nic) {
-  let pars = qs('#trns > p')
+  let pars = qs('#booktrns > p')
   pars.forEach(par => {
     if (par.getAttribute('nic') == nic) par.setAttribute('active', true), par.classList.remove('hidden')
     else par.classList.add('hidden')
@@ -310,7 +302,6 @@ function createLeftHeader(state, info) {
   ohleft.style.left = arect.width*0.15 + 'px'
   ohleft.addEventListener("click", clickLeftHeader, false)
 
-
   let otree = create('div', 'tree')
   otree.id = 'tree'
   otree.setAttribute('tree', info.tree)
@@ -325,8 +316,10 @@ function createLeftHeader(state, info) {
   otree.appendChild(otbody)
   ohleft.appendChild(otree)
   tree(info.tree, otree)
-  otree.addEventListener('click', goBookEvent, false)
-
+  // otree.addEventListener('click', goBookEvent, false)
+  otree.addEventListener("click", function(ev) {
+    goBookEvent(ev, info)
+  }, false)
   otbody.classList.add('tree-collapse')
 }
 

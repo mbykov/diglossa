@@ -122,12 +122,9 @@ export function navigate(state) {
     history.push(state)
     hstate = history.length-1
   } else {
-    log('OLD STATE', state)
     delete state.old
   }
   // log('STATES', hstate, history)
-
-  // if (['title', 'book'].includes(state.section)) twoPage(state)
 
   if (section == 'home')  getLib()
   else if (section == 'title') twoPanesTitle(state), getTitle(state)

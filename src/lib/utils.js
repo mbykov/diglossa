@@ -21,7 +21,7 @@ export function recreateDiv (sel) {
   if (el) el.parentElement.removeChild(el)
   el = document.createElement('div')
   el.classList.add(sel)
-  el.id = sel
+  // el.id = sel
   return el
 }
 

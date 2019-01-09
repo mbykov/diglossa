@@ -362,20 +362,19 @@ function goBookEvent(ev, info) {
 }
 
 function parseBook(state, info, pars) {
-  log('parseBOOK', info);
-  log('parseBOOKs', state);
   if (!pars.length) return;
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booksource');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booktrns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(osource);
-  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(otrns); // let cnics = _.compact(_.uniq(pars.map(auth=> { if (!auth.author) return auth.nic })))
+  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(otrns);
 
-  let nic; //  = info.nic
-  // if (!nic) nic = cnics[0]
-  // else if (!cnics.includes(nic)) nic = cnics[0]
-  // // state.nic = nic
-  // state.cnics = cnics
+  let cnics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(pars.map(auth => {
+    if (!auth.author) return auth.nic;
+  })));
 
+  let current = {};
+  current = readTree(current, info.tree, state.fpath);
+  let nic = current.nic || cnics[0];
   if (state.mono) setMono(nic, state, pars);else setChunk(nic, state, pars);
   createRightHeader(state, info);
   createLeftHeader(state, info); // osource.addEventListener("mouseover", copyToClipboard, false)
@@ -397,7 +396,6 @@ function setChunk(nic, state, pars, direction) {
   });
 
   apars.forEach(apar => {
-    // log('APAR', apar)
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>");
 
     if (state.query) {
@@ -436,8 +434,7 @@ function setChunk(nic, state, pars, direction) {
 }
 
 function setMono(nic, state, pars, direction) {
-  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booksource'); // log('APARs', pars.length)
-
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booksource');
   pars.forEach(par => {
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["p"])(par.text);
     oleft.setAttribute('pos', par.pos);
@@ -462,23 +459,22 @@ function hideProgress() {
 }
 
 function createRightHeader(state, info) {
-  log('========================> CREATE H', state.fpath, info.tree);
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#book');
   let arect = obook.getBoundingClientRect();
-  let ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["div"])();
-  ohright.classList.add('hright');
+  let ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('.hright');
+  if (ohright) Object(_utils__WEBPACK_IMPORTED_MODULE_1__["remove"])(ohright);
+  ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'hright');
   ohright.style.left = arect.width * 0.70 + 'px';
   obook.appendChild(ohright);
   let current = {};
   current = readTree(current, info.tree, state.fpath);
-  log('CURRENT', current);
-  if (!current.nic) current.nic = current.cnics[0]; // это нужно убрать, nic всегда должен быть
-
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('ul');
-  oul.setAttribute('id', 'namelist'); // oul.addEventListener("click", clickRightHeader, false)
+  oul.setAttribute('id', 'namelist');
+  oul.setAttribute('fpath', current.fpath); // oul.addEventListener("click", clickRightHeader, false)
 
+  let fpath = current.fpath;
   oul.addEventListener("click", function (ev) {
-    clickRightHeader(ev, info, state.fpath);
+    clickRightHeader(ev, info);
   }, false);
   ohright.appendChild(oul);
   createNameList(current.cnics, info.nicnames);
@@ -511,18 +507,15 @@ function createNameList(cnics, nicnames) {
   });
 }
 
-function clickRightHeader(ev, info, fpath) {
-  log('=========== R SAVE INFO =>', info.tree);
-
+function clickRightHeader(ev, info) {
   if (ev.target.classList.contains('active')) {
     expandRightHeader();
   } else {
     let nic = ev.target.getAttribute('nic');
+    let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#namelist');
+    let fpath = oul.getAttribute('fpath');
     writeTree(info.tree, fpath, nic);
-    log('=========== R SAVE INFO 2 =>', info.tree);
     Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["pushInfo"])(info).then(function (res) {
-      log('INFO SAVED NIC', nic);
-      log('INFO SAVED info', info);
       collapseRightHeader(nic);
       otherNic(nic);
     });
@@ -530,7 +523,7 @@ function clickRightHeader(ev, info, fpath) {
 }
 
 function otherNic(nic) {
-  let pars = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])('#trns > p');
+  let pars = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])('#booktrns > p');
   pars.forEach(par => {
     if (par.getAttribute('nic') == nic) par.setAttribute('active', true), par.classList.remove('hidden');else par.classList.add('hidden');
   });
@@ -579,8 +572,11 @@ function createLeftHeader(state, info) {
   let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tbody');
   otree.appendChild(otbody);
   ohleft.appendChild(otree);
-  Object(_tree__WEBPACK_IMPORTED_MODULE_2__["tree"])(info.tree, otree);
-  otree.addEventListener('click', goBookEvent, false);
+  Object(_tree__WEBPACK_IMPORTED_MODULE_2__["tree"])(info.tree, otree); // otree.addEventListener('click', goBookEvent, false)
+
+  otree.addEventListener("click", function (ev) {
+    goBookEvent(ev, info);
+  }, false);
   otbody.classList.add('tree-collapse');
 }
 
@@ -1041,10 +1037,8 @@ function navigate(state) {
     history.push(state);
     hstate = history.length - 1;
   } else {
-    log('OLD STATE', state);
     delete state.old;
   } // log('STATES', hstate, history)
-  // if (['title', 'book'].includes(state.section)) twoPage(state)
 
 
   if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getLib"])();else if (section == 'title') twoPanesTitle(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getTitle"])(state);else if (section == 'book') twoPanes(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getBook"])(state); // else if (section == 'cleanup') goCleanup(state)
@@ -1340,8 +1334,8 @@ function recreateDiv(sel) {
   let el = document.querySelector(sel);
   if (el) el.parentElement.removeChild(el);
   el = document.createElement('div');
-  el.classList.add(sel);
-  el.id = sel;
+  el.classList.add(sel); // el.id = sel
+
   return el;
 }
 function recreate(element) {
