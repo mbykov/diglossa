@@ -81,6 +81,7 @@
     "mousetrap": "^1.6.2",
     "pouchdb": "^7.0.0",
     "pouchdb-find": "^7.0.0",
+    "pouchdb-quick-search": "^1.3.0",
     "slash": "^2.0.0",
     "split.js": "^1.4.0",
     "textract": "^2.4.0"

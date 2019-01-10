@@ -16,18 +16,16 @@ import { q, qs, empty, create, remove, span, p, div, enclitic } from './lib/util
 // import { parseQuery } from './lib/search';
 import { getInfoFiles } from './lib/getfiles'
 import { navigate } from './lib/nav';
+// cleanup - перенести в book?
 import { getInfo, cleanup } from './lib/pouch'
 
 const settings = require('electron').remote.require('electron-settings')
 
 const JSON = require('json5')
-// const Mousetrap = require('mousetrap')
 const axios = require('axios')
 let fse = require('fs-extra')
 const slash = require('slash')
 const log = console.log
-// const Store = require('electron-store')
-// const store = new Store()
 
 const path = require('path')
 

@@ -118,13 +118,13 @@ __webpack_require__.r(__webpack_exports__);
 // import { parseQuery } from './lib/search';
 
 
+ // cleanup - перенести в book?
 
 
 
 const settings = __webpack_require__(/*! electron */ "electron").remote.require('electron-settings');
 
-const JSON = __webpack_require__(/*! json5 */ "json5"); // const Mousetrap = require('mousetrap')
-
+const JSON = __webpack_require__(/*! json5 */ "json5");
 
 const axios = __webpack_require__(/*! axios */ "axios");
 
@@ -132,8 +132,7 @@ let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
 const slash = __webpack_require__(/*! slash */ "slash");
 
-const log = console.log; // const Store = require('electron-store')
-// const store = new Store()
+const log = console.log;
 
 const path = __webpack_require__(/*! path */ "path");
 
@@ -397,8 +396,8 @@ function parseBook(state, info, pars) {
   let nic = current.nic || cnics[0];
   if (state.mono) setMono(nic, state, pars);else setChunk(nic, state, pars);
   createRightHeader(state, info);
-  createLeftHeader(state, info); // osource.addEventListener("mouseover", copyToClipboard, false)
-  // otrns.addEventListener("wheel", cyclePar, false)
+  createLeftHeader(state, info);
+  osource.addEventListener("mouseover", copyToClipboard, false); // otrns.addEventListener("wheel", cyclePar, false)
 
   hideProgress();
 }
@@ -609,6 +608,14 @@ function clickLeftHeader(ev) {
   ohleft.classList.toggle('header');
 }
 
+function copyToClipboard(ev) {
+  if (ev.shiftKey == true) return;
+  if (ev.ctrlKey == true) return;
+  if (ev.target.nodeName != 'SPAN') return;
+  let wf = ev.target.textContent;
+  clipboard.writeText(wf);
+}
+
 /***/ }),
 
 /***/ "./src/lib/context_menu.js":
@@ -749,8 +756,40 @@ function getDir(info) {
   let tree = shortTree(children, info.bpath);
   info.tree = tree;
   log('SHORT TREE', tree);
-  let book = walkRead(info, fulltree, pars);
+  walkRead(info, fulltree, pars, map);
+  log('==>', pars.length);
+  let mapdocs = map2mapdoc(info.nics, map);
+  let book = {
+    pars: pars,
+    mapdocs: mapdocs
+  };
   return book;
+}
+
+function map2mapdoc(nics, map) {
+  let mapnics = {};
+
+  for (let wf in map) {
+    map[wf].forEach(groupid => {
+      nics.forEach(nic => {
+        let parid = [groupid, nic].join('-');
+        if (!mapnics[wf]) mapnics[wf] = [];
+        mapnics[wf].push(parid);
+      });
+    });
+  }
+
+  let mapdocs = [];
+
+  for (let wf in mapnics) {
+    let mapdoc = {
+      _id: wf,
+      parids: mapnics[wf]
+    };
+    mapdocs.push(mapdoc);
+  }
+
+  return mapdocs;
 }
 
 function shortTree(children, bpath) {
@@ -775,17 +814,21 @@ function shortTree(children, bpath) {
   return children;
 }
 
-function walkRead(info, children, pars) {
+function walkRead(info, children, pars, map) {
   children.forEach(child => {
     if (child.file) {
       child.children.forEach(fn => {
-        readFile(info, fn, pars);
+        readFile(info, fn, pars, map);
       });
     } else {
-      walkRead(info, child.children, pars);
+      walkRead(info, child.children, pars, map);
     }
-  });
-  info.nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(info.nics); // let book = {pars: pars, mapdocs: mapdocs}
+  }); // хрень какая-то с никами здесь
+
+  info.nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(info.nics);
+
+  let nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(info.nics); // let book = {pars: pars, mapdocs: mapdocs}
+
 
   let book = {
     pars: pars
@@ -793,7 +836,7 @@ function walkRead(info, children, pars) {
   return book;
 }
 
-function readFile(info, fn, pars) {
+function readFile(info, fn, pars, map) {
   let ext = path.extname(fn);
   if (!ext) return;
   if (['.info', '.json', '.txt'].includes(ext)) return;
@@ -839,10 +882,22 @@ function readFile(info, fn, pars) {
     };
 
     if (auth && auth.author) {
-      par.author = true; // bookWFMap(map, row, groupid)
+      par.author = true;
+      bookWFMap(map, row, groupid);
     }
 
     pars.push(par);
+  });
+}
+
+function bookWFMap(map, row, groupid) {
+  let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g, '');
+
+  let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(punctless.split(' '));
+
+  wfs.forEach(wf => {
+    if (!map[wf]) map[wf] = [];
+    map[wf].push(groupid);
   });
 }
 
@@ -939,6 +994,8 @@ __webpack_require__.r(__webpack_exports__);
 
 const log = console.log;
 
+const clipboard = __webpack_require__(/*! electron-clipboard-extended */ "electron-clipboard-extended");
+
 const settings = __webpack_require__(/*! electron */ "electron").remote.require('electron-settings');
 
 const Mousetrap = __webpack_require__(/*! mousetrap */ "mousetrap");
@@ -1023,6 +1080,15 @@ Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
 Mousetrap.bind(['alt+1', 'alt+2'], function (ev) {
   if (ev.which == 49) log('----1');else if (ev.which == 50) log('----2');
 });
+Mousetrap.bind(['ctrl+f'], function (ev) {
+  let query = clipboard.readText().split(' ')[0];
+  log('CTRL F', query);
+  Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["searchBook"])(query).then(function (res) {
+    log('SEARCH QINFOS:', res);
+  }).catch(function (err) {
+    log('SEARCH ERR:', err);
+  });
+});
 
 function hideAll() {
   const sections = document.querySelectorAll('.section.is-shown');
@@ -1050,9 +1116,9 @@ function navigate(state) {
     hstate = history.length - 1;
   } else {
     delete state.old;
-  } // log('STATES', hstate, history)
+  }
 
-
+  log('HISTORY', history);
   if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getLib"])();else if (section == 'title') twoPanesTitle(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getTitle"])(state);else if (section == 'book') twoPanes(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getBook"])(state); // else if (section == 'cleanup') goCleanup(state)
   // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)
@@ -1066,7 +1132,7 @@ function navigate(state) {
 /*!**************************!*\
   !*** ./src/lib/pouch.js ***!
   \**************************/
-/*! exports provided: pushBook, pushInfo, getLib, getInfo, getTitle, getBook, getText, cleanup */
+/*! exports provided: pushBook, pushInfo, getLib, getInfo, getTitle, getBook, getText, cleanup, searchBook */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1079,6 +1145,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getBook", function() { return getBook; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getText", function() { return getText; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "cleanup", function() { return cleanup; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "searchBook", function() { return searchBook; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! electron */ "electron");
@@ -1121,7 +1188,7 @@ let ftdb = new PouchDB(ftdbPath);
 let libPath = path.resolve(upath, 'pouch/library');
 let libdb = new PouchDB(libPath);
 function pushBook(info, book) {
-  return Promise.all([pushInfo(info), pushTexts(book.pars)]).then(function (res) {
+  return Promise.all([pushInfo(info), pushTexts(book.pars), pushMap(book.mapdocs)]).then(function (res) {
     // if (res[1].length) {
     libdb.createIndex({
       index: {
@@ -1173,6 +1240,40 @@ function pushTexts(newdocs) {
     }); // log('========= CLEANDOCS', cleandocs)
 
     return libdb.bulkDocs(cleandocs);
+  });
+} // MAP
+
+
+function pushMap(ndocs) {
+  return ftdb.allDocs({
+    include_docs: true
+  }).then(function (res) {
+    let docs = res.rows.map(row => {
+      return row.doc;
+    });
+    let hdoc = {};
+    docs.forEach(doc => {
+      hdoc[doc._id] = doc;
+    });
+    let cleandocs = [];
+    ndocs.forEach(ndoc => {
+      let doc = hdoc[ndoc._id];
+
+      if (doc) {
+        let testdoc = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.clone(doc);
+
+        delete testdoc._rev;
+        if (lodash__WEBPACK_IMPORTED_MODULE_0___default.a.isEqual(ndoc, testdoc)) return;else {
+          // неверно - нужны только уникальные значения, uniq не катит
+          doc.docs = ndoc.docs; //  _.uniq(doc.docs.concat(ndoc.docs))
+
+          cleandocs.push(doc);
+        }
+      } else {
+        cleandocs.push(ndoc);
+      }
+    });
+    return ftdb.bulkDocs(cleandocs);
   });
 }
 
@@ -1236,7 +1337,27 @@ function getText(state, endpos) {
 }
 function cleanup() {
   log('before destroy');
-  return Promise.all([libdb.destroy(), ftdb.destroy()]);
+  return Promise.all([libdb.destroy()]);
+}
+function searchBook(query) {
+  return ftdb.get(query).then(function (wfdoc) {
+    let opts = {
+      include_docs: true,
+      keys: wfdoc.parids
+    };
+    libdb.allDocs(opts).then(function (result) {
+      let qdocs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(result.rows.map(row => {
+        return row.doc;
+      }));
+
+      let qinfos = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(qdocs, 'infoid');
+
+      return qinfos; // current = {_id: '_local/current', section: 'search', qinfos: qinfos, query: query}
+      // navigate(current)
+    });
+  }); // .catch(function (err) {
+  //   log('SEARCH ERR:', err)
+  // })
 }
 
 /***/ }),

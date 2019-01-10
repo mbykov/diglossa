@@ -1,6 +1,6 @@
 //
-import _ from "lodash";
-import { remote } from "electron";
+import _ from "lodash"
+import { remote } from "electron"
 import { q } from './utils'
 import { parseLib, parseTitle, parseBook } from './book'
 const { getCurrentWindow } = require('electron').remote
@@ -15,7 +15,7 @@ const isDev = require('electron-is-dev')
 log('=====IS-DEV', isDev)
 const limit = 20
 
-const app = remote.app;
+const app = remote.app
 const apath = app.getAppPath()
 const upath = app.getPath("userData")
 
@@ -34,7 +34,7 @@ export function pushBook(info, book) {
   return Promise.all([
     pushInfo(info),
     pushTexts(book.pars),
-    // pushMap(book.mapdocs)
+    pushMap(book.mapdocs)
   ])
     .then(function(res) {
       // if (res[1].length) {
@@ -87,6 +87,35 @@ function pushTexts(newdocs) {
     })
 }
 
+// MAP
+function pushMap(ndocs) {
+  return ftdb.allDocs({ include_docs: true })
+    .then(function(res) {
+      let docs = res.rows.map(row=>{ return row.doc})
+      let hdoc = {}
+      docs.forEach(doc=> { hdoc[doc._id] = doc })
+
+      let cleandocs = []
+      ndocs.forEach(ndoc=> {
+        let doc = hdoc[ndoc._id]
+        if (doc) {
+          let testdoc = _.clone(doc)
+          delete testdoc._rev
+          if (_.isEqual(ndoc, testdoc)) return
+          else {
+            // неверно - нужны только уникальные значения, uniq не катит
+            doc.docs = ndoc.docs //  _.uniq(doc.docs.concat(ndoc.docs))
+            cleandocs.push(doc)
+          }
+        } else {
+          cleandocs.push(ndoc)
+        }
+      })
+      return ftdb.bulkDocs(cleandocs)
+    })
+}
+
+
 export function getLib() {
   let options = {
     include_docs: true,
@@ -99,14 +128,14 @@ export function getLib() {
       parseLib(infos)
     })
     .catch(function (err) {
-      log('getLibErr', err);
+      log('getLibErr', err)
     })
 }
 
 export function getInfo(infoid) {
   return libdb.get(infoid)
     .catch(function (err) {
-      log('getTitleErr', err);
+      log('getTitleErr', err)
     })
 }
 
@@ -116,7 +145,7 @@ export function getTitle(state) {
     .then(function (info) {
       parseTitle(state, info)
     }).catch(function (err) {
-      log('getTitleErr', err);
+      log('getTitleErr', err)
     })
 }
 
@@ -131,7 +160,7 @@ export function getBook(state) {
           parseBook(state, info, pars)
         })
     }).catch(function (err) {
-      log('getBookErr', err);
+      log('getBookErr', err)
     })
 }
 
@@ -150,6 +179,24 @@ export function cleanup() {
   log('before destroy')
   return Promise.all([
     libdb.destroy(),
-    ftdb.destroy()
+    // ftdb.destroy()
   ])
+}
+
+export function searchBook(query) {
+  return ftdb.get(query)
+    .then(function (wfdoc) {
+      let opts = { include_docs: true, keys: wfdoc.parids }
+      libdb.allDocs(opts)
+        .then(function (result) {
+          let qdocs = _.compact(result.rows.map(row=> { return row.doc}))
+          let qinfos = _.groupBy(qdocs, 'infoid')
+          return qinfos
+          // current = {_id: '_local/current', section: 'search', qinfos: qinfos, query: query}
+          // navigate(current)
+        })
+    })
+    // .catch(function (err) {
+    //   log('SEARCH ERR:', err)
+    // })
 }

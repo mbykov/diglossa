@@ -124,7 +124,7 @@ export function parseBook(state, info, pars) {
   createRightHeader(state, info)
   createLeftHeader(state, info)
 
-  // osource.addEventListener("mouseover", copyToClipboard, false)
+  osource.addEventListener("mouseover", copyToClipboard, false)
   // otrns.addEventListener("wheel", cyclePar, false)
   hideProgress()
 }
@@ -330,4 +330,13 @@ function clickLeftHeader(ev) {
   otbody.classList.toggle('tree-collapse')
   let ohleft = q('.hleft')
   ohleft.classList.toggle('header')
+}
+
+function copyToClipboard(ev) {
+  if (ev.shiftKey == true) return
+  if (ev.ctrlKey == true) return
+
+  if (ev.target.nodeName != 'SPAN') return
+  let wf = ev.target.textContent
+  clipboard.writeText(wf)
 }

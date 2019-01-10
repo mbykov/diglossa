@@ -1,13 +1,14 @@
 //
-import _ from "lodash";
+import _ from "lodash"
 import { q, qs, empty, create, remove, span, p, div, enclitic } from './utils'
 import Split from 'split.js'
 // import { bookData, scrollPanes, keyPanes, parseLib, parseTitle, parseBook } from './lib/book'
 // import { parseLib, parseTitle } from './book'
-import { getLib, getTitle, getBook } from './pouch'
+import { getLib, getTitle, getBook, searchBook } from './pouch'
 
 
 const log = console.log
+const clipboard = require('electron-clipboard-extended')
 const settings = require('electron').remote.require('electron-settings')
 const Mousetrap = require('mousetrap')
 const fse = require('fs-extra')
@@ -98,6 +99,17 @@ Mousetrap.bind(['alt+1', 'alt+2'], function(ev) {
   else if (ev.which == 50) log('----2')
 })
 
+Mousetrap.bind(['ctrl+f'], function(ev) {
+  let query = clipboard.readText().split(' ')[0]
+  log('CTRL F', query)
+  searchBook(query)
+    .then(function (res) {
+      log('SEARCH QINFOS:', res)
+    }).catch(function (err) {
+      log('SEARCH ERR:', err)
+    })
+})
+
 function hideAll () {
   const sections = document.querySelectorAll('.section.is-shown')
   Array.prototype.forEach.call(sections, (section) => {
@@ -124,7 +136,7 @@ export function navigate(state) {
   } else {
     delete state.old
   }
-  // log('STATES', hstate, history)
+  log('HISTORY', history)
 
   if (section == 'home')  getLib()
   else if (section == 'title') twoPanesTitle(state), getTitle(state)

@@ -50,8 +50,33 @@ function getDir(info) {
   let tree = shortTree(children, info.bpath)
   info.tree = tree
   log('SHORT TREE', tree)
-  let book = walkRead(info, fulltree, pars)
+  walkRead(info, fulltree, pars, map)
+  log('==>', pars.length)
+  let mapdocs = map2mapdoc(info.nics, map)
+
+  let book = {pars: pars, mapdocs: mapdocs}
   return book
+}
+
+function map2mapdoc(nics, map) {
+  let mapnics = {}
+  for (let wf in map) {
+    map[wf].forEach(groupid=> {
+      nics.forEach(nic=> {
+        let parid = [groupid, nic].join('-')
+        if (!mapnics[wf]) mapnics[wf] = []
+        mapnics[wf].push(parid)
+      })
+    })
+  }
+
+  let mapdocs = []
+  for (let wf in mapnics) {
+    let mapdoc = {_id: wf, parids: mapnics[wf]}
+    mapdocs.push(mapdoc)
+  }
+
+  return mapdocs
 }
 
 function shortTree(children, bpath) {
@@ -71,23 +96,26 @@ function shortTree(children, bpath) {
   return children
 }
 
-function walkRead(info, children, pars) {
+function walkRead(info, children, pars, map) {
   children.forEach(child=> {
     if (child.file) {
       child.children.forEach(fn=> {
-        readFile(info, fn, pars)
+        readFile(info, fn, pars, map)
       })
     } else {
-      walkRead(info, child.children, pars)
+      walkRead(info, child.children, pars, map)
     }
   })
+  // хрень какая-то с никами здесь
   info.nics = _.uniq(info.nics)
+  let nics = _.uniq(info.nics)
+
   // let book = {pars: pars, mapdocs: mapdocs}
   let book = {pars: pars}
   return book
 }
 
-function readFile(info, fn, pars) {
+function readFile(info, fn, pars, map) {
   let ext = path.extname(fn)
   if (!ext) return
   if (['.info', '.json', '.txt'].includes(ext)) return
@@ -118,9 +146,18 @@ function readFile(info, fn, pars) {
     let par = { _id: parid, infoid: info._id, pos: idx, nic: nic, fpath: fpath, lang: lang, text: row }
     if (auth && auth.author) {
       par.author = true
-      // bookWFMap(map, row, groupid)
+      bookWFMap(map, row, groupid)
     }
     pars.push(par)
+  })
+}
+
+function bookWFMap(map, row, groupid) {
+  let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
+  let wfs = _.compact(punctless.split(' '))
+  wfs.forEach(wf=> {
+    if (!map[wf]) map[wf] = []
+    map[wf].push(groupid)
   })
 }
 
