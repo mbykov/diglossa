@@ -1345,13 +1345,14 @@ function searchBook(query) {
       include_docs: true,
       keys: wfdoc.parids
     };
-    libdb.allDocs(opts).then(function (result) {
+    return libdb.allDocs(opts).then(function (result) {
       let qdocs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(result.rows.map(row => {
         return row.doc;
       }));
 
       let qinfos = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(qdocs, 'infoid');
 
+      log('POUCH-QINFOS', qinfos);
       return qinfos; // current = {_id: '_local/current', section: 'search', qinfos: qinfos, query: query}
       // navigate(current)
     });

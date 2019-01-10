@@ -187,10 +187,11 @@ export function searchBook(query) {
   return ftdb.get(query)
     .then(function (wfdoc) {
       let opts = { include_docs: true, keys: wfdoc.parids }
-      libdb.allDocs(opts)
+      return libdb.allDocs(opts)
         .then(function (result) {
           let qdocs = _.compact(result.rows.map(row=> { return row.doc}))
           let qinfos = _.groupBy(qdocs, 'infoid')
+          log('POUCH-QINFOS', qinfos)
           return qinfos
           // current = {_id: '_local/current', section: 'search', qinfos: qinfos, query: query}
           // navigate(current)
