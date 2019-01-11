@@ -223,6 +223,7 @@ function createRightHeader(state, info) {
   ohright = create('div', 'hright')
   ohright.style.left = arect.width*0.70 + 'px'
   obook.appendChild(ohright)
+  log('CREATE RH state', state)
 
   let current = {}
   current = readTree(current, info.tree, state.fpath)
@@ -425,10 +426,10 @@ function addChunk(state) {
   if (osource.scrollHeight - osource.scrollTop - osource.clientHeight <= 3.0) {
     let start = qs('#booksource > p').length
     state.pos = start
-    log('SET CHUNK ', start)
+    // log('SET CHUNK ', start)
     getText(state)
       .then(function(res) {
-        log('new CHUNK', res.docs)
+        // log('new CHUNK', res.docs)
         setChunk(state, res.docs)
       })
     .catch(function (err) {

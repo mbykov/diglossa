@@ -411,9 +411,9 @@ function setChunk(state, pars, direction) {
 
   let tpars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
     return !par.author;
-  });
+  }); // log('APARS', apars)
 
-  log('APARS', apars);
+
   apars.forEach(apar => {
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>");
 
@@ -513,6 +513,7 @@ function createRightHeader(state, info) {
   ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'hright');
   ohright.style.left = arect.width * 0.70 + 'px';
   obook.appendChild(ohright);
+  log('CREATE RH state', state);
   let current = {};
   current = readTree(current, info.tree, state.fpath);
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('ul');
@@ -694,21 +695,21 @@ function addChunk(state) {
     let start = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])('#booksource > p')[0];
     if (!start) return;
     let startpos = start.getAttribute('pos');
-    if (startpos <= 0) return;
-    log('SET CHUNK rev', start);
+    if (startpos <= 0) return; // log('SET CHUNK rev', start)
+
     let newstart = startpos - limit > 0 ? startpos - limit : 0;
-    state.pos = newstart; // getText(current, startpos)
-    //   .then(function(res) {
-    //     setChunk(_.reverse(res.docs), true)
-    //   })
+    state.pos = newstart;
+    Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getText"])(state, startpos).then(function (res) {
+      setChunk(state, lodash__WEBPACK_IMPORTED_MODULE_0___default.a.reverse(res.docs), true);
+    });
   }
 
   if (osource.scrollHeight - osource.scrollTop - osource.clientHeight <= 3.0) {
     let start = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])('#booksource > p').length;
-    state.pos = start;
-    log('SET CHUNK ', start);
+    state.pos = start; // log('SET CHUNK ', start)
+
     Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getText"])(state).then(function (res) {
-      log('new CHUNK', res.docs);
+      // log('new CHUNK', res.docs)
       setChunk(state, res.docs);
     }).catch(function (err) {
       log('GET CHUNK ERR:', err);
@@ -1214,7 +1215,7 @@ function navigate(state) {
   let progress = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#progress');
   progress.classList.add('is-shown');
   let section = state.section;
-  sectionTrigger(section);
+  sectionTrigger(section); // delete state.nic
 
   if (!state.old) {
     // history.push(_.clone(state))

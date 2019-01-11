@@ -134,6 +134,7 @@ export function navigate(state) {
   progress.classList.add('is-shown')
   let section = state.section
   sectionTrigger(section)
+  // delete state.nic
   if (!state.old) {
     // history.push(_.clone(state))
     history.push(state)
