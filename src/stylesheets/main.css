@@ -69,7 +69,7 @@ h4 {
     padding-left: 15px;
     padding-top: 25px;
     padding-bottom: 25px;
-    /* -webkit-app-region: drag; */
+    margin-top: 50px;
     overflow-y: hidden;
     /* overflow-x: hidden; */
 }
@@ -80,7 +80,7 @@ h4 {
     padding-left: 15px;
     padding-top: 25px;
     padding-bottom: 25px;
-    /* margin-top: -50px; */
+    margin-top: 50px;
     overflow-y: hidden;
     overflow-x: hidden;
 }

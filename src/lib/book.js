@@ -12,6 +12,7 @@ const clipboard = require('electron-clipboard-extended')
 
 let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
 let rePunct = new RegExp(punct, 'g')
+let limit = 20
 
 export function parseLib(infos) {
   let osource = q('#library')
@@ -87,7 +88,6 @@ export function parseTitle(state, info) {
   otrns.appendChild(otree)
   tree(info.tree, otree)
 
-  // otree.addEventListener('click', goBookEvent, false)
   otree.addEventListener("click", function(ev) {
     goBookEvent(ev, info)
   }, false)
@@ -125,7 +125,7 @@ export function parseBook(state, info, pars) {
   createLeftHeader(state, info)
 
   osource.addEventListener("mouseover", copyToClipboard, false)
-  // otrns.addEventListener("wheel", cyclePar, false)
+  otrns.addEventListener("wheel", cyclePar, false)
   hideProgress()
 }
 
@@ -196,6 +196,23 @@ function hideProgress() {
   progress.classList.remove('is-shown')
 }
 
+function cyclePar(ev) {
+  if (ev.shiftKey != true) return
+  let idx = ev.target.getAttribute('pos')
+
+  let selector = '#booktrns [pos="'+idx+'"]'
+  let pars = qs(selector)
+  let nics = _.map(pars, par=> { return par.getAttribute('nic') })
+  if (nics.length == 1) return
+  let curpar = _.find(pars, par=> { return !par.classList.contains('hidden') })
+  let nic = curpar.getAttribute('nic')
+  let nicidx = nics.indexOf(nic)
+  let nextnic = (nicidx+1 == nics.length) ? nics[0] : nics[nicidx+1]
+  let next = _.find(pars, par=> { return par.getAttribute('nic') == nextnic })
+  next.classList.remove('hidden')
+  curpar.classList.add('hidden')
+}
+
 function createRightHeader(state, info) {
   let obook = q('#book')
   let arect = obook.getBoundingClientRect()
@@ -211,7 +228,6 @@ function createRightHeader(state, info) {
   let oul = create('ul')
   oul.setAttribute('id', 'namelist')
   oul.setAttribute('fpath', current.fpath)
-  // oul.addEventListener("click", clickRightHeader, false)
   let fpath = current.fpath
   oul.addEventListener("click", function(ev) {
     clickRightHeader(ev, info)
@@ -296,9 +312,10 @@ function expandRightHeader() {
 function createLeftHeader(state, info) {
   let obook = q('#book')
   let arect = obook.getBoundingClientRect()
-  let ohleft = div()
+  let ohleft = q('.hleft')
+  if (ohleft) remove(ohleft)
+  ohleft = create('div', 'hleft')
   obook.appendChild(ohleft)
-  ohleft.classList.add('hleft')
   ohleft.style.left = arect.width*0.15 + 'px'
   ohleft.addEventListener("click", clickLeftHeader, false)
 
@@ -316,7 +333,6 @@ function createLeftHeader(state, info) {
   otree.appendChild(otbody)
   ohleft.appendChild(otree)
   tree(info.tree, otree)
-  // otree.addEventListener('click', goBookEvent, false)
   otree.addEventListener("click", function(ev) {
     goBookEvent(ev, info)
   }, false)
@@ -335,8 +351,59 @@ function clickLeftHeader(ev) {
 function copyToClipboard(ev) {
   if (ev.shiftKey == true) return
   if (ev.ctrlKey == true) return
-
   if (ev.target.nodeName != 'SPAN') return
   let wf = ev.target.textContent
   clipboard.writeText(wf)
+}
+
+export function scrollPanes(ev, state) {
+  if (ev.shiftKey == true) return;
+  let delta = (ev.deltaY > 0) ? 24 : -24
+  let osource = q('#booksource')
+  let otrns = q('#booktrns')
+  osource.scrollTop += delta
+  otrns.scrollTop = osource.scrollTop
+
+  if (!state || state.section != 'book') return
+
+  let sTop = osource.scrollTop;
+  let spars = qs('#source > p')
+  _.each(spars, el=> {
+    let off = sTop - el.offsetTop
+    if (off < 0) {
+      state.pos = el.getAttribute('pos')
+      return false
+    }
+  })
+  addChunk(state)
+}
+
+function addChunk(state) {
+  if (state && state.section != 'book') return
+  let osource = q('#booksource')
+
+  if (osource.scrollTop == 0) {
+    let start = qs('#booksource > p')[0]
+    if (!start) return
+    let startpos = start.getAttribute('pos')
+    if (startpos <= 0) return
+    log('SET CHUNK rev', start)
+
+    let newstart = (startpos - limit > 0) ? startpos - limit : 0
+    state.pos = newstart
+    // getText(current, startpos)
+    //   .then(function(res) {
+    //     setChunk(_.reverse(res.docs), true)
+    //   })
+  }
+
+  if (osource.scrollHeight - osource.scrollTop - osource.clientHeight <= 3.0) {
+    let start = qs('#booksource > p').length
+    state.pos = start
+    log('SET CHUNK ', start)
+    // getText(current)
+    //   .then(function(res) {
+    //     setChunk(res.docs)
+    //   })
+  }
 }

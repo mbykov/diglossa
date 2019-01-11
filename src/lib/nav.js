@@ -3,6 +3,7 @@ import _ from "lodash"
 import { q, qs, empty, create, remove, span, p, div, enclitic } from './utils'
 import Split from 'split.js'
 // import { bookData, scrollPanes, keyPanes, parseLib, parseTitle, parseBook } from './lib/book'
+import { scrollPanes, keyPanes } from './book'
 // import { parseLib, parseTitle } from './book'
 import { getLib, getTitle, getBook, searchBook } from './pouch'
 
@@ -48,8 +49,8 @@ function twoPanes(state) {
   let sizes = settings.get('split-sizes') || [50, 50]
   if (split && state.mono) split.collapse(1)
   else if (split) split.setSizes(sizes)
-  if (split) return
 
+  if (split) return
   settings.set('split-sizes', sizes)
 
   split = Split(['#booksource', '#booktrns'], {
@@ -64,9 +65,13 @@ function twoPanes(state) {
   })
   if (state.mono) split.collapse(1)
 
-  // let obook = q('#book')
+  let obook = q('#book')
   // obook.addEventListener("wheel", scrollPanes, false)
   // document.addEventListener("keydown", keyPanes, false)
+  obook.addEventListener("wheel", function(ev) {
+    scrollPanes(ev, state)
+  }, false)
+
   // return split
 }
 

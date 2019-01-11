@@ -244,11 +244,7 @@ electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('action', function (even
   Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])({
     section: action
   });
-}); // function showCleanup() {
-//   showSection('cleanup')
-//   let ocleanup = q('#cleanup')
-//   ocleanup.addEventListener("click", goCleanup, false)
-// }
+});
 
 /***/ }),
 
@@ -256,7 +252,7 @@ electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('action', function (even
 /*!*************************!*\
   !*** ./src/lib/book.js ***!
   \*************************/
-/*! exports provided: parseLib, parseTitle, parseBook */
+/*! exports provided: parseLib, parseTitle, parseBook, scrollPanes */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -264,6 +260,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseLib", function() { return parseLib; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseTitle", function() { return parseTitle; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseBook", function() { return parseBook; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "scrollPanes", function() { return scrollPanes; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
@@ -287,6 +284,7 @@ const clipboard = __webpack_require__(/*! electron-clipboard-extended */ "electr
 
 let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
 let rePunct = new RegExp(punct, 'g');
+let limit = 20;
 function parseLib(infos) {
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#library');
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(osource);
@@ -358,8 +356,7 @@ function parseTitle(state, info) {
   let tbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tbody');
   otree.appendChild(tbody);
   otrns.appendChild(otree);
-  Object(_tree__WEBPACK_IMPORTED_MODULE_2__["tree"])(info.tree, otree); // otree.addEventListener('click', goBookEvent, false)
-
+  Object(_tree__WEBPACK_IMPORTED_MODULE_2__["tree"])(info.tree, otree);
   otree.addEventListener("click", function (ev) {
     goBookEvent(ev, info);
   }, false);
@@ -397,8 +394,8 @@ function parseBook(state, info, pars) {
   if (state.mono) setMono(nic, state, pars);else setChunk(nic, state, pars);
   createRightHeader(state, info);
   createLeftHeader(state, info);
-  osource.addEventListener("mouseover", copyToClipboard, false); // otrns.addEventListener("wheel", cyclePar, false)
-
+  osource.addEventListener("mouseover", copyToClipboard, false);
+  otrns.addEventListener("wheel", cyclePar, false);
   hideProgress();
 }
 
@@ -477,6 +474,34 @@ function hideProgress() {
   progress.classList.remove('is-shown');
 }
 
+function cyclePar(ev) {
+  if (ev.shiftKey != true) return;
+  let idx = ev.target.getAttribute('pos');
+  let selector = '#booktrns [pos="' + idx + '"]';
+  let pars = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])(selector);
+
+  let nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.map(pars, par => {
+    return par.getAttribute('nic');
+  });
+
+  if (nics.length == 1) return;
+
+  let curpar = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(pars, par => {
+    return !par.classList.contains('hidden');
+  });
+
+  let nic = curpar.getAttribute('nic');
+  let nicidx = nics.indexOf(nic);
+  let nextnic = nicidx + 1 == nics.length ? nics[0] : nics[nicidx + 1];
+
+  let next = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(pars, par => {
+    return par.getAttribute('nic') == nextnic;
+  });
+
+  next.classList.remove('hidden');
+  curpar.classList.add('hidden');
+}
+
 function createRightHeader(state, info) {
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#book');
   let arect = obook.getBoundingClientRect();
@@ -489,8 +514,7 @@ function createRightHeader(state, info) {
   current = readTree(current, info.tree, state.fpath);
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('ul');
   oul.setAttribute('id', 'namelist');
-  oul.setAttribute('fpath', current.fpath); // oul.addEventListener("click", clickRightHeader, false)
-
+  oul.setAttribute('fpath', current.fpath);
   let fpath = current.fpath;
   oul.addEventListener("click", function (ev) {
     clickRightHeader(ev, info);
@@ -572,9 +596,10 @@ function expandRightHeader() {
 function createLeftHeader(state, info) {
   let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#book');
   let arect = obook.getBoundingClientRect();
-  let ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["div"])();
+  let ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('.hleft');
+  if (ohleft) Object(_utils__WEBPACK_IMPORTED_MODULE_1__["remove"])(ohleft);
+  ohleft = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'hleft');
   obook.appendChild(ohleft);
-  ohleft.classList.add('hleft');
   ohleft.style.left = arect.width * 0.15 + 'px';
   ohleft.addEventListener("click", clickLeftHeader, false);
   let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tree');
@@ -591,8 +616,7 @@ function createLeftHeader(state, info) {
   let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tbody');
   otree.appendChild(otbody);
   ohleft.appendChild(otree);
-  Object(_tree__WEBPACK_IMPORTED_MODULE_2__["tree"])(info.tree, otree); // otree.addEventListener('click', goBookEvent, false)
-
+  Object(_tree__WEBPACK_IMPORTED_MODULE_2__["tree"])(info.tree, otree);
   otree.addEventListener("click", function (ev) {
     goBookEvent(ev, info);
   }, false);
@@ -614,6 +638,56 @@ function copyToClipboard(ev) {
   if (ev.target.nodeName != 'SPAN') return;
   let wf = ev.target.textContent;
   clipboard.writeText(wf);
+}
+
+function scrollPanes(ev, state) {
+  if (ev.shiftKey == true) return;
+  let delta = ev.deltaY > 0 ? 24 : -24;
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booksource');
+  let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booktrns');
+  osource.scrollTop += delta;
+  otrns.scrollTop = osource.scrollTop;
+  if (!state || state.section != 'book') return;
+  let sTop = osource.scrollTop;
+  let spars = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])('#source > p');
+
+  lodash__WEBPACK_IMPORTED_MODULE_0___default.a.each(spars, el => {
+    let off = sTop - el.offsetTop;
+
+    if (off < 0) {
+      state.pos = el.getAttribute('pos');
+      return false;
+    }
+  });
+
+  addChunk(state);
+}
+
+function addChunk(state) {
+  if (state && state.section != 'book') return;
+  let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booksource');
+
+  if (osource.scrollTop == 0) {
+    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])('#booksource > p')[0];
+    if (!start) return;
+    let startpos = start.getAttribute('pos');
+    if (startpos <= 0) return;
+    log('SET CHUNK rev', start);
+    let newstart = startpos - limit > 0 ? startpos - limit : 0;
+    state.pos = newstart; // getText(current, startpos)
+    //   .then(function(res) {
+    //     setChunk(_.reverse(res.docs), true)
+    //   })
+  }
+
+  if (osource.scrollHeight - osource.scrollTop - osource.clientHeight <= 3.0) {
+    let start = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])('#booksource > p').length;
+    state.pos = start;
+    log('SET CHUNK ', start); // getText(current)
+    //   .then(function(res) {
+    //     setChunk(res.docs)
+    //   })
+  }
 }
 
 /***/ }),
@@ -984,12 +1058,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
 /* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! split.js */ "split.js");
 /* harmony import */ var split_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(split_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _pouch__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./pouch */ "./src/lib/pouch.js");
+/* harmony import */ var _book__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./book */ "./src/lib/book.js");
+/* harmony import */ var _pouch__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./pouch */ "./src/lib/pouch.js");
 //
 
 
  // import { bookData, scrollPanes, keyPanes, parseLib, parseTitle, parseBook } from './lib/book'
-// import { parseLib, parseTitle } from './book'
+
+ // import { parseLib, parseTitle } from './book'
 
 
 const log = console.log;
@@ -1051,10 +1127,13 @@ function twoPanes(state) {
       settings.set('split-sizes', sizes);
     }
   });
-  if (state.mono) split.collapse(1); // let obook = q('#book')
-  // obook.addEventListener("wheel", scrollPanes, false)
+  if (state.mono) split.collapse(1);
+  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#book'); // obook.addEventListener("wheel", scrollPanes, false)
   // document.addEventListener("keydown", keyPanes, false)
-  // return split
+
+  obook.addEventListener("wheel", function (ev) {
+    Object(_book__WEBPACK_IMPORTED_MODULE_3__["scrollPanes"])(ev, state);
+  }, false); // return split
 }
 
 function twoPanesTitle(state) {
@@ -1083,7 +1162,7 @@ Mousetrap.bind(['alt+1', 'alt+2'], function (ev) {
 Mousetrap.bind(['ctrl+f'], function (ev) {
   let query = clipboard.readText().split(' ')[0];
   log('CTRL F', query);
-  Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["searchBook"])(query).then(function (res) {
+  Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["searchBook"])(query).then(function (res) {
     log('SEARCH QINFOS:', res);
   }).catch(function (err) {
     log('SEARCH ERR:', err);
@@ -1119,7 +1198,7 @@ function navigate(state) {
   }
 
   log('HISTORY', history);
-  if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getLib"])();else if (section == 'title') twoPanesTitle(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getTitle"])(state);else if (section == 'book') twoPanes(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["getBook"])(state); // else if (section == 'cleanup') goCleanup(state)
+  if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getLib"])();else if (section == 'title') twoPanesTitle(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getTitle"])(state);else if (section == 'book') twoPanes(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getBook"])(state); // else if (section == 'cleanup') goCleanup(state)
   // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)
 

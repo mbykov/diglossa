@@ -130,9 +130,3 @@ ipcRenderer.on('action', function (event, action) {
   // else
   navigate({section: action})
 })
-
-// function showCleanup() {
-//   showSection('cleanup')
-//   let ocleanup = q('#cleanup')
-//   ocleanup.addEventListener("click", goCleanup, false)
-// }
