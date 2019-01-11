@@ -378,6 +378,30 @@ export function scrollPanes(ev, state) {
   addChunk(state)
 }
 
+export function keyPanes(ev, state) {
+  let source = q('#booksource')
+  let trns = q('#booktrns')
+  // trns.scrollTop = source.scrollTop
+  log('KEY', ev.which)
+  if (ev.keyCode == 38) {
+    source.scrollTop = source.scrollTop - 24
+  } else if (ev.keyCode == 40) {
+    source.scrollTop = source.scrollTop + 24
+  } else if (ev.keyCode == 33) {
+    let height = source.clientHeight
+    source.scrollTop = source.scrollTop - height + 60
+  } else if (ev.keyCode == 34) {
+    let height = source.clientHeight
+    source.scrollTop = source.scrollTop + height - 60
+  }
+  else return
+  trns.scrollTop = source.scrollTop
+
+  // if (!current || current.section != 'book') return
+  // addChunk()
+}
+
+
 function addChunk(state) {
   if (state && state.section != 'book') return
   let osource = q('#booksource')

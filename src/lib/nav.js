@@ -66,13 +66,13 @@ function twoPanes(state) {
   if (state.mono) split.collapse(1)
 
   let obook = q('#book')
-  // obook.addEventListener("wheel", scrollPanes, false)
-  // document.addEventListener("keydown", keyPanes, false)
+  document.addEventListener("keydown", function(ev) {
+    keyPanes(ev, state)
+  }, false)
+
   obook.addEventListener("wheel", function(ev) {
     scrollPanes(ev, state)
   }, false)
-
-  // return split
 }
 
 function twoPanesTitle(state) {

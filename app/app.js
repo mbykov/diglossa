@@ -252,7 +252,7 @@ electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('action', function (even
 /*!*************************!*\
   !*** ./src/lib/book.js ***!
   \*************************/
-/*! exports provided: parseLib, parseTitle, parseBook, scrollPanes */
+/*! exports provided: parseLib, parseTitle, parseBook, scrollPanes, keyPanes */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -261,6 +261,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseTitle", function() { return parseTitle; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseBook", function() { return parseBook; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "scrollPanes", function() { return scrollPanes; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "keyPanes", function() { return keyPanes; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
@@ -661,6 +662,27 @@ function scrollPanes(ev, state) {
   });
 
   addChunk(state);
+}
+function keyPanes(ev, state) {
+  let source = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booksource');
+  let trns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booktrns'); // trns.scrollTop = source.scrollTop
+
+  log('KEY', ev.which);
+
+  if (ev.keyCode == 38) {
+    source.scrollTop = source.scrollTop - 24;
+  } else if (ev.keyCode == 40) {
+    source.scrollTop = source.scrollTop + 24;
+  } else if (ev.keyCode == 33) {
+    let height = source.clientHeight;
+    source.scrollTop = source.scrollTop - height + 60;
+  } else if (ev.keyCode == 34) {
+    let height = source.clientHeight;
+    source.scrollTop = source.scrollTop + height - 60;
+  } else return;
+
+  trns.scrollTop = source.scrollTop; // if (!current || current.section != 'book') return
+  // addChunk()
 }
 
 function addChunk(state) {
@@ -1128,12 +1150,13 @@ function twoPanes(state) {
     }
   });
   if (state.mono) split.collapse(1);
-  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#book'); // obook.addEventListener("wheel", scrollPanes, false)
-  // document.addEventListener("keydown", keyPanes, false)
-
+  let obook = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#book');
+  document.addEventListener("keydown", function (ev) {
+    Object(_book__WEBPACK_IMPORTED_MODULE_3__["keyPanes"])(ev, state);
+  }, false);
   obook.addEventListener("wheel", function (ev) {
     Object(_book__WEBPACK_IMPORTED_MODULE_3__["scrollPanes"])(ev, state);
-  }, false); // return split
+  }, false);
 }
 
 function twoPanesTitle(state) {
