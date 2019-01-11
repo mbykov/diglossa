@@ -3,7 +3,7 @@ import _ from 'lodash'
 import { q, qs, empty, create, recreate, span, p, div, remove } from './utils'
 import { tree } from './tree';
 import { navigate } from './nav';
-import { pushInfo } from './pouch'
+import { pushInfo, getText } from './pouch'
 
 const settings = require('electron').remote.require('electron-settings')
 const path = require('path')
@@ -116,11 +116,12 @@ export function parseBook(state, info, pars) {
   let current = {}
   current = readTree(current, info.tree, state.fpath)
   let nic = current.nic || cnics[0]
+  state.nic = nic
 
   if (state.mono)
-    setMono(nic, state, pars)
+    setMono(state, pars)
   else
-    setChunk(nic, state, pars)
+    setChunk(state, pars)
   createRightHeader(state, info)
   createLeftHeader(state, info)
 
@@ -129,12 +130,13 @@ export function parseBook(state, info, pars) {
   hideProgress()
 }
 
-function setChunk(nic, state, pars, direction) {
+function setChunk(state, pars, direction) {
   let osource = q('#booksource')
   let otrns = q('#booktrns')
 
   let apars = _.filter(pars, par=> { return par.author})
   let tpars = _.filter(pars, par=> { return !par.author})
+  // log('APARS', apars)
   apars.forEach(apar=> {
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>")
     if (state.query) {
@@ -154,7 +156,7 @@ function setChunk(nic, state, pars, direction) {
       let oright = p(par.text)
       oright.setAttribute('pos', apar.pos)
       oright.setAttribute('nic', par.nic)
-      if (par.nic == nic) oright.classList.add('active')
+      if (par.nic == state.nic) oright.classList.add('active')
       else oright.classList.add('hidden')
       if (!direction) otrns.appendChild(oright)
       else otrns.prepend(oright)
@@ -172,7 +174,7 @@ function setChunk(nic, state, pars, direction) {
   }
 }
 
-function setMono(nic, state, pars, direction) {
+function setMono(state, pars, direction) {
   let osource = q('#booksource')
   pars.forEach(par=> {
     let oleft = p(par.text)
@@ -382,7 +384,6 @@ export function keyPanes(ev, state) {
   let source = q('#booksource')
   let trns = q('#booktrns')
   // trns.scrollTop = source.scrollTop
-  log('KEY', ev.which)
   if (ev.keyCode == 38) {
     source.scrollTop = source.scrollTop - 24
   } else if (ev.keyCode == 40) {
@@ -398,7 +399,7 @@ export function keyPanes(ev, state) {
   trns.scrollTop = source.scrollTop
 
   // if (!current || current.section != 'book') return
-  // addChunk()
+  addChunk(state)
 }
 
 
@@ -411,23 +412,27 @@ function addChunk(state) {
     if (!start) return
     let startpos = start.getAttribute('pos')
     if (startpos <= 0) return
-    log('SET CHUNK rev', start)
+    // log('SET CHUNK rev', start)
 
     let newstart = (startpos - limit > 0) ? startpos - limit : 0
     state.pos = newstart
-    // getText(current, startpos)
-    //   .then(function(res) {
-    //     setChunk(_.reverse(res.docs), true)
-    //   })
+    getText(state, startpos)
+      .then(function(res) {
+        setChunk(state, _.reverse(res.docs), true)
+      })
   }
 
   if (osource.scrollHeight - osource.scrollTop - osource.clientHeight <= 3.0) {
     let start = qs('#booksource > p').length
     state.pos = start
     log('SET CHUNK ', start)
-    // getText(current)
-    //   .then(function(res) {
-    //     setChunk(res.docs)
-    //   })
+    getText(state)
+      .then(function(res) {
+        log('new CHUNK', res.docs)
+        setChunk(state, res.docs)
+      })
+    .catch(function (err) {
+      log('GET CHUNK ERR:', err)
+    })
   }
 }

@@ -392,7 +392,8 @@ function parseBook(state, info, pars) {
   let current = {};
   current = readTree(current, info.tree, state.fpath);
   let nic = current.nic || cnics[0];
-  if (state.mono) setMono(nic, state, pars);else setChunk(nic, state, pars);
+  state.nic = nic;
+  if (state.mono) setMono(state, pars);else setChunk(state, pars);
   createRightHeader(state, info);
   createLeftHeader(state, info);
   osource.addEventListener("mouseover", copyToClipboard, false);
@@ -400,7 +401,7 @@ function parseBook(state, info, pars) {
   hideProgress();
 }
 
-function setChunk(nic, state, pars, direction) {
+function setChunk(state, pars, direction) {
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booksource');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booktrns');
 
@@ -412,6 +413,7 @@ function setChunk(nic, state, pars, direction) {
     return !par.author;
   });
 
+  log('APARS', apars);
   apars.forEach(apar => {
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>");
 
@@ -435,7 +437,7 @@ function setChunk(nic, state, pars, direction) {
       let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["p"])(par.text);
       oright.setAttribute('pos', apar.pos);
       oright.setAttribute('nic', par.nic);
-      if (par.nic == nic) oright.classList.add('active');else oright.classList.add('hidden');
+      if (par.nic == state.nic) oright.classList.add('active');else oright.classList.add('hidden');
       if (!direction) otrns.appendChild(oright);else otrns.prepend(oright);
       aligns.push(oright);
     });
@@ -450,7 +452,7 @@ function setChunk(nic, state, pars, direction) {
   }
 }
 
-function setMono(nic, state, pars, direction) {
+function setMono(state, pars, direction) {
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booksource');
   pars.forEach(par => {
     let oleft = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["p"])(par.text);
@@ -667,8 +669,6 @@ function keyPanes(ev, state) {
   let source = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booksource');
   let trns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#booktrns'); // trns.scrollTop = source.scrollTop
 
-  log('KEY', ev.which);
-
   if (ev.keyCode == 38) {
     source.scrollTop = source.scrollTop - 24;
   } else if (ev.keyCode == 40) {
@@ -682,7 +682,8 @@ function keyPanes(ev, state) {
   } else return;
 
   trns.scrollTop = source.scrollTop; // if (!current || current.section != 'book') return
-  // addChunk()
+
+  addChunk(state);
 }
 
 function addChunk(state) {
@@ -705,10 +706,13 @@ function addChunk(state) {
   if (osource.scrollHeight - osource.scrollTop - osource.clientHeight <= 3.0) {
     let start = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])('#booksource > p').length;
     state.pos = start;
-    log('SET CHUNK ', start); // getText(current)
-    //   .then(function(res) {
-    //     setChunk(res.docs)
-    //   })
+    log('SET CHUNK ', start);
+    Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getText"])(state).then(function (res) {
+      log('new CHUNK', res.docs);
+      setChunk(state, res.docs);
+    }).catch(function (err) {
+      log('GET CHUNK ERR:', err);
+    });
   }
 }
 
@@ -1429,13 +1433,11 @@ function getText(state, endpos) {
     pos: {
       $gte: start,
       $lt: end
-    } // log('SELECTOR', selector)
-
+    }
   };
   return libdb.find({
     selector: selector
   }); // sort: ['idx'], , limit: 20
-  // return libdb.explain({selector: selector})
 }
 function cleanup() {
   log('before destroy');

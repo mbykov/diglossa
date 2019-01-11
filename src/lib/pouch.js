@@ -169,9 +169,7 @@ export function getText(state, endpos) {
   let start = state.pos*1 || 0
   let end = endpos*1 || start*1 + limit*1
   let selector = {fpath: fpath, pos: {$gte: start, $lt: end}}
-  // log('SELECTOR', selector)
   return libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
-  // return libdb.explain({selector: selector})
 }
 
 
