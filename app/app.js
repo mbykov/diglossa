@@ -1458,6 +1458,24 @@ function searchBook(query) {
       let qinfos = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(qdocs, 'infoid');
 
       log('POUCH-QINFOS', qinfos);
+
+      for (let infoid in qinfos) {
+        let gqinfo = qinfos[infoid];
+
+        let qgroups = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(gqinfo, 'fpath');
+
+        for (let fpath in qgroups) {
+          let qgroup = qgroups[fpath];
+
+          let qpos = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(qgroup, 'pos');
+
+          for (let pos in qpos) {
+            let qlines = qpos[pos];
+            log('Id', infoid, 'fp', fpath, 'p', pos, 'ql', qlines);
+          }
+        }
+      }
+
       return qinfos; // current = {_id: '_local/current', section: 'search', qinfos: qinfos, query: query}
       // navigate(current)
     });

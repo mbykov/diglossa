@@ -190,6 +190,21 @@ export function searchBook(query) {
           let qdocs = _.compact(result.rows.map(row=> { return row.doc}))
           let qinfos = _.groupBy(qdocs, 'infoid')
           log('POUCH-QINFOS', qinfos)
+          for (let infoid in qinfos) {
+            let gqinfo = qinfos[infoid]
+            let qgroups = _.groupBy(gqinfo, 'fpath')
+            for (let fpath in qgroups) {
+              let qgroup = qgroups[fpath]
+              let qpos = _.groupBy(qgroup, 'pos')
+              for (let pos in qpos) {
+                let qlines = qpos[pos]
+                log('Id', infoid, 'fp', fpath, 'p', pos, 'ql', qlines)
+              }
+            }
+
+          }
+
+
           return qinfos
           // current = {_id: '_local/current', section: 'search', qinfos: qinfos, query: query}
           // navigate(current)
