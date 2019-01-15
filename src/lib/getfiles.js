@@ -11,6 +11,7 @@ const glob = require('glob')
 const dirTree = require('directory-tree')
 const textract = require('textract')
 const log = console.log
+const restricted = ['.info', '.json', '.txt']
 
 export function getInfoFiles(infopath, cb) {
   // if (!fns || !fns.length) return
@@ -161,9 +162,12 @@ function bookWFMap(map, row, groupid) {
   })
 }
 
+//   if (['.info', '.json', '.txt'].includes(ext)) return
 function walk(children) {
   let dirs = _.filter(children, child=> { return child.type == 'directory' })
   let files = _.filter(children, child=> { return child.type == 'file' })
+  log('FILES', files)
+  files = _.filter(files, fn=> { return !restricted.includes(fn.extension) })
   let grDirs = []
   dirs.forEach(dir=> {
     if (!dir.children.length) return
@@ -182,7 +186,8 @@ function groupByName(fns) {
   let names = fns.map(fn=> { return {name: _.first(_.last(fn.path.split('/')).split('.')), fn: fn}})
   let grouped = _.groupBy(names, 'name')
   for (let name in grouped) {
-    let child = {text: name, children: grouped[name].map(obj=> { return obj.fn.path}), file: true}
+    let clean = name.replace(/_/g, ' ')
+    let child = {text: clean, children: grouped[name].map(obj=> { return obj.fn.path}), file: true}
     children.push(child)
   }
   return children

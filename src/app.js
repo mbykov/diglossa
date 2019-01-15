@@ -75,7 +75,10 @@ document.body.addEventListener('click', (event) => {
   else if (event.target.id == 'cleanupdb') {
     cleanup()
       .then(function () {
+        let progress = q('#progress')
+        progress.classList.remove('is-shown')
         getCurrentWindow().reload()
+        navigate({section: 'home'})
       }).catch(function (err) {
         log('DESTROY ERR:', err)
       })
@@ -121,7 +124,7 @@ ipcRenderer.on('reread', function (event) {
 ipcRenderer.on('reload', function (event) {
   let state = settings.get('state')
   getCurrentWindow().reload()
-  log('RE-LOAD', JSON.stringify(state))
+  // log('RE-LOAD', JSON.stringify(state))
   navigate(state)
 })
 

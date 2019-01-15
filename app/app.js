@@ -182,7 +182,12 @@ document.body.addEventListener('click', event => {
     });
   } else if (event.target.id == 'cleanupdb') {
     Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_6__["cleanup"])().then(function () {
+      let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#progress');
+      progress.classList.remove('is-shown');
       getCurrentWindow().reload();
+      Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])({
+        section: 'home'
+      });
     }).catch(function (err) {
       log('DESTROY ERR:', err);
     });
@@ -234,8 +239,8 @@ electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('reread', function (even
 
 electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('reload', function (event) {
   let state = settings.get('state');
-  getCurrentWindow().reload();
-  log('RE-LOAD', JSON.stringify(state));
+  getCurrentWindow().reload(); // log('RE-LOAD', JSON.stringify(state))
+
   Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
 });
 electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('action', function (event, action) {
@@ -393,6 +398,7 @@ function parseBook(state, info, pars) {
   current = readTree(current, info.tree, state.fpath);
   let nic = current.nic || cnics[0];
   state.nic = nic;
+  current.cnics = cnics;
   if (state.mono) setMono(state, pars);else setChunk(state, pars);
   createRightHeader(state, info);
   createLeftHeader(state, info);
@@ -818,6 +824,7 @@ const dirTree = __webpack_require__(/*! directory-tree */ "directory-tree");
 const textract = __webpack_require__(/*! textract */ "textract");
 
 const log = console.log;
+const restricted = ['.info', '.json', '.txt'];
 function getInfoFiles(infopath, cb) {
   // if (!fns || !fns.length) return
   // let progress = q('#progress')
@@ -1000,7 +1007,8 @@ function bookWFMap(map, row, groupid) {
     if (!map[wf]) map[wf] = [];
     map[wf].push(groupid);
   });
-}
+} //   if (['.info', '.json', '.txt'].includes(ext)) return
+
 
 function walk(children) {
   let dirs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(children, child => {
@@ -1011,6 +1019,10 @@ function walk(children) {
     return child.type == 'file';
   });
 
+  log('FILES', files);
+  files = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(files, fn => {
+    return !restricted.includes(fn.extension);
+  });
   let grDirs = [];
   dirs.forEach(dir => {
     if (!dir.children.length) return;
@@ -1039,8 +1051,9 @@ function groupByName(fns) {
   let grouped = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(names, 'name');
 
   for (let name in grouped) {
+    let clean = name.replace(/_/g, ' ');
     let child = {
-      text: name,
+      text: clean,
       children: grouped[name].map(obj => {
         return obj.fn.path;
       }),
@@ -1223,13 +1236,14 @@ function navigate(state) {
     hstate = history.length - 1;
   } else {
     delete state.old;
-  }
+  } // log('HISTORY', history)
 
-  log('HISTORY', history);
+
   if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getLib"])();else if (section == 'title') twoPanesTitle(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getTitle"])(state);else if (section == 'book') twoPanes(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getBook"])(state); // else if (section == 'cleanup') goCleanup(state)
   // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)
 
+  if (!['title', 'book'].includes(section)) progress.classList.remove('is-shown');
   settings.set('state', state);
 }
 

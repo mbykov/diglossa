@@ -124,12 +124,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! electron */ "electron");
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _menu_edit_menu_template__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./menu/edit_menu_template */ "./src/menu/edit_menu_template.js");
-/* harmony import */ var _menu_file_menu_template__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./menu/file_menu_template */ "./src/menu/file_menu_template.js");
-/* harmony import */ var _menu_about_menu_template__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./menu/about_menu_template */ "./src/menu/about_menu_template.js");
-/* harmony import */ var _menu_help_menu_template__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./menu/help_menu_template */ "./src/menu/help_menu_template.js");
-/* harmony import */ var _menu_auth_menu_template__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./menu/auth_menu_template */ "./src/menu/auth_menu_template.js");
-/* harmony import */ var env__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! env */ "./config/env_development.json");
-var env__WEBPACK_IMPORTED_MODULE_8___namespace = /*#__PURE__*/__webpack_require__.t(/*! env */ "./config/env_development.json", 1);
+/* harmony import */ var _menu_lib_menu_template__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./menu/lib_menu_template */ "./src/menu/lib_menu_template.js");
+/* harmony import */ var _menu_file_menu_template__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./menu/file_menu_template */ "./src/menu/file_menu_template.js");
+/* harmony import */ var _menu_about_menu_template__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./menu/about_menu_template */ "./src/menu/about_menu_template.js");
+/* harmony import */ var _menu_help_menu_template__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./menu/help_menu_template */ "./src/menu/help_menu_template.js");
+/* harmony import */ var _menu_auth_menu_template__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./menu/auth_menu_template */ "./src/menu/auth_menu_template.js");
+/* harmony import */ var env__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! env */ "./config/env_development.json");
+var env__WEBPACK_IMPORTED_MODULE_9___namespace = /*#__PURE__*/__webpack_require__.t(/*! env */ "./config/env_development.json", 1);
 // This is main process of Electron, started as first thing when your
 // app starts. It runs through entire life of your application.
 // It doesn't have any windows which you can see on screen, but we can open
@@ -138,7 +139,7 @@ var env__WEBPACK_IMPORTED_MODULE_8___namespace = /*#__PURE__*/__webpack_require_
 
  // import { devMenuTemplate } from "./menu/dev_menu_template";
 
- // import { libMenuTemplate } from "./menu/lib_menu_template";
+
 
 
 
@@ -158,9 +159,9 @@ const settings = __webpack_require__(/*! electron-settings */ "electron-settings
 
 
 const setApplicationMenu = () => {
-  const menus = [_menu_file_menu_template__WEBPACK_IMPORTED_MODULE_4__["fileMenuTemplate"], _menu_about_menu_template__WEBPACK_IMPORTED_MODULE_5__["aboutMenuTemplate"], _menu_auth_menu_template__WEBPACK_IMPORTED_MODULE_7__["authMenuTemplate"], _menu_help_menu_template__WEBPACK_IMPORTED_MODULE_6__["helpMenuTemplate"]];
+  const menus = [_menu_lib_menu_template__WEBPACK_IMPORTED_MODULE_4__["libMenuTemplate"], _menu_file_menu_template__WEBPACK_IMPORTED_MODULE_5__["fileMenuTemplate"], _menu_about_menu_template__WEBPACK_IMPORTED_MODULE_6__["aboutMenuTemplate"], _menu_auth_menu_template__WEBPACK_IMPORTED_MODULE_8__["authMenuTemplate"], _menu_help_menu_template__WEBPACK_IMPORTED_MODULE_7__["helpMenuTemplate"]];
 
-  if (env__WEBPACK_IMPORTED_MODULE_8__.name !== "production") {// menus.push(devMenuTemplate);
+  if (env__WEBPACK_IMPORTED_MODULE_9__.name !== "production") {// menus.push(devMenuTemplate);
   }
 
   electron__WEBPACK_IMPORTED_MODULE_2__["Menu"].setApplicationMenu(electron__WEBPACK_IMPORTED_MODULE_2__["Menu"].buildFromTemplate(menus));
@@ -169,9 +170,9 @@ const setApplicationMenu = () => {
 // on same machine like those are two separate apps.
 
 
-if (env__WEBPACK_IMPORTED_MODULE_8__.name !== "production") {
+if (env__WEBPACK_IMPORTED_MODULE_9__.name !== "production") {
   const userDataPath = electron__WEBPACK_IMPORTED_MODULE_2__["app"].getPath("userData");
-  electron__WEBPACK_IMPORTED_MODULE_2__["app"].setPath("userData", `${userDataPath} (${env__WEBPACK_IMPORTED_MODULE_8__.name})`);
+  electron__WEBPACK_IMPORTED_MODULE_2__["app"].setPath("userData", `${userDataPath} (${env__WEBPACK_IMPORTED_MODULE_9__.name})`);
 }
 
 electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("ready", () => {
@@ -205,7 +206,7 @@ electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("ready", () => {
     slashes: true
   }));
 
-  if (env__WEBPACK_IMPORTED_MODULE_8__.name === "development") {
+  if (env__WEBPACK_IMPORTED_MODULE_9__.name === "development") {
     win.openDevTools();
   }
 
@@ -360,30 +361,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_0__);
 
 const fileMenuTemplate = {
-  label: "File",
+  label: "Book",
   submenu: [{
-    label: "Home",
-    accelerator: "CmdOrCtrl+L",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'home');
-    }
-  }, {
     label: "Import from file",
     click: () => {
       electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('parseDir');
     }
-  }, {
-    label: "Clone from Github",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'cloneGithub');
-    }
-  }, {
+  }, // { label: "Clone from Github", click: () => { BrowserWindow.getFocusedWindow().webContents.send('action', 'cloneGithub') } },
+  {
     type: 'separator'
-  }, {
-    label: "Clean up DB",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'cleanup');
-    }
   }, {
     label: "Reload application",
     accelerator: "CommandOrControl+Shift+R",
@@ -396,54 +382,22 @@ const fileMenuTemplate = {
     click: () => {
       electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('reread');
     }
-  }, // { role: 'reload'},
-  // { role: 'forcereload'},
+  }, // { type: "separator" },
+  // { label: "Publish", click: () => { BrowserWindow.getFocusedWindow().webContents.send('action', 'publish') } },
+  // { type: "separator" },
+  // { label: "Export to TXT", click: () => { BrowserWindow.getFocusedWindow().webContents.send('action', 'exportTXT') } },
+  // { label: "Export to PDF", click: () => { BrowserWindow.getFocusedWindow().webContents.send('action', 'exportPDF') } },
+  // { label: "Export to HTML", click: () => { BrowserWindow.getFocusedWindow().webContents.send('action', 'exportHTML') } },
+  // { type: "separator" },
+  // { label: "Create dictionary for book", click: () => { BrowserWindow.getFocusedWindow().webContents.send('action', 'createDict') } },
+  // { type: "separator" },
   {
-    type: "separator"
-  }, {
-    label: "Publish",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'publish');
-    }
-  }, {
-    type: "separator"
-  }, {
-    label: "Export to TXT",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'exportTXT');
-    }
-  }, {
-    label: "Export to PDF",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'exportPDF');
-    }
-  }, {
-    label: "Export to HTML",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'exportHTML');
-    }
-  }, {
-    type: "separator"
-  }, {
-    label: "Create dictionary for book",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'createDict');
-    }
-  }, {
-    type: "separator"
-  }, {
     label: "Clean up DB",
     click: () => {
       electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'cleanup');
     }
   }, {
     type: "separator"
-  }, {
-    label: "Quit",
-    accelerator: "CmdOrCtrl+Q",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["app"].quit();
-    }
   }]
 };
 
@@ -484,6 +438,38 @@ const helpMenuTemplate = {
     accelerator: "Alt+CmdOrCtrl+I",
     click: () => {
       electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().toggleDevTools();
+    }
+  }]
+};
+
+/***/ }),
+
+/***/ "./src/menu/lib_menu_template.js":
+/*!***************************************!*\
+  !*** ./src/menu/lib_menu_template.js ***!
+  \***************************************/
+/*! exports provided: libMenuTemplate */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "libMenuTemplate", function() { return libMenuTemplate; });
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! electron */ "electron");
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_0__);
+
+const libMenuTemplate = {
+  label: "File",
+  submenu: [{
+    label: "Home",
+    accelerator: "CmdOrCtrl+L",
+    click: () => {
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'home');
+    }
+  }, {
+    label: "Quit",
+    accelerator: "CmdOrCtrl+Q",
+    click: () => {
+      electron__WEBPACK_IMPORTED_MODULE_0__["app"].quit();
     }
   }]
 };

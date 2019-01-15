@@ -8,7 +8,7 @@ import url from "url";
 import { app, BrowserWindow, Menu, ipcMain, globalShortcut } from "electron";
 // import { devMenuTemplate } from "./menu/dev_menu_template";
 import { editMenuTemplate } from "./menu/edit_menu_template";
-// import { libMenuTemplate } from "./menu/lib_menu_template";
+import { libMenuTemplate } from "./menu/lib_menu_template";
 import { fileMenuTemplate } from "./menu/file_menu_template";
 import { aboutMenuTemplate } from "./menu/about_menu_template";
 import { helpMenuTemplate } from "./menu/help_menu_template";
@@ -27,7 +27,7 @@ const settings = require('electron-settings');
 import env from "env";
 
 const setApplicationMenu = () => {
-  const menus = [fileMenuTemplate, aboutMenuTemplate, authMenuTemplate, helpMenuTemplate];
+  const menus = [libMenuTemplate, fileMenuTemplate, aboutMenuTemplate, authMenuTemplate, helpMenuTemplate];
   if (env.name !== "production") {
     // menus.push(devMenuTemplate);
   }

@@ -142,7 +142,7 @@ export function navigate(state) {
   } else {
     delete state.old
   }
-  log('HISTORY', history)
+  // log('HISTORY', history)
 
   if (section == 'home')  getLib()
   else if (section == 'title') twoPanesTitle(state), getTitle(state)
@@ -150,5 +150,7 @@ export function navigate(state) {
   // else if (section == 'cleanup') goCleanup(state)
   // else if (section == 'search') parseQuery(libdb, current)
   // else showSection(section)
+  if (!['title', 'book'].includes(section)) progress.classList.remove('is-shown')
+
   settings.set('state', state)
 }

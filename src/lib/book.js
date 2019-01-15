@@ -117,6 +117,7 @@ export function parseBook(state, info, pars) {
   current = readTree(current, info.tree, state.fpath)
   let nic = current.nic || cnics[0]
   state.nic = nic
+  current.cnics = cnics
 
   if (state.mono)
     setMono(state, pars)
