@@ -108,8 +108,8 @@ function pushMap(ndocs) {
   log('MAP NEW-DOCS', ndocs[100])
   return ftdb.allDocs({ include_docs: true })
     .then(function(res) {
-      log('MAP OLD-RES', res)
-      log('MAP OLD-RES-ROWS', res.rows)
+      // log('MAP OLD-RES', res)
+      log('MAP OLD-RES-ROWS', res.rows.length)
       let odocs = res.rows.map(row=>{ return row.doc})
       log('MAP OLD-DOCS', odocs.length, odocs)
       let hdoc = {}
@@ -131,7 +131,7 @@ function pushMap(ndocs) {
           cleandocs.push(ndoc)
         }
       })
-      log('MAP CLEANDOCS', cleandocs)
+      log('MAP CLEANDOCS', cleandocs.length)
       return ftdb.bulkDocs(cleandocs)
     })
     .catch(function (err) {
@@ -193,6 +193,7 @@ export function getText(state, endpos) {
   let start = state.pos*1 || 0
   let end = endpos*1 || start*1 + limit*1
   let selector = {fpath: fpath, pos: {$gte: start, $lt: end}}
+  log('SELECTOR1', selector)
   return libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
 }
 
@@ -204,8 +205,64 @@ export function cleanup() {
   ])
 }
 
-export function searchBook(selector) {
-  return ftdb.find({selector: selector})
+export function searchBook(state) {
+  let selector = {wf: state.query}
+  ftdb.find({selector: selector})
+    .then(function (res) {
+      let ftdocs = res.docs
+      if (ftdocs.length > 1) throw new Error('FTDOCS > 1')
+      let docs = ftdocs[0].docs
+      let selector = {$or: docs.map(doc=> { return {fpath: doc.fpath, pos: doc.pos }})}
+      libdb.find({selector: selector})
+        .then(function(res) {
+          let qtree = {}
+          log('SEARCH res', res.docs.length)
+          let qinfos = _.groupBy(res.docs, 'infoid')
+          log('QINFOS', qinfos)
+
+          for (let infoid in qinfos) {
+            let gqinfo = qinfos[infoid]
+            let qfpath = _.groupBy(gqinfo, 'fpath')
+            qtree[infoid] = {}
+            for (let fpath in qfpath) {
+              let qgroup = qfpath[fpath]
+              let qpos = _.groupBy(qgroup, 'pos')
+              qtree[infoid][fpath] = {}
+              for (let pos in qpos) {
+                let qlines = qpos[pos]
+                qtree[infoid][fpath][pos] = qlines
+              }
+            }
+          }
+          log('QTRE', qtree)
+        })
+    }).catch(function (err) {
+      log('SEARCH ERR:', err)
+    })
+
+}
+
+export function searchBook_(ftselector) {
+  return ftdb.find({selector: ftselector})
+    .then(function (res) {
+      // log('SEARCH RES:', res)
+      let ftdocs = res.docs
+      if (ftdocs.length > 1) throw new Error('FTDOCS > 1')
+      // log('SEARCH FDOCS:', ftdocs.length)
+      // log('SEARCH FDOCS:', ftdocs[0].wf)
+      let docs = ftdocs[0].docs
+      // log('SEARCH FDOCS:', ftdocs[0].docs)
+
+      let selector = {$or: docs.map(doc=> { return {fpath: doc.fpath, pos: doc.pos }})}
+      // log('SELECTOR2', selector)
+      // return libdb.find({selector: selector, use_index: 'fpathindex'})
+      return libdb.find({selector: selector})
+      // return ftdocs
+    }).catch(function (err) {
+      log('SEARCH ERR:', err)
+    })
+
+
   // return ftdb.get(query)
 
   // .then(function (wfdoc) {

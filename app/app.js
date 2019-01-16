@@ -876,33 +876,25 @@ function getDir(info) {
     mapdocs: mapdocs
   };
   return book;
-}
+} // function map2mapdoc(nics, map) {
+//   let mapnics = {}
+//   for (let id in map) {
+//     map[id].groupids.forEach(groupid=> {
+//       nics.forEach(nic=> {
+//         let parid = [groupid, nic].join('-')
+//         if (!mapnics[id]) mapnics[id] = []
+//         mapnics[id].push(parid)
+//       })
+//     })
+//   }
+//   let mapdocs = []
+//   for (let wf in mapnics) {
+//     let mapdoc = {_id: wf, parids: mapnics[wf]}
+//     mapdocs.push(mapdoc)
+//   }
+//   return mapdocs
+// }
 
-function map2mapdoc(nics, map) {
-  let mapnics = {};
-
-  for (let id in map) {
-    map[id].groupids.forEach(groupid => {
-      nics.forEach(nic => {
-        let parid = [groupid, nic].join('-');
-        if (!mapnics[id]) mapnics[id] = [];
-        mapnics[id].push(parid);
-      });
-    });
-  }
-
-  let mapdocs = [];
-
-  for (let wf in mapnics) {
-    let mapdoc = {
-      _id: wf,
-      parids: mapnics[wf]
-    };
-    mapdocs.push(mapdoc);
-  }
-
-  return mapdocs;
-}
 
 function shortTree(children, bpath) {
   children.forEach(child => {
@@ -986,8 +978,9 @@ function readFile(info, fn, pars, map) {
     };
 
     if (auth && auth.author) {
-      par.author = true;
-      bookWFMap(map, row, groupid); // bookWFMap(map, row, parid)
+      par.author = true; // bookWFMap(map, row, groupid)
+
+      bookWFMap(map, row, fpath, idx);
     }
 
     pars.push(par);
@@ -1002,18 +995,22 @@ function hashCode(s) {
   }, 0);
 }
 
-function bookWFMap(map, row, groupid) {
+function bookWFMap(map, row, fpath, pos) {
   let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g, '');
 
-  let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(punctless.split(' '));
+  let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(punctless.split(' ')));
 
   wfs.forEach(wf => {
     let id = hashCode(wf);
+    let doc = {
+      fpath: fpath,
+      pos: pos
+    };
     if (!map[id]) map[id] = {
       wf: wf,
-      groupids: []
+      docs: []
     };
-    map[id].groupids.push(groupid);
+    map[id].docs.push(doc);
   });
 }
 
@@ -1221,14 +1218,10 @@ Mousetrap.bind(['alt+1', 'alt+2'], function (ev) {
 });
 Mousetrap.bind(['ctrl+f'], function (ev) {
   let query = clipboard.readText().split(' ')[0];
-  let selector = {
-    wf: query
-  };
-  log('CTRL F', selector);
-  Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["searchBook"])(selector).then(function (res) {
-    log('SEARCH RES:', res);
-  }).catch(function (err) {
-    log('SEARCH ERR:', err);
+  log('CTRL F', query);
+  navigate({
+    section: 'search',
+    query: query
   });
 });
 Mousetrap.bind(['esc'], function (ev) {// log('ESC')
@@ -1265,8 +1258,7 @@ function navigate(state) {
 
 
   if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getLib"])();else if (section == 'title') twoPanesTitle(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getTitle"])(state);else if (section == 'book') twoPanes(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getBook"])(state); // else if (section == 'cleanup') goCleanup(state)
-  // else if (section == 'search') parseQuery(libdb, current)
-  // else showSection(section)
+  else if (section == 'search') Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["searchBook"])(state); // else showSection(section)
 
   if (!['title', 'book'].includes(section)) progress.classList.remove('is-shown');
   settings.set('state', state);
@@ -1278,7 +1270,7 @@ function navigate(state) {
 /*!**************************!*\
   !*** ./src/lib/pouch.js ***!
   \**************************/
-/*! exports provided: pushBook, pushInfo, getLib, getInfo, getTitle, getBook, getText, cleanup, searchBook */
+/*! exports provided: pushBook, pushInfo, getLib, getInfo, getTitle, getBook, getText, cleanup, searchBook, searchBook_ */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1292,6 +1284,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getText", function() { return getText; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "cleanup", function() { return cleanup; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "searchBook", function() { return searchBook; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "searchBook_", function() { return searchBook_; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! electron */ "electron");
@@ -1411,8 +1404,8 @@ function pushMap(ndocs) {
   return ftdb.allDocs({
     include_docs: true
   }).then(function (res) {
-    log('MAP OLD-RES', res);
-    log('MAP OLD-RES-ROWS', res.rows);
+    // log('MAP OLD-RES', res)
+    log('MAP OLD-RES-ROWS', res.rows.length);
     let odocs = res.rows.map(row => {
       return row.doc;
     });
@@ -1439,7 +1432,7 @@ function pushMap(ndocs) {
         cleandocs.push(ndoc);
       }
     });
-    log('MAP CLEANDOCS', cleandocs);
+    log('MAP CLEANDOCS', cleandocs.length);
     return ftdb.bulkDocs(cleandocs);
   }).catch(function (err) {
     log('MAP ERR', err);
@@ -1498,6 +1491,7 @@ function getText(state, endpos) {
       $lt: end
     }
   };
+  log('SELECTOR1', selector);
   return libdb.find({
     selector: selector
   }); // sort: ['idx'], , limit: 20
@@ -1506,9 +1500,87 @@ function cleanup() {
   log('before destroy');
   return Promise.all([libdb.destroy(), ftdb.destroy()]);
 }
-function searchBook(selector) {
-  return ftdb.find({
+function searchBook(state) {
+  let selector = {
+    wf: state.query
+  };
+  ftdb.find({
     selector: selector
+  }).then(function (res) {
+    let ftdocs = res.docs;
+    if (ftdocs.length > 1) throw new Error('FTDOCS > 1');
+    let docs = ftdocs[0].docs;
+    let selector = {
+      $or: docs.map(doc => {
+        return {
+          fpath: doc.fpath,
+          pos: doc.pos
+        };
+      })
+    };
+    libdb.find({
+      selector: selector
+    }).then(function (res) {
+      let qtree = {};
+      log('SEARCH res', res.docs.length);
+
+      let qinfos = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(res.docs, 'infoid');
+
+      log('QINFOS', qinfos);
+
+      for (let infoid in qinfos) {
+        let gqinfo = qinfos[infoid];
+
+        let qfpath = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(gqinfo, 'fpath');
+
+        qtree[infoid] = {};
+
+        for (let fpath in qfpath) {
+          let qgroup = qfpath[fpath];
+
+          let qpos = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(qgroup, 'pos');
+
+          qtree[infoid][fpath] = {};
+
+          for (let pos in qpos) {
+            let qlines = qpos[pos];
+            qtree[infoid][fpath][pos] = qlines;
+          }
+        }
+      }
+
+      log('QTRE', qtree);
+    });
+  }).catch(function (err) {
+    log('SEARCH ERR:', err);
+  });
+}
+function searchBook_(ftselector) {
+  return ftdb.find({
+    selector: ftselector
+  }).then(function (res) {
+    // log('SEARCH RES:', res)
+    let ftdocs = res.docs;
+    if (ftdocs.length > 1) throw new Error('FTDOCS > 1'); // log('SEARCH FDOCS:', ftdocs.length)
+    // log('SEARCH FDOCS:', ftdocs[0].wf)
+
+    let docs = ftdocs[0].docs; // log('SEARCH FDOCS:', ftdocs[0].docs)
+
+    let selector = {
+      $or: docs.map(doc => {
+        return {
+          fpath: doc.fpath,
+          pos: doc.pos
+        };
+      }) // log('SELECTOR2', selector)
+      // return libdb.find({selector: selector, use_index: 'fpathindex'})
+
+    };
+    return libdb.find({
+      selector: selector
+    }); // return ftdocs
+  }).catch(function (err) {
+    log('SEARCH ERR:', err);
   }); // return ftdb.get(query)
   // .then(function (wfdoc) {
   //   let opts = { include_docs: true, keys: wfdoc.parids }

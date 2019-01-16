@@ -62,26 +62,24 @@ function getDir(info) {
   return book
 }
 
-function map2mapdoc(nics, map) {
-  let mapnics = {}
-  for (let id in map) {
-    map[id].groupids.forEach(groupid=> {
-      nics.forEach(nic=> {
-        let parid = [groupid, nic].join('-')
-        if (!mapnics[id]) mapnics[id] = []
-        mapnics[id].push(parid)
-      })
-    })
-  }
-
-  let mapdocs = []
-  for (let wf in mapnics) {
-    let mapdoc = {_id: wf, parids: mapnics[wf]}
-    mapdocs.push(mapdoc)
-  }
-
-  return mapdocs
-}
+// function map2mapdoc(nics, map) {
+//   let mapnics = {}
+//   for (let id in map) {
+//     map[id].groupids.forEach(groupid=> {
+//       nics.forEach(nic=> {
+//         let parid = [groupid, nic].join('-')
+//         if (!mapnics[id]) mapnics[id] = []
+//         mapnics[id].push(parid)
+//       })
+//     })
+//   }
+//   let mapdocs = []
+//   for (let wf in mapnics) {
+//     let mapdoc = {_id: wf, parids: mapnics[wf]}
+//     mapdocs.push(mapdoc)
+//   }
+//   return mapdocs
+// }
 
 function shortTree(children, bpath) {
   children.forEach(child=> {
@@ -145,8 +143,8 @@ function readFile(info, fn, pars, map) {
     let par = { _id: parid, infoid: info._id, pos: idx, nic: nic, fpath: fpath, lang: lang, text: row }
     if (auth && auth.author) {
       par.author = true
-      bookWFMap(map, row, groupid)
-      // bookWFMap(map, row, parid)
+      // bookWFMap(map, row, groupid)
+      bookWFMap(map, row, fpath, idx)
     }
     pars.push(par)
   })
@@ -157,13 +155,14 @@ function hashCode(s) {
   return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
 }
 
-function bookWFMap(map, row, groupid) {
+function bookWFMap(map, row, fpath, pos) {
   let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
-  let wfs = _.compact(punctless.split(' '))
+  let wfs = _.uniq(_.compact(punctless.split(' ')))
   wfs.forEach(wf=> {
     let id = hashCode(wf)
-    if (!map[id]) map[id] = {wf: wf, groupids: []}
-    map[id].groupids.push(groupid)
+    let doc = { fpath: fpath, pos: pos }
+    if (!map[id]) map[id] = {wf: wf, docs: []}
+    map[id].docs.push(doc)
   })
 }
 

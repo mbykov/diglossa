@@ -106,14 +106,8 @@ Mousetrap.bind(['alt+1', 'alt+2'], function(ev) {
 
 Mousetrap.bind(['ctrl+f'], function(ev) {
   let query = clipboard.readText().split(' ')[0]
-  let selector = {wf: query}
-  log('CTRL F', selector)
-  searchBook(selector)
-    .then(function (res) {
-      log('SEARCH RES:', res)
-    }).catch(function (err) {
-      log('SEARCH ERR:', err)
-    })
+  log('CTRL F', query)
+  navigate({section: 'search', query: query})
 })
 
 Mousetrap.bind(['esc'], function(ev) {
@@ -154,7 +148,7 @@ export function navigate(state) {
   else if (section == 'title') twoPanesTitle(state), getTitle(state)
   else if (section == 'book') twoPanes(state), getBook(state)
   // else if (section == 'cleanup') goCleanup(state)
-  // else if (section == 'search') parseQuery(libdb, current)
+  else if (section == 'search') searchBook(state)
   // else showSection(section)
   if (!['title', 'book'].includes(section)) progress.classList.remove('is-shown')
 
