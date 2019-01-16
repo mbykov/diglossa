@@ -518,8 +518,8 @@ function createRightHeader(state, info) {
   if (ohright) Object(_utils__WEBPACK_IMPORTED_MODULE_1__["remove"])(ohright);
   ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'hright');
   ohright.style.left = arect.width * 0.70 + 'px';
-  obook.appendChild(ohright);
-  log('CREATE RH state', state);
+  obook.appendChild(ohright); // log('CREATE RH state', state)
+
   let current = {};
   current = readTree(current, info.tree, state.fpath);
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('ul');
@@ -824,7 +824,8 @@ const dirTree = __webpack_require__(/*! directory-tree */ "directory-tree");
 const textract = __webpack_require__(/*! textract */ "textract");
 
 const log = console.log;
-const restricted = ['.info', '.json', '.txt'];
+const restricted = ['.info', '.json', '.txt']; // const rePuncts = new RegExp('[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9\'"<>\[\]]', 'g')
+
 function getInfoFiles(infopath, cb) {
   // if (!fns || !fns.length) return
   // let progress = q('#progress')
@@ -866,7 +867,10 @@ function getDir(info) {
   log('SHORT TREE', tree);
   walkRead(info, fulltree, pars, map);
   log('==>', pars.length);
-  let mapdocs = map2mapdoc(info.nics, map);
+  log('==>', map[7939]); // let mapdocs = map2mapdoc(info.nics, map)
+
+  let mapdocs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.values(map);
+
   let book = {
     pars: pars,
     mapdocs: mapdocs
@@ -877,12 +881,12 @@ function getDir(info) {
 function map2mapdoc(nics, map) {
   let mapnics = {};
 
-  for (let wf in map) {
-    map[wf].forEach(groupid => {
+  for (let id in map) {
+    map[id].groupids.forEach(groupid => {
       nics.forEach(nic => {
         let parid = [groupid, nic].join('-');
-        if (!mapnics[wf]) mapnics[wf] = [];
-        mapnics[wf].push(parid);
+        if (!mapnics[id]) mapnics[id] = [];
+        mapnics[id].push(parid);
       });
     });
   }
@@ -934,14 +938,6 @@ function walkRead(info, children, pars, map) {
   }); // хрень какая-то с никами здесь
 
   info.nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(info.nics);
-
-  let nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(info.nics); // let book = {pars: pars, mapdocs: mapdocs}
-
-
-  let book = {
-    pars: pars
-  };
-  return book;
 }
 
 function readFile(info, fn, pars, map) {
@@ -991,14 +987,37 @@ function readFile(info, fn, pars, map) {
 
     if (auth && auth.author) {
       par.author = true;
-      bookWFMap(map, row, groupid);
+      bookWFMap(map, row, groupid); // bookWFMap(map, row, parid)
     }
 
     pars.push(par);
   });
+} // https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
+
+
+function hashCode(s) {
+  return s.split("").reduce(function (a, b) {
+    a = (a << 5) - a + b.charCodeAt(0);
+    return a & a;
+  }, 0);
 }
 
 function bookWFMap(map, row, groupid) {
+  let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g, '');
+
+  let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(punctless.split(' '));
+
+  wfs.forEach(wf => {
+    let id = hashCode(wf);
+    if (!map[id]) map[id] = {
+      wf: wf,
+      groupids: []
+    };
+    map[id].groupids.push(groupid);
+  });
+}
+
+function bookWFMap_(map, row, groupid) {
   let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g, '');
 
   let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(punctless.split(' '));
@@ -1017,9 +1036,9 @@ function walk(children) {
 
   let files = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(children, child => {
     return child.type == 'file';
-  });
+  }); // log('FILES', files)
 
-  log('FILES', files);
+
   files = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(files, fn => {
     return !restricted.includes(fn.extension);
   });
@@ -1202,12 +1221,18 @@ Mousetrap.bind(['alt+1', 'alt+2'], function (ev) {
 });
 Mousetrap.bind(['ctrl+f'], function (ev) {
   let query = clipboard.readText().split(' ')[0];
-  log('CTRL F', query);
-  Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["searchBook"])(query).then(function (res) {
-    log('SEARCH QINFOS:', res);
+  let selector = {
+    wf: query
+  };
+  log('CTRL F', selector);
+  Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["searchBook"])(selector).then(function (res) {
+    log('SEARCH RES:', res);
   }).catch(function (err) {
     log('SEARCH ERR:', err);
   });
+});
+Mousetrap.bind(['esc'], function (ev) {// log('ESC')
+  // похоже, общий метод не получится
 });
 
 function hideAll() {
@@ -1317,6 +1342,13 @@ function pushBook(info, book) {
       },
       name: 'fpathindex'
     }); // }
+  }).then(function (res) {
+    ftdb.createIndex({
+      index: {
+        fields: ['wf']
+      },
+      name: 'wfindex'
+    });
   });
 }
 function pushInfo(ndoc) {
@@ -1362,18 +1394,31 @@ function pushTexts(newdocs) {
 
     return libdb.bulkDocs(cleandocs);
   });
-} // MAP
+} // ndocs = ndocs.slice(0,3)
+// ftdb.bulkDocs(ndocs)
+//   .then(function () {
+//   return ftdb.allDocs({include_docs: true});
+// }).then(function (res) {
+//   log('ALLDOCS', res);
+// }).catch(function (err) {
+//   console.log(err);
+// });
+// MAP
 
 
 function pushMap(ndocs) {
+  log('MAP NEW-DOCS', ndocs[100]);
   return ftdb.allDocs({
     include_docs: true
   }).then(function (res) {
-    let docs = res.rows.map(row => {
+    log('MAP OLD-RES', res);
+    log('MAP OLD-RES-ROWS', res.rows);
+    let odocs = res.rows.map(row => {
       return row.doc;
     });
+    log('MAP OLD-DOCS', odocs.length, odocs);
     let hdoc = {};
-    docs.forEach(doc => {
+    odocs.forEach(doc => {
       hdoc[doc._id] = doc;
     });
     let cleandocs = [];
@@ -1394,7 +1439,10 @@ function pushMap(ndocs) {
         cleandocs.push(ndoc);
       }
     });
+    log('MAP CLEANDOCS', cleandocs);
     return ftdb.bulkDocs(cleandocs);
+  }).catch(function (err) {
+    log('MAP ERR', err);
   });
 }
 
@@ -1456,44 +1504,35 @@ function getText(state, endpos) {
 }
 function cleanup() {
   log('before destroy');
-  return Promise.all([libdb.destroy()]);
+  return Promise.all([libdb.destroy(), ftdb.destroy()]);
 }
-function searchBook(query) {
-  return ftdb.get(query).then(function (wfdoc) {
-    let opts = {
-      include_docs: true,
-      keys: wfdoc.parids
-    };
-    return libdb.allDocs(opts).then(function (result) {
-      let qdocs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(result.rows.map(row => {
-        return row.doc;
-      }));
-
-      let qinfos = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(qdocs, 'infoid');
-
-      log('POUCH-QINFOS', qinfos);
-
-      for (let infoid in qinfos) {
-        let gqinfo = qinfos[infoid];
-
-        let qgroups = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(gqinfo, 'fpath');
-
-        for (let fpath in qgroups) {
-          let qgroup = qgroups[fpath];
-
-          let qpos = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(qgroup, 'pos');
-
-          for (let pos in qpos) {
-            let qlines = qpos[pos];
-            log('Id', infoid, 'fp', fpath, 'p', pos, 'ql', qlines);
-          }
-        }
-      }
-
-      return qinfos; // current = {_id: '_local/current', section: 'search', qinfos: qinfos, query: query}
-      // navigate(current)
-    });
-  }); // .catch(function (err) {
+function searchBook(selector) {
+  return ftdb.find({
+    selector: selector
+  }); // return ftdb.get(query)
+  // .then(function (wfdoc) {
+  //   let opts = { include_docs: true, keys: wfdoc.parids }
+  //   return libdb.allDocs(opts)
+  //     .then(function (result) {
+  //       let qdocs = _.compact(result.rows.map(row=> { return row.doc}))
+  //       let qinfos = _.groupBy(qdocs, 'infoid')
+  //       log('POUCH-QINFOS', qinfos)
+  //       for (let infoid in qinfos) {
+  //         let gqinfo = qinfos[infoid]
+  //         let qgroups = _.groupBy(gqinfo, 'fpath')
+  //         for (let fpath in qgroups) {
+  //           let qgroup = qgroups[fpath]
+  //           let qpos = _.groupBy(qgroup, 'pos')
+  //           for (let pos in qpos) {
+  //             let qlines = qpos[pos]
+  //             // log('Id', infoid, 'fp', fpath, 'p', pos, 'ql', qlines)
+  //           }
+  //         }
+  //       }
+  //       return qinfos
+  //     })
+  // })
+  // .catch(function (err) {
   //   log('SEARCH ERR:', err)
   // })
 }

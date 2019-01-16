@@ -12,6 +12,7 @@ const dirTree = require('directory-tree')
 const textract = require('textract')
 const log = console.log
 const restricted = ['.info', '.json', '.txt']
+// const rePuncts = new RegExp('[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9\'"<>\[\]]', 'g')
 
 export function getInfoFiles(infopath, cb) {
   // if (!fns || !fns.length) return
@@ -53,7 +54,9 @@ function getDir(info) {
   log('SHORT TREE', tree)
   walkRead(info, fulltree, pars, map)
   log('==>', pars.length)
-  let mapdocs = map2mapdoc(info.nics, map)
+  log('==>', map[7939])
+  // let mapdocs = map2mapdoc(info.nics, map)
+  let mapdocs = _.values(map)
 
   let book = {pars: pars, mapdocs: mapdocs}
   return book
@@ -61,12 +64,12 @@ function getDir(info) {
 
 function map2mapdoc(nics, map) {
   let mapnics = {}
-  for (let wf in map) {
-    map[wf].forEach(groupid=> {
+  for (let id in map) {
+    map[id].groupids.forEach(groupid=> {
       nics.forEach(nic=> {
         let parid = [groupid, nic].join('-')
-        if (!mapnics[wf]) mapnics[wf] = []
-        mapnics[wf].push(parid)
+        if (!mapnics[id]) mapnics[id] = []
+        mapnics[id].push(parid)
       })
     })
   }
@@ -109,11 +112,6 @@ function walkRead(info, children, pars, map) {
   })
   // хрень какая-то с никами здесь
   info.nics = _.uniq(info.nics)
-  let nics = _.uniq(info.nics)
-
-  // let book = {pars: pars, mapdocs: mapdocs}
-  let book = {pars: pars}
-  return book
 }
 
 function readFile(info, fn, pars, map) {
@@ -148,12 +146,28 @@ function readFile(info, fn, pars, map) {
     if (auth && auth.author) {
       par.author = true
       bookWFMap(map, row, groupid)
+      // bookWFMap(map, row, parid)
     }
     pars.push(par)
   })
 }
 
+// https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
+function hashCode(s) {
+  return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
+}
+
 function bookWFMap(map, row, groupid) {
+  let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
+  let wfs = _.compact(punctless.split(' '))
+  wfs.forEach(wf=> {
+    let id = hashCode(wf)
+    if (!map[id]) map[id] = {wf: wf, groupids: []}
+    map[id].groupids.push(groupid)
+  })
+}
+
+function bookWFMap_(map, row, groupid) {
   let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
   let wfs = _.compact(punctless.split(' '))
   wfs.forEach(wf=> {
@@ -166,7 +180,7 @@ function bookWFMap(map, row, groupid) {
 function walk(children) {
   let dirs = _.filter(children, child=> { return child.type == 'directory' })
   let files = _.filter(children, child=> { return child.type == 'file' })
-  log('FILES', files)
+  // log('FILES', files)
   files = _.filter(files, fn=> { return !restricted.includes(fn.extension) })
   let grDirs = []
   dirs.forEach(dir=> {

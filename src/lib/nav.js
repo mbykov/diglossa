@@ -106,13 +106,19 @@ Mousetrap.bind(['alt+1', 'alt+2'], function(ev) {
 
 Mousetrap.bind(['ctrl+f'], function(ev) {
   let query = clipboard.readText().split(' ')[0]
-  log('CTRL F', query)
-  searchBook(query)
+  let selector = {wf: query}
+  log('CTRL F', selector)
+  searchBook(selector)
     .then(function (res) {
-      log('SEARCH QINFOS:', res)
+      log('SEARCH RES:', res)
     }).catch(function (err) {
       log('SEARCH ERR:', err)
     })
+})
+
+Mousetrap.bind(['esc'], function(ev) {
+  // log('ESC')
+  // похоже, общий метод не получится
 })
 
 function hideAll () {

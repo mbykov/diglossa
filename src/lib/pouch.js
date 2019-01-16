@@ -44,6 +44,12 @@ export function pushBook(info, book) {
       })
       // }
     })
+    .then(function(res) {
+      ftdb.createIndex({
+        index: {fields: ['wf']},
+        name: 'wfindex'
+      })
+    })
 }
 
 export function pushInfo(ndoc) {
@@ -87,13 +93,27 @@ function pushTexts(newdocs) {
     })
 }
 
+// ndocs = ndocs.slice(0,3)
+// ftdb.bulkDocs(ndocs)
+//   .then(function () {
+//   return ftdb.allDocs({include_docs: true});
+// }).then(function (res) {
+//   log('ALLDOCS', res);
+// }).catch(function (err) {
+//   console.log(err);
+// });
+
 // MAP
 function pushMap(ndocs) {
+  log('MAP NEW-DOCS', ndocs[100])
   return ftdb.allDocs({ include_docs: true })
     .then(function(res) {
-      let docs = res.rows.map(row=>{ return row.doc})
+      log('MAP OLD-RES', res)
+      log('MAP OLD-RES-ROWS', res.rows)
+      let odocs = res.rows.map(row=>{ return row.doc})
+      log('MAP OLD-DOCS', odocs.length, odocs)
       let hdoc = {}
-      docs.forEach(doc=> { hdoc[doc._id] = doc })
+      odocs.forEach(doc=> { hdoc[doc._id] = doc })
 
       let cleandocs = []
       ndocs.forEach(ndoc=> {
@@ -111,7 +131,11 @@ function pushMap(ndocs) {
           cleandocs.push(ndoc)
         }
       })
+      log('MAP CLEANDOCS', cleandocs)
       return ftdb.bulkDocs(cleandocs)
+    })
+    .catch(function (err) {
+      log('MAP ERR', err)
     })
 }
 
@@ -172,44 +196,42 @@ export function getText(state, endpos) {
   return libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
 }
 
-
 export function cleanup() {
   log('before destroy')
   return Promise.all([
     libdb.destroy(),
-    // ftdb.destroy()
+    ftdb.destroy()
   ])
 }
 
-export function searchBook(query) {
-  return ftdb.get(query)
-    .then(function (wfdoc) {
-      let opts = { include_docs: true, keys: wfdoc.parids }
-      return libdb.allDocs(opts)
-        .then(function (result) {
-          let qdocs = _.compact(result.rows.map(row=> { return row.doc}))
-          let qinfos = _.groupBy(qdocs, 'infoid')
-          log('POUCH-QINFOS', qinfos)
-          for (let infoid in qinfos) {
-            let gqinfo = qinfos[infoid]
-            let qgroups = _.groupBy(gqinfo, 'fpath')
-            for (let fpath in qgroups) {
-              let qgroup = qgroups[fpath]
-              let qpos = _.groupBy(qgroup, 'pos')
-              for (let pos in qpos) {
-                let qlines = qpos[pos]
-                log('Id', infoid, 'fp', fpath, 'p', pos, 'ql', qlines)
-              }
-            }
+export function searchBook(selector) {
+  return ftdb.find({selector: selector})
+  // return ftdb.get(query)
 
-          }
+  // .then(function (wfdoc) {
+    //   let opts = { include_docs: true, keys: wfdoc.parids }
+    //   return libdb.allDocs(opts)
+    //     .then(function (result) {
+    //       let qdocs = _.compact(result.rows.map(row=> { return row.doc}))
+    //       let qinfos = _.groupBy(qdocs, 'infoid')
+    //       log('POUCH-QINFOS', qinfos)
+    //       for (let infoid in qinfos) {
+    //         let gqinfo = qinfos[infoid]
+    //         let qgroups = _.groupBy(gqinfo, 'fpath')
+    //         for (let fpath in qgroups) {
+    //           let qgroup = qgroups[fpath]
+    //           let qpos = _.groupBy(qgroup, 'pos')
+    //           for (let pos in qpos) {
+    //             let qlines = qpos[pos]
+    //             // log('Id', infoid, 'fp', fpath, 'p', pos, 'ql', qlines)
+    //           }
+    //         }
 
+    //       }
 
-          return qinfos
-          // current = {_id: '_local/current', section: 'search', qinfos: qinfos, query: query}
-          // navigate(current)
-        })
-    })
+    //       return qinfos
+    //     })
+    // })
     // .catch(function (err) {
     //   log('SEARCH ERR:', err)
     // })

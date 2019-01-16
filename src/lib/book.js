@@ -224,7 +224,7 @@ function createRightHeader(state, info) {
   ohright = create('div', 'hright')
   ohright.style.left = arect.width*0.70 + 'px'
   obook.appendChild(ohright)
-  log('CREATE RH state', state)
+  // log('CREATE RH state', state)
 
   let current = {}
   current = readTree(current, info.tree, state.fpath)
