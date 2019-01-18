@@ -110,9 +110,12 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
 
 Mousetrap.bind(['ctrl+v'], function(ev) {
   let state = settings.get('state')
+  if (!state.infoid) return
   getInfo(state.infoid)
     .then(function(info) {
-      log('CTRL V state', JSON.parse(JSON.stringify(state)), info)
+      if (!info) return
+      log('CTRL V stats', info.stats)
+      showStats(info)
     })
   // navigate({section: 'search', query: query})
 })
@@ -158,4 +161,34 @@ export function navigate(state) {
   // else showSection(section)
 
   settings.set('state', state)
+}
+
+function showStats(info) {
+  sectionTrigger('stats')
+  let ores = q('#qstats')
+  empty(ores)
+  let otitle = create('div', 'title')
+  otitle.textContent = info.book.title
+  let ostats = create('div')
+  ores.appendChild(otitle)
+  ores.appendChild(ostats)
+  let qfpath = _.groupBy(info.stats, 'fpath')
+  for (let fpath in qfpath) {
+    let ofpath = create('ul', 'statfpath')
+    ofpath.textContent = fpath
+    ostats.appendChild(ofpath)
+    let fns = qfpath[fpath]
+    let sizes = _.map(fns, fn=> { return fn.pars})
+    let correct = (_.uniq(sizes).length == 1) ? true : false
+    fns.forEach(fn=> {
+      let ofn = create('li', 'statline')
+      let onic = span(fn.nic, 'statnic')
+      let osize = span(fn.pars, 'statsize')
+      ofn.appendChild(onic)
+      ofn.appendChild(osize)
+      ofpath.appendChild(ofn)
+      if (correct) osize.classList.add('green')
+      else osize.classList.add('red')
+    })
+  }
 }

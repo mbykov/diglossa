@@ -15,9 +15,6 @@ const restricted = ['.info', '.json', '.txt']
 // const rePuncts = new RegExp('[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9\'"<>\[\]]', 'g')
 
 export function getInfoFiles(infopath, cb) {
-  // if (!fns || !fns.length) return
-  // let progress = q('#progress')
-  // progress.classList.add('is-shown')
   let info
   try {
     let json = fse.readFileSync(infopath)
@@ -32,10 +29,10 @@ export function getInfoFiles(infopath, cb) {
   info.bpath = slash(bpath)
   info.infopath = slash(infopath)
   info.nics = []
+  info.stats = []
   let book = getDir(info)
   pushBook(info, book)
     .then(function(res) {
-      log('BOOK PUSHED OK')
       cb(true)
     })
     .catch(function(err) {
@@ -53,10 +50,7 @@ function getDir(info) {
   info.tree = tree
   log('SHORT TREE', tree)
   walkRead(info, fulltree, pars, map)
-  // log('==>', pars.length)
-  // log('==>', map[7939])
   let mapdocs = _.values(map)
-
   let book = {pars: pars, mapdocs: mapdocs}
   return book
 }
@@ -101,6 +95,7 @@ function readFile(info, fn, pars, map) {
   let auth = _.find(info.auths, auth=> { return auth.nic == nic})
   let lang = (auth && auth.lang) ? auth.lang : 'lang'
   let txt
+  let mypars = 0
   try {
     txt = fse.readFileSync(fn, 'utf8')
   } catch(err) {
@@ -127,7 +122,10 @@ function readFile(info, fn, pars, map) {
       bookWFMap(map, row, fpath, idx)
     }
     pars.push(par)
+    mypars +=1
   })
+  let stat = {fpath: fpath, nic: nic, pars: mypars}
+  info.stats.push(stat)
 }
 
 // https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
@@ -145,15 +143,6 @@ function bookWFMap(map, row, fpath, pos) {
     map[id].docs.push(doc)
   })
 }
-
-// function bookWFMap_(map, row, groupid) {
-//   let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
-//   let wfs = _.compact(punctless.split(' '))
-//   wfs.forEach(wf=> {
-//     if (!map[wf]) map[wf] = []
-//     map[wf].push(groupid)
-//   })
-// }
 
 //   if (['.info', '.json', '.txt'].includes(ext)) return
 function walk(children) {

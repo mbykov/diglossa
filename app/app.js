@@ -977,9 +977,6 @@ const log = console.log;
 const restricted = ['.info', '.json', '.txt']; // const rePuncts = new RegExp('[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9\'"<>\[\]]', 'g')
 
 function getInfoFiles(infopath, cb) {
-  // if (!fns || !fns.length) return
-  // let progress = q('#progress')
-  // progress.classList.add('is-shown')
   let info;
 
   try {
@@ -995,9 +992,9 @@ function getInfoFiles(infopath, cb) {
   info.bpath = slash(bpath);
   info.infopath = slash(infopath);
   info.nics = [];
+  info.stats = [];
   let book = getDir(info);
   Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["pushBook"])(info, book).then(function (res) {
-    log('BOOK PUSHED OK');
     cb(true);
   }).catch(function (err) {
     log('PUSH BOOK ERR:', err);
@@ -1015,8 +1012,7 @@ function getDir(info) {
   let tree = shortTree(children, info.bpath);
   info.tree = tree;
   log('SHORT TREE', tree);
-  walkRead(info, fulltree, pars, map); // log('==>', pars.length)
-  // log('==>', map[7939])
+  walkRead(info, fulltree, pars, map);
 
   let mapdocs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.values(map);
 
@@ -1076,6 +1072,7 @@ function readFile(info, fn, pars, map) {
 
   let lang = auth && auth.lang ? auth.lang : 'lang';
   let txt;
+  let mypars = 0;
 
   try {
     txt = fse.readFileSync(fn, 'utf8');
@@ -1115,7 +1112,14 @@ function readFile(info, fn, pars, map) {
     }
 
     pars.push(par);
+    mypars += 1;
   });
+  let stat = {
+    fpath: fpath,
+    nic: nic,
+    pars: mypars
+  };
+  info.stats.push(stat);
 } // https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
 
 
@@ -1143,15 +1147,7 @@ function bookWFMap(map, row, fpath, pos) {
     };
     map[id].docs.push(doc);
   });
-} // function bookWFMap_(map, row, groupid) {
-//   let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
-//   let wfs = _.compact(punctless.split(' '))
-//   wfs.forEach(wf=> {
-//     if (!map[wf]) map[wf] = []
-//     map[wf].push(groupid)
-//   })
-// }
-//   if (['.info', '.json', '.txt'].includes(ext)) return
+} //   if (['.info', '.json', '.txt'].includes(ext)) return
 
 
 function walk(children) {
@@ -1352,8 +1348,11 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
 });
 Mousetrap.bind(['ctrl+v'], function (ev) {
   let state = settings.get('state');
+  if (!state.infoid) return;
   Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getInfo"])(state.infoid).then(function (info) {
-    log('CTRL V state', JSON.parse(JSON.stringify(state)), info);
+    if (!info) return;
+    log('CTRL V stats', info.stats);
+    showStats(info);
   }); // navigate({section: 'search', query: query})
 });
 Mousetrap.bind(['esc'], function (ev) {// log('ESC')
@@ -1392,6 +1391,41 @@ function navigate(state) {
   if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getLib"])();else if (section == 'title') twoPanesTitle(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getTitle"])(state);else if (section == 'book') twoPanes(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getBook"])(state);else if (section == 'search') Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getQuery"])(state); // else showSection(section)
 
   settings.set('state', state);
+}
+
+function showStats(info) {
+  sectionTrigger('stats');
+  let ores = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#qstats');
+  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(ores);
+  let otitle = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'title');
+  otitle.textContent = info.book.title;
+  let ostats = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div');
+  ores.appendChild(otitle);
+  ores.appendChild(ostats);
+
+  let qfpath = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(info.stats, 'fpath');
+
+  for (let fpath in qfpath) {
+    let ofpath = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('ul', 'statfpath');
+    ofpath.textContent = fpath;
+    ostats.appendChild(ofpath);
+    let fns = qfpath[fpath];
+
+    let sizes = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.map(fns, fn => {
+      return fn.pars;
+    });
+
+    let correct = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.uniq(sizes).length == 1 ? true : false;
+    fns.forEach(fn => {
+      let ofn = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('li', 'statline');
+      let onic = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["span"])(fn.nic, 'statnic');
+      let osize = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["span"])(fn.pars, 'statsize');
+      ofn.appendChild(onic);
+      ofn.appendChild(osize);
+      ofpath.appendChild(ofn);
+      if (correct) osize.classList.add('green');else osize.classList.add('red');
+    });
+  }
 }
 
 /***/ }),

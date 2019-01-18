@@ -301,3 +301,23 @@ div.qtext > p.hidden {
   margin-top: 20px;
   margin-bottom: 20px;
 }
+
+.statline {
+    padding-left: 25px;
+}
+
+.statnic {
+    width: 150px;
+}
+
+.statnic::after {
+    content: ': ';
+}
+
+.green {
+    color: green;
+}
+
+.red {
+    color: red;
+}
