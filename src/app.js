@@ -14,7 +14,7 @@ import { q, qs, empty, create, remove, span, p, div, enclitic } from './lib/util
 // import { bookData, scrollPanes, keyPanes, parseLib, parseTitle, parseBook } from './lib/book'
 // import { parseInfo, parseDir, parseODS } from './lib/getfiles'
 // import { parseQuery } from './lib/search';
-import { getInfoFiles } from './lib/getfiles'
+import { getInfoFiles, getOds } from './lib/getfiles'
 import { navigate } from './lib/nav';
 // cleanup - перенести в book?
 import { getInfo, cleanup } from './lib/pouch'
@@ -89,6 +89,10 @@ ipcRenderer.on('parseDir', function (event) {
   dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'JSON', extensions: ['json'] }]}, parseDir)
 })
 
+ipcRenderer.on('parseOds', function (event) {
+  dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'ODS', extensions: ['ods'] }]}, parseOds)
+})
+
 function parseDir(fns) {
   if (!fns || !fns.length) return
   let progress = q('#progress')
@@ -96,6 +100,18 @@ function parseDir(fns) {
   let infopath = fns[0]
   getInfoFiles(infopath, function(res) {
     navigate({section: 'home'})
+  })
+}
+
+function parseOds(fns) {
+  if (!fns || !fns.length) return
+  let progress = q('#progress')
+  progress.classList.add('is-shown')
+  let odsopath = fns[0]
+  log('ODSPATH', odsopath)
+  getOds(odsopath, function(res) {
+    log('ODS RES', res)
+    // navigate({section: 'home'})
   })
 }
 

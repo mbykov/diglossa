@@ -363,6 +363,11 @@ __webpack_require__.r(__webpack_exports__);
 const fileMenuTemplate = {
   label: "Book",
   submenu: [{
+    label: "Import from ODS",
+    click: () => {
+      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('parseOds');
+    }
+  }, {
     label: "Import from file",
     click: () => {
       electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('parseDir');

@@ -3,6 +3,7 @@ import { app, BrowserWindow } from "electron";
 export const fileMenuTemplate = {
   label: "Book",
   submenu: [
+    { label: "Import from ODS", click: () => { BrowserWindow.getFocusedWindow().webContents.send('parseOds') } },
     { label: "Import from file", click: () => { BrowserWindow.getFocusedWindow().webContents.send('parseDir') } },
     // { label: "Clone from Github", click: () => { BrowserWindow.getFocusedWindow().webContents.send('action', 'cloneGithub') } },
     { type: 'separator' },

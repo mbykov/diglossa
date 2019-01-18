@@ -202,6 +202,15 @@ electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('parseDir', function (ev
     }]
   }, parseDir);
 });
+electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('parseOds', function (event) {
+  dialog.showOpenDialog({
+    properties: ['openFile'],
+    filters: [{
+      name: 'ODS',
+      extensions: ['ods']
+    }]
+  }, parseOds);
+});
 
 function parseDir(fns) {
   if (!fns || !fns.length) return;
@@ -212,6 +221,17 @@ function parseDir(fns) {
     Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])({
       section: 'home'
     });
+  });
+}
+
+function parseOds(fns) {
+  if (!fns || !fns.length) return;
+  let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#progress');
+  progress.classList.add('is-shown');
+  let odsopath = fns[0];
+  log('ODSPATH', odsopath);
+  Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_4__["getOds"])(odsopath, function (res) {
+    log('ODS RES', res); // navigate({section: 'home'})
   });
 }
 
@@ -257,7 +277,7 @@ electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('action', function (even
 /*!*************************!*\
   !*** ./src/lib/book.js ***!
   \*************************/
-/*! exports provided: parseLib, parseTitle, parseBook, scrollPanes, keyPanes, parseQuery */
+/*! exports provided: parseLib, parseTitle, parseBook, scrollPanes, keyPanes, parseQuery, parseOds */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -268,6 +288,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "scrollPanes", function() { return scrollPanes; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "keyPanes", function() { return keyPanes; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseQuery", function() { return parseQuery; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseOds", function() { return parseOds; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
@@ -873,6 +894,10 @@ function scrollQueries(ev) {
   curpar.classList.add('hidden');
 }
 
+function parseOds() {
+  hideProgress();
+}
+
 /***/ }),
 
 /***/ "./src/lib/context_menu.js":
@@ -943,12 +968,13 @@ document.addEventListener("contextmenu", event => {
 /*!*****************************!*\
   !*** ./src/lib/getfiles.js ***!
   \*****************************/
-/*! exports provided: getInfoFiles */
+/*! exports provided: getInfoFiles, getOds */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getInfoFiles", function() { return getInfoFiles; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getOds", function() { return getOds; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
@@ -1085,16 +1111,12 @@ function readFile(info, fn, pars, map) {
   dirname = slash(dirname);
   let fpath = fn.split(info.bpath)[1].split('.')[0];
   fpath = slash(fpath);
-  fpath = fpath.replace(/^\//, ''); // info.sections.push(fpath)
-
+  fpath = fpath.replace(/^\//, '');
   let clean = txt.trim().replace(/\n+/, '\n'); //.replace(/\s+/, ' ')
 
   let rows = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(clean.split('\n'));
 
   rows.forEach((row, idx) => {
-    // if (idx == 0) log('ROW', row)
-    // let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-')
-    // let parid = [groupid, nic].join('-')
     let parid = ['text', info.book.author, info.book.title, fpath, idx, nic].join('-');
     let par = {
       _id: parid,
@@ -1219,6 +1241,100 @@ function parseInfo(info) {
   let infoid = ['info', info.book.author, info.book.title].join('-');
   info._id = infoid;
   return info;
+}
+
+function getOds(odspath, cb) {
+  if (!odspath) return;
+  let ext = path.extname(odspath);
+
+  let bname = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.capitalize(path.basename(odspath, ext));
+
+  try {
+    textract.fromFileWithPath(odspath, {
+      preserveLineBreaks: true,
+      delimiter: '|'
+    }, function (err, str) {
+      let book = parseCSV(bname, str); // cb(book)
+
+      log('ODS STR', book);
+      cb(true);
+    });
+  } catch (err) {
+    if (err) log('ODS ERR', err);
+    cb(false);
+  } // let dir = path.parse(infopath).dir
+  // let bpath = path.resolve(dir, info.book.path)
+  // info.bpath = slash(bpath)
+  // info.infopath = slash(infopath)
+  // info.nics = []
+  // info.stats = []
+  // let book = getDir(info)
+  // pushBook(info, book)
+  //   .then(function(res) {
+  //     cb(true)
+  //   })
+  //   .catch(function(err) {
+  //     log('PUSH BOOK ERR:', err)
+  //   })
+
+}
+
+function parseCSV(bname, str) {
+  let pars = [];
+  let map = {};
+  let rows = str.split('\n');
+  rows = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(rows, row => {
+    return row[0] != '#' && row != ',,';
+  });
+  let rfirst = rows.shift();
+  let nics = rfirst.split(',');
+  let info = {};
+  info.book = {};
+  info.book.title = bname.split('_').map(str => {
+    return lodash__WEBPACK_IMPORTED_MODULE_0___default.a.capitalize(str);
+  }).join(' ');
+  info.book.author = nics[0];
+  log('INFO', info);
+  let infoid = ['info', info.book.author, info.book.title].join('-');
+  info._id = infoid;
+  info.nics = nics;
+  info.stats = [];
+  let fpath = bname;
+  rows.forEach((row, idx) => {
+    let strs;
+    if (/","|,"|",/.test(row)) strs = row.split(/","|,"|",/);else strs = row.split(',');
+    strs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(strs);
+    strs.forEach((str, idy) => {
+      let nic = nics[idy];
+      let text = str.replace(/"/g, '');
+      let parid = ['text', info.book.author, info.book.title, fpath, idx, nic].join('-');
+      let par = {
+        _id: parid,
+        infoid: info._id,
+        pos: idx,
+        nic: nic,
+        fpath: fpath,
+        text: text
+      };
+
+      if (idy == 0) {
+        par.author = true;
+        bookWFMap(map, row, fpath, idx);
+      }
+
+      pars.push(par);
+    });
+  });
+
+  let mapdocs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.values(map);
+
+  log('=>INFO', info);
+  log('=>PARS', pars);
+  log('=>MDS', mapdocs);
+  return {
+    pars: pars,
+    mapdocs: mapdocs
+  };
 }
 
 /***/ }),

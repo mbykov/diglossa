@@ -108,13 +108,9 @@ function readFile(info, fn, pars, map) {
   fpath = slash(fpath)
   fpath = fpath.replace(/^\//, '')
 
-  // info.sections.push(fpath)
   let clean = txt.trim().replace(/\n+/, '\n') //.replace(/\s+/, ' ')
   let rows = _.compact(clean.split('\n'))
   rows.forEach((row, idx)=> {
-    // if (idx == 0) log('ROW', row)
-    // let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-')
-    // let parid = [groupid, nic].join('-')
     let parid = ['text', info.book.author, info.book.title, fpath, idx, nic].join('-')
     let par = { _id: parid, infoid: info._id, pos: idx, nic: nic, fpath: fpath, lang: lang, text: row }
     if (auth && auth.author) {
@@ -188,4 +184,80 @@ function parseInfo(info) {
   let infoid = ['info', info.book.author, info.book.title].join('-')
   info._id = infoid
   return info
+}
+
+export function getOds(odspath, cb) {
+  if (!odspath) return
+  let ext = path.extname(odspath);
+  let bname = _.capitalize(path.basename(odspath, ext))
+  try {
+    textract.fromFileWithPath(odspath, {preserveLineBreaks: true, delimiter: '|'}, function(err, str) {
+      let book = parseCSV(bname, str)
+      // cb(book)
+      log('ODS STR', book)
+      cb(true)
+    })
+  } catch (err) {
+    if (err) log('ODS ERR', err)
+    cb(false)
+  }
+
+  // let dir = path.parse(infopath).dir
+  // let bpath = path.resolve(dir, info.book.path)
+  // info.bpath = slash(bpath)
+  // info.infopath = slash(infopath)
+  // info.nics = []
+  // info.stats = []
+  // let book = getDir(info)
+  // pushBook(info, book)
+  //   .then(function(res) {
+  //     cb(true)
+  //   })
+  //   .catch(function(err) {
+  //     log('PUSH BOOK ERR:', err)
+  //   })
+}
+
+function parseCSV(bname, str) {
+  let pars = []
+  let map = {}
+
+  let rows = str.split('\n')
+  rows = _.filter(rows, row=> { return row[0] != '#' && row != ',,' })
+  let rfirst = rows.shift()
+  let nics = rfirst.split(',')
+  let info = {}
+  info.book = {}
+  info.book.title = bname.split('_').map(str=> { return _.capitalize(str)}).join(' ')
+  info.book.author = nics[0]
+  log('INFO', info)
+  let infoid = ['info', info.book.author, info.book.title].join('-')
+  info._id = infoid
+  info.nics = nics
+  info.stats = []
+
+  let fpath = bname
+  rows.forEach((row, idx) => {
+    let strs
+    if (/","|,"|",/.test(row)) strs = row.split(/","|,"|",/)
+    else strs = row.split(',')
+    strs = _.compact(strs)
+    strs.forEach((str, idy)=> {
+      let nic = nics[idy]
+      let text = str.replace(/"/g, '')
+      let parid = ['text', info.book.author, info.book.title, fpath, idx, nic].join('-')
+      let par = { _id: parid, infoid: info._id, pos: idx, nic: nic, fpath: fpath, text: text }
+      if (idy == 0) {
+        par.author = true
+        bookWFMap(map, row, fpath, idx)
+      }
+      pars.push(par)
+    })
+  })
+  let mapdocs = _.values(map)
+  log('=>INFO', info)
+  log('=>PARS', pars)
+  log('=>MDS', mapdocs)
+
+  return {pars: pars, mapdocs: mapdocs}
 }

@@ -556,3 +556,8 @@ function scrollQueries(ev) {
   next.classList.remove('hidden')
   curpar.classList.add('hidden')
 }
+
+export function parseOds() {
+
+  hideProgress()
+}
