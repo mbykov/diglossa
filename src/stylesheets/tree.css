@@ -6,7 +6,7 @@
 
 .tree-branch {
     margin-left: 5px;
-    /* padding-left: 10px; */
+    padding-left: 10px;
 }
 
 .tree-sign {
@@ -45,7 +45,7 @@ ul.tree-list {
   list-style: none;
 }
 .tree-collapse > ul {
-  display: none;
+    display: none;
 }
 .tree-collapse > div {
   display: none;

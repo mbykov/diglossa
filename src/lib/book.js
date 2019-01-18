@@ -13,6 +13,7 @@ const clipboard = require('electron-clipboard-extended')
 let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
 let rePunct = new RegExp(punct, 'g')
 let limit = 20
+let around = 50
 
 export function parseLib(infos) {
   let osource = q('#library')
@@ -86,6 +87,7 @@ export function parseTitle(state, info) {
   let tbody = create('div', 'tbody')
   otree.appendChild(tbody)
   otrns.appendChild(otree)
+  // log('INFO.TREE', info.tree)
   tree(info.tree, otree)
 
   otree.addEventListener("click", function(ev) {
@@ -169,7 +171,7 @@ function setChunk(state, pars, direction) {
   // position before adding upper chunk:
   if (direction) {
     let firstpos = apars[0].pos
-    let firstel = qs('#source [pos="'+firstpos+'"]')[0]
+    let firstel = qs('#booksource [pos="'+firstpos+'"]')[0]
     let offset = firstel.offsetTop
     otrns.scrollTop = osource.scrollTop = offset
   }
@@ -379,6 +381,7 @@ export function scrollPanes(ev, state) {
       return false
     }
   })
+  // if (state && state.section != 'book') return
   addChunk(state)
 }
 
@@ -400,7 +403,7 @@ export function keyPanes(ev, state) {
   else return
   trns.scrollTop = source.scrollTop
 
-  // if (!current || current.section != 'book') return
+  // if (state && state.section != 'book') return
   addChunk(state)
 }
 
@@ -414,7 +417,6 @@ function addChunk(state) {
     if (!start) return
     let startpos = start.getAttribute('pos')
     if (startpos <= 0) return
-    // log('SET CHUNK rev', start)
 
     let newstart = (startpos - limit > 0) ? startpos - limit : 0
     state.pos = newstart
@@ -427,14 +429,130 @@ function addChunk(state) {
   if (osource.scrollHeight - osource.scrollTop - osource.clientHeight <= 3.0) {
     let start = qs('#booksource > p').length
     state.pos = start
-    // log('SET CHUNK ', start)
     getText(state)
       .then(function(res) {
-        // log('new CHUNK', res.docs)
         setChunk(state, res.docs)
       })
     .catch(function (err) {
       log('GET CHUNK ERR:', err)
     })
   }
+}
+
+export function parseQuery(state, qtree) {
+  let osec = q('#qresults')
+  empty(osec)
+  let otree = create('div', 'tree')
+  otree.id = 'qtree'
+  let otbody = create('div', 'tbody')
+  otree.appendChild(otbody)
+  osec.appendChild(otree)
+  // otree.addEventListener('click', treeClick, false)
+  otree.addEventListener("click", function(ev) {
+    treeClick(ev, state)
+  }, false)
+  // otree.addEventListener('click', jumpPos, false)
+  otree.addEventListener("wheel", scrollQueries, false)
+
+  // log('QTRE', qtree)
+  for (let infoid in qtree) {
+    let child  = {text: infoid}
+    let ibranch = branch(child)
+    otbody.appendChild(ibranch)
+
+    let inode = qtree[infoid]
+    for (let fpath in inode) {
+      let fchild  = {text: fpath}
+      let fbranch = branch(fchild)
+      ibranch.appendChild(fbranch)
+
+      let fnode = inode[fpath]
+      for (let pos in fnode) {
+        let pars = fnode[pos]
+        let auth = _.find(pars, par=> { return par.author })
+        let trns = _.filter(pars, par=> { return !par.author })
+
+        let otext = div('', 'qtext')
+        fbranch.appendChild(otext)
+        otext.setAttribute('pos', pos)
+        otext.setAttribute('fpath', fpath)
+        otext.setAttribute('infoid', infoid)
+
+        let {html, percent} = aroundQuery(auth.text, state.query, pos)
+        // if (pos == 5) log('NODE', html)
+        let oauth = p('', 'qline')
+        oauth.innerHTML = html
+        otext.appendChild(oauth)
+      }
+    }
+  }
+
+  hideProgress()
+}
+
+function branch(node) {
+  let onode = create('div', 'tree-branch')
+  let osign = create('span', 'tree-sign')
+  osign.textContent = '▾'
+  onode.appendChild(osign)
+  let otext = create('span', 'tree-node-branch')
+  otext.textContent = node.text
+  onode.appendChild(otext)
+  let tbody = create('div', 'tbody')
+  onode.appendChild(tbody)
+  return onode
+}
+
+function aroundQuery(str, wf, pos) {
+  let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)'
+  let rePunct = new RegExp(punct, 'g')
+  let arr = str.split(wf)
+  let head = arr[0].slice(-around)
+  let percent = head.length/str.length
+  head =  head.replace(rePunct, "<span class=\"active\">$1<\/span>")
+  let tail = arr.slice(1).join('').slice(0, around)
+  tail = tail.replace(rePunct, "<span class=\"active\">$1<\/span>")
+  let qspan = ['<span class="query">', wf, '</span>'].join('')
+  let html = [head, qspan, tail] .join('')
+  return {html: html, percent: percent}
+}
+
+function treeClick(ev, state) {
+  let parent = ev.target.parentNode
+  if (ev.target.classList.contains('tree-node-branch')) {
+    parent.classList.toggle('tree-collapse')
+  } else if (ev.target.classList.contains('active') || ev.target.classList.contains('query')) {
+    // let praparent = parent.parentNode
+    // log('PRAPARENT', praparent)
+    let target = ev.target.closest('.qtext')
+    log('PATHEL', target)
+    jumpPos(target, state.query)
+  }
+}
+
+function jumpPos(el, query) {
+  let infoid = el.getAttribute('infoid')
+  let fpath = el.getAttribute('fpath')
+  let pos = el.getAttribute('pos')
+  let state = {section: "book", infoid: infoid, fpath: fpath, pos: pos, query: query}
+  navigate(state)
+}
+
+function scrollQueries(ev) {
+  if (ev.shiftKey != true) return
+  log('SCROLL', ev.target)
+  return
+  let el = ev.target
+  let parent = el.closest('.qtext')
+  if (!parent) return
+  let pars = parent.children
+  let nics = _.map(pars, par=> { return par.getAttribute('nic') })
+
+  let curpar = _.find(pars, par=> { return !par.classList.contains('hidden') })
+  let nic = curpar.getAttribute('nic')
+  let nicidx = nics.indexOf(nic)
+  let nextnic = (nicidx+1 == nics.length) ? nics[0] : nics[nicidx+1]
+  let next = _.find(pars, par=> { return par.getAttribute('nic') == nextnic })
+  next.classList.remove('hidden')
+  curpar.classList.add('hidden')
 }

@@ -5,7 +5,7 @@ import Split from 'split.js'
 // import { bookData, scrollPanes, keyPanes, parseLib, parseTitle, parseBook } from './lib/book'
 import { scrollPanes, keyPanes } from './book'
 // import { parseLib, parseTitle } from './book'
-import { getLib, getTitle, getBook, searchBook } from './pouch'
+import { getInfo, getLib, getTitle, getBook, getQuery } from './pouch'
 
 
 const log = console.log
@@ -23,7 +23,6 @@ let hstate = 0
 let split
 
 function goLeft() {
-  // log('<<=== LEFT', hstate)
   if (hstate - 1 < 0) return
   if (hstate - 1 >= 0) hstate--
   let state = history[hstate]
@@ -32,7 +31,6 @@ function goLeft() {
 }
 
 function goRight() {
-  // log('===>> RIGHT', hstate)
   if (hstate + 1 >= history.length) return
   if (hstate + 1 < history.length) hstate++
   let state = history[hstate]
@@ -110,6 +108,15 @@ Mousetrap.bind(['ctrl+f'], function(ev) {
   navigate({section: 'search', query: query})
 })
 
+Mousetrap.bind(['ctrl+v'], function(ev) {
+  let state = settings.get('state')
+  getInfo(state.infoid)
+    .then(function(info) {
+      log('CTRL V state', JSON.parse(JSON.stringify(state)), info)
+    })
+  // navigate({section: 'search', query: query})
+})
+
 Mousetrap.bind(['esc'], function(ev) {
   // log('ESC')
   // похоже, общий метод не получится
@@ -129,10 +136,10 @@ function sectionTrigger(section) {
 }
 
 export function navigate(state) {
-  log('NAV-state', JSON.stringify(state))
-  let progress = q('#progress')
-  progress.classList.add('is-shown')
+  log('NAV-state', JSON.parse(JSON.stringify(state)))
   let section = state.section
+  let progress = q('#progress')
+  if (['title', 'book', 'search'].includes(section)) progress.classList.add('is-shown')
   sectionTrigger(section)
   // delete state.nic
   if (!state.old) {
@@ -147,10 +154,8 @@ export function navigate(state) {
   if (section == 'home')  getLib()
   else if (section == 'title') twoPanesTitle(state), getTitle(state)
   else if (section == 'book') twoPanes(state), getBook(state)
-  // else if (section == 'cleanup') goCleanup(state)
-  else if (section == 'search') searchBook(state)
+  else if (section == 'search') getQuery(state)
   // else showSection(section)
-  if (!['title', 'book'].includes(section)) progress.classList.remove('is-shown')
 
   settings.set('state', state)
 }

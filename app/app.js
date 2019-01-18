@@ -257,7 +257,7 @@ electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('action', function (even
 /*!*************************!*\
   !*** ./src/lib/book.js ***!
   \*************************/
-/*! exports provided: parseLib, parseTitle, parseBook, scrollPanes, keyPanes */
+/*! exports provided: parseLib, parseTitle, parseBook, scrollPanes, keyPanes, parseQuery */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -267,6 +267,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseBook", function() { return parseBook; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "scrollPanes", function() { return scrollPanes; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "keyPanes", function() { return keyPanes; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "parseQuery", function() { return parseQuery; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
@@ -291,6 +292,7 @@ const clipboard = __webpack_require__(/*! electron-clipboard-extended */ "electr
 let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
 let rePunct = new RegExp(punct, 'g');
 let limit = 20;
+let around = 50;
 function parseLib(infos) {
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#library');
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(osource);
@@ -361,7 +363,8 @@ function parseTitle(state, info) {
   otree.id = 'tree';
   let tbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tbody');
   otree.appendChild(tbody);
-  otrns.appendChild(otree);
+  otrns.appendChild(otree); // log('INFO.TREE', info.tree)
+
   Object(_tree__WEBPACK_IMPORTED_MODULE_2__["tree"])(info.tree, otree);
   otree.addEventListener("click", function (ev) {
     goBookEvent(ev, info);
@@ -452,7 +455,7 @@ function setChunk(state, pars, direction) {
 
   if (direction) {
     let firstpos = apars[0].pos;
-    let firstel = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])('#source [pos="' + firstpos + '"]')[0];
+    let firstel = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])('#booksource [pos="' + firstpos + '"]')[0];
     let offset = firstel.offsetTop;
     otrns.scrollTop = osource.scrollTop = offset;
   }
@@ -668,7 +671,8 @@ function scrollPanes(ev, state) {
       state.pos = el.getAttribute('pos');
       return false;
     }
-  });
+  }); // if (state && state.section != 'book') return
+
 
   addChunk(state);
 }
@@ -688,7 +692,7 @@ function keyPanes(ev, state) {
     source.scrollTop = source.scrollTop + height - 60;
   } else return;
 
-  trns.scrollTop = source.scrollTop; // if (!current || current.section != 'book') return
+  trns.scrollTop = source.scrollTop; // if (state && state.section != 'book') return
 
   addChunk(state);
 }
@@ -701,8 +705,7 @@ function addChunk(state) {
     let start = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])('#booksource > p')[0];
     if (!start) return;
     let startpos = start.getAttribute('pos');
-    if (startpos <= 0) return; // log('SET CHUNK rev', start)
-
+    if (startpos <= 0) return;
     let newstart = startpos - limit > 0 ? startpos - limit : 0;
     state.pos = newstart;
     Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getText"])(state, startpos).then(function (res) {
@@ -712,15 +715,162 @@ function addChunk(state) {
 
   if (osource.scrollHeight - osource.scrollTop - osource.clientHeight <= 3.0) {
     let start = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])('#booksource > p').length;
-    state.pos = start; // log('SET CHUNK ', start)
-
+    state.pos = start;
     Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getText"])(state).then(function (res) {
-      // log('new CHUNK', res.docs)
       setChunk(state, res.docs);
     }).catch(function (err) {
       log('GET CHUNK ERR:', err);
     });
   }
+}
+
+function parseQuery(state, qtree) {
+  let osec = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#qresults');
+  Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(osec);
+  let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tree');
+  otree.id = 'qtree';
+  let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tbody');
+  otree.appendChild(otbody);
+  osec.appendChild(otree); // otree.addEventListener('click', treeClick, false)
+
+  otree.addEventListener("click", function (ev) {
+    treeClick(ev, state);
+  }, false); // otree.addEventListener('click', jumpPos, false)
+
+  otree.addEventListener("wheel", scrollQueries, false); // log('QTRE', qtree)
+
+  for (let infoid in qtree) {
+    let child = {
+      text: infoid
+    };
+    let ibranch = branch(child);
+    otbody.appendChild(ibranch);
+    let inode = qtree[infoid];
+
+    for (let fpath in inode) {
+      let fchild = {
+        text: fpath
+      };
+      let fbranch = branch(fchild);
+      ibranch.appendChild(fbranch);
+      let fnode = inode[fpath];
+
+      for (let pos in fnode) {
+        let pars = fnode[pos];
+
+        let auth = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(pars, par => {
+          return par.author;
+        });
+
+        let trns = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
+          return !par.author;
+        });
+
+        let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["div"])('', 'qtext');
+        fbranch.appendChild(otext);
+        otext.setAttribute('pos', pos);
+        otext.setAttribute('fpath', fpath);
+        otext.setAttribute('infoid', infoid);
+        let {
+          html,
+          percent
+        } = aroundQuery(auth.text, state.query, pos); // if (pos == 5) log('NODE', html)
+
+        let oauth = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["p"])('', 'qline');
+        oauth.innerHTML = html;
+        otext.appendChild(oauth);
+      }
+    }
+  }
+
+  hideProgress();
+}
+
+function branch(node) {
+  let onode = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tree-branch');
+  let osign = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('span', 'tree-sign');
+  osign.textContent = '▾';
+  onode.appendChild(osign);
+  let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('span', 'tree-node-branch');
+  otext.textContent = node.text;
+  onode.appendChild(otext);
+  let tbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tbody');
+  onode.appendChild(tbody);
+  return onode;
+}
+
+function aroundQuery(str, wf, pos) {
+  let punct = '([^\.,\/#!$%\^&\*;:{}=\-_`~()a-zA-Z0-9\'"<> ]+)';
+  let rePunct = new RegExp(punct, 'g');
+  let arr = str.split(wf);
+  let head = arr[0].slice(-around);
+  let percent = head.length / str.length;
+  head = head.replace(rePunct, "<span class=\"active\">$1<\/span>");
+  let tail = arr.slice(1).join('').slice(0, around);
+  tail = tail.replace(rePunct, "<span class=\"active\">$1<\/span>");
+  let qspan = ['<span class="query">', wf, '</span>'].join('');
+  let html = [head, qspan, tail].join('');
+  return {
+    html: html,
+    percent: percent
+  };
+}
+
+function treeClick(ev, state) {
+  let parent = ev.target.parentNode;
+
+  if (ev.target.classList.contains('tree-node-branch')) {
+    parent.classList.toggle('tree-collapse');
+  } else if (ev.target.classList.contains('active') || ev.target.classList.contains('query')) {
+    // let praparent = parent.parentNode
+    // log('PRAPARENT', praparent)
+    let target = ev.target.closest('.qtext');
+    log('PATHEL', target);
+    jumpPos(target, state.query);
+  }
+}
+
+function jumpPos(el, query) {
+  let infoid = el.getAttribute('infoid');
+  let fpath = el.getAttribute('fpath');
+  let pos = el.getAttribute('pos');
+  let state = {
+    section: "book",
+    infoid: infoid,
+    fpath: fpath,
+    pos: pos,
+    query: query
+  };
+  Object(_nav__WEBPACK_IMPORTED_MODULE_3__["navigate"])(state);
+}
+
+function scrollQueries(ev) {
+  if (ev.shiftKey != true) return;
+  log('SCROLL', ev.target);
+  return;
+  let el = ev.target;
+  let parent = el.closest('.qtext');
+  if (!parent) return;
+  let pars = parent.children;
+
+  let nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.map(pars, par => {
+    return par.getAttribute('nic');
+  });
+
+  let curpar = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(pars, par => {
+    return !par.classList.contains('hidden');
+  });
+
+  let nic = curpar.getAttribute('nic');
+  let nicidx = nics.indexOf(nic);
+  let nextnic = nicidx + 1 == nics.length ? nics[0] : nics[nicidx + 1];
+
+  let next = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(pars, par => {
+    return par.getAttribute('nic') == nextnic;
+  });
+
+  next.classList.remove('hidden');
+  curpar.classList.add('hidden');
 }
 
 /***/ }),
@@ -865,9 +1015,8 @@ function getDir(info) {
   let tree = shortTree(children, info.bpath);
   info.tree = tree;
   log('SHORT TREE', tree);
-  walkRead(info, fulltree, pars, map);
-  log('==>', pars.length);
-  log('==>', map[7939]); // let mapdocs = map2mapdoc(info.nics, map)
+  walkRead(info, fulltree, pars, map); // log('==>', pars.length)
+  // log('==>', map[7939])
 
   let mapdocs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.values(map);
 
@@ -876,25 +1025,7 @@ function getDir(info) {
     mapdocs: mapdocs
   };
   return book;
-} // function map2mapdoc(nics, map) {
-//   let mapnics = {}
-//   for (let id in map) {
-//     map[id].groupids.forEach(groupid=> {
-//       nics.forEach(nic=> {
-//         let parid = [groupid, nic].join('-')
-//         if (!mapnics[id]) mapnics[id] = []
-//         mapnics[id].push(parid)
-//       })
-//     })
-//   }
-//   let mapdocs = []
-//   for (let wf in mapnics) {
-//     let mapdoc = {_id: wf, parids: mapnics[wf]}
-//     mapdocs.push(mapdoc)
-//   }
-//   return mapdocs
-// }
-
+}
 
 function shortTree(children, bpath) {
   children.forEach(child => {
@@ -965,8 +1096,9 @@ function readFile(info, fn, pars, map) {
 
   rows.forEach((row, idx) => {
     // if (idx == 0) log('ROW', row)
-    let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-');
-    let parid = [groupid, nic].join('-');
+    // let groupid = ['text', info.book.author, info.book.title, fpath, idx].join('-')
+    // let parid = [groupid, nic].join('-')
+    let parid = ['text', info.book.author, info.book.title, fpath, idx, nic].join('-');
     let par = {
       _id: parid,
       infoid: info._id,
@@ -978,8 +1110,7 @@ function readFile(info, fn, pars, map) {
     };
 
     if (auth && auth.author) {
-      par.author = true; // bookWFMap(map, row, groupid)
-
+      par.author = true;
       bookWFMap(map, row, fpath, idx);
     }
 
@@ -1012,18 +1143,15 @@ function bookWFMap(map, row, fpath, pos) {
     };
     map[id].docs.push(doc);
   });
-}
-
-function bookWFMap_(map, row, groupid) {
-  let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g, '');
-
-  let wfs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(punctless.split(' '));
-
-  wfs.forEach(wf => {
-    if (!map[wf]) map[wf] = [];
-    map[wf].push(groupid);
-  });
-} //   if (['.info', '.json', '.txt'].includes(ext)) return
+} // function bookWFMap_(map, row, groupid) {
+//   let punctless = row.replace(/[.,\/#!$%\^&\*;:{}«»=\|\-+_`~()a-zA-Z0-9'"<>\[\]]/g,'')
+//   let wfs = _.compact(punctless.split(' '))
+//   wfs.forEach(wf=> {
+//     if (!map[wf]) map[wf] = []
+//     map[wf].push(groupid)
+//   })
+// }
+//   if (['.info', '.json', '.txt'].includes(ext)) return
 
 
 function walk(children) {
@@ -1147,7 +1275,6 @@ let hstate = 0;
 let split;
 
 function goLeft() {
-  // log('<<=== LEFT', hstate)
   if (hstate - 1 < 0) return;
   if (hstate - 1 >= 0) hstate--;
   let state = history[hstate];
@@ -1156,7 +1283,6 @@ function goLeft() {
 }
 
 function goRight() {
-  // log('===>> RIGHT', hstate)
   if (hstate + 1 >= history.length) return;
   if (hstate + 1 < history.length) hstate++;
   let state = history[hstate];
@@ -1224,6 +1350,12 @@ Mousetrap.bind(['ctrl+f'], function (ev) {
     query: query
   });
 });
+Mousetrap.bind(['ctrl+v'], function (ev) {
+  let state = settings.get('state');
+  Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getInfo"])(state.infoid).then(function (info) {
+    log('CTRL V state', JSON.parse(JSON.stringify(state)), info);
+  }); // navigate({section: 'search', query: query})
+});
 Mousetrap.bind(['esc'], function (ev) {// log('ESC')
   // похоже, общий метод не получится
 });
@@ -1242,10 +1374,10 @@ function sectionTrigger(section) {
 }
 
 function navigate(state) {
-  log('NAV-state', JSON.stringify(state));
-  let progress = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#progress');
-  progress.classList.add('is-shown');
+  log('NAV-state', JSON.parse(JSON.stringify(state)));
   let section = state.section;
+  let progress = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#progress');
+  if (['title', 'book', 'search'].includes(section)) progress.classList.add('is-shown');
   sectionTrigger(section); // delete state.nic
 
   if (!state.old) {
@@ -1257,10 +1389,8 @@ function navigate(state) {
   } // log('HISTORY', history)
 
 
-  if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getLib"])();else if (section == 'title') twoPanesTitle(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getTitle"])(state);else if (section == 'book') twoPanes(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getBook"])(state); // else if (section == 'cleanup') goCleanup(state)
-  else if (section == 'search') Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["searchBook"])(state); // else showSection(section)
+  if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getLib"])();else if (section == 'title') twoPanesTitle(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getTitle"])(state);else if (section == 'book') twoPanes(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getBook"])(state);else if (section == 'search') Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getQuery"])(state); // else showSection(section)
 
-  if (!['title', 'book'].includes(section)) progress.classList.remove('is-shown');
   settings.set('state', state);
 }
 
@@ -1270,7 +1400,7 @@ function navigate(state) {
 /*!**************************!*\
   !*** ./src/lib/pouch.js ***!
   \**************************/
-/*! exports provided: pushBook, pushInfo, getLib, getInfo, getTitle, getBook, getText, cleanup, searchBook, searchBook_ */
+/*! exports provided: pushBook, pushInfo, getLib, getInfo, getTitle, getBook, getText, cleanup, getQuery */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1283,8 +1413,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getBook", function() { return getBook; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getText", function() { return getText; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "cleanup", function() { return cleanup; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "searchBook", function() { return searchBook; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "searchBook_", function() { return searchBook_; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getQuery", function() { return getQuery; });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! electron */ "electron");
@@ -1309,9 +1438,9 @@ let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
 const isDev = __webpack_require__(/*! electron-is-dev */ "electron-is-dev"); // const isDev = false
 // const isDev = true
+// log('=====IS-DEV', isDev)
 
 
-log('=====IS-DEV', isDev);
 const limit = 20;
 const app = electron__WEBPACK_IMPORTED_MODULE_1__["remote"].app;
 const apath = app.getAppPath();
@@ -1491,7 +1620,6 @@ function getText(state, endpos) {
       $lt: end
     }
   };
-  log('SELECTOR1', selector);
   return libdb.find({
     selector: selector
   }); // sort: ['idx'], , limit: 20
@@ -1500,18 +1628,20 @@ function cleanup() {
   log('before destroy');
   return Promise.all([libdb.destroy(), ftdb.destroy()]);
 }
-function searchBook(state) {
+function getQuery(state) {
   let selector = {
     wf: state.query
   };
   ftdb.find({
     selector: selector
   }).then(function (res) {
-    let ftdocs = res.docs;
-    if (ftdocs.length > 1) throw new Error('FTDOCS > 1');
-    let docs = ftdocs[0].docs;
+    let ftdocs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.flatten(res.docs.map(doc => {
+      return doc.docs;
+    })); // log('FTDOCS', ftdocs)
+
+
     let selector = {
-      $or: docs.map(doc => {
+      $or: ftdocs.map(doc => {
         return {
           fpath: doc.fpath,
           pos: doc.pos
@@ -1521,12 +1651,10 @@ function searchBook(state) {
     libdb.find({
       selector: selector
     }).then(function (res) {
-      let qtree = {};
-      log('SEARCH res', res.docs.length);
+      let qtree = []; // log('SEARCH res.docs', res.docs)
 
-      let qinfos = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(res.docs, 'infoid');
+      let qinfos = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(res.docs, 'infoid'); // log('QINFOS', qinfos)
 
-      log('QINFOS', qinfos);
 
       for (let infoid in qinfos) {
         let gqinfo = qinfos[infoid];
@@ -1549,64 +1677,11 @@ function searchBook(state) {
         }
       }
 
-      log('QTRE', qtree);
+      Object(_book__WEBPACK_IMPORTED_MODULE_3__["parseQuery"])(state, qtree);
     });
   }).catch(function (err) {
     log('SEARCH ERR:', err);
   });
-}
-function searchBook_(ftselector) {
-  return ftdb.find({
-    selector: ftselector
-  }).then(function (res) {
-    // log('SEARCH RES:', res)
-    let ftdocs = res.docs;
-    if (ftdocs.length > 1) throw new Error('FTDOCS > 1'); // log('SEARCH FDOCS:', ftdocs.length)
-    // log('SEARCH FDOCS:', ftdocs[0].wf)
-
-    let docs = ftdocs[0].docs; // log('SEARCH FDOCS:', ftdocs[0].docs)
-
-    let selector = {
-      $or: docs.map(doc => {
-        return {
-          fpath: doc.fpath,
-          pos: doc.pos
-        };
-      }) // log('SELECTOR2', selector)
-      // return libdb.find({selector: selector, use_index: 'fpathindex'})
-
-    };
-    return libdb.find({
-      selector: selector
-    }); // return ftdocs
-  }).catch(function (err) {
-    log('SEARCH ERR:', err);
-  }); // return ftdb.get(query)
-  // .then(function (wfdoc) {
-  //   let opts = { include_docs: true, keys: wfdoc.parids }
-  //   return libdb.allDocs(opts)
-  //     .then(function (result) {
-  //       let qdocs = _.compact(result.rows.map(row=> { return row.doc}))
-  //       let qinfos = _.groupBy(qdocs, 'infoid')
-  //       log('POUCH-QINFOS', qinfos)
-  //       for (let infoid in qinfos) {
-  //         let gqinfo = qinfos[infoid]
-  //         let qgroups = _.groupBy(gqinfo, 'fpath')
-  //         for (let fpath in qgroups) {
-  //           let qgroup = qgroups[fpath]
-  //           let qpos = _.groupBy(qgroup, 'pos')
-  //           for (let pos in qpos) {
-  //             let qlines = qpos[pos]
-  //             // log('Id', infoid, 'fp', fpath, 'p', pos, 'ql', qlines)
-  //           }
-  //         }
-  //       }
-  //       return qinfos
-  //     })
-  // })
-  // .catch(function (err) {
-  //   log('SEARCH ERR:', err)
-  // })
 }
 
 /***/ }),
@@ -1615,18 +1690,18 @@ function searchBook_(ftselector) {
 /*!*************************!*\
   !*** ./src/lib/tree.js ***!
   \*************************/
-/*! exports provided: tree */
+/*! exports provided: tree, leaf_, branch */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "tree", function() { return tree; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "leaf_", function() { return leaf_; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "branch", function() { return branch; });
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
 //
 
-let log = console.log; // export default function treeTitle(deftitle) {
-// }
-
+let log = console.log;
 function tree(children, otree) {
   let tbody = otree.lastChild;
   children.forEach(node => {
@@ -1659,8 +1734,8 @@ function createBranch(node) {
   osign.addEventListener('click', toggleNode, false);
   onode.appendChild(osign);
   let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-node-branch');
-  otext.textContent = node.text;
-  if (node.fpath) otext.setAttribute('fpath', node.fpath);
+  otext.textContent = node.text; // if (node.fpath) otext.setAttribute('fpath', node.fpath)
+
   onode.appendChild(otext);
   let tbody = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tbody');
   onode.appendChild(tbody);
@@ -1670,6 +1745,28 @@ function createBranch(node) {
 function toggleNode(ev) {
   let parent = ev.target.parentNode;
   parent.classList.toggle('tree-collapse');
+}
+
+function leaf_(node) {
+  let onode = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-text');
+  let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-node-text');
+  otext.textContent = node.text;
+  otext.setAttribute('fpath', node.fpath);
+  onode.appendChild(otext);
+  return onode;
+}
+function branch(node) {
+  let onode = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tree-branch');
+  let osign = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-sign');
+  osign.textContent = '▾';
+  onode.addEventListener('click', toggleNode, false);
+  onode.appendChild(osign);
+  let otext = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('span', 'tree-node-branch');
+  otext.textContent = node.text;
+  onode.appendChild(otext);
+  let tbody = Object(_utils__WEBPACK_IMPORTED_MODULE_0__["create"])('div', 'tbody');
+  onode.appendChild(tbody);
+  return onode;
 }
 
 /***/ }),

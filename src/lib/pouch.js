@@ -2,7 +2,7 @@
 import _ from "lodash"
 import { remote } from "electron"
 import { q } from './utils'
-import { parseLib, parseTitle, parseBook } from './book'
+import { parseLib, parseTitle, parseBook, parseQuery } from './book'
 const { getCurrentWindow } = require('electron').remote
 
 const log = console.log
@@ -12,7 +12,7 @@ let fse = require('fs-extra')
 const isDev = require('electron-is-dev')
 // const isDev = false
 // const isDev = true
-log('=====IS-DEV', isDev)
+// log('=====IS-DEV', isDev)
 const limit = 20
 
 const app = remote.app
@@ -193,7 +193,6 @@ export function getText(state, endpos) {
   let start = state.pos*1 || 0
   let end = endpos*1 || start*1 + limit*1
   let selector = {fpath: fpath, pos: {$gte: start, $lt: end}}
-  log('SELECTOR1', selector)
   return libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
 }
 
@@ -205,20 +204,19 @@ export function cleanup() {
   ])
 }
 
-export function searchBook(state) {
+export function getQuery(state) {
   let selector = {wf: state.query}
   ftdb.find({selector: selector})
     .then(function (res) {
-      let ftdocs = res.docs
-      if (ftdocs.length > 1) throw new Error('FTDOCS > 1')
-      let docs = ftdocs[0].docs
-      let selector = {$or: docs.map(doc=> { return {fpath: doc.fpath, pos: doc.pos }})}
+      let ftdocs = _.flatten(res.docs.map(doc=> { return doc.docs }))
+      // log('FTDOCS', ftdocs)
+      let selector = {$or: ftdocs.map(doc=> { return {fpath: doc.fpath, pos: doc.pos }})}
       libdb.find({selector: selector})
         .then(function(res) {
-          let qtree = {}
-          log('SEARCH res', res.docs.length)
+          let qtree = []
+          // log('SEARCH res.docs', res.docs)
           let qinfos = _.groupBy(res.docs, 'infoid')
-          log('QINFOS', qinfos)
+          // log('QINFOS', qinfos)
 
           for (let infoid in qinfos) {
             let gqinfo = qinfos[infoid]
@@ -234,62 +232,10 @@ export function searchBook(state) {
               }
             }
           }
-          log('QTRE', qtree)
+          parseQuery(state, qtree)
         })
     }).catch(function (err) {
       log('SEARCH ERR:', err)
     })
 
-}
-
-export function searchBook_(ftselector) {
-  return ftdb.find({selector: ftselector})
-    .then(function (res) {
-      // log('SEARCH RES:', res)
-      let ftdocs = res.docs
-      if (ftdocs.length > 1) throw new Error('FTDOCS > 1')
-      // log('SEARCH FDOCS:', ftdocs.length)
-      // log('SEARCH FDOCS:', ftdocs[0].wf)
-      let docs = ftdocs[0].docs
-      // log('SEARCH FDOCS:', ftdocs[0].docs)
-
-      let selector = {$or: docs.map(doc=> { return {fpath: doc.fpath, pos: doc.pos }})}
-      // log('SELECTOR2', selector)
-      // return libdb.find({selector: selector, use_index: 'fpathindex'})
-      return libdb.find({selector: selector})
-      // return ftdocs
-    }).catch(function (err) {
-      log('SEARCH ERR:', err)
-    })
-
-
-  // return ftdb.get(query)
-
-  // .then(function (wfdoc) {
-    //   let opts = { include_docs: true, keys: wfdoc.parids }
-    //   return libdb.allDocs(opts)
-    //     .then(function (result) {
-    //       let qdocs = _.compact(result.rows.map(row=> { return row.doc}))
-    //       let qinfos = _.groupBy(qdocs, 'infoid')
-    //       log('POUCH-QINFOS', qinfos)
-    //       for (let infoid in qinfos) {
-    //         let gqinfo = qinfos[infoid]
-    //         let qgroups = _.groupBy(gqinfo, 'fpath')
-    //         for (let fpath in qgroups) {
-    //           let qgroup = qgroups[fpath]
-    //           let qpos = _.groupBy(qgroup, 'pos')
-    //           for (let pos in qpos) {
-    //             let qlines = qpos[pos]
-    //             // log('Id', infoid, 'fp', fpath, 'p', pos, 'ql', qlines)
-    //           }
-    //         }
-
-    //       }
-
-    //       return qinfos
-    //     })
-    // })
-    // .catch(function (err) {
-    //   log('SEARCH ERR:', err)
-    // })
 }
