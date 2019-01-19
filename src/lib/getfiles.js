@@ -220,7 +220,6 @@ function parseCSV(fpath, str) {
   info.book = {}
   info.book.title = fpath.split('_').map(str=> { return _.capitalize(str)}).join(' ')
   info.book.author = nics[0]
-  log('INFO', info)
   let infoid = ['info', info.book.author, info.book.title].join('-')
   info._id = infoid
   info.nics = nics
@@ -228,8 +227,9 @@ function parseCSV(fpath, str) {
   info.nicnames = {}
   nics.forEach(nic=> { info.nicnames[nic] = nic })
   let tree = []
-  let cnics = nics.shift()
-  let child = {text: fpath, children: [], fpath: fpath, cnics: cnics, nic: cnics[0]}
+  // let cnics = nics.slice(1)
+  let child = {text: fpath, children: [], fpath: fpath, cnics: nics, nic: nics[1]}
+  if (child.cnics.length == 1) child.mono = true
   tree.push(child)
   info.tree = tree
 

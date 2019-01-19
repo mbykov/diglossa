@@ -251,10 +251,15 @@ electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('reread', function (even
 
   Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_6__["getInfo"])(state.infoid).then(function (info) {
     log('GET INFO', info.infopath);
-    Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_4__["getInfoFiles"])(info.infopath, function (res) {
-      log('REREAD BOOK OK state', state);
+
+    if (info.infopath) {
+      Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_4__["getInfoFiles"])(info.infopath, function (res) {
+        log('REREAD BOOK OK state', state);
+        Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
+      });
+    } else {
       Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
-    });
+    }
   }).catch(function (err) {
     log('RE-READ BOOK ERR:', err);
   });
@@ -348,6 +353,7 @@ function goTitleEvent(ev) {
 }
 
 function parseTitle(state, info) {
+  log('TITLE STATE', state);
   log('TITLE INFO', info);
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#titlesource');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#titletrns');
@@ -444,8 +450,9 @@ function setChunk(state, pars, direction) {
 
   let tpars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(pars, par => {
     return !par.author;
-  }); // log('APARS', apars)
+  });
 
+  if (!apars.length) return; // log('APARS', apars)
 
   apars.forEach(apar => {
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>");
@@ -733,6 +740,7 @@ function addChunk(state) {
     let newstart = startpos - limit > 0 ? startpos - limit : 0;
     state.pos = newstart;
     Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getText"])(state, startpos).then(function (res) {
+      if (!res.docs.length) return;
       setChunk(state, lodash__WEBPACK_IMPORTED_MODULE_0___default.a.reverse(res.docs), true);
     });
   }
@@ -1286,7 +1294,6 @@ function parseCSV(fpath, str) {
     return lodash__WEBPACK_IMPORTED_MODULE_0___default.a.capitalize(str);
   }).join(' ');
   info.book.author = nics[0];
-  log('INFO', info);
   let infoid = ['info', info.book.author, info.book.title].join('-');
   info._id = infoid;
   info.nics = nics;
@@ -1295,15 +1302,16 @@ function parseCSV(fpath, str) {
   nics.forEach(nic => {
     info.nicnames[nic] = nic;
   });
-  let tree = [];
-  let cnics = nics.shift();
+  let tree = []; // let cnics = nics.slice(1)
+
   let child = {
     text: fpath,
     children: [],
     fpath: fpath,
-    cnics: cnics,
-    nic: cnics[0]
+    cnics: nics,
+    nic: nics[1]
   };
+  if (child.cnics.length == 1) child.mono = true;
   tree.push(child);
   info.tree = tree;
   rows.forEach((row, idx) => {

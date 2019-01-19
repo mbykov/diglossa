@@ -45,6 +45,7 @@ function goTitleEvent(ev) {
 
 
 export function parseTitle(state, info) {
+  log('TITLE STATE', state)
   log('TITLE INFO', info)
   let osource = q('#titlesource')
   let otrns = q('#titletrns')
@@ -139,6 +140,7 @@ function setChunk(state, pars, direction) {
 
   let apars = _.filter(pars, par=> { return par.author})
   let tpars = _.filter(pars, par=> { return !par.author})
+  if (!apars.length) return
   // log('APARS', apars)
   apars.forEach(apar=> {
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>")
@@ -422,6 +424,7 @@ function addChunk(state) {
     state.pos = newstart
     getText(state, startpos)
       .then(function(res) {
+        if (!res.docs.length) return
         setChunk(state, _.reverse(res.docs), true)
       })
   }
