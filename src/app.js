@@ -126,14 +126,17 @@ ipcRenderer.on('reread', function (event) {
   }
   getInfo(state.infoid)
     .then(function (info) {
-      log('GET INFO', info.infopath)
+      log('GET INFO', info)
       if (info.infopath) {
         getInfoFiles(info.infopath, function(res) {
           log('REREAD BOOK OK state', state)
           navigate(state)
         })
       } else {
-        navigate(state)
+        getOds(info.odspath, function(res) {
+          log('ODS RES', res)
+          navigate(state)
+        })
       }
     }).catch(function(err) {
       log('RE-READ BOOK ERR:', err)

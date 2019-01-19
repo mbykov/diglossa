@@ -231,11 +231,11 @@ span.active {
   cursor: pointer;
 }
 
-/* #lib { */
-/*   margin-left: 150px; */
-/*   margin-top: 100px; */
-/*   cursor: pointer; */
-/* } */
+span.query {
+    cursor: pointer;
+    color: maroon;
+    font-weight: bold;
+}
 
 .libauth {
   padding-top: 25px;
@@ -278,11 +278,6 @@ div.hleft.header > div.tree {
 
 .qtext {
   padding-left: 15px;
-}
-
-.query {
-  color: maroon;
-  font-weight: bold;
 }
 
 /* #source > div:nth-child(2) > p:nth-child(4) */

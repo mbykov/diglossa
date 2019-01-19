@@ -250,7 +250,7 @@ electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('reread', function (even
   }
 
   Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_6__["getInfo"])(state.infoid).then(function (info) {
-    log('GET INFO', info.infopath);
+    log('GET INFO', info);
 
     if (info.infopath) {
       Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_4__["getInfoFiles"])(info.infopath, function (res) {
@@ -258,7 +258,10 @@ electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('reread', function (even
         Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
       });
     } else {
-      Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
+      Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_4__["getOds"])(info.odspath, function (res) {
+        log('ODS RES', res);
+        Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
+      });
     }
   }).catch(function (err) {
     log('RE-READ BOOK ERR:', err);
@@ -852,12 +855,9 @@ function treeClick(ev, state) {
   let parent = ev.target.parentNode;
 
   if (ev.target.classList.contains('tree-node-branch')) {
-    parent.classList.toggle('tree-collapse');
-  } else if (ev.target.classList.contains('active') || ev.target.classList.contains('query')) {
-    // let praparent = parent.parentNode
-    // log('PRAPARENT', praparent)
+    parent.classList.toggle('tree-collapse'); // } else if (ev.target.classList.contains('active') || ev.target.classList.contains('query')) {
+  } else if (ev.target.classList.contains('query')) {
     let target = ev.target.closest('.qtext');
-    log('PATHEL', target);
     jumpPos(target, state.query);
   }
 }
@@ -1255,17 +1255,21 @@ function parseInfo(info) {
 }
 
 function getOds(odspath, cb) {
+  log('==>00', odspath);
   if (!odspath) return;
   let ext = path.extname(odspath);
 
   let bname = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.capitalize(path.basename(odspath, ext));
+
+  log('==>0', bname);
 
   try {
     textract.fromFileWithPath(odspath, {
       preserveLineBreaks: true,
       delimiter: '|'
     }, function (err, str) {
-      let book = parseCSV(bname, str);
+      let book = parseCSV(odspath, bname, str);
+      log('==>1', book);
       Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["pushBook"])(book.info, book.pars, book.mapdocs).then(function (res) {
         log('ODS PUSH BOOK', book);
         cb(true);
@@ -1279,7 +1283,7 @@ function getOds(odspath, cb) {
   }
 }
 
-function parseCSV(fpath, str) {
+function parseCSV(odspath, fpath, str) {
   let pars = [];
   let map = {};
   let rows = str.split('\n');
@@ -1289,6 +1293,7 @@ function parseCSV(fpath, str) {
   let rfirst = rows.shift();
   let nics = rfirst.split(',');
   let info = {};
+  info.odspath = odspath;
   info.book = {};
   info.book.title = fpath.split('_').map(str => {
     return lodash__WEBPACK_IMPORTED_MODULE_0___default.a.capitalize(str);

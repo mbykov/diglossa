@@ -187,12 +187,15 @@ function parseInfo(info) {
 }
 
 export function getOds(odspath, cb) {
+  log('==>00', odspath)
   if (!odspath) return
   let ext = path.extname(odspath);
   let bname = _.capitalize(path.basename(odspath, ext))
+  log('==>0', bname)
   try {
     textract.fromFileWithPath(odspath, {preserveLineBreaks: true, delimiter: '|'}, function(err, str) {
-      let book = parseCSV(bname, str)
+      let book = parseCSV(odspath, bname, str)
+      log('==>1', book)
       pushBook(book.info, book.pars, book.mapdocs)
         .then(function(res) {
           log('ODS PUSH BOOK', book)
@@ -208,7 +211,7 @@ export function getOds(odspath, cb) {
   }
 }
 
-function parseCSV(fpath, str) {
+function parseCSV(odspath, fpath, str) {
   let pars = []
   let map = {}
 
@@ -217,6 +220,7 @@ function parseCSV(fpath, str) {
   let rfirst = rows.shift()
   let nics = rfirst.split(',')
   let info = {}
+  info.odspath = odspath
   info.book = {}
   info.book.title = fpath.split('_').map(str=> { return _.capitalize(str)}).join(' ')
   info.book.author = nics[0]

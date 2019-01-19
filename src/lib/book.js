@@ -524,11 +524,9 @@ function treeClick(ev, state) {
   let parent = ev.target.parentNode
   if (ev.target.classList.contains('tree-node-branch')) {
     parent.classList.toggle('tree-collapse')
-  } else if (ev.target.classList.contains('active') || ev.target.classList.contains('query')) {
-    // let praparent = parent.parentNode
-    // log('PRAPARENT', praparent)
+  // } else if (ev.target.classList.contains('active') || ev.target.classList.contains('query')) {
+  } else if (ev.target.classList.contains('query')) {
     let target = ev.target.closest('.qtext')
-    log('PATHEL', target)
     jumpPos(target, state.query)
   }
 }
