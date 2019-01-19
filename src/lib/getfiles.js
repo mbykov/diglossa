@@ -238,31 +238,6 @@ function parseCSV(odspath, fpath, str) {
   info.tree = tree
 
   rows.forEach((row, idx) => {
-    // if (idx != 25) return
-
-    // let strs = []
-    // if (/","|,"|",/.test(row)) strs = row.split(/","|,"|",/)
-    // else strs = row.split(',')
-    // strs = _.compact(strs)
-
-    // let test = row.replace(/, /g, 'TMP')
-    // strs = test.split(/,/)
-    // strs = strs.map(str=> { return str.replace(/TMP/g, ', ').replace(/"/g, '') })
-
-    // let quoted = row.match(/("[^"]+")/g)
-    // let tmp = row
-    // if (quoted) {
-    //   strs = quoted
-    //   quoted.forEach(str=> { tmp = tmp.replace(str, '') })
-    //   tmp = tmp.replace(/^,+/, '').replace(/,+$/, '').replace(/,,+/, ',')
-    //   if (tmp) {
-    //     let unquoted = tmp.split(',')
-    //     strs = quoted.concat(unquoted) // неверный порядок частей
-    //   }
-    // } else {
-    //   strs = row.split(',')
-    // }
-
     let strs = []
     let quoted = row.match(/("[^"]+")/)
     let tmp = row
@@ -282,7 +257,6 @@ function parseCSV(odspath, fpath, str) {
         quoted = tmp.match(/("[^"]+")/)
         if (tmp && !quoted) {
           tmp = tmp.replace(/^,+/, '').replace(/,+$/, '').replace(/,,+/, ',')
-          // strs.push(tmp)
           strs = strs.concat(tmp.split(','))
         }
       }
@@ -291,8 +265,6 @@ function parseCSV(odspath, fpath, str) {
     }
     strs = _.compact(strs)
 
-
-    if (!strs) log('row', idx, row)
     if (strs.length != 3) log('row', idx, row, strs, strs.length)
     // if (strs.length != 3) log('row', idx, strs.length)
 
