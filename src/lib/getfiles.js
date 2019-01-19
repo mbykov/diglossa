@@ -238,10 +238,64 @@ function parseCSV(odspath, fpath, str) {
   info.tree = tree
 
   rows.forEach((row, idx) => {
-    let strs
-    if (/","|,"|",/.test(row)) strs = row.split(/","|,"|",/)
-    else strs = row.split(',')
+    // if (idx != 25) return
+
+    // let strs = []
+    // if (/","|,"|",/.test(row)) strs = row.split(/","|,"|",/)
+    // else strs = row.split(',')
+    // strs = _.compact(strs)
+
+    // let test = row.replace(/, /g, 'TMP')
+    // strs = test.split(/,/)
+    // strs = strs.map(str=> { return str.replace(/TMP/g, ', ').replace(/"/g, '') })
+
+    // let quoted = row.match(/("[^"]+")/g)
+    // let tmp = row
+    // if (quoted) {
+    //   strs = quoted
+    //   quoted.forEach(str=> { tmp = tmp.replace(str, '') })
+    //   tmp = tmp.replace(/^,+/, '').replace(/,+$/, '').replace(/,,+/, ',')
+    //   if (tmp) {
+    //     let unquoted = tmp.split(',')
+    //     strs = quoted.concat(unquoted) // неверный порядок частей
+    //   }
+    // } else {
+    //   strs = row.split(',')
+    // }
+
+    let strs = []
+    let quoted = row.match(/("[^"]+")/)
+    let tmp = row
+    if (quoted) {
+      while (quoted) {
+        // log('Q', idx, quoted[1])
+        if (quoted.index == 0) {
+          strs.push(quoted[1])
+          tmp = tmp.replace(quoted[1], '')
+        } else {
+          let head = tmp.split(quoted[1])[0]
+          head = head.replace(/,,+/, ',').replace(/^,/, '').replace(/,$/, '')
+          strs = strs.concat(head.split(','))
+          strs.push(quoted[1])
+          tmp = tmp.split(quoted[1])[1]
+        }
+        quoted = tmp.match(/("[^"]+")/)
+        if (tmp && !quoted) {
+          tmp = tmp.replace(/^,+/, '').replace(/,+$/, '').replace(/,,+/, ',')
+          // strs.push(tmp)
+          strs = strs.concat(tmp.split(','))
+        }
+      }
+    } else {
+      strs = row.split(',')
+    }
     strs = _.compact(strs)
+
+
+    if (!strs) log('row', idx, row)
+    if (strs.length != 3) log('row', idx, row, strs, strs.length)
+    // if (strs.length != 3) log('row', idx, strs.length)
+
     strs.forEach((str, idy)=> {
       let nic = nics[idy]
       let text = str.replace(/"/g, '')
