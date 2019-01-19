@@ -31,7 +31,7 @@ export function getInfoFiles(infopath, cb) {
   info.nics = []
   info.stats = []
   let book = getDir(info)
-  pushBook(info, book)
+  pushBook(info, book.pars, book.mapdocs)
     .then(function(res) {
       cb(true)
     })
@@ -193,32 +193,22 @@ export function getOds(odspath, cb) {
   try {
     textract.fromFileWithPath(odspath, {preserveLineBreaks: true, delimiter: '|'}, function(err, str) {
       let book = parseCSV(bname, str)
-      // cb(book)
-      log('ODS STR', book)
-      cb(true)
+      pushBook(book.info, book.pars, book.mapdocs)
+        .then(function(res) {
+          log('ODS PUSH BOOK', book)
+          cb(true)
+        })
+        .catch(function(err) {
+          log('PUSH BOOK ERR:', err)
+        })
     })
   } catch (err) {
     if (err) log('ODS ERR', err)
     cb(false)
   }
-
-  // let dir = path.parse(infopath).dir
-  // let bpath = path.resolve(dir, info.book.path)
-  // info.bpath = slash(bpath)
-  // info.infopath = slash(infopath)
-  // info.nics = []
-  // info.stats = []
-  // let book = getDir(info)
-  // pushBook(info, book)
-  //   .then(function(res) {
-  //     cb(true)
-  //   })
-  //   .catch(function(err) {
-  //     log('PUSH BOOK ERR:', err)
-  //   })
 }
 
-function parseCSV(bname, str) {
+function parseCSV(fpath, str) {
   let pars = []
   let map = {}
 
@@ -228,15 +218,21 @@ function parseCSV(bname, str) {
   let nics = rfirst.split(',')
   let info = {}
   info.book = {}
-  info.book.title = bname.split('_').map(str=> { return _.capitalize(str)}).join(' ')
+  info.book.title = fpath.split('_').map(str=> { return _.capitalize(str)}).join(' ')
   info.book.author = nics[0]
   log('INFO', info)
   let infoid = ['info', info.book.author, info.book.title].join('-')
   info._id = infoid
   info.nics = nics
-  info.stats = []
+  info.stats = nics.map
+  info.nicnames = {}
+  nics.forEach(nic=> { info.nicnames[nic] = nic })
+  let tree = []
+  let cnics = nics.shift()
+  let child = {text: fpath, children: [], fpath: fpath, cnics: cnics, nic: cnics[0]}
+  tree.push(child)
+  info.tree = tree
 
-  let fpath = bname
   rows.forEach((row, idx) => {
     let strs
     if (/","|,"|",/.test(row)) strs = row.split(/","|,"|",/)
@@ -256,8 +252,8 @@ function parseCSV(bname, str) {
   })
   let mapdocs = _.values(map)
   log('=>INFO', info)
-  log('=>PARS', pars)
-  log('=>MDS', mapdocs)
+  log('=>PARS', pars[0])
+  log('=>MDS', mapdocs[0])
 
-  return {pars: pars, mapdocs: mapdocs}
+  return {info: info, pars: pars, mapdocs: mapdocs}
 }

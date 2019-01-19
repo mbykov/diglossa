@@ -45,6 +45,7 @@ function goTitleEvent(ev) {
 
 
 export function parseTitle(state, info) {
+  log('TITLE INFO', info)
   let osource = q('#titlesource')
   let otrns = q('#titletrns')
   empty(osource)
@@ -80,14 +81,13 @@ export function parseTitle(state, info) {
   ocontent.id = 'book-content'
   ocontent.textContent = 'Content:'
   otrns.appendChild(ocontent)
-  // ocontent.setAttribute('infoid', info._id)
 
   let otree = create('div', 'tree')
   otree.id = 'tree'
   let tbody = create('div', 'tbody')
   otree.appendChild(tbody)
   otrns.appendChild(otree)
-  // log('INFO.TREE', info.tree)
+  log('INFO.TREE', info.tree)
   tree(info.tree, otree)
 
   otree.addEventListener("click", function(ev) {

@@ -111,7 +111,7 @@ function parseOds(fns) {
   log('ODSPATH', odsopath)
   getOds(odsopath, function(res) {
     log('ODS RES', res)
-    // navigate({section: 'home'})
+    navigate({section: 'home'})
   })
 }
 

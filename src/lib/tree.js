@@ -8,8 +8,7 @@ export function tree(children, otree) {
     if (node.fpath) {
       let onode = createNode(node)
       tbody.appendChild(onode)
-    }
-    else {
+    } else {
       let obranch = createBranch(node)
       tbody.appendChild(obranch)
       tree(node.children, obranch)

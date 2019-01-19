@@ -30,11 +30,11 @@ let ftdb = new PouchDB(ftdbPath)
 let libPath = path.resolve(upath, 'pouch/library')
 let libdb = new PouchDB(libPath)
 
-export function pushBook(info, book) {
+export function pushBook(info, pars, mapdocs) {
   return Promise.all([
     pushInfo(info),
-    pushTexts(book.pars),
-    pushMap(book.mapdocs)
+    pushTexts(pars),
+    pushMap(mapdocs)
   ])
     .then(function(res) {
       // if (res[1].length) {
@@ -93,25 +93,14 @@ function pushTexts(newdocs) {
     })
 }
 
-// ndocs = ndocs.slice(0,3)
-// ftdb.bulkDocs(ndocs)
-//   .then(function () {
-//   return ftdb.allDocs({include_docs: true});
-// }).then(function (res) {
-//   log('ALLDOCS', res);
-// }).catch(function (err) {
-//   console.log(err);
-// });
-
 // MAP
 function pushMap(ndocs) {
-  log('MAP NEW-DOCS', ndocs[100])
+  // log('MAP NEW-DOCS', ndocs[100])
   return ftdb.allDocs({ include_docs: true })
     .then(function(res) {
-      // log('MAP OLD-RES', res)
-      log('MAP OLD-RES-ROWS', res.rows.length)
+      // log('MAP OLD-RES-ROWS', res.rows.length)
       let odocs = res.rows.map(row=>{ return row.doc})
-      log('MAP OLD-DOCS', odocs.length, odocs)
+      // log('MAP OLD-DOCS', odocs.length, odocs)
       let hdoc = {}
       odocs.forEach(doc=> { hdoc[doc._id] = doc })
 
@@ -131,7 +120,7 @@ function pushMap(ndocs) {
           cleandocs.push(ndoc)
         }
       })
-      log('MAP CLEANDOCS', cleandocs.length)
+      // log('MAP CLEANDOCS', cleandocs.length)
       return ftdb.bulkDocs(cleandocs)
     })
     .catch(function (err) {

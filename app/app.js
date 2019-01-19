@@ -231,7 +231,10 @@ function parseOds(fns) {
   let odsopath = fns[0];
   log('ODSPATH', odsopath);
   Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_4__["getOds"])(odsopath, function (res) {
-    log('ODS RES', res); // navigate({section: 'home'})
+    log('ODS RES', res);
+    Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])({
+      section: 'home'
+    });
   });
 }
 
@@ -345,6 +348,7 @@ function goTitleEvent(ev) {
 }
 
 function parseTitle(state, info) {
+  log('TITLE INFO', info);
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#titlesource');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#titletrns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(osource);
@@ -378,14 +382,13 @@ function parseTitle(state, info) {
   let ocontent = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'book-content');
   ocontent.id = 'book-content';
   ocontent.textContent = 'Content:';
-  otrns.appendChild(ocontent); // ocontent.setAttribute('infoid', info._id)
-
+  otrns.appendChild(ocontent);
   let otree = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tree');
   otree.id = 'tree';
   let tbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tbody');
   otree.appendChild(tbody);
-  otrns.appendChild(otree); // log('INFO.TREE', info.tree)
-
+  otrns.appendChild(otree);
+  log('INFO.TREE', info.tree);
   Object(_tree__WEBPACK_IMPORTED_MODULE_2__["tree"])(info.tree, otree);
   otree.addEventListener("click", function (ev) {
     goBookEvent(ev, info);
@@ -1020,7 +1023,7 @@ function getInfoFiles(infopath, cb) {
   info.nics = [];
   info.stats = [];
   let book = getDir(info);
-  Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["pushBook"])(info, book).then(function (res) {
+  Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["pushBook"])(info, book.pars, book.mapdocs).then(function (res) {
     cb(true);
   }).catch(function (err) {
     log('PUSH BOOK ERR:', err);
@@ -1254,32 +1257,21 @@ function getOds(odspath, cb) {
       preserveLineBreaks: true,
       delimiter: '|'
     }, function (err, str) {
-      let book = parseCSV(bname, str); // cb(book)
-
-      log('ODS STR', book);
-      cb(true);
+      let book = parseCSV(bname, str);
+      Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["pushBook"])(book.info, book.pars, book.mapdocs).then(function (res) {
+        log('ODS PUSH BOOK', book);
+        cb(true);
+      }).catch(function (err) {
+        log('PUSH BOOK ERR:', err);
+      });
     });
   } catch (err) {
     if (err) log('ODS ERR', err);
     cb(false);
-  } // let dir = path.parse(infopath).dir
-  // let bpath = path.resolve(dir, info.book.path)
-  // info.bpath = slash(bpath)
-  // info.infopath = slash(infopath)
-  // info.nics = []
-  // info.stats = []
-  // let book = getDir(info)
-  // pushBook(info, book)
-  //   .then(function(res) {
-  //     cb(true)
-  //   })
-  //   .catch(function(err) {
-  //     log('PUSH BOOK ERR:', err)
-  //   })
-
+  }
 }
 
-function parseCSV(bname, str) {
+function parseCSV(fpath, str) {
   let pars = [];
   let map = {};
   let rows = str.split('\n');
@@ -1290,7 +1282,7 @@ function parseCSV(bname, str) {
   let nics = rfirst.split(',');
   let info = {};
   info.book = {};
-  info.book.title = bname.split('_').map(str => {
+  info.book.title = fpath.split('_').map(str => {
     return lodash__WEBPACK_IMPORTED_MODULE_0___default.a.capitalize(str);
   }).join(' ');
   info.book.author = nics[0];
@@ -1298,8 +1290,22 @@ function parseCSV(bname, str) {
   let infoid = ['info', info.book.author, info.book.title].join('-');
   info._id = infoid;
   info.nics = nics;
-  info.stats = [];
-  let fpath = bname;
+  info.stats = nics.map;
+  info.nicnames = {};
+  nics.forEach(nic => {
+    info.nicnames[nic] = nic;
+  });
+  let tree = [];
+  let cnics = nics.shift();
+  let child = {
+    text: fpath,
+    children: [],
+    fpath: fpath,
+    cnics: cnics,
+    nic: cnics[0]
+  };
+  tree.push(child);
+  info.tree = tree;
   rows.forEach((row, idx) => {
     let strs;
     if (/","|,"|",/.test(row)) strs = row.split(/","|,"|",/);else strs = row.split(',');
@@ -1329,9 +1335,10 @@ function parseCSV(bname, str) {
   let mapdocs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.values(map);
 
   log('=>INFO', info);
-  log('=>PARS', pars);
-  log('=>MDS', mapdocs);
+  log('=>PARS', pars[0]);
+  log('=>MDS', mapdocs[0]);
   return {
+    info: info,
     pars: pars,
     mapdocs: mapdocs
   };
@@ -1605,8 +1612,8 @@ let ftdbPath = path.resolve(upath, 'pouch/fulltext');
 let ftdb = new PouchDB(ftdbPath);
 let libPath = path.resolve(upath, 'pouch/library');
 let libdb = new PouchDB(libPath);
-function pushBook(info, book) {
-  return Promise.all([pushInfo(info), pushTexts(book.pars), pushMap(book.mapdocs)]).then(function (res) {
+function pushBook(info, pars, mapdocs) {
+  return Promise.all([pushInfo(info), pushTexts(pars), pushMap(mapdocs)]).then(function (res) {
     // if (res[1].length) {
     libdb.createIndex({
       index: {
@@ -1666,29 +1673,19 @@ function pushTexts(newdocs) {
 
     return libdb.bulkDocs(cleandocs);
   });
-} // ndocs = ndocs.slice(0,3)
-// ftdb.bulkDocs(ndocs)
-//   .then(function () {
-//   return ftdb.allDocs({include_docs: true});
-// }).then(function (res) {
-//   log('ALLDOCS', res);
-// }).catch(function (err) {
-//   console.log(err);
-// });
-// MAP
+} // MAP
 
 
 function pushMap(ndocs) {
-  log('MAP NEW-DOCS', ndocs[100]);
+  // log('MAP NEW-DOCS', ndocs[100])
   return ftdb.allDocs({
     include_docs: true
   }).then(function (res) {
-    // log('MAP OLD-RES', res)
-    log('MAP OLD-RES-ROWS', res.rows.length);
+    // log('MAP OLD-RES-ROWS', res.rows.length)
     let odocs = res.rows.map(row => {
       return row.doc;
-    });
-    log('MAP OLD-DOCS', odocs.length, odocs);
+    }); // log('MAP OLD-DOCS', odocs.length, odocs)
+
     let hdoc = {};
     odocs.forEach(doc => {
       hdoc[doc._id] = doc;
@@ -1710,8 +1707,8 @@ function pushMap(ndocs) {
       } else {
         cleandocs.push(ndoc);
       }
-    });
-    log('MAP CLEANDOCS', cleandocs.length);
+    }); // log('MAP CLEANDOCS', cleandocs.length)
+
     return ftdb.bulkDocs(cleandocs);
   }).catch(function (err) {
     log('MAP ERR', err);
