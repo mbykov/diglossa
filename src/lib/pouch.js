@@ -205,7 +205,6 @@ export function getQuery(state) {
           let qtree = []
           // log('SEARCH res.docs', res.docs)
           let qinfos = _.groupBy(res.docs, 'infoid')
-          // log('QINFOS', qinfos)
 
           for (let infoid in qinfos) {
             let gqinfo = qinfos[infoid]

@@ -44,12 +44,12 @@ ul.about li:before {
 }
 
 #new-version {
-    /* float: right; */
+    display: none;
     position: absolute;
     left: 0;
     right: 0;
     padding-left: 10px;
-    color: maroon;
+    color: green;
     cursor: pointer;
 }
 

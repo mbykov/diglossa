@@ -216,9 +216,7 @@ electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("ready", () => {
     let name = pckg.name;
     let version = pckg.version; // let aversion = pckg.dependencies.antrax.replace('^', '')
 
-    win.webContents.send('version', {
-      version: version
-    });
+    win.webContents.send('version', version);
     win.setTitle([name, 'v.', version].join(' '));
   });
   electron__WEBPACK_IMPORTED_MODULE_2__["globalShortcut"].register('CommandOrControl+R', () => win.webContents.send('reread'));

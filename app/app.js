@@ -146,10 +146,11 @@ const {
 
 
 const isDev = true;
-const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app;
-const apath = app.getAppPath();
-let upath = app.getPath("userData"); // const watch = require('node-watch')
+const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app; // const apath = app.getAppPath()
+// let upath = app.getPath("userData")
+// const watch = require('node-watch')
 
+let over = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])("#new-version");
 let container = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#container');
 let imports = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["qs"])('link[rel="import"]');
 imports.forEach(link => {
@@ -250,16 +251,12 @@ electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('reread', function (even
   }
 
   Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_6__["getInfo"])(state.infoid).then(function (info) {
-    log('GET INFO', info);
-
     if (info.infopath) {
       Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_4__["getInfoFiles"])(info.infopath, function (res) {
-        log('REREAD BOOK OK state', state);
         Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
       });
     } else {
       Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_4__["getOds"])(info.odspath, function (res) {
-        log('ODS RES', res);
         Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
       });
     }
@@ -270,17 +267,34 @@ electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('reread', function (even
 
 electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('reload', function (event) {
   let state = settings.get('state');
-  getCurrentWindow().reload(); // log('RE-LOAD', JSON.stringify(state))
-
+  getCurrentWindow().reload();
   Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
 });
 electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('action', function (event, action) {
-  // if (action == 'cleanup') showCleanup()
-  // else
   Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])({
     section: action
   });
 });
+electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('version', function (event, oldver) {
+  axios.get('https://api.github.com/repos/mbykov/diglossa.js/releases/latest').then(function (response) {
+    if (!response || !response.data) return;
+    let newver = response.data.name;
+
+    if (oldver && newver && newver > oldver) {
+      let verTxt = ['new version available:', newver].join(' ');
+      over.textContent = verTxt;
+      over.classList.add('is-shown');
+    }
+  }).catch(function (err) {
+    console.log('VERSION ERR', err);
+  });
+});
+over.addEventListener('click', getNewVersion, false);
+
+function getNewVersion() {
+  let href = 'https://github.com/mbykov/diglossa.js/releases/latest';
+  electron__WEBPACK_IMPORTED_MODULE_2__["shell"].openExternal(href);
+}
 
 /***/ }),
 
@@ -355,8 +369,8 @@ function goTitleEvent(ev) {
 }
 
 function parseTitle(state, info) {
-  log('TITLE STATE', state);
-  log('TITLE INFO', info);
+  // log('TITLE STATE', state)
+  // log('TITLE INFO', info)
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#titlesource');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#titletrns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(osource);
@@ -395,8 +409,8 @@ function parseTitle(state, info) {
   otree.id = 'tree';
   let tbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tbody');
   otree.appendChild(tbody);
-  otrns.appendChild(otree);
-  log('INFO.TREE', info.tree);
+  otrns.appendChild(otree); // log('INFO.TREE', info.tree)
+
   Object(_tree__WEBPACK_IMPORTED_MODULE_2__["tree"])(info.tree, otree);
   otree.addEventListener("click", function (ev) {
     goBookEvent(ev, info);
@@ -1317,27 +1331,6 @@ function parseCSV(odspath, fpath, str) {
   tree.push(child);
   info.tree = tree;
   rows.forEach((row, idx) => {
-    // if (idx != 25) return
-    // let strs = []
-    // if (/","|,"|",/.test(row)) strs = row.split(/","|,"|",/)
-    // else strs = row.split(',')
-    // strs = _.compact(strs)
-    // let test = row.replace(/, /g, 'TMP')
-    // strs = test.split(/,/)
-    // strs = strs.map(str=> { return str.replace(/TMP/g, ', ').replace(/"/g, '') })
-    // let quoted = row.match(/("[^"]+")/g)
-    // let tmp = row
-    // if (quoted) {
-    //   strs = quoted
-    //   quoted.forEach(str=> { tmp = tmp.replace(str, '') })
-    //   tmp = tmp.replace(/^,+/, '').replace(/,+$/, '').replace(/,,+/, ',')
-    //   if (tmp) {
-    //     let unquoted = tmp.split(',')
-    //     strs = quoted.concat(unquoted) // неверный порядок частей
-    //   }
-    // } else {
-    //   strs = row.split(',')
-    // }
     let strs = [];
     let quoted = row.match(/("[^"]+")/);
     let tmp = row;
@@ -1359,8 +1352,7 @@ function parseCSV(odspath, fpath, str) {
         quoted = tmp.match(/("[^"]+")/);
 
         if (tmp && !quoted) {
-          tmp = tmp.replace(/^,+/, '').replace(/,+$/, '').replace(/,,+/, ','); // strs.push(tmp)
-
+          tmp = tmp.replace(/^,+/, '').replace(/,+$/, '').replace(/,,+/, ',');
           strs = strs.concat(tmp.split(','));
         }
       }
@@ -1369,7 +1361,6 @@ function parseCSV(odspath, fpath, str) {
     }
 
     strs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(strs);
-    if (!strs) log('row', idx, row);
     if (strs.length != 3) log('row', idx, row, strs, strs.length); // if (strs.length != 3) log('row', idx, strs.length)
 
     strs.forEach((str, idy) => {
@@ -1394,11 +1385,11 @@ function parseCSV(odspath, fpath, str) {
     });
   });
 
-  let mapdocs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.values(map);
+  let mapdocs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.values(map); // log('=>INFO', info)
+  // log('=>PARS', pars[0])
+  // log('=>MDS', mapdocs[0])
 
-  log('=>INFO', info);
-  log('=>PARS', pars[0]);
-  log('=>MDS', mapdocs[0]);
+
   return {
     info: info,
     pars: pars,
@@ -1525,7 +1516,6 @@ Mousetrap.bind(['alt+1', 'alt+2'], function (ev) {
 });
 Mousetrap.bind(['ctrl+f'], function (ev) {
   let query = clipboard.readText().split(' ')[0];
-  log('CTRL F', query);
   navigate({
     section: 'search',
     query: query
@@ -1536,9 +1526,8 @@ Mousetrap.bind(['ctrl+v'], function (ev) {
   if (!state.infoid) return;
   Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getInfo"])(state.infoid).then(function (info) {
     if (!info) return;
-    log('CTRL V stats', info.stats);
-    showStats(info);
-  }); // navigate({section: 'search', query: query})
+    showStats(info); // not nav
+  });
 });
 Mousetrap.bind(['esc'], function (ev) {// log('ESC')
   // похоже, общий метод не получится
@@ -1561,7 +1550,9 @@ function navigate(state) {
   log('NAV-state', JSON.parse(JSON.stringify(state)));
   let section = state.section;
   let progress = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#progress');
+  let over = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])("#new-version");
   if (['title', 'book', 'search'].includes(section)) progress.classList.add('is-shown');
+  if (section != 'home') over.classList.remove('is-shown');
   sectionTrigger(section); // delete state.nic
 
   if (!state.old) {
@@ -1862,8 +1853,7 @@ function getQuery(state) {
     }).then(function (res) {
       let qtree = []; // log('SEARCH res.docs', res.docs)
 
-      let qinfos = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(res.docs, 'infoid'); // log('QINFOS', qinfos)
-
+      let qinfos = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(res.docs, 'infoid');
 
       for (let infoid in qinfos) {
         let gqinfo = qinfos[infoid];

@@ -281,9 +281,9 @@ function parseCSV(odspath, fpath, str) {
     })
   })
   let mapdocs = _.values(map)
-  log('=>INFO', info)
-  log('=>PARS', pars[0])
-  log('=>MDS', mapdocs[0])
+  // log('=>INFO', info)
+  // log('=>PARS', pars[0])
+  // log('=>MDS', mapdocs[0])
 
   return {info: info, pars: pars, mapdocs: mapdocs}
 }

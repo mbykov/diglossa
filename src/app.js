@@ -36,9 +36,10 @@ const {dialog, getCurrentWindow} = require('electron').remote
 // const isDev = false
 const isDev = true
 const app = remote.app;
-const apath = app.getAppPath()
-let upath = app.getPath("userData")
+// const apath = app.getAppPath()
+// let upath = app.getPath("userData")
 // const watch = require('node-watch')
+let over = q("#new-version")
 
 let container = q('#container')
 let imports = qs('link[rel="import"]')
@@ -126,15 +127,12 @@ ipcRenderer.on('reread', function (event) {
   }
   getInfo(state.infoid)
     .then(function (info) {
-      log('GET INFO', info)
       if (info.infopath) {
         getInfoFiles(info.infopath, function(res) {
-          log('REREAD BOOK OK state', state)
           navigate(state)
         })
       } else {
         getOds(info.odspath, function(res) {
-          log('ODS RES', res)
           navigate(state)
         })
       }
@@ -147,12 +145,32 @@ ipcRenderer.on('reread', function (event) {
 ipcRenderer.on('reload', function (event) {
   let state = settings.get('state')
   getCurrentWindow().reload()
-  // log('RE-LOAD', JSON.stringify(state))
   navigate(state)
 })
 
 ipcRenderer.on('action', function (event, action) {
-  // if (action == 'cleanup') showCleanup()
-  // else
   navigate({section: action})
 })
+
+ipcRenderer.on('version', function (event, oldver) {
+  axios.get('https://api.github.com/repos/mbykov/diglossa.js/releases/latest')
+    .then(function (response) {
+      if (!response || !response.data) return
+      let newver = response.data.name
+      if (oldver && newver && newver > oldver) {
+        let verTxt = ['new version available:', newver].join(' ')
+        over.textContent = verTxt
+        over.classList.add('is-shown')
+      }
+    })
+    .catch(function (err) {
+      console.log('VERSION ERR', err)
+    })
+})
+
+over.addEventListener('click', getNewVersion, false)
+
+function getNewVersion() {
+  let href = 'https://github.com/mbykov/diglossa.js/releases/latest'
+  shell.openExternal(href)
+}

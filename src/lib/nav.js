@@ -104,7 +104,6 @@ Mousetrap.bind(['alt+1', 'alt+2'], function(ev) {
 
 Mousetrap.bind(['ctrl+f'], function(ev) {
   let query = clipboard.readText().split(' ')[0]
-  log('CTRL F', query)
   navigate({section: 'search', query: query})
 })
 
@@ -114,10 +113,8 @@ Mousetrap.bind(['ctrl+v'], function(ev) {
   getInfo(state.infoid)
     .then(function(info) {
       if (!info) return
-      log('CTRL V stats', info.stats)
-      showStats(info)
+      showStats(info) // not nav
     })
-  // navigate({section: 'search', query: query})
 })
 
 Mousetrap.bind(['esc'], function(ev) {
@@ -142,7 +139,10 @@ export function navigate(state) {
   log('NAV-state', JSON.parse(JSON.stringify(state)))
   let section = state.section
   let progress = q('#progress')
+  let over = q("#new-version")
+
   if (['title', 'book', 'search'].includes(section)) progress.classList.add('is-shown')
+  if (section != 'home') over.classList.remove('is-shown')
   sectionTrigger(section)
   // delete state.nic
   if (!state.old) {

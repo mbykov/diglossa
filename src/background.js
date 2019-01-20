@@ -89,7 +89,7 @@ app.on("ready", () => {
     let name = pckg.name
     let version = pckg.version
     // let aversion = pckg.dependencies.antrax.replace('^', '')
-    win.webContents.send('version', { version: version })
+    win.webContents.send('version', version )
     win.setTitle([name, 'v.', version].join(' '))
   })
 
