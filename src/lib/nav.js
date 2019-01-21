@@ -15,6 +15,7 @@ const Mousetrap = require('mousetrap')
 const fse = require('fs-extra')
 const path = require('path')
 const slash = require('slash')
+const {getCurrentWindow} = require('electron').remote
 
 // let current = {section: 'title'}
 let init = {section: 'home'}
@@ -57,8 +58,8 @@ function twoPanes(state) {
     cursor: 'col-resize',
     minSize: [0, 0],
     onDragEnd: function (sizes) {
-      // log('RESIZED', sizes)
       settings.set('split-sizes', sizes)
+      getCurrentWindow().reload()
     }
   })
   if (state.mono) split.collapse(1)

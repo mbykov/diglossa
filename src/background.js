@@ -93,6 +93,10 @@ app.on("ready", () => {
     win.setTitle([name, 'v.', version].join(' '))
   })
 
+  win.on('resize', function () {
+    win.webContents.send('reload')
+  })
+
   globalShortcut.register('CommandOrControl+R', () => win.webContents.send('reread'));
   globalShortcut.register('CommandOrControl+Shift+R', () => win.reload());
 });

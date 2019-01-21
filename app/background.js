@@ -219,6 +219,9 @@ electron__WEBPACK_IMPORTED_MODULE_2__["app"].on("ready", () => {
     win.webContents.send('version', version);
     win.setTitle([name, 'v.', version].join(' '));
   });
+  win.on('resize', function () {
+    win.webContents.send('reload');
+  });
   electron__WEBPACK_IMPORTED_MODULE_2__["globalShortcut"].register('CommandOrControl+R', () => win.webContents.send('reread'));
   electron__WEBPACK_IMPORTED_MODULE_2__["globalShortcut"].register('CommandOrControl+Shift+R', () => win.reload());
 });

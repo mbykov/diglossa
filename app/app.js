@@ -1451,7 +1451,11 @@ const fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
 const path = __webpack_require__(/*! path */ "path");
 
-const slash = __webpack_require__(/*! slash */ "slash"); // let current = {section: 'title'}
+const slash = __webpack_require__(/*! slash */ "slash");
+
+const {
+  getCurrentWindow
+} = __webpack_require__(/*! electron */ "electron").remote; // let current = {section: 'title'}
 
 
 let init = {
@@ -1492,8 +1496,8 @@ function twoPanes(state) {
     cursor: 'col-resize',
     minSize: [0, 0],
     onDragEnd: function (sizes) {
-      // log('RESIZED', sizes)
       settings.set('split-sizes', sizes);
+      getCurrentWindow().reload();
     }
   });
   if (state.mono) split.collapse(1);
