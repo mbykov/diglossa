@@ -48,7 +48,6 @@ function getDir(info) {
   let children = _.clone(fulltree)
   let tree = shortTree(children, info.bpath)
   info.tree = tree
-  log('SHORT TREE', tree)
   walkRead(info, fulltree, pars, map)
   let mapdocs = _.values(map)
   let book = {pars: pars, mapdocs: mapdocs}

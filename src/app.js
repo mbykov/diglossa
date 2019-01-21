@@ -174,3 +174,14 @@ function getNewVersion() {
   let href = 'https://github.com/mbykov/diglossa.js/releases/latest'
   shell.openExternal(href)
 }
+
+function copyToClipboard(ev) {
+  if (ev.shiftKey == true) return
+  if (ev.ctrlKey == true) return
+  if (ev.target.nodeName != 'SPAN') return
+  if (!ev.target.classList.contains('active')) return
+  let wf = ev.target.textContent
+  clipboard.writeText(wf)
+}
+
+document.addEventListener("mouseover", copyToClipboard, false)

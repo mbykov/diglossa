@@ -126,6 +126,10 @@ li.hidden {
     display: none; /* !important */;
 }
 
+.activetrn {
+    display: block!important;
+}
+
 input[type='file'] {
     color: transparent;
 }

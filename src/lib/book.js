@@ -129,7 +129,7 @@ export function parseBook(state, info, pars) {
   createRightHeader(state, info)
   createLeftHeader(state, info)
 
-  osource.addEventListener("mouseover", copyToClipboard, false)
+  // osource.addEventListener("mouseover", copyToClipboard, false)
   otrns.addEventListener("wheel", cyclePar, false)
   hideProgress()
 }
@@ -161,22 +161,54 @@ function setChunk(state, pars, direction) {
       let oright = p(par.text)
       oright.setAttribute('pos', apar.pos)
       oright.setAttribute('nic', par.nic)
-      if (par.nic == state.nic) oright.classList.add('active')
+      if (par.nic == state.nic) oright.classList.add('trn')
       else oright.classList.add('hidden')
       if (!direction) otrns.appendChild(oright)
       else otrns.prepend(oright)
       aligns.push(oright)
     })
-    alignPars(aligns)
+    alignPars(aligns, apar)
   })
 
-  // position before adding upper chunk:
   if (direction) {
-    let firstpos = apars[0].pos
+    let firstpos = apars[0].pos // position before adding upper chunk:
     let firstel = qs('#booksource [pos="'+firstpos+'"]')[0]
     let offset = firstel.offsetTop
     otrns.scrollTop = osource.scrollTop = offset
   }
+}
+
+function cyclePar(ev) {
+  if (ev.shiftKey != true) return
+  let idx = ev.target.getAttribute('pos')
+
+  let seltrns = '#booktrns [pos="'+idx+'"]'
+  let pars = qs(seltrns)
+  let nics = _.map(pars, par=> { return par.getAttribute('nic') })
+  if (nics.length == 1) return
+  let prev = _.find(pars, par=> { return !par.classList.contains('hidden') })
+  let nic = prev.getAttribute('nic')
+  let nicidx = nics.indexOf(nic)
+  let nextnic = (nicidx+1 == nics.length) ? nics[0] : nics[nicidx+1]
+  let act = _.find(pars, par=> { return par.getAttribute('nic') == nextnic })
+  act.classList.remove('hidden')
+  act.classList.add('trn')
+  prev.classList.add('hidden')
+
+  let selsource = '#booksource [pos="'+idx+'"]'
+  let source = q(selsource)
+  let heights = [source, act].map(par => { return par.scrollHeight })
+  let max = _.max(heights)
+  source.style.height = max + 'px'
+  act.style.height = max + 'px'
+}
+
+function alignPars(pars, apar) {
+  let heights = pars.map(par => { return par.scrollHeight })
+  let max = _.max(heights) + 12
+  pars.forEach(par => {
+    par.style.height = max + 'px'
+  })
 }
 
 function setMono(state, pars, direction) {
@@ -189,35 +221,9 @@ function setMono(state, pars, direction) {
   })
 }
 
-
-function alignPars(pars) {
-  let heights = pars.map(par => { return par.scrollHeight })
-  let max = _.max(heights) + 12
-  pars.forEach(par => {
-    par.style.height = max + 'px'
-  })
-}
-
 function hideProgress() {
   let progress = q('#progress')
   progress.classList.remove('is-shown')
-}
-
-function cyclePar(ev) {
-  if (ev.shiftKey != true) return
-  let idx = ev.target.getAttribute('pos')
-
-  let selector = '#booktrns [pos="'+idx+'"]'
-  let pars = qs(selector)
-  let nics = _.map(pars, par=> { return par.getAttribute('nic') })
-  if (nics.length == 1) return
-  let curpar = _.find(pars, par=> { return !par.classList.contains('hidden') })
-  let nic = curpar.getAttribute('nic')
-  let nicidx = nics.indexOf(nic)
-  let nextnic = (nicidx+1 == nics.length) ? nics[0] : nics[nicidx+1]
-  let next = _.find(pars, par=> { return par.getAttribute('nic') == nextnic })
-  next.classList.remove('hidden')
-  curpar.classList.add('hidden')
 }
 
 function createRightHeader(state, info) {
@@ -356,14 +362,6 @@ function clickLeftHeader(ev) {
   ohleft.classList.toggle('header')
 }
 
-function copyToClipboard(ev) {
-  if (ev.shiftKey == true) return
-  if (ev.ctrlKey == true) return
-  if (ev.target.nodeName != 'SPAN') return
-  let wf = ev.target.textContent
-  clipboard.writeText(wf)
-}
-
 export function scrollPanes(ev, state) {
   if (ev.shiftKey == true) return;
   let delta = (ev.deltaY > 0) ? 24 : -24
@@ -456,6 +454,7 @@ export function parseQuery(state, qtree) {
   }, false)
   // otree.addEventListener('click', jumpPos, false)
   otree.addEventListener("wheel", scrollQueries, false)
+  // otree.addEventListener("mouseover", copyToClipboard, false)
 
   // log('QTRE', qtree)
   for (let infoid in qtree) {

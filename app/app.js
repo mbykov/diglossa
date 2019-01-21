@@ -296,6 +296,17 @@ function getNewVersion() {
   electron__WEBPACK_IMPORTED_MODULE_2__["shell"].openExternal(href);
 }
 
+function copyToClipboard(ev) {
+  if (ev.shiftKey == true) return;
+  if (ev.ctrlKey == true) return;
+  if (ev.target.nodeName != 'SPAN') return;
+  if (!ev.target.classList.contains('active')) return;
+  let wf = ev.target.textContent;
+  clipboard.writeText(wf);
+}
+
+document.addEventListener("mouseover", copyToClipboard, false);
+
 /***/ }),
 
 /***/ "./src/lib/book.js":
@@ -450,8 +461,8 @@ function parseBook(state, info, pars) {
   current.cnics = cnics;
   if (state.mono) setMono(state, pars);else setChunk(state, pars);
   createRightHeader(state, info);
-  createLeftHeader(state, info);
-  osource.addEventListener("mouseover", copyToClipboard, false);
+  createLeftHeader(state, info); // osource.addEventListener("mouseover", copyToClipboard, false)
+
   otrns.addEventListener("wheel", cyclePar, false);
   hideProgress();
 }
@@ -493,19 +504,69 @@ function setChunk(state, pars, direction) {
       let oright = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["p"])(par.text);
       oright.setAttribute('pos', apar.pos);
       oright.setAttribute('nic', par.nic);
-      if (par.nic == state.nic) oright.classList.add('active');else oright.classList.add('hidden');
+      if (par.nic == state.nic) oright.classList.add('trn');else oright.classList.add('hidden');
       if (!direction) otrns.appendChild(oright);else otrns.prepend(oright);
       aligns.push(oright);
     });
-    alignPars(aligns);
-  }); // position before adding upper chunk:
+    alignPars(aligns, apar);
+  });
 
   if (direction) {
-    let firstpos = apars[0].pos;
+    let firstpos = apars[0].pos; // position before adding upper chunk:
+
     let firstel = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])('#booksource [pos="' + firstpos + '"]')[0];
     let offset = firstel.offsetTop;
     otrns.scrollTop = osource.scrollTop = offset;
   }
+}
+
+function cyclePar(ev) {
+  if (ev.shiftKey != true) return;
+  let idx = ev.target.getAttribute('pos');
+  let seltrns = '#booktrns [pos="' + idx + '"]';
+  let pars = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])(seltrns);
+
+  let nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.map(pars, par => {
+    return par.getAttribute('nic');
+  });
+
+  if (nics.length == 1) return;
+
+  let prev = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(pars, par => {
+    return !par.classList.contains('hidden');
+  });
+
+  let nic = prev.getAttribute('nic');
+  let nicidx = nics.indexOf(nic);
+  let nextnic = nicidx + 1 == nics.length ? nics[0] : nics[nicidx + 1];
+
+  let act = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(pars, par => {
+    return par.getAttribute('nic') == nextnic;
+  });
+
+  act.classList.remove('hidden');
+  act.classList.add('trn');
+  prev.classList.add('hidden');
+  let selsource = '#booksource [pos="' + idx + '"]';
+  let source = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])(selsource);
+  let heights = [source, act].map(par => {
+    return par.scrollHeight;
+  });
+
+  let max = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.max(heights);
+
+  source.style.height = max + 'px';
+  act.style.height = max + 'px';
+}
+
+function alignPars(pars, apar) {
+  let heights = pars.map(par => {
+    return par.scrollHeight;
+  });
+  let max = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.max(heights) + 12;
+  pars.forEach(par => {
+    par.style.height = max + 'px';
+  });
 }
 
 function setMono(state, pars, direction) {
@@ -518,47 +579,9 @@ function setMono(state, pars, direction) {
   });
 }
 
-function alignPars(pars) {
-  let heights = pars.map(par => {
-    return par.scrollHeight;
-  });
-  let max = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.max(heights) + 12;
-  pars.forEach(par => {
-    par.style.height = max + 'px';
-  });
-}
-
 function hideProgress() {
   let progress = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#progress');
   progress.classList.remove('is-shown');
-}
-
-function cyclePar(ev) {
-  if (ev.shiftKey != true) return;
-  let idx = ev.target.getAttribute('pos');
-  let selector = '#booktrns [pos="' + idx + '"]';
-  let pars = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["qs"])(selector);
-
-  let nics = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.map(pars, par => {
-    return par.getAttribute('nic');
-  });
-
-  if (nics.length == 1) return;
-
-  let curpar = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(pars, par => {
-    return !par.classList.contains('hidden');
-  });
-
-  let nic = curpar.getAttribute('nic');
-  let nicidx = nics.indexOf(nic);
-  let nextnic = nicidx + 1 == nics.length ? nics[0] : nics[nicidx + 1];
-
-  let next = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.find(pars, par => {
-    return par.getAttribute('nic') == nextnic;
-  });
-
-  next.classList.remove('hidden');
-  curpar.classList.add('hidden');
 }
 
 function createRightHeader(state, info) {
@@ -692,14 +715,6 @@ function clickLeftHeader(ev) {
   ohleft.classList.toggle('header');
 }
 
-function copyToClipboard(ev) {
-  if (ev.shiftKey == true) return;
-  if (ev.ctrlKey == true) return;
-  if (ev.target.nodeName != 'SPAN') return;
-  let wf = ev.target.textContent;
-  clipboard.writeText(wf);
-}
-
 function scrollPanes(ev, state) {
   if (ev.shiftKey == true) return;
   let delta = ev.deltaY > 0 ? 24 : -24;
@@ -785,7 +800,8 @@ function parseQuery(state, qtree) {
     treeClick(ev, state);
   }, false); // otree.addEventListener('click', jumpPos, false)
 
-  otree.addEventListener("wheel", scrollQueries, false); // log('QTRE', qtree)
+  otree.addEventListener("wheel", scrollQueries, false); // otree.addEventListener("mouseover", copyToClipboard, false)
+  // log('QTRE', qtree)
 
   for (let infoid in qtree) {
     let child = {
@@ -1059,7 +1075,6 @@ function getDir(info) {
 
   let tree = shortTree(children, info.bpath);
   info.tree = tree;
-  log('SHORT TREE', tree);
   walkRead(info, fulltree, pars, map);
 
   let mapdocs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.values(map);
