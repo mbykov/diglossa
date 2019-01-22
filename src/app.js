@@ -36,8 +36,12 @@ const {dialog, getCurrentWindow} = require('electron').remote
 // const isDev = false
 const isDev = true
 const app = remote.app;
-// const apath = app.getAppPath()
-// let upath = app.getPath("userData")
+
+const apath = app.getAppPath()
+const upath = app.getPath("userData")
+log('APATH', apath)
+log('UPATH', upath)
+
 // const watch = require('node-watch')
 let over = q("#new-version")
 

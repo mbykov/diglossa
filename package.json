@@ -10,7 +10,7 @@
   "main": "app/background.js",
   "build": {
    "productName": "Diglossa.js",
-    "appId": "org.diglossa.diglossa.js",
+    "appId": "org.diglossa.diglossa",
     "files": [
       "app/**/*",
       "src/**/*",
