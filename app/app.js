@@ -104,7 +104,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _lib_getfiles__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./lib/getfiles */ "./src/lib/getfiles.js");
 /* harmony import */ var _lib_nav__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/nav */ "./src/lib/nav.js");
 /* harmony import */ var _lib_pouch__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./lib/pouch */ "./src/lib/pouch.js");
-//
 // import "./stylesheets/app.css";
 // import "./stylesheets/main.css";
 
