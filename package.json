@@ -28,6 +28,7 @@
       }
     },
     "mac": {
+      "category": "public.app-category.productivity",
       "icon": "resources/icon.icns"
     },
     "win": {
@@ -40,9 +41,18 @@
     "linux": {
       "category": "Educational software",
       "target": [
-        "deb",
-        "tar.gz",
-        "AppImage"
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        },
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "rpm",
+          "arch": ["x64"]
+        }
       ],
       "icon": "resources/icons"
     },
