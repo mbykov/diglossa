@@ -1,6 +1,6 @@
 {
   "name": "diglossa.js",
-  "version": "0.4.31",
+  "version": "0.4.32",
   "productName": "Diglossa.js",
   "description": "Bilingual Reader - an application for creating, distributing and reading bi-(many) lingual texts.",
   "author": "Michael  Bykov <m.bykov@gmail.com>",
@@ -9,7 +9,7 @@
   "homepage": "http://diglossa.org/diglossa.js",
   "main": "app/background.js",
   "build": {
-   "productName": "Diglossa.js",
+    "productName": "Diglossa.js",
     "appId": "org.diglossa.diglossa",
     "files": [
       "app/**/*",
@@ -43,15 +43,21 @@
       "target": [
         {
           "target": "deb",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "rpm",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "resources/icons"
@@ -99,7 +105,7 @@
     "chai": "^4.2.0",
     "css-loader": "^0.28.7",
     "electron": "4.0.0",
-    "electron-builder": "^20.28.4",
+    "electron-builder": "^20.31.3",
     "electron-mocha": "^6.0.4",
     "mocha": "^5.2.0",
     "source-map-support": "^0.5.9",
