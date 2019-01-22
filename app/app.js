@@ -162,6 +162,9 @@ imports.forEach(link => {
 // navigate({section: 'home'})
 
 let state = settings.get('state');
+if (!state) state = {
+  section: 'home'
+};
 Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
 document.body.addEventListener('click', event => {
   // log('CLICK-DOC', event.target.dataset)

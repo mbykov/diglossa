@@ -9,6 +9,7 @@
   "homepage": "http://diglossa.org/diglossa.js",
   "main": "app/background.js",
   "build": {
+   "productName": "Diglossa.js",
     "appId": "org.diglossa.diglossa.js",
     "files": [
       "app/**/*",
@@ -20,19 +21,11 @@
       "buildResources": "resources"
     },
     "dmg": {
-      "contents": [
-        {
-          "x": 410,
-          "y": 150,
-          "type": "link",
-          "path": "/Applications"
-        },
-        {
-          "x": 130,
-          "y": 150,
-          "type": "file"
-        }
-      ]
+      "title": "${productName}-Setup",
+      "window": {
+        "height": 380,
+        "width": 540
+      }
     },
     "mac": {
       "icon": "resources/icon.icns"
@@ -47,7 +40,9 @@
     "linux": {
       "category": "Educational software",
       "target": [
-        "deb"
+        "deb",
+        "tar.gz",
+        "AppImage"
       ],
       "icon": "resources/icons"
     },

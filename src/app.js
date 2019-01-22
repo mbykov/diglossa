@@ -53,6 +53,7 @@ imports.forEach(link=> {
 // home.classList.add('is-shown')
 // navigate({section: 'home'})
 let state = settings.get('state')
+if (!state) state = {section: 'home'}
 navigate(state)
 
 document.body.addEventListener('click', (event) => {
