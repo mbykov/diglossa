@@ -9,7 +9,7 @@
   "homepage": "http://diglossa.org/diglossa.js",
   "main": "app/background.js",
   "build": {
-    "appId": "org.diglossa.diglossa-js",
+    "appId": "org.diglossa.diglossa.js",
     "files": [
       "app/**/*",
       "src/**/*",
