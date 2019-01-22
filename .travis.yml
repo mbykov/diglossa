@@ -7,6 +7,11 @@ node_js:
 dist: trusty
 sudo: false
 
+addons:
+  apt:
+    packages:
+      - rpm
+
 env:
   global:
     - ELECTRON_CACHE=$HOME/.cache/electron
