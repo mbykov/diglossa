@@ -138,11 +138,10 @@ function sectionTrigger(section) {
 
 export function navigate(state) {
   try {
-    log('NAV-state-raw', state)
+    // log('NAV-state', JSON.parse(JSON.stringify(state)))
   } catch (err) {
-    log('NAV-state-err', err)
+    // log('NAV-state-err', err)
   }
-  log('NAV-state', JSON.parse(JSON.stringify(state)))
   let section = state.section
   let progress = q('#progress')
   let over = q("#new-version")

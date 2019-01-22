@@ -146,11 +146,11 @@ const {
 
 
 const isDev = true;
-const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app;
-const apath = app.getAppPath();
-const upath = app.getPath("userData");
-log('APATH', apath);
-log('UPATH', upath); // const watch = require('node-watch')
+const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app; // const apath = app.getAppPath()
+// const upath = app.getPath("userData")
+// log('APATH', apath)
+// log('UPATH', upath)
+// const watch = require('node-watch')
 
 let over = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])("#new-version");
 let container = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#container');
@@ -1571,13 +1571,10 @@ function sectionTrigger(section) {
 }
 
 function navigate(state) {
-  try {
-    log('NAV-state-raw', state);
-  } catch (err) {
-    log('NAV-state-err', err);
+  try {// log('NAV-state', JSON.parse(JSON.stringify(state)))
+  } catch (err) {// log('NAV-state-err', err)
   }
 
-  log('NAV-state', JSON.parse(JSON.stringify(state)));
   let section = state.section;
   let progress = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#progress');
   let over = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])("#new-version");
