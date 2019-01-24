@@ -104,7 +104,7 @@ module.exports = {"name":"development","description":"Add here any environment s
 /*! exports provided: name, version, productName, description, author, copyright, license, homepage, main, build, scripts, dependencies, devDependencies, repository, bugs, default */
 /***/ (function(module) {
 
-module.exports = {"name":"diglossa.js","version":"0.4.31","productName":"Diglossa.js","description":"Bilingual Reader - an application for creating, distributing and reading bi-(many) lingual texts.","author":"Michael  Bykov <m.bykov@gmail.com>","copyright":"© 2018, Michael Bykov","license":"GPL-3.0","homepage":"http://diglossa.org/diglossa.js","main":"app/background.js","build":{"productName":"Diglossa.js","appId":"org.diglossa.diglossa","files":["app/**/*","src/**/*","resources/**/*","package.json"],"directories":{"buildResources":"resources"},"dmg":{"title":"${productName}-Setup","window":{"height":380,"width":540}},"mac":{"category":"public.app-category.productivity","icon":"resources/icon.icns"},"win":{"icon":"resources/icon.ico","publisherName":"Michael Bykov","publish":["github"]},"linux":{"category":"Educational software","target":[{"target":"deb","arch":["x64"]},{"target":"AppImage","arch":["x64"]},{"target":"rpm","arch":["x64"]}],"icon":"resources/icons"},"publish":"github"},"scripts":{"postinstall":"electron-builder install-app-deps","preunit":"webpack --config=build/webpack.unit.config.js --env=test --display=none","unit":"electron-mocha temp/specs.js --renderer --require source-map-support/register","pree2e":"webpack --config=build/webpack.app.config.js --env=test --display=none && webpack --config=build/webpack.e2e.config.js --env=test --display=none","e2e":"mocha temp/e2e.js --require source-map-support/register","test":"npm run unit && npm run e2e","start":"node build/start.js","release":"webpack --config=build/webpack.app.config.js --env=production && electron-builder"},"dependencies":{"axios":"^0.18.0","directory-tree":"^2.1.0","electron-clipboard-extended":"^1.1.1","electron-is-dev":"^1.0.1","electron-settings":"^3.2.0","electron-window-state":"^5.0.2","file-loader":"^2.0.0","franc-all":"^5.0.0","fs-extra":"^7.0.1","fs-jetpack":"^2.2.0","git-clone":"^0.1.0","glob":"^7.1.3","json5":"^2.1.0","lodash":"^4.17.11","mousetrap":"^1.6.2","pouchdb":"^7.0.0","pouchdb-find":"^7.0.0","pouchdb-quick-search":"^1.3.0","slash":"^2.0.0","split.js":"^1.4.0","textract":"^2.4.0"},"devDependencies":{"@babel/core":"^7.1.2","@babel/preset-env":"^7.1.0","babel-loader":"^8.0.4","babel-plugin-transform-object-rest-spread":"^7.0.0-beta.3","chai":"^4.2.0","css-loader":"^0.28.7","electron":"4.0.0","electron-builder":"^20.28.4","electron-mocha":"^6.0.4","mocha":"^5.2.0","source-map-support":"^0.5.9","spectron":"^4.0.0","style-loader":"^0.23.0","friendly-errors-webpack-plugin":"^1.7.0","webpack":"^4.20.2","webpack-cli":"^3.1.2","webpack-merge":"^4.1.4","webpack-node-externals":"^1.7.2"},"repository":{"type":"git","url":"git+https://github.com/mbykov/diglossa.js.git"},"bugs":{"url":"https://github.com/mbykov/diglossa.js/issues"}};
+module.exports = {"name":"diglossa.js","version":"0.4.33","productName":"Diglossa.js","description":"Bilingual Reader - an application for creating, distributing and reading bi-(many) lingual texts.","author":"Michael  Bykov <m.bykov@gmail.com>","copyright":"© 2018, Michael Bykov","license":"GPL-3.0","homepage":"http://diglossa.org/diglossa.js","main":"app/background.js","build":{"productName":"Diglossa.js","appId":"org.diglossa.diglossa","files":["app/**/*","src/**/*","resources/**/*","package.json"],"directories":{"buildResources":"resources"},"dmg":{"title":"${productName}-Setup","window":{"height":380,"width":540}},"mac":{"category":"public.app-category.productivity","icon":"resources/icon.icns"},"win":{"icon":"resources/icon.ico","publisherName":"Michael Bykov","publish":["github"]},"linux":{"category":"Educational software","target":[{"target":"deb","arch":["x64"]},{"target":"rpm","arch":["x64"]}],"icon":"resources/icons"},"publish":"github"},"scripts":{"postinstall":"electron-builder install-app-deps","preunit":"webpack --config=build/webpack.unit.config.js --env=test --display=none","unit":"electron-mocha temp/specs.js --renderer --require source-map-support/register","pree2e":"webpack --config=build/webpack.app.config.js --env=test --display=none && webpack --config=build/webpack.e2e.config.js --env=test --display=none","e2e":"mocha temp/e2e.js --require source-map-support/register","test":"npm run unit && npm run e2e","start":"node build/start.js","release":"webpack --config=build/webpack.app.config.js --env=production && electron-builder"},"dependencies":{"axios":"^0.18.0","directory-tree":"^2.1.0","electron-clipboard-extended":"^1.1.1","electron-is-dev":"^1.0.1","electron-settings":"^3.2.0","electron-window-state":"^5.0.2","file-loader":"^2.0.0","franc-all":"^5.0.0","fs-extra":"^7.0.1","fs-jetpack":"^2.2.0","git-clone":"^0.1.0","glob":"^7.1.3","json5":"^2.1.0","lodash":"^4.17.11","mousetrap":"^1.6.2","pouchdb":"^7.0.0","pouchdb-find":"^7.0.0","pouchdb-quick-search":"^1.3.0","slash":"^2.0.0","split.js":"^1.4.0","textract":"^2.4.0"},"devDependencies":{"@babel/core":"^7.1.2","@babel/preset-env":"^7.1.0","babel-loader":"^8.0.4","babel-plugin-transform-object-rest-spread":"^7.0.0-beta.3","chai":"^4.2.0","css-loader":"^0.28.7","electron":"4.0.0","electron-builder":"^20.31.3","electron-mocha":"^6.0.4","mocha":"^5.2.0","source-map-support":"^0.5.9","spectron":"^4.0.0","style-loader":"^0.23.0","friendly-errors-webpack-plugin":"^1.7.0","webpack":"^4.20.2","webpack-cli":"^3.1.2","webpack-merge":"^4.1.4","webpack-node-externals":"^1.7.2"},"repository":{"type":"git","url":"git+https://github.com/mbykov/diglossa.js.git"},"bugs":{"url":"https://github.com/mbykov/diglossa.js/issues"}};
 
 /***/ }),
 
@@ -295,11 +295,6 @@ const authMenuTemplate = {
     click: () => {
       electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'signin');
     }
-  }, {
-    label: "sign up",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'signup');
-    }
   }]
 };
 
@@ -424,17 +419,9 @@ __webpack_require__.r(__webpack_exports__);
 
 const helpMenuTemplate = {
   label: "Help",
-  submenu: [{
-    label: "how to create a book",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'howto-create');
-    }
-  }, {
-    label: "how to create a dictionary",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'howto-dict');
-    }
-  }, {
+  submenu: [// { label: "how to create a book", click: () => { BrowserWindow.getFocusedWindow().webContents.send('action', 'howto-create') } },
+  // { label: "how to create a dictionary", click: () => { BrowserWindow.getFocusedWindow().webContents.send('action', 'howto-dict') } },
+  {
     label: "hot keys",
     click: () => {
       electron__WEBPACK_IMPORTED_MODULE_0__["BrowserWindow"].getFocusedWindow().webContents.send('action', 'hotkeys');

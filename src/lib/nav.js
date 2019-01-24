@@ -2,9 +2,7 @@
 import _ from "lodash"
 import { q, qs, empty, create, remove, span, p, div, enclitic } from './utils'
 import Split from 'split.js'
-// import { bookData, scrollPanes, keyPanes, parseLib, parseTitle, parseBook } from './lib/book'
 import { scrollPanes, keyPanes } from './book'
-// import { parseLib, parseTitle } from './book'
 import { getInfo, getLib, getTitle, getBook, getQuery } from './pouch'
 
 
@@ -17,7 +15,6 @@ const path = require('path')
 const slash = require('slash')
 const {getCurrentWindow} = require('electron').remote
 
-// let current = {section: 'title'}
 let init = {section: 'home'}
 let history = [init]
 let hstate = 0
@@ -99,8 +96,8 @@ Mousetrap.bind(['alt+left', 'alt+right'], function(ev) {
 })
 
 Mousetrap.bind(['alt+1', 'alt+2'], function(ev) {
-  if (ev.which == 49) log('----1')
-  else if (ev.which == 50) log('----2')
+  // if (ev.which == 49) log('----1')
+  // else if (ev.which == 50) log('----2')
 })
 
 Mousetrap.bind(['ctrl+f'], function(ev) {
@@ -119,7 +116,6 @@ Mousetrap.bind(['ctrl+v'], function(ev) {
 })
 
 Mousetrap.bind(['esc'], function(ev) {
-  // log('ESC')
   // похоже, общий метод не получится
 })
 
@@ -138,9 +134,9 @@ function sectionTrigger(section) {
 
 export function navigate(state) {
   try {
-    // log('NAV-state', JSON.parse(JSON.stringify(state)))
+    JSON.parse(JSON.stringify(state))
   } catch (err) {
-    // log('NAV-state-err', err)
+    log('NAV-state ERR', err)
   }
   let section = state.section
   let progress = q('#progress')
@@ -149,7 +145,6 @@ export function navigate(state) {
   if (['title', 'book', 'search'].includes(section)) progress.classList.add('is-shown')
   if (section != 'home') over.classList.remove('is-shown')
   sectionTrigger(section)
-  // delete state.nic
   if (!state.old) {
     // history.push(_.clone(state))
     history.push(state)
@@ -157,7 +152,6 @@ export function navigate(state) {
   } else {
     delete state.old
   }
-  // log('HISTORY', history)
 
   if (section == 'home')  getLib()
   else if (section == 'title') twoPanesTitle(state), getTitle(state)

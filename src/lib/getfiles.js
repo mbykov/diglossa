@@ -143,7 +143,6 @@ function bookWFMap(map, row, fpath, pos) {
 function walk(children) {
   let dirs = _.filter(children, child=> { return child.type == 'directory' })
   let files = _.filter(children, child=> { return child.type == 'file' })
-  // log('FILES', files)
   files = _.filter(files, fn=> { return !restricted.includes(fn.extension) })
   let grDirs = []
   dirs.forEach(dir=> {
@@ -186,18 +185,14 @@ function parseInfo(info) {
 }
 
 export function getOds(odspath, cb) {
-  log('==>00', odspath)
   if (!odspath) return
   let ext = path.extname(odspath);
   let bname = _.capitalize(path.basename(odspath, ext))
-  log('==>0', bname)
   try {
     textract.fromFileWithPath(odspath, {preserveLineBreaks: true, delimiter: '|'}, function(err, str) {
       let book = parseCSV(odspath, bname, str)
-      log('==>1', book)
       pushBook(book.info, book.pars, book.mapdocs)
         .then(function(res) {
-          log('ODS PUSH BOOK', book)
           cb(true)
         })
         .catch(function(err) {
@@ -225,7 +220,7 @@ function parseCSV(odspath, fpath, str) {
   info.book.author = nics[0]
   let infoid = ['info', info.book.author, info.book.title].join('-')
   info._id = infoid
-  info.nics = nics
+  info.nics = nics.slice(1)
   info.stats = nics.map
   info.nicnames = {}
   nics.forEach(nic=> { info.nicnames[nic] = nic })
@@ -242,7 +237,6 @@ function parseCSV(odspath, fpath, str) {
     let tmp = row
     if (quoted) {
       while (quoted) {
-        // log('Q', idx, quoted[1])
         if (quoted.index == 0) {
           strs.push(quoted[1])
           tmp = tmp.replace(quoted[1], '')
@@ -264,9 +258,6 @@ function parseCSV(odspath, fpath, str) {
     }
     strs = _.compact(strs)
 
-    if (strs.length != 3) log('row', idx, row, strs, strs.length)
-    // if (strs.length != 3) log('row', idx, strs.length)
-
     strs.forEach((str, idy)=> {
       let nic = nics[idy]
       let text = str.replace(/"/g, '')
@@ -280,9 +271,6 @@ function parseCSV(odspath, fpath, str) {
     })
   })
   let mapdocs = _.values(map)
-  // log('=>INFO', info)
-  // log('=>PARS', pars[0])
-  // log('=>MDS', mapdocs[0])
 
   return {info: info, pars: pars, mapdocs: mapdocs}
 }

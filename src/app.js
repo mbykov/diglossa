@@ -35,11 +35,6 @@ const {dialog, getCurrentWindow} = require('electron').remote
 const isDev = true
 const app = remote.app;
 
-// const apath = app.getAppPath()
-// const upath = app.getPath("userData")
-// log('APATH', apath)
-// log('UPATH', upath)
-
 // const watch = require('node-watch')
 let over = q("#new-version")
 
@@ -59,24 +54,10 @@ if (!state) state = {section: 'home'}
 navigate(state)
 
 document.body.addEventListener('click', (event) => {
-  // log('CLICK-DOC', event.target.dataset)
-  if (event.target.dataset.section) {
-    const section = event.target.dataset.section
-    // log('CLICK', section)
-
-    // TODO:
-    // let fn = '/home/michael/diglossa.texts/Xuanzang/datangxiyuji.json'
-    let fn = '/home/michael/diglossa.texts/Plato/dialogues.json'
-    // let fns = [fn]
-    if (section == 'readInfo') {
-      getInfoFiles(fn, function(res) {
-        navigate({section: 'home'})
-      })
-    }
-    else
-      navigate({section: section})
-  }
-  else if (event.target.id == 'cleanupdb') {
+  if (event.target.classList.contains('external')) {
+    let href = event.target.textContent
+    shell.openExternal(href)
+  } else if (event.target.id == 'cleanupdb') {
     cleanup()
       .then(function () {
         let progress = q('#progress')
@@ -112,9 +93,7 @@ function parseOds(fns) {
   let progress = q('#progress')
   progress.classList.add('is-shown')
   let odsopath = fns[0]
-  log('ODSPATH', odsopath)
   getOds(odsopath, function(res) {
-    log('ODS RES', res)
     navigate({section: 'home'})
   })
 }
@@ -123,7 +102,6 @@ ipcRenderer.on('reread', function (event) {
   let progress = q('#progress')
   progress.classList.add('is-shown')
   let state = settings.get('state')
-  log('RE-READ', JSON.stringify(state))
   if (!state.infoid) {
     navigate(state)
     return

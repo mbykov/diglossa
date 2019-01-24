@@ -145,11 +145,7 @@ const {
 
 
 const isDev = true;
-const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app; // const apath = app.getAppPath()
-// const upath = app.getPath("userData")
-// log('APATH', apath)
-// log('UPATH', upath)
-// const watch = require('node-watch')
+const app = electron__WEBPACK_IMPORTED_MODULE_2__["remote"].app; // const watch = require('node-watch')
 
 let over = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])("#new-version");
 let container = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#container');
@@ -168,23 +164,9 @@ if (!state) state = {
 };
 Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
 document.body.addEventListener('click', event => {
-  // log('CLICK-DOC', event.target.dataset)
-  if (event.target.dataset.section) {
-    const section = event.target.dataset.section; // log('CLICK', section)
-    // TODO:
-    // let fn = '/home/michael/diglossa.texts/Xuanzang/datangxiyuji.json'
-
-    let fn = '/home/michael/diglossa.texts/Plato/dialogues.json'; // let fns = [fn]
-
-    if (section == 'readInfo') {
-      Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_4__["getInfoFiles"])(fn, function (res) {
-        Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])({
-          section: 'home'
-        });
-      });
-    } else Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])({
-      section: section
-    });
+  if (event.target.classList.contains('external')) {
+    let href = event.target.textContent;
+    electron__WEBPACK_IMPORTED_MODULE_2__["shell"].openExternal(href);
   } else if (event.target.id == 'cleanupdb') {
     Object(_lib_pouch__WEBPACK_IMPORTED_MODULE_6__["cleanup"])().then(function () {
       let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#progress');
@@ -234,9 +216,7 @@ function parseOds(fns) {
   let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#progress');
   progress.classList.add('is-shown');
   let odsopath = fns[0];
-  log('ODSPATH', odsopath);
   Object(_lib_getfiles__WEBPACK_IMPORTED_MODULE_4__["getOds"])(odsopath, function (res) {
-    log('ODS RES', res);
     Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])({
       section: 'home'
     });
@@ -247,7 +227,6 @@ electron__WEBPACK_IMPORTED_MODULE_2__["ipcRenderer"].on('reread', function (even
   let progress = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["q"])('#progress');
   progress.classList.add('is-shown');
   let state = settings.get('state');
-  log('RE-READ', JSON.stringify(state));
 
   if (!state.infoid) {
     Object(_lib_nav__WEBPACK_IMPORTED_MODULE_5__["navigate"])(state);
@@ -384,8 +363,6 @@ function goTitleEvent(ev) {
 }
 
 function parseTitle(state, info) {
-  // log('TITLE STATE', state)
-  // log('TITLE INFO', info)
   let osource = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#titlesource');
   let otrns = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])('#titletrns');
   Object(_utils__WEBPACK_IMPORTED_MODULE_1__["empty"])(osource);
@@ -424,8 +401,7 @@ function parseTitle(state, info) {
   otree.id = 'tree';
   let tbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tbody');
   otree.appendChild(tbody);
-  otrns.appendChild(otree); // log('INFO.TREE', info.tree)
-
+  otrns.appendChild(otree);
   Object(_tree__WEBPACK_IMPORTED_MODULE_2__["tree"])(info.tree, otree);
   otree.addEventListener("click", function (ev) {
     goBookEvent(ev, info);
@@ -483,8 +459,7 @@ function setChunk(state, pars, direction) {
     return !par.author;
   });
 
-  if (!apars.length) return; // log('APARS', apars)
-
+  if (!apars.length) return;
   apars.forEach(apar => {
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>");
 
@@ -595,8 +570,7 @@ function createRightHeader(state, info) {
   if (ohright) Object(_utils__WEBPACK_IMPORTED_MODULE_1__["remove"])(ohright);
   ohright = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'hright');
   ohright.style.left = arect.width * 0.70 + 'px';
-  obook.appendChild(ohright); // log('CREATE RH state', state)
-
+  obook.appendChild(ohright);
   let current = {};
   current = readTree(current, info.tree, state.fpath);
   let oul = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('ul');
@@ -737,8 +711,7 @@ function scrollPanes(ev, state) {
       state.pos = el.getAttribute('pos');
       return false;
     }
-  }); // if (state && state.section != 'book') return
-
+  });
 
   addChunk(state);
 }
@@ -758,8 +731,7 @@ function keyPanes(ev, state) {
     source.scrollTop = source.scrollTop + height - 60;
   } else return;
 
-  trns.scrollTop = source.scrollTop; // if (state && state.section != 'book') return
-
+  trns.scrollTop = source.scrollTop;
   addChunk(state);
 }
 
@@ -798,14 +770,12 @@ function parseQuery(state, qtree) {
   otree.id = 'qtree';
   let otbody = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["create"])('div', 'tbody');
   otree.appendChild(otbody);
-  osec.appendChild(otree); // otree.addEventListener('click', treeClick, false)
-
+  osec.appendChild(otree);
   otree.addEventListener("click", function (ev) {
     treeClick(ev, state);
   }, false); // otree.addEventListener('click', jumpPos, false)
 
-  otree.addEventListener("wheel", scrollQueries, false); // otree.addEventListener("mouseover", copyToClipboard, false)
-  // log('QTRE', qtree)
+  otree.addEventListener("wheel", scrollQueries, false);
 
   for (let infoid in qtree) {
     let child = {
@@ -842,8 +812,7 @@ function parseQuery(state, qtree) {
         let {
           html,
           percent
-        } = aroundQuery(auth.text, state.query, pos); // if (pos == 5) log('NODE', html)
-
+        } = aroundQuery(auth.text, state.query, pos);
         let oauth = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["p"])('', 'qline');
         oauth.innerHTML = html;
         otext.appendChild(oauth);
@@ -888,7 +857,7 @@ function treeClick(ev, state) {
   let parent = ev.target.parentNode;
 
   if (ev.target.classList.contains('tree-node-branch')) {
-    parent.classList.toggle('tree-collapse'); // } else if (ev.target.classList.contains('active') || ev.target.classList.contains('query')) {
+    parent.classList.toggle('tree-collapse');
   } else if (ev.target.classList.contains('query')) {
     let target = ev.target.closest('.qtext');
     jumpPos(target, state.query);
@@ -911,7 +880,6 @@ function jumpPos(el, query) {
 
 function scrollQueries(ev) {
   if (ev.shiftKey != true) return;
-  log('SCROLL', ev.target);
   return;
   let el = ev.target;
   let parent = el.closest('.qtext');
@@ -936,9 +904,7 @@ function scrollQueries(ev) {
 
   next.classList.remove('hidden');
   curpar.classList.add('hidden');
-} // export function parseOds() {
-//   hideProgress()
-// }
+}
 
 /***/ }),
 
@@ -1220,8 +1186,7 @@ function walk(children) {
 
   let files = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(children, child => {
     return child.type == 'file';
-  }); // log('FILES', files)
-
+  });
 
   files = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.filter(files, fn => {
     return !restricted.includes(fn.extension);
@@ -1285,13 +1250,10 @@ function parseInfo(info) {
 }
 
 function getOds(odspath, cb) {
-  log('==>00', odspath);
   if (!odspath) return;
   let ext = path.extname(odspath);
 
   let bname = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.capitalize(path.basename(odspath, ext));
-
-  log('==>0', bname);
 
   try {
     textract.fromFileWithPath(odspath, {
@@ -1299,9 +1261,7 @@ function getOds(odspath, cb) {
       delimiter: '|'
     }, function (err, str) {
       let book = parseCSV(odspath, bname, str);
-      log('==>1', book);
       Object(_pouch__WEBPACK_IMPORTED_MODULE_3__["pushBook"])(book.info, book.pars, book.mapdocs).then(function (res) {
-        log('ODS PUSH BOOK', book);
         cb(true);
       }).catch(function (err) {
         log('PUSH BOOK ERR:', err);
@@ -1331,7 +1291,7 @@ function parseCSV(odspath, fpath, str) {
   info.book.author = nics[0];
   let infoid = ['info', info.book.author, info.book.title].join('-');
   info._id = infoid;
-  info.nics = nics;
+  info.nics = nics.slice(1);
   info.stats = nics.map;
   info.nicnames = {};
   nics.forEach(nic => {
@@ -1356,7 +1316,6 @@ function parseCSV(odspath, fpath, str) {
 
     if (quoted) {
       while (quoted) {
-        // log('Q', idx, quoted[1])
         if (quoted.index == 0) {
           strs.push(quoted[1]);
           tmp = tmp.replace(quoted[1], '');
@@ -1380,8 +1339,6 @@ function parseCSV(odspath, fpath, str) {
     }
 
     strs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(strs);
-    if (strs.length != 3) log('row', idx, row, strs, strs.length); // if (strs.length != 3) log('row', idx, strs.length)
-
     strs.forEach((str, idy) => {
       let nic = nics[idy];
       let text = str.replace(/"/g, '');
@@ -1404,10 +1361,7 @@ function parseCSV(odspath, fpath, str) {
     });
   });
 
-  let mapdocs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.values(map); // log('=>INFO', info)
-  // log('=>PARS', pars[0])
-  // log('=>MDS', mapdocs[0])
-
+  let mapdocs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.values(map);
 
   return {
     info: info,
@@ -1438,9 +1392,7 @@ __webpack_require__.r(__webpack_exports__);
 //
 
 
- // import { bookData, scrollPanes, keyPanes, parseLib, parseTitle, parseBook } from './lib/book'
 
- // import { parseLib, parseTitle } from './book'
 
 
 const log = console.log;
@@ -1459,8 +1411,7 @@ const slash = __webpack_require__(/*! slash */ "slash");
 
 const {
   getCurrentWindow
-} = __webpack_require__(/*! electron */ "electron").remote; // let current = {section: 'title'}
-
+} = __webpack_require__(/*! electron */ "electron").remote;
 
 let init = {
   section: 'home'
@@ -1534,8 +1485,8 @@ function twoPanesTitle(state) {
 Mousetrap.bind(['alt+left', 'alt+right'], function (ev) {
   if (ev.which == 37) goLeft();else if (ev.which == 39) goRight();
 });
-Mousetrap.bind(['alt+1', 'alt+2'], function (ev) {
-  if (ev.which == 49) log('----1');else if (ev.which == 50) log('----2');
+Mousetrap.bind(['alt+1', 'alt+2'], function (ev) {// if (ev.which == 49) log('----1')
+  // else if (ev.which == 50) log('----2')
 });
 Mousetrap.bind(['ctrl+f'], function (ev) {
   let query = clipboard.readText().split(' ')[0];
@@ -1552,8 +1503,7 @@ Mousetrap.bind(['ctrl+v'], function (ev) {
     showStats(info); // not nav
   });
 });
-Mousetrap.bind(['esc'], function (ev) {// log('ESC')
-  // похоже, общий метод не получится
+Mousetrap.bind(['esc'], function (ev) {// похоже, общий метод не получится
 });
 
 function hideAll() {
@@ -1570,8 +1520,10 @@ function sectionTrigger(section) {
 }
 
 function navigate(state) {
-  try {// log('NAV-state', JSON.parse(JSON.stringify(state)))
-  } catch (err) {// log('NAV-state-err', err)
+  try {
+    JSON.parse(JSON.stringify(state));
+  } catch (err) {
+    log('NAV-state ERR', err);
   }
 
   let section = state.section;
@@ -1579,7 +1531,7 @@ function navigate(state) {
   let over = Object(_utils__WEBPACK_IMPORTED_MODULE_1__["q"])("#new-version");
   if (['title', 'book', 'search'].includes(section)) progress.classList.add('is-shown');
   if (section != 'home') over.classList.remove('is-shown');
-  sectionTrigger(section); // delete state.nic
+  sectionTrigger(section);
 
   if (!state.old) {
     // history.push(_.clone(state))
@@ -1587,8 +1539,7 @@ function navigate(state) {
     hstate = history.length - 1;
   } else {
     delete state.old;
-  } // log('HISTORY', history)
-
+  }
 
   if (section == 'home') Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getLib"])();else if (section == 'title') twoPanesTitle(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getTitle"])(state);else if (section == 'book') twoPanes(state), Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getBook"])(state);else if (section == 'search') Object(_pouch__WEBPACK_IMPORTED_MODULE_4__["getQuery"])(state); // else showSection(section)
 
@@ -1674,7 +1625,6 @@ let fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
 const isDev = __webpack_require__(/*! electron-is-dev */ "electron-is-dev"); // const isDev = false
 // const isDev = true
-// log('=====IS-DEV', isDev)
 
 
 const limit = 20;
@@ -1733,8 +1683,7 @@ function pushTexts(newdocs) {
   }).then(function (res) {
     let docs = res.rows.map(row => {
       return row.doc;
-    }); // log('========= DOCS', docs[0])
-
+    });
     let cleandocs = [];
     let hdoc = {};
     docs.forEach(doc => {
@@ -1748,23 +1697,19 @@ function pushTexts(newdocs) {
       } else {
         cleandocs.push(newdoc);
       }
-    }); // log('========= CLEANDOCS', cleandocs)
-
+    });
     return libdb.bulkDocs(cleandocs);
   });
 } // MAP
 
 
 function pushMap(ndocs) {
-  // log('MAP NEW-DOCS', ndocs[100])
   return ftdb.allDocs({
     include_docs: true
   }).then(function (res) {
-    // log('MAP OLD-RES-ROWS', res.rows.length)
     let odocs = res.rows.map(row => {
       return row.doc;
-    }); // log('MAP OLD-DOCS', odocs.length, odocs)
-
+    });
     let hdoc = {};
     odocs.forEach(doc => {
       hdoc[doc._id] = doc;
@@ -1786,8 +1731,7 @@ function pushMap(ndocs) {
       } else {
         cleandocs.push(ndoc);
       }
-    }); // log('MAP CLEANDOCS', cleandocs.length)
-
+    });
     return ftdb.bulkDocs(cleandocs);
   }).catch(function (err) {
     log('MAP ERR', err);
@@ -1823,11 +1767,9 @@ function getTitle(state) {
   });
 }
 function getBook(state) {
-  // log('PARS GOT BEFORE')
   libdb.get(state.infoid).then(function (info) {
     getText(state).then(function (res) {
-      let pars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(res.docs); // log('PARS.LENGTH', pars.length)
-
+      let pars = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.compact(res.docs);
 
       Object(_book__WEBPACK_IMPORTED_MODULE_3__["parseBook"])(state, info, pars);
     });
@@ -1851,7 +1793,6 @@ function getText(state, endpos) {
   }); // sort: ['idx'], , limit: 20
 }
 function cleanup() {
-  log('before destroy');
   return Promise.all([libdb.destroy(), ftdb.destroy()]);
 }
 function getQuery(state) {
@@ -1863,8 +1804,7 @@ function getQuery(state) {
   }).then(function (res) {
     let ftdocs = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.flatten(res.docs.map(doc => {
       return doc.docs;
-    })); // log('FTDOCS', ftdocs)
-
+    }));
 
     let selector = {
       $or: ftdocs.map(doc => {
@@ -1877,7 +1817,7 @@ function getQuery(state) {
     libdb.find({
       selector: selector
     }).then(function (res) {
-      let qtree = []; // log('SEARCH res.docs', res.docs)
+      let qtree = [];
 
       let qinfos = lodash__WEBPACK_IMPORTED_MODULE_0___default.a.groupBy(res.docs, 'infoid');
 

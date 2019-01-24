@@ -45,8 +45,6 @@ function goTitleEvent(ev) {
 
 
 export function parseTitle(state, info) {
-  // log('TITLE STATE', state)
-  // log('TITLE INFO', info)
   let osource = q('#titlesource')
   let otrns = q('#titletrns')
   empty(osource)
@@ -88,7 +86,6 @@ export function parseTitle(state, info) {
   let tbody = create('div', 'tbody')
   otree.appendChild(tbody)
   otrns.appendChild(otree)
-  // log('INFO.TREE', info.tree)
   tree(info.tree, otree)
 
   otree.addEventListener("click", function(ev) {
@@ -141,7 +138,6 @@ function setChunk(state, pars, direction) {
   let apars = _.filter(pars, par=> { return par.author})
   let tpars = _.filter(pars, par=> { return !par.author})
   if (!apars.length) return
-  // log('APARS', apars)
   apars.forEach(apar=> {
     let html = apar.text.replace(rePunct, "<span class=\"active\">$1<\/span>")
     if (state.query) {
@@ -234,7 +230,6 @@ function createRightHeader(state, info) {
   ohright = create('div', 'hright')
   ohright.style.left = arect.width*0.70 + 'px'
   obook.appendChild(ohright)
-  // log('CREATE RH state', state)
 
   let current = {}
   current = readTree(current, info.tree, state.fpath)
@@ -381,7 +376,6 @@ export function scrollPanes(ev, state) {
       return false
     }
   })
-  // if (state && state.section != 'book') return
   addChunk(state)
 }
 
@@ -403,7 +397,6 @@ export function keyPanes(ev, state) {
   else return
   trns.scrollTop = source.scrollTop
 
-  // if (state && state.section != 'book') return
   addChunk(state)
 }
 
@@ -448,15 +441,12 @@ export function parseQuery(state, qtree) {
   let otbody = create('div', 'tbody')
   otree.appendChild(otbody)
   osec.appendChild(otree)
-  // otree.addEventListener('click', treeClick, false)
   otree.addEventListener("click", function(ev) {
     treeClick(ev, state)
   }, false)
   // otree.addEventListener('click', jumpPos, false)
   otree.addEventListener("wheel", scrollQueries, false)
-  // otree.addEventListener("mouseover", copyToClipboard, false)
 
-  // log('QTRE', qtree)
   for (let infoid in qtree) {
     let child  = {text: infoid}
     let ibranch = branch(child)
@@ -481,7 +471,6 @@ export function parseQuery(state, qtree) {
         otext.setAttribute('infoid', infoid)
 
         let {html, percent} = aroundQuery(auth.text, state.query, pos)
-        // if (pos == 5) log('NODE', html)
         let oauth = p('', 'qline')
         oauth.innerHTML = html
         otext.appendChild(oauth)
@@ -523,7 +512,6 @@ function treeClick(ev, state) {
   let parent = ev.target.parentNode
   if (ev.target.classList.contains('tree-node-branch')) {
     parent.classList.toggle('tree-collapse')
-  // } else if (ev.target.classList.contains('active') || ev.target.classList.contains('query')) {
   } else if (ev.target.classList.contains('query')) {
     let target = ev.target.closest('.qtext')
     jumpPos(target, state.query)
@@ -540,7 +528,6 @@ function jumpPos(el, query) {
 
 function scrollQueries(ev) {
   if (ev.shiftKey != true) return
-  log('SCROLL', ev.target)
   return
   let el = ev.target
   let parent = el.closest('.qtext')
@@ -556,8 +543,3 @@ function scrollQueries(ev) {
   next.classList.remove('hidden')
   curpar.classList.add('hidden')
 }
-
-// export function parseOds() {
-
-//   hideProgress()
-// }

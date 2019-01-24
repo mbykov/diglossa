@@ -12,7 +12,6 @@ let fse = require('fs-extra')
 const isDev = require('electron-is-dev')
 // const isDev = false
 // const isDev = true
-// log('=====IS-DEV', isDev)
 const limit = 20
 
 const app = remote.app
@@ -75,7 +74,6 @@ function pushTexts(newdocs) {
   return libdb.allDocs({include_docs: true})
     .then(function(res) {
       let docs = res.rows.map(row=>{ return row.doc })
-      // log('========= DOCS', docs[0])
       let cleandocs = []
       let hdoc = {}
       docs.forEach(doc=> { hdoc[doc._id] = doc })
@@ -88,19 +86,15 @@ function pushTexts(newdocs) {
           cleandocs.push(newdoc)
         }
       })
-      // log('========= CLEANDOCS', cleandocs)
       return libdb.bulkDocs(cleandocs)
     })
 }
 
 // MAP
 function pushMap(ndocs) {
-  // log('MAP NEW-DOCS', ndocs[100])
   return ftdb.allDocs({ include_docs: true })
     .then(function(res) {
-      // log('MAP OLD-RES-ROWS', res.rows.length)
       let odocs = res.rows.map(row=>{ return row.doc})
-      // log('MAP OLD-DOCS', odocs.length, odocs)
       let hdoc = {}
       odocs.forEach(doc=> { hdoc[doc._id] = doc })
 
@@ -120,7 +114,6 @@ function pushMap(ndocs) {
           cleandocs.push(ndoc)
         }
       })
-      // log('MAP CLEANDOCS', cleandocs.length)
       return ftdb.bulkDocs(cleandocs)
     })
     .catch(function (err) {
@@ -163,13 +156,11 @@ export function getTitle(state) {
 }
 
 export function getBook(state) {
-  // log('PARS GOT BEFORE')
   libdb.get(state.infoid)
     .then(function (info) {
       getText(state)
         .then(function(res) {
           let pars = _.compact(res.docs)
-          // log('PARS.LENGTH', pars.length)
           parseBook(state, info, pars)
         })
     }).catch(function (err) {
@@ -186,7 +177,6 @@ export function getText(state, endpos) {
 }
 
 export function cleanup() {
-  log('before destroy')
   return Promise.all([
     libdb.destroy(),
     ftdb.destroy()
@@ -198,12 +188,10 @@ export function getQuery(state) {
   ftdb.find({selector: selector})
     .then(function (res) {
       let ftdocs = _.flatten(res.docs.map(doc=> { return doc.docs }))
-      // log('FTDOCS', ftdocs)
       let selector = {$or: ftdocs.map(doc=> { return {fpath: doc.fpath, pos: doc.pos }})}
       libdb.find({selector: selector})
         .then(function(res) {
           let qtree = []
-          // log('SEARCH res.docs', res.docs)
           let qinfos = _.groupBy(res.docs, 'infoid')
 
           for (let infoid in qinfos) {
