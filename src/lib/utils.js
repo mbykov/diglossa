@@ -1,6 +1,14 @@
 import _ from 'lodash'
+// const natural = require('natural')
 
-let util = require('util')
+// let util = require('util')
+
+export const log = console.log
+
+// https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
+export function hashCode(s) {
+  return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
+}
 
 export function q (sel) {
   return document.querySelector(sel)
@@ -30,9 +38,9 @@ export function recreate (element) {
   element.parentNode.replaceChild(newElement, element)
 }
 
-// function cret (str) {
-//   return document.createTextNode(str)
-// }
+export function ctext (str) {
+  return document.createTextNode(str)
+}
 
 export function span (str, style) {
   let el = document.createElement('span')
@@ -40,6 +48,11 @@ export function span (str, style) {
   if (style) el.classList.add(style)
   return el
 }
+
+export function space () {
+  return document.createTextNode(' ')
+}
+
 
 export function br () {
   let oBR = document.createElement('br')
@@ -72,16 +85,9 @@ export function remove (el) {
   el.parentElement.removeChild(el)
 }
 
-export function removeAll (sel) {
-  let els = document.querySelectorAll(sel)
+export function removeAll (els) {
   els.forEach(el => { el.parentElement.removeChild(el) })
 }
-
-// function closeAll() {
-//     words = null
-//     // window.close()
-//     ipcRenderer.send('sync', 'window-hide')
-// }
 
 export function findAncestor (el, cls) {
   while ((el = el.parentElement) && !el.classList.contains(cls)) {
@@ -89,39 +95,90 @@ export function findAncestor (el, cls) {
   }
 }
 
+export function getCoords (el) {
+  let rect = el.getBoundingClientRect()
+  return rect
+}
+
 export function placePopup (coords, el) {
-  var top = [coords.top, 'px'].join('')
-  var left = [coords.left, 'px'].join('')
+  let top = [coords.top, 'px'].join('')
+  let left = [coords.left, 'px'].join('')
   el.style.top = top
   el.style.left = left
 }
 
-export function plog () {
-  var vs = _.values(arguments)
-  if (vs.length === 1) vs = vs[0]
-  // console.log(util.inspect(vs, {showHidden: false, depth: null}))
-  console.log(util.inspect(vs, {showHidden: false, depth: 3}))
+// https://stackoverflow.com/questions/4793604/how-to-insert-an-element-after-another-element-in-javascript-without-using-a-lib
+export function insertAfter(referenceNode, newNode) {
+  referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 }
 
-export function enclitic(str) {
-  let syms = str.split('')
-  let stress = false
-  let clean = []
-  let stresses = [ac.oxia, ac.varia, ac.peris]
-  syms.forEach(sym => {
-    if (!stresses.includes(sym)) clean.push(sym)
-    else if (!stress) clean.push(sym), stress = true
-  })
-  return clean.join('')
+export function zerofill(number, size) {
+  number = number.toString()
+  while (number.length < size) number = "0" + number
+  return number;
 }
 
-export function getStore(name) {
-  let json, obj
-
-  return obj
+export function cleanStr(str) {
+  return str.trim().replace(/\n+/g, '\n').replace(/↵+/, '\n').replace(/  +/, ' ').replace(/ /g, '') // .replace(/\s+/, ' ')
 }
 
-export function setStore(name, obj) {
-  let oapp = q('#app')
-  q('#app').setAttribute()
+export function ndash(str) {
+  return str.trim().replace(/^--/, '–').replace(/^—/, '–').replace(/ - /g, ' – ') // m-dash: —
+}
+
+export function cleanDname(descr) {
+  if (!descr.author) descr.author = ''
+  if (!descr.title) descr.title = descr.name || ''
+  let lang = descr.lang || ''
+  // let str = [descr.type || '', descr.lang || '', descr.author.slice(0,25), descr.title.slice(0,25)].join('-')
+  let str = [lang, descr.author.slice(0,25), descr.title.slice(0,25)].join('-')
+  return str.replace(/[)(,\.]/g,'').replace(/\s+/g, '-').replace(/\//g, '_')
+}
+
+// ev.preventDefault()
+// ev.stopPropagation()
+
+export function replaceEl (el, html) {
+  const parentElem = el.parentNode
+  let innerElem
+  while (innerElem = el.firstChild) { parentElem.insertBefore(innerElem, el) }
+  parentElem.removeChild(el)
+}
+
+export function fromHTML(html) {
+  const div = document.createElement('div')
+  div.innerHTML = html
+  return div.firstChild
+}
+
+export function previousSiblings(elem) {
+  let sibs = []
+  while (elem = elem.previousSibling) {
+    if (elem.nodeName !== 'SPAN') continue
+    sibs.push(elem)
+  }
+  return sibs
+}
+
+export function splitByPhrases(str) {
+  return str.replace(/([.?!])\s*(?=[A-Z])/g, "$1|").split("|")
+}
+
+
+// PAGE
+export function scrollToPosition(scrollTop) {
+  let osec = q('.page')
+  osec.scrollTop = scrollTop
+}
+
+export function selectParallelBooks(store, bid) {
+  for (let libook in store) {
+    for (let book of store[libook].books) {
+      if (book.bid == bid) return store[libook].books
+    }
+  }
+}
+
+export function tokenizer (str) {
+  return str.split(/[\p{P} ]+/ug).filter(Boolean)
 }

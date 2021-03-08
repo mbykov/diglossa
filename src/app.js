@@ -1,168 +1,238 @@
-// import "./stylesheets/app.css";
-// import "./stylesheets/main.css";
+'use strict'
 
-import "./lib/context_menu.js";
-import _ from "lodash";
-// import Split from 'split.js'
-import { remote } from "electron";
-import { shell } from 'electron'
-import { ipcRenderer } from "electron";
+import "./css/tailwind.css";
+import "./css/index.css";
+import "./css/tree.css";
 
-import { q, qs, empty, create, remove, span, p, div, enclitic } from './lib/utils'
-// import { bookData, scrollPanes, keyPanes, parseLib, parseTitle, parseBook } from './lib/book'
-// import { parseInfo, parseDir, parseODS } from './lib/getfiles'
-// import { parseQuery } from './lib/search';
-import { getInfoFiles, getOds } from './lib/getfiles'
-import { navigate } from './lib/nav';
-// cleanup - перенести в book?
-import { getInfo, cleanup } from './lib/pouch'
+import _ from 'lodash'
+import { remote, ipcRenderer, shell } from "electron"
+import { log, q, qs, remove } from './lib/utils'
+import { progress } from './lib/progress'
+import { message } from './lib/message'
+import { loadTemplates, loadSection } from './lib/load-templates'
+import { config } from "./config"
+import { header, rotateBlock } from './header'
 
-const settings = require('electron').remote.require('electron-settings')
+const mouse = require('mousetrap')
+const Store = require('electron-store')
+const appstore = new Store({name: 'app'})
 
-const JSON = require('json5')
-const axios = require('axios')
-let fse = require('fs-extra')
-const slash = require('slash')
-const log = console.log
+let dgl = remote.getGlobal('dgl')
+import { getExportBook } from './exportBook'
+import { getImportBook } from './importBook'
+import { getImportDict } from './importDict'
+let templates = remote.getGlobal('templates')
 
-const path = require('path')
+import { library } from './library'
+import { book } from './book'
+import { page } from './page'
+import { bookmarks } from './bookmarks'
+import { newtext } from './newtext'
+import { preference } from './prefs'
+import { dictionary } from './dicts'
+import { search } from './search'
 
-const clipboard = require('electron-clipboard-extended')
-const {dialog, getCurrentWindow} = require('electron').remote
+const { app } = require('electron').remote
+let homepath = app.getPath('home')
+// let lang = appstore.get('lang') || config.deflang
 
-// const isDev = require('electron-is-dev')
-// const isDev = false
-const isDev = true
-const app = remote.app;
 
-// const watch = require('node-watch')
-let over = q("#new-version")
+const routes = { library, book, page, bookmarks, newtext, preference, dictionary, search }
 
-let container = q('#container')
-let imports = qs('link[rel="import"]')
-imports.forEach(link=> {
-  let content = link.import
-  let section = content.querySelector('.section')
-  container.appendChild(section.cloneNode(true))
-})
-
-// let home = q('#home')
-// home.classList.add('is-shown')
-// navigate({section: 'home'})
-let state = settings.get('state')
-if (!state) state = {section: 'home'}
-navigate(state)
-
-document.body.addEventListener('click', (event) => {
-  if (event.target.classList.contains('external')) {
-    let href = event.target.textContent
-    shell.openExternal(href)
-  } else if (event.target.id == 'cleanupdb') {
-    cleanup()
-      .then(function () {
-        let progress = q('#progress')
-        progress.classList.remove('is-shown')
-        getCurrentWindow().reload()
-        navigate({section: 'home'})
-      }).catch(function (err) {
-        log('DESTROY ERR:', err)
-      })
+class History {
+  constructor() {
+    this.store = [],
+    this.index = 0
   }
-})
-
-ipcRenderer.on('parseDir', function (event) {
-  dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'JSON', extensions: ['json'] }]}, parseDir)
-})
-
-ipcRenderer.on('parseOds', function (event) {
-  dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'ODS', extensions: ['ods'] }]}, parseOds)
-})
-
-function parseDir(fns) {
-  if (!fns || !fns.length) return
-  let progress = q('#progress')
-  progress.classList.add('is-shown')
-  let infopath = fns[0]
-  getInfoFiles(infopath, function(res) {
-    navigate({section: 'home'})
-  })
+  get state() {
+    return this.store[this.index]
+  }
+  set state(state) {
+    this.store.push(state)
+    this.index = this.store.length -1
+  }
+  back() {
+    if (this.index) this.index--, router(this.state, true) // чтобы не запомнить
+    // if (this.index) this.index--, router(this.state)
+  }
+  forward() {
+    if (this.index < this.store.length-1) this.index++, router(this.state, true)
+    // if (this.index < this.store.length-1) this.index++, router(this.state)
+  }
+  log() {
+    log('HST:', this)
+  }
 }
 
-function parseOds(fns) {
-  if (!fns || !fns.length) return
-  let progress = q('#progress')
-  progress.classList.add('is-shown')
-  let odsopath = fns[0]
-  getOds(odsopath, function(res) {
-    navigate({section: 'home'})
-  })
+let hst = new History()
+
+mouse.bind(['alt+left'], function(ev) {
+  if (dgl.editMode) return
+  hst.back()
+})
+
+mouse.bind(['alt+right'], function(ev) {
+  if (dgl.editMode) return
+  hst.forward()
+})
+
+export const router = async (state, skip) => {
+  closeAll()
+  if (!skip) hst.state = state
+  dgl.route = state.route
+  let section = routes[state.route]
+  await section.ready(state)
 }
 
-ipcRenderer.on('reread', function (event) {
-  let progress = q('#progress')
-  progress.classList.add('is-shown')
-  let state = settings.get('state')
-  if (!state.infoid) {
-    navigate(state)
-    return
+export function render(template, selector = '#app') {
+  const region = q(selector)
+  region.innerHTML = templates[template]
+  hideSearchIcon()
+}
+
+function closeAll() {
+  let ofn = q('#footnote')
+  if (ofn) ofn.parentElement.removeChild(ofn)
+  let oimgs = qs('img.floatimg')
+  oimgs.forEach(el => { el.parentElement.removeChild(el) })
+  progress.hide()
+  message.hide()
+  page.localquery = ''
+  // hideSearchIcon()
+}
+
+;(async function init() {
+  await loadTemplates()
+  const initState = {route: 'library'}
+  // if (!glang.local) glang.local = config.deflang
+  dgl.langs = (books) => books.filter(book=> book.active).map(book=> book.lang),
+  dgl.alllangs = (books) => books.map(book=> book.lang),
+  dgl.actives = (books) => {
+    books = books.filter(book=> book.active)
+    if (books.length > 1 && !books.find(book=> book.shown)) books[1].shown = true
+    return books
   }
-  getInfo(state.infoid)
-    .then(function (info) {
-      if (info.infopath) {
-        getInfoFiles(info.infopath, function(res) {
-          navigate(state)
-        })
-      } else {
-        getOds(info.odspath, function(res) {
-          navigate(state)
-        })
-      }
-    }).catch(function(err) {
-      log('RE-READ BOOK ERR:', err)
-    })
-})
+  dgl.origin = (books) => books.find(book=> book.origin), // origin always active
+  dgl.shown = (books) => books.filter(book=> book.active).find(book=> book.shown),
+  dgl.trns = (books) => books.filter(book=> book.active && !book.origin)
 
-// R+Shift
-ipcRenderer.on('reload', function (event) {
-  let state = settings.get('state')
-  getCurrentWindow().reload()
-  navigate(state)
-})
+  router(initState)
+  setSearchIcon()
+  render('message', '#message')
+})()
 
-ipcRenderer.on('action', function (event, action) {
-  navigate({section: action})
-})
-
-ipcRenderer.on('version', function (event, oldver) {
-  axios.get('https://api.github.com/repos/mbykov/diglossa.js/releases/latest')
-    .then(function (response) {
-      if (!response || !response.data) return
-      let newver = response.data.name
-      if (oldver && newver && newver > oldver) {
-        let verTxt = ['new version available:', newver].join(' ')
-        over.textContent = verTxt
-        over.classList.add('is-shown')
-      }
-    })
-    .catch(function (err) {
-      console.log('VERSION ERR', err)
-    })
-})
-
-over.addEventListener('click', getNewVersion, false)
-
-function getNewVersion() {
-  let href = 'https://github.com/mbykov/diglossa.js/releases/latest'
+document.addEventListener ("click",  (ev) => {
+  message.hide()
+  if (ev.target.nodeName == 'BUTTON') return
+  // if (ev.target.nodeName == 'A') return
+  let ohref = ev.target.closest('.external')
+  if (!ohref) return
+  ev.preventDefault()
+  let href = ohref.textContent
+  log('_href', href)
+  if (!href) return
   shell.openExternal(href)
+})
+
+
+// document.on('click', 'a[href^="http"]', function(event) {
+//   event.preventDefault();
+//   log('____HREF', this.href)
+//   shell.openExternal(this.href);
+// });
+
+
+// scroll page
+document.addEventListener("wheel", function(ev) {
+  if (ev.shiftKey) return
+  const opage = q('.page') // || q('.section') // todo: del
+  if (!opage) return
+  let delta = (ev.deltaY > 0) ? 24 : -24
+  opage.scrollTop += delta
+})
+
+
+mouse.bind('esc', function(ev) {
+  ipcRenderer.send('hide-popup-window')
+  // exitEditMode()
+  closeAll()
+})
+
+mouse.bind('ctrl+v', function(ev) {
+  let state = {route: 'newtext'}
+  router(state)
+})
+
+mouse.bind('ctrl+d', function(ev) {
+  router({route: 'dictionary'})
+})
+
+ipcRenderer.on('route', function (event, route) {
+  router({route})
+})
+
+ipcRenderer.on('section', function (event, route) {
+  let lang = appstore.get('lang') || config.deflang
+  // log('__SECTION LANG', lang)
+  loadSection(lang, route)
+})
+
+
+ipcRenderer.on('lang', function (event, lang) {
+  // log('____LANG', lang)
+  appstore.set('lang', lang)
+  ipcRenderer.send('lang', lang)
+})
+
+
+// todo: del ================== DEL
+mouse.bind('ctrl+l', function(ev) {
+  ev.preventDefault()
+  const state = {route: 'library'}
+  router(state)
+})
+
+
+function hideSearchIcon() {
+  q('#search-icon').classList.add('hidden')
+  q('#search-input').classList.add('hidden')
 }
 
-function copyToClipboard(ev) {
-  if (ev.shiftKey == true) return
-  if (ev.ctrlKey == true) return
-  if (ev.target.nodeName != 'SPAN') return
-  if (!ev.target.classList.contains('active')) return
-  let wf = ev.target.textContent
-  clipboard.writeText(wf)
+function setSearchIcon() {
+  let oicon = q('#search-icon')
+  oicon.innerHTML = templates.searchicon
+  let oinput = q('#search-input')
+  oinput.innerHTML = templates.searchinput
 }
 
-document.addEventListener("mouseover", copyToClipboard, false)
+
+const handleError = (title, error) => {
+  log('_HANDLE ERR title', title)
+  log('_HANDLE ERR', error)
+}
+
+if (process.type === 'renderer') {
+	const errorHandler = _.debounce(error => {
+		handleError('Unhandled Error', error);
+	}, 200);
+	window.addEventListener('error', event => {
+		event.preventDefault();
+		errorHandler(event.error || event);
+	});
+
+	const rejectionHandler = _.debounce(reason => {
+		handleError('Unhandled Promise Rejection', reason);
+	}, 200);
+	window.addEventListener('unhandledrejection', event => {
+		event.preventDefault();
+		rejectionHandler(event.reason);
+	});
+} else {
+	process.on('uncaughtException', error => {
+		handleError('Unhandled Error', error);
+	});
+
+	process.on('unhandledRejection', error => {
+		handleError('Unhandled Promise Rejection', error);
+	});
+}

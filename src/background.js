@@ -1,78 +1,41 @@
-// This is main process of Electron, started as first thing when your
-// app starts. It runs through entire life of your application.
-// It doesn't have any windows which you can see on screen, but we can open
-// window from here.
-
 import path from "path";
 import url from "url";
-import { app, BrowserWindow, Menu, ipcMain, globalShortcut } from "electron";
-// import { devMenuTemplate } from "./menu/dev_menu_template";
-import { editMenuTemplate } from "./menu/edit_menu_template";
-import { libMenuTemplate } from "./menu/lib_menu_template";
-import { fileMenuTemplate } from "./menu/file_menu_template";
-import { aboutMenuTemplate } from "./menu/about_menu_template";
-import { helpMenuTemplate } from "./menu/help_menu_template";
-import { authMenuTemplate } from "./menu/auth_menu_template";
-// import { leftMenuTemplate } from "./menu/left_menu_template";
-// import { rightMenuTemplate } from "./menu/right_menu_template";
-// import createWindow from "./lib/window";
-const windowStateKeeper = require('electron-window-state');
-const settings = require('electron-settings');
+import { app, BrowserWindow, ipcMain, shell } from "electron";
 
-// const Store = require('electron-store')
-// const store = new Store()
+import { config } from "./config";
+
+import { fb2json } from '../../../b/book-fb2json'
+// import { fb2json } from 'book-fb2json'
+import { epub2json } from '../../../b/book-epub2json'
+// import { epub2json } from 'book-epub2json' // ??? нету
+// import { md2json } from '../../../b/book-md2json'
+import { md2json } from 'book-md2json'
+import { pdf2json } from '../../../b/book-pdf2json'
+// import { pdf2json } from 'book-pdf2json'
+
+const Store = require('electron-store')
+const positionstore = new Store({name: 'bounds'})
+import { MenuFactory } from "./i18n/menu-factory"
 
 // Special module holding environment variables which you declared
 // in config/env_xxx.json file.
-import env from "env";
+// import env from "env";
 
-const setApplicationMenu = () => {
-  const menus = [libMenuTemplate, fileMenuTemplate, aboutMenuTemplate, authMenuTemplate, helpMenuTemplate];
-  if (env.name !== "production") {
-    // menus.push(devMenuTemplate);
-  }
-  Menu.setApplicationMenu(Menu.buildFromTemplate(menus));
-};
-
-// Save userData in separate folders for each environment.
-// Thanks to this you can use production and development versions of the app
-// on same machine like those are two separate apps.
-if (env.name !== "production") {
-  const userDataPath = app.getPath("userData");
-  app.setPath("userData", `${userDataPath} (${env.name})`);
-}
-
-app.on("ready", () => {
-  setApplicationMenu();
-
-  // Load the previous state with fallback to defaults
-  let mainWindowState = windowStateKeeper({
-    defaultWidth: 1000,
-    defaultHeight: 800
-  });
-
-  // Create the window using the state information
-  const win = new BrowserWindow({
-    'x': mainWindowState.x,
-    'y': mainWindowState.y,
-    'width': mainWindowState.width,
-    'height': mainWindowState.height,
+const createWindow = () => {
+  const mainWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
     webPreferences: {
+      enableRemoteModule: true,
+      nodeIntegrationInWorker: true,
       nodeIntegration: true
     }
   });
 
-  // Let us register listeners on the window, so we can update the state
-  // automatically (the listeners will be removed when the window is closed)
-  // and restore the maximized or full screen state
-  mainWindowState.manage(win);
+  let winBounds = positionstore.get('main') || mainWindow.getBounds()
+  mainWindow.setBounds(winBounds)
 
-  // const mainWindow = createWindow("main", {
-  //   width: 1000,
-  //   height: 600
-  // });
-
-  win.loadURL(
+  mainWindow.loadURL(
     url.format({
       pathname: path.join(__dirname, "app.html"),
       protocol: "file:",
@@ -80,34 +43,143 @@ app.on("ready", () => {
     })
   );
 
-  if (env.name === "development") {
-    win.openDevTools();
-  }
-
-  win.webContents.on('did-finish-load', () => {
-    let pckg = require('../package.json')
-    let name = pckg.name
-    let version = pckg.version
-    // let aversion = pckg.dependencies.antrax.replace('^', '')
-    win.webContents.send('version', version )
-    win.setTitle([name, 'v.', version].join(' '))
+  mainWindow.webContents.on('will-navigate', (event) => {
+    event.preventDefault()
   })
 
-  win.on('resize', function () {
-    win.webContents.send('reload')
+  mainWindow.webContents.openDevTools();
+  global.templates = {}
+  global.dgl = {}
+
+  mainWindow.on('close', () => {
+    positionstore.set('main', mainWindow.getBounds())
+  })
+  // mainWindow.on('resize', () => {
+  //   positionstore.set('main', mainWindow.getBounds())
+  // })
+
+  ipcMain.on('importBook', async (event, data) => {
+    let bpath = data.bpath
+    let ext = path.extname(data.bpath)
+    if (!ext) return false
+    let type = ext.replace(/^\./, '')
+    if (type == 'zip') type = bpath.split('.').slice(-2).join('.')
+
+    let action
+    if (type == 'epub') action = epub2json
+    else if (type == 'fb2') action = fb2json
+    else if (type == 'fb2.zip') action = fb2json
+    else if (type == 'pdf') action = pdf2json
+    // else if (type == 'html') action = html2json
+    else if (type == 'md') action = md2json
+    else return {descr: 'book extension should be .epub, .fb2, .fb2.zip, .md or .dgl'}
+
+    let result = await action(bpath)
+    result.type = type
+    result.bpath = bpath
+    if (data.orbid) result.orbid = data.orbid
+    mainWindow.webContents.send('importBookResult', result)
+  })
+}
+
+
+const createPopup = () => {
+
+  const popupWindow = new BrowserWindow({
+    width: 200,
+    height: 300,
+    frame: false,
+    hasShadow: true,
+    show: false,
+    webPreferences: {
+      // enableRemoteModule: true,
+      nodeIntegration: true
+    }
+  });
+
+  let popupBounds = positionstore.get('popup') || popupWindow.getBounds()
+  popupWindow.setBounds(popupBounds)
+
+  // and load the index.html of the app.
+  popupWindow.loadURL(
+    url.format({
+      pathname: path.join(__dirname, "popup.html"),
+      protocol: "file:",
+      slashes: true
+    })
+  );
+
+  // Open the DevTools.
+  // popupWindow.webContents.openDevTools();
+
+  popupWindow.webContents.on('will-navigate', (event) => {
+    event.preventDefault()
   })
 
-  globalShortcut.register('CommandOrControl+R', () => win.webContents.send('reread'));
-  globalShortcut.register('CommandOrControl+Shift+R', () => win.reload());
-});
+  ipcMain.on('show-popup-window', (event, data) => {
+    popupWindow.show()
+    popupWindow.webContents.send('data', data)
+  })
+
+  ipcMain.on('hide-popup-window', (event) => {
+    popupWindow.hide()
+  })
+
+  popupWindow.on('close', () => {
+    positionstore.set('popup', popupWindow.getBounds())
+  })
+  // popupWindow.on('resize', () => {
+  //   positionstore.set('popup', popupWindow.getBounds())
+  // })
+}
+
 
 app.on("window-all-closed", () => {
   app.quit();
 });
 
+app.on("ready", () => {
+  let lang = config.deflang
+  MenuFactory(lang)
+})
 
-// app.on('before-quit', (ev) => {
-//   console.log('APP BEFORE QUIT')
-//   win.webContents.send('save-state', 'whoooooooh!')
-//   ev.preventDefault()
-// })
+app.on('ready', createPopup);
+app.on('ready', createWindow);
+
+ipcMain.on('lang', (event, lang) => {
+  console.log('_LANG', lang)
+  MenuFactory(lang)
+})
+
+const handleError = (title, error) => {
+  console.log('_B HE title', title)
+  console.log('_B HE ERR', error)
+}
+
+console.log('_TYPE ', process.type)
+
+if (process.type === 'renderer') {
+	const errorHandler = _.debounce(error => {
+		handleError('Unhandled Error', error);
+	}, 200);
+	window.addEventListener('error', event => {
+		event.preventDefault();
+		errorHandler(event.error || event);
+	});
+
+	const rejectionHandler = _.debounce(reason => {
+		handleError('Unhandled Promise Rejection', reason);
+	}, 200);
+	window.addEventListener('unhandledrejection', event => {
+		event.preventDefault();
+		rejectionHandler(event.reason);
+	});
+} else {
+	process.on('uncaughtException', error => {
+		handleError('Unhandled Error', error);
+	});
+
+	process.on('unhandledRejection', error => {
+		handleError('Unhandled Promise Rejection', error);
+	});
+}

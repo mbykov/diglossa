@@ -1,63 +1,12 @@
 {
-  "name": "diglossa.js",
-  "version": "0.4.33",
-  "productName": "Diglossa.js",
-  "description": "Bilingual Reader - an application for creating, distributing and reading bi-(many) lingual texts.",
-  "author": "Michael  Bykov <m.bykov@gmail.com>",
-  "copyright": "© 2018, Michael Bykov",
-  "license": "GPL-3.0",
-  "homepage": "http://diglossa.org/diglossa.js",
+  "name": "glossa",
+  "productName": "Glossa",
+  "description": "x x x x x x x x x x x x x x ",
+  "version": "0.1.0",
+  "author": "Mr. Gumby <mr.gumby@example.com>",
+  "copyright": "© 2017, Gumby inc.",
+  "homepage": "http://example.com",
   "main": "app/background.js",
-  "build": {
-    "productName": "Diglossa.js",
-    "appId": "org.diglossa.diglossa",
-    "files": [
-      "app/**/*",
-      "src/**/*",
-      "resources/**/*",
-      "package.json"
-    ],
-    "directories": {
-      "buildResources": "resources"
-    },
-    "dmg": {
-      "title": "${productName}-Setup",
-      "window": {
-        "height": 380,
-        "width": 540
-      }
-    },
-    "mac": {
-      "category": "public.app-category.productivity",
-      "icon": "resources/icon.icns"
-    },
-    "win": {
-      "icon": "resources/icon.ico",
-      "publisherName": "Michael Bykov",
-      "publish": [
-        "github"
-      ]
-    },
-    "linux": {
-      "category": "Educational software",
-      "target": [
-        {
-          "target": "deb",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "rpm",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "resources/icons"
-    },
-    "publish": "github"
-  },
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
     "preunit": "webpack --config=build/webpack.unit.config.js --env=test --display=none",
@@ -68,54 +17,77 @@
     "start": "node build/start.js",
     "release": "webpack --config=build/webpack.app.config.js --env=production && electron-builder"
   },
+  "build": {
+    "appId": "org.diglossa.diglossa",
+    "files": [
+      "app/**/*",
+      "src/**/*",
+      "resources/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "resources"
+    },
+    "linux": {
+      "category": "Educational software",
+      "target": [
+        {
+          "target": "tar.gz",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "resources/icons"
+    },
+    "publish": null
+  },
   "dependencies": {
-    "axios": "^0.18.0",
-    "directory-tree": "^2.1.0",
-    "electron-clipboard-extended": "^1.1.1",
-    "electron-is-dev": "^1.0.1",
-    "electron-settings": "^3.2.0",
-    "electron-window-state": "^5.0.2",
-    "file-loader": "^2.0.0",
-    "franc-all": "^5.0.0",
-    "fs-extra": "^7.0.1",
-    "fs-jetpack": "^2.2.0",
-    "git-clone": "^0.1.0",
-    "glob": "^7.1.3",
-    "json5": "^2.1.0",
-    "lodash": "^4.17.11",
-    "mousetrap": "^1.6.2",
-    "pouchdb": "^7.0.0",
-    "pouchdb-find": "^7.0.0",
-    "pouchdb-quick-search": "^1.3.0",
-    "slash": "^2.0.0",
-    "split.js": "^1.4.0",
-    "textract": "^2.4.0"
+    "@babel/runtime": "^7.12.5",
+    "book-epub2json": "^0.9.0",
+    "book-fb2json": "^0.9.0",
+    "book-md2json": "0.9.5",
+    "book-pdf2json": "^0.9.0",
+    "electron-store": "^6.0.1",
+    "electron-util": "^0.14.2",
+    "flexsearch": "0.6.32",
+    "franc": "^5.0.0",
+    "fs-extra": "^9.0.1",
+    "is-zip": "^1.0.0",
+    "json5": "^2.1.3",
+    "jszip": "^3.5.0",
+    "langs": "^2.0.0",
+    "lodash": "^4.17.20",
+    "mark.js": "^8.11.1",
+    "marked": "^1.2.7",
+    "mousetrap": "^1.6.5",
+    "natural": "^2.4.1",
+    "postcss-import": "^14.0.0",
+    "pouchdb": "^7.2.2",
+    "snowball-german": "^1.0.0",
+    "stopword": "^1.0.6"
   },
   "devDependencies": {
-    "@babel/core": "^7.1.2",
-    "@babel/preset-env": "^7.1.0",
-    "babel-loader": "^8.0.4",
-    "babel-plugin-transform-object-rest-spread": "^7.0.0-beta.3",
-    "chai": "^4.2.0",
-    "css-loader": "^0.28.7",
-    "electron": "4.0.0",
-    "electron-builder": "^20.31.3",
-    "electron-mocha": "^6.0.4",
-    "mocha": "^5.2.0",
-    "source-map-support": "^0.5.9",
-    "spectron": "^4.0.0",
-    "style-loader": "^0.23.0",
-    "friendly-errors-webpack-plugin": "^1.7.0",
-    "webpack": "^4.20.2",
-    "webpack-cli": "^3.1.2",
-    "webpack-merge": "^4.1.4",
-    "webpack-node-externals": "^1.7.2"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/mbykov/diglossa.js.git"
-  },
-  "bugs": {
-    "url": "https://github.com/mbykov/diglossa.js/issues"
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
+    "autoprefixer": "^10.1.0",
+    "babel-loader": "^8.0.0-beta.4",
+    "chai": "^4.1.0",
+    "css-loader": "^3.1.0",
+    "electron": "^11.1.1",
+    "electron-builder": "^22.9.1",
+    "electron-mocha": "^8.1.1",
+    "file-loader": "^6.2.0",
+    "mocha": "^7.1.1",
+    "postcss": "^8.2.2",
+    "postcss-loader": "^4.1.0",
+    "source-map-support": "^0.5.6",
+    "style-loader": "^1.1.4",
+    "tailwind": "^4.0.0",
+    "webpack": "^5.11.1",
+    "webpack-cli": "^4.3.1",
+    "webpack-merge": "^5.7.3",
+    "webpack-node-externals": "^2.5.2",
+    "worker-loader": "^3.0.7"
   }
 }

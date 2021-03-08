@@ -1,0 +1,363 @@
+/* @tailwind base; */
+/* @tailwind components; */
+/* .section { */
+/*     @apply p-4 text-gray-900 w-full bg-gray-200 shadow-md rounded m-4 */
+/* } */
+/* .header { */
+/*     @apply py-2 mb-1 text-left text-gray-900 w-full bg-gray-100 shadow-md rounded */
+/* } */
+/* .header-cell { */
+/*     @apply px-12 */
+/* } */
+/* @tailwind utilities; */
+
+/* @import "tailwindcss/base"; */
+/* @import "tailwindcss/components"; */
+/* @import "tailwindcss/utilities"; */
+
+/* @apply p-4 text-gray-900 w-full bg-gray-200 shadow-md rounded m-4 */
+.section {
+	margin: 1rem;
+  padding: 1rem;
+  color: #1a202c;
+  width: 100%;
+  background-color: #edf2f7;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 0.25rem;
+  height: 100%;
+  overflow-y: hidden;
+  padding-bottom: 50px;
+}
+
+.section p {
+  padding-top: 0.5rem;
+}
+
+.section ul {
+  margin-left: 1rem;
+  list-style: disc;
+}
+
+/* @apply py-2 mb-1 text-left text-gray-900 w-full bg-gray-100 shadow-md rounded */
+.header {
+  padding-top: 0.5rem; padding-bottom: 0.5rem;
+  text-align: left;
+  color: #1a202c;
+  width: 100%;
+  background-color: #f7fafc;
+  cursor: pointer;
+  color: maroon;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 0.25rem;
+}
+
+/* @apply px-12 */
+.header-cell {
+  padding-left: 3rem; padding-right: 3rem;
+}
+
+
+
+.hidden {
+  display: none!important;
+}
+
+html {
+    height: 100%;
+    overflow-y: hidden;
+    overflow-x: hidden;
+}
+
+body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 2rem;
+    padding-top: 0;
+}
+
+#app {
+    height: 100%;
+    overflow: hidden;
+}
+
+#progress {
+    height: 20px;
+    width: 100px;
+    position: absolute;
+    top: 5px;
+    right: 25px;
+    margin-right: 25px;
+    z-index: 100;
+}
+
+#ok {
+    position: absolute;
+    top: 55px;
+    right: 55px;
+    z-index: 100;
+}
+
+p.ptext {
+    padding-top: 0.5rem;
+    text-indent: 1rem;
+}
+
+p.plist {
+  padding-top: 0;
+  text-indent: 1rem;
+  height: 1rem;
+}
+
+.ul {
+  margin-top: 1rem;
+}
+
+
+.book {
+  height: 100%;
+  padding-bottom: 50px;
+}
+
+.page {
+    margin-top: 25px;
+    height: 100%;
+    overflow-y: hidden;
+}
+
+#message {
+    /* height: 20px; */
+    width: 80%;
+    white-space: nowrap;
+    position: absolute;
+    top: 0;
+    left: 25px;
+    z-index: 10;
+    background: white;
+}
+
+/* == text == */
+
+span.wf:hover {
+    background-color: #eee8aa;
+}
+
+span.ref:hover {
+    background-color: #eee8aa;
+    cursor: pointer;
+}
+
+h1, .h1 {
+    margin-top: 50px;
+    color: maroon;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+h2, .h2 {
+    margin-top: 50px;
+    color: maroon;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+h3, .h3 {
+    margin-top: 25px;
+    color: maroon;
+    font-size: 16px;
+}
+
+h4, .h4 {
+    color: maroon;
+    margin-top: 20px;
+    font-size: 16px;
+}
+
+a {
+    cursor: pointer;
+}
+
+em {
+    color: #2f4f4f;
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+
+/* .line-par { */
+/*     /\* width: auto; *\/ */
+/* } */
+
+/* .line-block { */
+/*     overflow: hidden; */
+/* } */
+
+.list-line .ptext {
+    text-indent: 0;
+}
+
+.line-head {
+    cursor: pointer;
+}
+
+/* =========== COLORS =============== */
+
+.maroon {
+    color: maroon;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.darkgreen {
+    color: darkgreen;
+}
+
+.darkred {
+    color: darkred;
+}
+
+.grey {
+    color: grey;
+}
+
+
+/* =========== TABLE =============== */
+
+tr:nth-child(even):not(.hidden) {
+    background-color: #edf2f7;
+}
+
+tr:nth-child(odd):not(.hidden) {
+    background-color: #f7fafc;
+}
+
+.odd {
+    background-color: #f7fafc;
+}
+
+.even {
+    background-color: #edf2f7;
+}
+
+.table-line {
+    cursor: pointer;
+}
+
+.table-line:hover {
+    background-color: #eee8aa!important;
+}
+
+.tmpl {
+    display: none!important;
+}
+
+/* == bmk ==  */
+
+
+.tree-block p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.synchroMark {
+  width: 0.5rem;
+  height: 0.5rem;
+  float: right;
+  position: relative;
+  z-index: 100;
+  top: 1rem;
+}
+
+#dict-progress {
+  height: 20px;
+  width: auto;
+  position: absolute;
+  top: 5px;
+  right: 150px;
+  font-weight: bold;
+  z-index: 20;
+  margin-left: 25px;
+}
+
+.highlight {
+  background: orange;
+  color: black;
+}
+
+/* === search === */
+#search-input {
+  position: absolute;
+  top: 0;
+  padding: 4px;
+  right: 25px;
+  margin-right: 25px;
+  cursor: pointer;
+}
+
+#search-icon {
+  position: absolute;
+  top: 12px;
+  right: 25px;
+  margin-right: 25px;
+  cursor: pointer;
+}
+
+/* .searchinput { */
+/*   width: 100%; */
+/* } */
+
+/* auto-sync */
+
+.em-red-circle::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  margin-top: 6px;
+  background-color: indianred;
+  float: right;
+  margin-right: -20px;
+}
+
+.em-green-circle::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  margin-top: 6px;
+  background-color: #bada55;
+  float: right;
+  margin-right: -20px;
+}
+
+/* .editable { */
+/*   border-style: dotted; */
+/*   border-width: 2px; */
+/*   border-color: eee8dd; */
+/* } */
+
+.truncated {
+  height: 2rem;
+}
+
+.external {
+  cursor: pointer;
+  color: maroon;
+}
+
+.show-page-position {
+  position: absolute;
+  top: 45px;
+  margin-right: 25px;
+  z-index: 100;
+  width: 0;
+  border-style: solid;
+  border-width: 1px;
+  border-top: 1px;
+}

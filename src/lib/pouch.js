@@ -1,217 +1,386 @@
-//
-import _ from "lodash"
-import { remote } from "electron"
-import { q } from './utils'
-import { parseLib, parseTitle, parseBook, parseQuery } from './book'
-const { getCurrentWindow } = require('electron').remote
+import _ from 'lodash'
 
-const log = console.log
-const path = require('path')
-let fse = require('fs-extra')
-
-const isDev = require('electron-is-dev')
-// const isDev = false
-// const isDev = true
-const limit = 20
-
-const app = remote.app
-const apath = app.getAppPath()
+import { log, q } from './utils'
+const { app } = require('electron').remote
 const upath = app.getPath("userData")
+// let apath = app.getAppPath()
+const path = require('path')
+const fse = require('fs-extra')
+import { config } from '../config'
+import { remote } from "electron"
 
-let dbPath = path.resolve(upath, 'pouch')
-fse.ensureDirSync(dbPath)
+const mouse = require('mousetrap')
+// const PouchDB = require('pouchdb')
+// import PouchDB from 'pouchdb'
+// const PouchDB = require('pouchdb').default;
+const PouchDB = require('electron').remote.require('pouchdb')
 
-const PouchDB = require('pouchdb')
-PouchDB.plugin(require('pouchdb-find'))
+export async function deleteDB(dname) {
+  // const pouchpath = path.resolve(upath, 'pouch')
+  const dpath = path.resolve(upath, 'pouch', dname)
+  await fse.remove(dpath)
+}
 
-let ftdbPath = path.resolve(upath, 'pouch/fulltext')
-let ftdb = new PouchDB(ftdbPath)
-let libPath = path.resolve(upath, 'pouch/library')
-let libdb = new PouchDB(libPath)
+function newDB(dbdict) {
+  const pouchpath = path.resolve(upath, 'pouch')
+  const dname = dbdict.dname || dbdict.bid
+  if (!dname) return
+  const dpath = path.resolve(upath, 'pouch', dname)
+  let pouch = new PouchDB(dpath)
+  pouch.dname = dname
+  pouch.name = dbdict.name
+  return pouch
+}
 
-export function pushBook(info, pars, mapdocs) {
-  return Promise.all([
-    pushInfo(info),
-    pushTexts(pars),
-    pushMap(mapdocs)
-  ])
-    .then(function(res) {
-      // if (res[1].length) {
-      libdb.createIndex({
-        index: {fields: ['fpath', 'pos']},
-        name: 'fpathindex'
-      })
-      // }
+export async function queryDBcomplex(qstems, dicts) {
+  let indecls = qstems.filter(qstem=> qstem.indecl)
+  qstems = qstems.filter(qstem=> !qstem.indecl)
+  let keys = _.uniq(_.compact(qstems.map(qstem=> qstem.stem)))
+  let flskeys = _.uniq(_.compact(qstems.map(qstem=> qstem.term)))
+  let termkeys = _.uniq(_.compact(indecls.map(qstem=> qstem.term)))
+  let dbdicts = dicts.filter(dict=> !dict.flex && !dict.indecl)
+  let flsdicts = dicts.filter(dict=> dict.flex)
+  let termdicts = dicts.filter(dict=> dict.indecl)
+
+  let alldocs = await fetchDocs(keys, dbdicts)
+  let dictdocs = alldocs.filter(doc=> !doc.refstem)
+
+  let refdocs = alldocs.filter(doc=> doc.refstem)
+  let refstems = refdocs.map(doc=> doc.refstem)
+  let lemmas = await fetchDocs(refstems, dbdicts)
+
+  // ref - сменить stem на stem исходной формы, и добавить keys исходной формы
+  // refdoc м.б. найден только в WKT, и только в verbs
+  lemmas.forEach(refdict=> {
+    let refdoc = refdocs.find(doc=> doc.refstem == refdict.stem)
+    refdict.stem = refdoc.stem
+    refdict.keys = refdoc.keys
+    refdict.time = refdoc.time
+    // refdict.trns = refdoc.trns
+  })
+
+  dictdocs.push(...lemmas)
+
+  let flsdocs = await fetchDocs(flskeys, flsdicts)
+  let termdocs = await fetchDocs(termkeys, termdicts)
+
+  return {dictdocs, flsdocs, termdocs}
+}
+
+export async function queryDB (stem, dicts) {
+  let keys = [stem]
+  let dbdicts = dicts.filter(dict=> !dict.flex)
+  let dictdocs = await fetchDocs(keys, dbdicts)
+
+  // exkey: surprise party
+  let exkeys = _.uniq(_.compact(_.flatten(dictdocs.map(ddoc=> ddoc.refs))))
+  let examples = await fetchDocs(exkeys, dbdicts)
+  examples.forEach(example=> example.example = true)
+  dictdocs.push(...examples)
+
+  return dictdocs
+}
+
+function fetchDocs(keys, dbdicts) {
+  const dbs = dbdicts.map(dbdict=> newDB(dbdict))
+  return Promise.all(dbs.map(function (db) {
+    return db.allDocs({
+      keys: keys,
+      include_docs: true
     })
-    .then(function(res) {
-      ftdb.createIndex({
-        index: {fields: ['wf']},
-        name: 'wfindex'
+      .then(function (res) {
+        if (!res || !res.rows) throw new Error('no query dbs result')
+        let rdocs = _.compact(_.flatten(res.rows.map(row => row.doc )))
+        let docs = _.compact(_.flatten(rdocs.map(rdoc=> rdoc.docs)))
+        docs.forEach(doc => { doc.dname = db.name })
+        return docs
       })
+  }))
+    .then(docs=> {
+      return _.flatten(docs)
+    })
+    .catch(function (err) {
+      console.log('ERR fetchDocs', err)
+      return []
     })
 }
 
-export function pushInfo(ndoc) {
-  return libdb.get(ndoc._id).catch(function (err) {
-    if (err.name === 'not_found') return
-    else throw err
-  }).then(function (doc) {
-    if (doc) {
-      let testdoc = _.clone(doc)
-      delete testdoc._rev
-      if (_.isEqual(ndoc, testdoc)) return
-      else {
-        ndoc._rev = doc._rev
-        return libdb.put(ndoc)
-      }
-    } else {
-      return libdb.put(ndoc)
-    }
+export function fetchFN(keys, bids) {
+  const dbs = bids.map(bid=> newDBdname(bid))
+  return Promise.all(dbs.map(function (db) {
+    return db.allDocs({
+      keys: keys,
+      include_docs: true
+    })
+      .then(function (res) {
+        if (!res || !res.rows) throw new Error('no query dbs result')
+        let rdocs = _.compact(_.flatten(res.rows.map(row => row.doc )))
+        return rdocs
+      })
+  }))
+    .then(docs=> {
+      return _.flatten(docs)
+    })
+    .catch(function (err) {
+      console.log('ERR fetchFN', err)
+      return []
+    })
+}
+
+function fetchRefs(keys, dbdicts) {
+  const dbs = dbdicts.map(dbdict=> newDB(dbdict))
+  return Promise.all(dbs.map(function (db) {
+    return db.allDocs({
+      keys: keys,
+      include_docs: true
+    })
+      .then(function (res) {
+        if (!res || !res.rows) throw new Error('no query dbs result')
+        let rdocs = _.compact(res.rows.map(row => { return row.doc }))
+        rdocs = _.compact(_.flatten(rdocs))
+        rdocs.forEach(rdoc => { rdoc.dname = db.dname })
+        return rdocs
+      }).catch(function (err) {
+        console.log('ERR fetch_Refs', err)
+      })
+  }))
+}
+
+function showProgress(total, size) {
+  let odprog = q('#dict-progress')
+  odprog.classList.remove('hidden')
+  let percent = Math.round(size*100/total)
+  odprog.textContent = [percent, '%'].join(' ')
+  if (percent >= 100) odprog.textContent = '', odprog.classList.add('hidden')
+}
+
+export async function fetchBlock_(_id, bids) {
+  const dbs = bids.map(bid=> newDBdname(bid))
+  dbs.forEach(db=> {
+    let opts = {include_docs: true, keys: [_id]}
+    db.options = opts
+  })
+
+  return Promise.all(dbs.map(async function (db) {
+    return db.allDocs(db.options)
+      .then(res=> {
+        return res.rows[0].doc
+      })
+  }))
+}
+
+export async function fetchBlock(params) {
+  const dbs = params.map(param=> newDBdname(param.bid))
+  dbs.forEach((db, idx)=> {
+    let opts = {include_docs: true, keys: [params[idx].id], lang: params[idx].lang, bid: params[idx].bid}
+    db.options = opts
+  })
+
+  return Promise.all(dbs.map(async function (db) {
+    return db.allDocs(db.options)
+      .then(res=> {
+        // log('___poush:', db.options, res)
+        if (!res.rows.length) return
+        let doc = res.rows[0].doc
+        if (!doc) return
+        doc.bid = db.options.bid
+        doc.lang = db.options.lang
+        return doc
+      })
+  }))
+}
+
+function newDBdname(dname) {
+  const pouchpath = path.resolve(upath, 'pouch')
+  const dpath = path.resolve(upath, 'pouch', dname)
+  let pouch = new PouchDB(dpath)
+  pouch.dname = dname
+  return pouch
+}
+
+export async function fetchBook(bid) {
+  const db = newDBdname(bid)
+  return db.allDocs({include_docs: true})
+    .then(res=> {
+      db.close()
+      return res.rows.map(row=> row.doc)
+    })
+    .catch(err=> {
+      log('_ERR fetch book docs', db.dname, err)
+    })
+}
+
+export async function fetchChapter(query) {
+  const db = newDBdname(query.bid)
+  let chpath, limit
+  chpath = query.path
+  limit = query.size
+  let startkey = [chpath, '-'].join('')
+  db.options = {include_docs: true, startkey, limit}
+
+  return db.allDocs(db.options)
+    .then(res=> {
+      const chdocs = res.rows.map(row=> row.doc)
+      return chdocs
+      // return {bid: query.bid, chdocs: chdocs}
+    })
+    .catch(err=> {
+      log('_ERR fetchChapterDocs:', db.dname, err)
+    })
+}
+
+export async function fetchChapterDocs(queries) {
+  const dbs = queries.map(book=> newDBdname(book.bid))
+  let chpath, limit
+  dbs.forEach((db, idx)=> {
+    chpath = queries[idx].path
+    limit = queries[idx].size
+    let startkey = [chpath, '-'].join('')
+    // let endkey = [chpath, '-\ufff0'].join('')
+    // let opts = {include_docs: true, startkey, endkey}
+    let opts = {include_docs: true, startkey, limit}
+    db.options = opts
+  })
+
+  return Promise.all(dbs.map(async function (db) {
+    return db.allDocs(db.options)
+      .then(res=> {
+        const chdocs = res.rows.map(row=> row.doc)
+        return queries.map(query=> {
+          if (query.bid != db.dname) return false
+          let chapter = {bid: query.bid, lang: query.lang, chdocs: chdocs}
+          if (query.active) chapter.active = true
+          if (query.origin) chapter.origin = true
+          if (query.shown) chapter.shown = true
+          return chapter
+        })
+      })
+      .catch(err=> {
+        log('_ERR fetchChapterDocs:', db.dname, err)
+      })
+  }))
+    .then(res=> {
+      return _.compact(_.flatten(res))
+    })
+}
+
+export async function pushDocs(dname, docs, pouchpath) {
+  if (!pouchpath) pouchpath = path.resolve(upath, 'pouch')
+  await fse.ensureDirSync(pouchpath)
+  // log('_pouch-docs dname', dname)
+  const dpath = path.resolve(pouchpath, dname)
+  let pouch = new PouchDB(dpath)
+  await pouch.close()
+  await fse.emptyDirSync(dpath)
+  pouch = new PouchDB(dpath) // todo: wtf? but that's true
+  pouch.dname = dname
+
+  let total = docs.length
+  let size = 0
+  const chunks = _.chunk(docs, config.batch_size)
+  for await (let chunk of chunks) {
+    size += config.batch_size
+    showProgress(total, size)
+    await pouch.bulkDocs(chunk)
+      .then(res=> {
+        let oks = res.filter(doc=> doc.ok)
+        // log('_chunk ok', res.length, oks.length, '=', res.length == oks.length)
+        return true
+      })
+  }
+  // log('_pouch-docs pushed', docs.length)
+  pouch.close()
+}
+
+export async function updateDocs(dname, docs, pouchpath) {
+  if (!pouchpath) pouchpath = path.resolve(upath, 'pouch')
+  await fse.ensureDirSync(pouchpath)
+  const dpath = path.resolve(pouchpath, dname)
+
+  docs.forEach(doc=> delete doc._rev)
+  await fse.emptyDirSync(dpath)
+  let pouch = new PouchDB(dpath)
+
+  await Promise.all(docs.map(async function (doc) {
+    return pouch.get(doc._id)
+      .then(function (orig) {
+        if (doc.md && doc.md == orig.md) return false
+        doc._rev = orig._rev
+        // log('_orig', orig)
+        return pouch.put(doc)
+      })
+      .catch(function (err) {
+        if (err.name === 'not_found') {
+          // log('_new doc', doc)
+          return pouch.put(doc)
+        } else {
+          log('_not not-found-err', doc._id)
+          throw err;
+        }
+      })
+      .catch(function (err) {
+        log('ERR: updating doc', err, 'doc:', doc)
+      })
+  }))
+    // .then(res=> {
+      // return 'updating docs: ok'
+      // pouch.close()
+    // })
+  log('_updated docs: ok')
+  pouch.close()
+}
+
+export async function pushImgs(dname, imgs) {
+  const pouchpath = path.resolve(upath, 'pouch')
+  return
+
+  await fse.ensureDirSync(pouchpath)
+  const dpath = path.resolve(upath, 'pouch', dname)
+  let pouch = new PouchDB(dpath)
+  pouch.dname = dname
+
+  imgs = imgs.slice(-3)
+  Promise.all(imgs.map(function (img) {
+    let name = img.name
+    pouch.putAttachment(name, name, img.data, 'image/jpeg')
+      .then(function (res) {
+        log('___IMG-RES:', res)
+      }).catch(function (err) {
+        console.log('ERR push Imgs', err)
+      })
+  }))
+
+  return
+
+  let docs = imgs.map(img=> {
+    // let ctype = ['image', path.extname(img.name)].join('')
+    let name = img.name
+    log('_pushing image_', name)
+    let doc = {_id: name, _attachments: {}}
+    let data = img.data.toString('base64')
+    doc._attachments[name] = {content_type: 'text/plain', data: data}
+    return doc
+  })
+
+  await pouch.bulkDocs(docs)
+    .then(res=> {
+      log('_images pushed_', res)
+      return true
+    }).catch(function (err) {
+      log('IMG PUSH ERR:', err)
+    });
+
+}
+
+export async function getImage(imgname) {
+  let dname = 'JK-Rowling-Harry-Potter-and-the-Orde'
+  const dpath = path.resolve(upath, 'pouch', dname)
+  let pouch = new PouchDB(dpath)
+  pouch.get(imgname, {attachments: true}).then(function (doc) {
+    console.log(doc);
   })
 }
 
-function pushTexts(newdocs) {
-  return libdb.allDocs({include_docs: true})
-    .then(function(res) {
-      let docs = res.rows.map(row=>{ return row.doc })
-      let cleandocs = []
-      let hdoc = {}
-      docs.forEach(doc=> { hdoc[doc._id] = doc })
-      newdocs.forEach(newdoc=> {
-        let doc = hdoc[newdoc._id]
-        if (doc) {
-          if (newdoc.text == doc.text) return
-          else doc.text = newdoc.text, cleandocs.push(doc)
-        } else {
-          cleandocs.push(newdoc)
-        }
-      })
-      return libdb.bulkDocs(cleandocs)
-    })
-}
-
-// MAP
-function pushMap(ndocs) {
-  return ftdb.allDocs({ include_docs: true })
-    .then(function(res) {
-      let odocs = res.rows.map(row=>{ return row.doc})
-      let hdoc = {}
-      odocs.forEach(doc=> { hdoc[doc._id] = doc })
-
-      let cleandocs = []
-      ndocs.forEach(ndoc=> {
-        let doc = hdoc[ndoc._id]
-        if (doc) {
-          let testdoc = _.clone(doc)
-          delete testdoc._rev
-          if (_.isEqual(ndoc, testdoc)) return
-          else {
-            // неверно - нужны только уникальные значения, uniq не катит
-            doc.docs = ndoc.docs //  _.uniq(doc.docs.concat(ndoc.docs))
-            cleandocs.push(doc)
-          }
-        } else {
-          cleandocs.push(ndoc)
-        }
-      })
-      return ftdb.bulkDocs(cleandocs)
-    })
-    .catch(function (err) {
-      log('MAP ERR', err)
-    })
-}
-
-
-export function getLib() {
-  let options = {
-    include_docs: true,
-    startkey: 'info',
-    endkey: 'info\ufff0'
-  }
-  libdb.allDocs(options)
-    .then(function (result) {
-      let infos = result.rows.map(row=> { return row.doc})
-      parseLib(infos)
-    })
-    .catch(function (err) {
-      log('getLibErr', err)
-    })
-}
-
-export function getInfo(infoid) {
-  return libdb.get(infoid)
-    .catch(function (err) {
-      log('getTitleErr', err)
-    })
-}
-
-export function getTitle(state) {
-  if (!state.infoid) return
-  libdb.get(state.infoid)
-    .then(function (info) {
-      parseTitle(state, info)
-    }).catch(function (err) {
-      log('getTitleErr', err)
-    })
-}
-
-export function getBook(state) {
-  libdb.get(state.infoid)
-    .then(function (info) {
-      getText(state)
-        .then(function(res) {
-          let pars = _.compact(res.docs)
-          parseBook(state, info, pars)
-        })
-    }).catch(function (err) {
-      log('getBookErr', err)
-    })
-}
-
-export function getText(state, endpos) {
-  let fpath = state.fpath
-  let start = state.pos*1 || 0
-  let end = endpos*1 || start*1 + limit*1
-  let selector = {fpath: fpath, pos: {$gte: start, $lt: end}}
-  return libdb.find({selector: selector}) // sort: ['idx'], , limit: 20
-}
-
-export function cleanup() {
-  return Promise.all([
-    libdb.destroy(),
-    ftdb.destroy()
-  ])
-}
-
-export function getQuery(state) {
-  let selector = {wf: state.query}
-  ftdb.find({selector: selector})
-    .then(function (res) {
-      let ftdocs = _.flatten(res.docs.map(doc=> { return doc.docs }))
-      let selector = {$or: ftdocs.map(doc=> { return {fpath: doc.fpath, pos: doc.pos }})}
-      libdb.find({selector: selector})
-        .then(function(res) {
-          let qtree = []
-          let qinfos = _.groupBy(res.docs, 'infoid')
-
-          for (let infoid in qinfos) {
-            let gqinfo = qinfos[infoid]
-            let qfpath = _.groupBy(gqinfo, 'fpath')
-            qtree[infoid] = {}
-            for (let fpath in qfpath) {
-              let qgroup = qfpath[fpath]
-              let qpos = _.groupBy(qgroup, 'pos')
-              qtree[infoid][fpath] = {}
-              for (let pos in qpos) {
-                let qlines = qpos[pos]
-                qtree[infoid][fpath][pos] = qlines
-              }
-            }
-          }
-          parseQuery(state, qtree)
-        })
-    }).catch(function (err) {
-      log('SEARCH ERR:', err)
-    })
-
-}
+mouse.bind('ctrl+g', function(ev) {
+  //
+})

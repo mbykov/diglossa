@@ -1,0 +1,45 @@
+<div class="text-gray-900 bg-gray-200 page">
+
+  <div class="mt-8 p-4 ">
+    <h1 class="text-3xl">Bookmarks:</h1>
+  </div>
+
+  <div id="add-bmk" class="w-full text-md bg-white shadow-md rounded mb-4 pb-4">
+      <div class="list-line flex flex-row items-start flex-nowrap border-b hover:bg-orange-100 bg-gray-100 hidden">
+        <div class="line-block overflow-hidden w-full p-3 px-5 flex flex-col" >
+          <div class="line-head truncate font-bold text-lg mb-1 maroon group-hover:text-white">
+            <span class="line-author">Author</span> -
+            <span class="line-title">Title</span> -
+            <span class="line-sname">Sname</span>
+          </div>
+          <div class="block truncate text-grey-darker mb-2 group-hover:text-white">text text text text text text text text text text text text text text text text text text text text </div>
+        </div>
+
+        <div class="line-button p-3 px-5">
+          <button id="add-bmk-button" type="button" class="text-sm bg-green-500 hover:bg-green-700 text-white py-1 px-2 rounded focus:outline-none focus:shadow-outline">Add bookmark</button>
+        </div>
+      </div>
+  </div>
+
+  <div id="bmks-list-container p-" >
+    <h2 class="p-4">Bookmark list:</h2>
+
+    <div id="bmks-list" class="w-full text-md bg-white shadow-md rounded mb-4">
+    </div>
+
+    <div class="tmpl list-line flex flex-row items-center flex-nowrap border-b hover:bg-orange-100 bg-gray-100">
+      <div class="line-block overflow-hidden w-full p-3 px-5 flex flex-col" >
+        <div class="line-head truncate font-bold text-lg mb-1 maroon group-hover:text-white">
+          <span class="line-author">Author-tmpl</span> -
+          <span class="line-title">Title-tmpl</span> -
+          <span class="line-sname">Sname-tmpl</span>
+        </div>
+        <div class="block truncate text-grey-darker mb-2 group-hover:text-white">text text text text text text text text text text text text text text text text text text text  </div>
+      </div>
+      <div class="line-button p-3 px-5">
+        <button type="button" class="line-delete text-sm bg-red-500 hover:bg-red-700 text-white py-1 px-2 rounded focus:outline-none focus:shadow-outline">Delete</button>
+      </div>
+    </div>
+
+  </div>
+</div>

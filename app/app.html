@@ -1,43 +1,20 @@
-<!-- <!doctype html> -->
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="../src/stylesheets/normalize.css">
-    <link rel="stylesheet" href="../src/stylesheets/app.css">
-    <link rel="stylesheet" href="../src/stylesheets/main.css">
-    <link rel="stylesheet" href="../src/stylesheets/tree.css">
+    <title>diglossa.js</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' ">
-    <link rel="import" href="../src/sections/home.html">
-     <!-- <link rel="import" href="../src/sections/main.html"> -->
-     <link rel="import" href="../src/sections/title.html">
-     <link rel="import" href="../src/sections/book.html">
-     <link rel="import" href="../src/sections/search.html">
-     <link rel="import" href="../src/sections/stats.html">
-     <link rel="import" href="../src/sections/about.html">
-     <link rel="import" href="../src/sections/signin.html">
-     <link rel="import" href="../src/sections/help.html">
-     <link rel="import" href="../src/sections/code.html">
-     <link rel="import" href="../src/sections/license.html">
-     <link rel="import" href="../src/sections/acknowledgements.html">
-     <link rel="import" href="../src/sections/hotkeys.html">
-     <link rel="import" href="../src/sections/cleanup.html">
-
-       <title>diglossa.js</title>
   </head>
   <body>
+    <!-- <div class="search-field"><span id="input"></span><span id="icon"></span></div> -->
+    <div id="search-input" class="hidden"></div><div id="search-icon" class="hidden"></div>
+    <div id="message" class="truncate hidden"></div>
+    <img id="progress" class="progress hidden" src="../resources/progress.gif" />
+    <div id="dict-progress" class="dict-progress hidden"></div>
 
-    <div id="new-version" class="external"></div>
-    <div id="arrows">
-      <img src="../resources/progress.gif" class="progress"  id="progress" />
-    </div>
-
-    <div id="container" class="container">
-    </div>
+    <div id="app"></div>
 
     <script src="app.js"></script>
   </body>
 </html>
-
-     <!-- <div id="new-version"></div> -->
-     <!-- <div id="headers" class="headers"> </div> -->

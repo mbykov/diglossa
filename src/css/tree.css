@@ -1,0 +1,88 @@
+.somestyle {
+    /* */
+}
+
+.tree-branch {
+    /* margin-left: 15px; */
+    /* padding-left: 10px; */
+}
+
+.tree-branch::before {
+    content: '▾';
+    padding-right: 5px;
+    /* display: inline-block; */
+    /* width: 20px; */
+    /* height: 20px; */
+    float: left;
+    color: maroon;
+    font-size: larger;
+}
+
+.tree-branch.tree-collapse::before {
+    content: '▸';
+    padding-right: 5px;
+}
+
+.tree-sign {
+  float: left;
+  padding-right: 10px;
+  color: maroon;
+  font-size: large;
+  display: inline-block;
+  width: 10px;
+}
+
+.tree-block {
+  white-space: nowrap;
+  cursor: pointer;
+  /* margin-bottom: 3px; */
+}
+
+
+.tree-block p {
+  /* margin-bottom: 6px; */
+}
+
+.tree-text {
+    white-space: nowrap;
+    padding-bottom: 5px;
+    padding-left: 10px;
+}
+
+.tree-text:hover {
+    background-color: #eee8aa;
+    cursor: pointer;
+}
+
+.tree-collapse > div {
+    display: none;
+}
+
+.lev-1 {
+    /* padding-left: 0 */
+}
+
+.lev-2 {
+    /* padding-left: 15px; */
+    margin-left: 10px;
+}
+
+.lev-3 {
+    /* padding-left: 30px; */
+  margin-left: 20px;
+}
+
+.lev-4 {
+    /* padding-left: 45px; */
+  margin-left: 30px;
+}
+
+.lev-5 {
+    /* padding-left: 60px; */
+  margin-left: 40px;
+}
+
+.lev-6 {
+  /* padding-left: 75px; */
+  margin-left: 50px;
+}

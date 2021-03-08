@@ -1,0 +1,42 @@
+<div class="text-gray-900 bg-gray-200 page">
+
+  <div class="mt-8 p-4 ">
+    <h1 class="text-3xl">Library:</h1>
+  </div>
+
+  <div id="lib-table" class="flex flex-col bg-white shadow-md rounded m-4">
+
+    <div class="tr-header flex border-b">
+      <div class="text-left w-40 left p-3 flex-grow-0 font-bold">Author</div>
+      <div class="text-left p-3 flex-grow  font-bold">Title</div>
+      <div class="text-left p-3 flex-grow-0 flex font-bold">
+        <svg class="h-8 w-8 text-gray-500"  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+        Langs
+      </div>
+      <div class="text-left  w-20 p-3 flex-grow-0 flex font-bold">on/off</div>
+      <div class="text-left  w-20 p-3 flex-grow-0 flex font-bold"></div>
+    </div>
+
+    <div class="tbody">
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="table-line flex tmpl lib border-b">
+  <div class="td-author w-40 p-3 px-5 flex-grow-0"></div>
+  <div class="td-title p-3 maroon flex-grow "></div>
+  <div class="td-langs p-3 text-gray-900 bold justify-end flex-grow-0"></div>
+  <div class="buttons w-20 p-3 flex flex-row">
+    <svg  class="h-8 w-8 text-green-500 " xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+    </svg>
+    <button type="button" class="hidden td-activate mr-3 text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 rounded focus:outline-none focus:shadow-outline">Activate</button>
+  </div>
+  <div class="td-button w-20 p-3 px-5">
+    <button type="button" class="td-delete text-sm bg-red-500 hover:bg-red-700 text-white py-1 px-2 rounded focus:outline-none focus:shadow-outline">Delete</button>
+  </div>
+</div>

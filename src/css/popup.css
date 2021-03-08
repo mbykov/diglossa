@@ -1,0 +1,166 @@
+/*  */
+
+@tailwind base;
+@tailwind components;
+
+.section {
+    @apply p-4 text-gray-900 w-full bg-gray-200 shadow-md rounded m-4
+}
+
+.header {
+    @apply py-2 mb-1 text-left text-gray-900 w-full bg-gray-100 shadow-md rounded
+}
+
+.header-cell {
+    @apply px-12
+}
+
+@tailwind utilities;
+
+.tmpl {
+    display: none!important;
+}
+
+body {
+    margin: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow-y: hidden;
+    overflow-x: hidden;
+}
+
+html {
+    margin: 0;
+    height: 100%;
+    overflow-y: hidden;
+    overflow-x: hidden;
+}
+
+h4 {
+    color: maroon;
+}
+
+#popup {
+    padding: 1em;
+    background-color: #ffffcc;
+    border-style: solid;
+    border-width: 1px;
+    font-size: smaller;
+    border-color: #cacd58;
+    /* box-shadow: 0.15em 0.15em 1em rgba(0, 0, 0, 0.75); */
+    height: 100%;
+    line-height: 1.1;
+    /* height: 400px; */
+    overflow-y: hidden;
+    overflow-x: hidden;
+}
+
+.dict-container {
+  background-color: #fffddd;
+  margin-bottom: 25px;
+}
+
+.dict-header {
+  padding: 10px;
+  background-color: #ffe;
+  display: flex;
+  justify-content: space-between;
+}
+
+.dict-query {
+    color: maroon;
+    font-weight: bold;
+    /* background-color: #eee; */
+}
+
+.dict-dname {
+    /* float: right; */
+    color: green;
+}
+
+
+
+dt {
+  font-weight: bold;
+  cursor: pointer;
+}
+
+dl,
+dd {
+    /* font-size: .9em; */
+    margin-left: 1em;
+    margin-top: 5px;
+}
+
+dd:before {
+    content:  "- ";
+}
+
+dd.morph {
+  background-color: white;
+  padding: 5px;
+}
+
+
+.hidden {
+    display: none!important;
+}
+
+
+.ellipsis::after {
+    content: '...'
+}
+
+abr {
+    color: green;
+    font-weight: bold;
+}
+
+.morestr {
+  color: maroon;
+}
+
+font {
+  color: darkgreen;
+  font-weight: bold;
+}
+
+b {
+  font-weight: bold;
+}
+
+i {
+  font-weight: italic;
+}
+
+.green {
+  color: green;
+}
+
+.darkgreen {
+  color: darkgreen;
+}
+
+.red {
+  color: red;
+}
+
+.darkred {
+  color: darkred;
+}
+
+.blue {
+  color: red;
+}
+
+.darkblue {
+  color: darkred;
+}
+
+.grey {
+  color: grey;
+}
+
+.maroon {
+  color: maroon;
+}

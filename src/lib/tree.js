@@ -1,71 +1,68 @@
-//
-import { q, qs, empty, create, span, p, div, remove } from './utils'
-let log = console.log
+import "../css/tree.css";
 
-export function tree(children, otree) {
-  let tbody = otree.lastChild
-  children.forEach(node=> {
-    if (node.fpath) {
-      let onode = createNode(node)
-      tbody.appendChild(onode)
-    } else {
-      let obranch = createBranch(node)
-      tbody.appendChild(obranch)
-      tree(node.children, obranch)
+import { log, q, qs, empty, create, remove, span, p, div, space } from './utils'
+import _ from 'lodash'
+const marked = require('marked')
+
+export function createTree(cnts, roots, books) {
+  let oroots = []
+  roots.forEach(root=> {
+    let oroot = treeBlock(root)
+    oroots.push(oroot)
+    books.forEach(book=> {
+      let doc = book.cnts[root.idx]
+      if (!doc) return // un-synchronized
+      let opar = treePar(doc)
+      if (!book.origin && !book.shown) opar.classList.add('hidden')
+      oroot.appendChild(opar)
+    })
+
+    let nextroot = cnts.find(cnt=> cnt.idx > root.idx && cnt.level == root.level)
+    let chroots = cnts.filter(cnt=> cnt.idx > root.idx)
+    if (nextroot) chroots = chroots.filter(cnt=> cnt.idx < nextroot.idx)
+    chroots = chroots.filter(cnt=> cnt.level == root.level + 1)
+    if (chroots.length) {
+      let osign = create('span', 'tree-sign')
+      osign.textContent = '▾'
+      oroot.prepend(osign)
     }
+
+    let ochildren = createTree(cnts, chroots, books)
+    ochildren.forEach(ochild=> oroot.appendChild(ochild))
   })
-  return otree
+  return oroots
 }
 
-function createNode(node) {
-  let onode = create('div', 'tree-text')
-  let otext = create('span', 'tree-node-text')
-  otext.textContent = node.text
-  otext.setAttribute('fpath', node.fpath)
-  if (node.mono) otext.setAttribute('mono', true)
-  onode.appendChild(otext)
-  return onode
+function treeBlock(doc) {
+  const oblock = create('div', 'block')
+  oblock.setAttribute('level', doc.level)
+  oblock.classList.add('tree-block')
+  let levstyle = ['lev', doc.level].join('-')
+  oblock.classList.add(levstyle)
+  return oblock
 }
 
-function createBranch(node) {
-  let onode = create('div', 'tree-branch')
-  let osign = create('span', 'tree-sign')
-  osign.textContent = '▾'
-  osign.addEventListener('click', toggleNode, false)
-  onode.appendChild(osign)
-  let otext = create('span', 'tree-node-branch')
-  otext.textContent = node.text
-  // if (node.fpath) otext.setAttribute('fpath', node.fpath)
-  onode.appendChild(otext)
-  let tbody = create('div', 'tbody')
-  onode.appendChild(tbody)
-  return onode
+function treePar(doc) {
+  let opar = create('p')
+  // opar.textContent = doc.md.replace(/#/g, '')
+  opar.innerHTML = marked(doc.md)
+  opar.setAttribute('path', doc.path)
+  opar.setAttribute('size', doc.size)
+  opar.setAttribute('idx', doc.idx)
+  opar.classList.add('tree-text')
+  opar.classList.add('ptext')
+  return opar
 }
 
-function toggleNode(ev) {
-  let parent = ev.target.parentNode
-  parent.classList.toggle('tree-collapse')
-}
-
-export function leaf_(node) {
-  let onode = create('div', 'tree-text')
-  let otext = create('span', 'tree-node-text')
-  otext.textContent = node.text
-  otext.setAttribute('fpath', node.fpath)
-  onode.appendChild(otext)
-  return onode
-}
-
-export function branch(node) {
-  let onode = create('div', 'tree-branch')
-  let osign = create('span', 'tree-sign')
-  osign.textContent = '▾'
-  onode.addEventListener('click', toggleNode, false)
-  onode.appendChild(osign)
-  let otext = create('span', 'tree-node-branch')
-  otext.textContent = node.text
-  onode.appendChild(otext)
-  let tbody = create('div', 'tbody')
-  onode.appendChild(tbody)
-  return onode
-}
+// sign-collapse
+document.addEventListener ("click",  (ev) => {
+  if (!q('.page')) return
+  let oblock = ev.target.closest('.block')
+  if (!oblock) return
+  let osign =  ev.target.closest('.tree-sign')
+  if (!osign) return
+  oblock.classList.toggle('tree-collapse')
+  if (oblock.classList.contains('tree-collapse')) osign.textContent =  '▸'
+  else osign.textContent = '▾'
+  ev.stopPropagation()
+})
