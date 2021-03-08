@@ -68,6 +68,7 @@ module.exports = env => {
         }
       ]
     },
+    // "plugins": ["transform-object-rest-spread"],
     plugins: [
     ]
   };

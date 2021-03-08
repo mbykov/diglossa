@@ -16,5 +16,8 @@ const watching = compiler.watch({}, (err, stats) => {
       .on("close", () => {
         watching.close();
       });
+  } else {
+    console.log('_START_ERR', err)
+    // console.log('_START_STATS', stats)
   }
 });

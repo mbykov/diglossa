@@ -7,10 +7,10 @@ import { log, q, create, zerofill, cleanDname, cleanStr } from './lib/utils'
 
 // import { fb2json } from '../../../b/book-fb2json'
 import { fb2json } from 'book-fb2json'
-import { epub2json } from '../../../b/book-epub2json'
-// import { epub2json } from 'book-epub2json' // ??? нету
-import { md2json } from '../../../b/book-md2json'
-// import { md2json } from 'book-md2json'
+// import { epub2json } from '../../../b/book-epub2json'
+import { epub2json } from 'book-epub2json' // ??? нету
+// import { md2json } from '../../../b/book-md2json'
+import { md2json } from 'book-md2json'
 // import { pdf2json } from '../../../b/book-pdf2json'
 import { pdf2json } from 'book-pdf2json'
 import { pushDocs, pushImgs, fetchChapterDocs } from './lib/pouch'

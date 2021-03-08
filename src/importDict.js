@@ -5,7 +5,7 @@ import { ipcRenderer } from "electron";
 const {dialog} = require('electron').remote
 const path = require("path")
 import { log, q, zerofill, cleanDname, cleanStr, defaultStemmer } from './lib/utils'
-import { sd2js } from '../../../b/dict-sd2json'
+import { sd2js } from '../../b/dict-sd2json'
 // import { importDSL as dsl2json } from '../../../../b/dict-dsl2json'
 import { pushDocs } from "./lib/pouch";
 const franc = require('franc')
