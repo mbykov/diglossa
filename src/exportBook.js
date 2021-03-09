@@ -194,7 +194,7 @@ ipcRenderer.on('uncompress', async function (event) {
 })
 
 async function uncompressPackage(prefs) {
-  let origin = dgl.origin(book.sbooks)
+  // let origin = dgl.origin(book.sbooks)
   let exportpath = prefs.exportpath
   fse.ensureDirSync(exportpath)
   let packname = prefs.name
