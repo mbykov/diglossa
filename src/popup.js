@@ -1,7 +1,6 @@
-//
+'use strict'
 
 import './css/popup.css';
-
 import _ from 'lodash'
 import { ipcRenderer } from "electron";
 const mouse = require('mousetrap')

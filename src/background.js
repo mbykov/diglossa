@@ -5,12 +5,12 @@ import { app, BrowserWindow, ipcMain, shell } from "electron";
 import { config } from "./config";
 
 // import { fb2json } from '../../b/book-fb2json'
-import { fb2json } from 'book-fb2json'
 // import { epub2json } from '../../b/book-epub2json'
-import { epub2json } from 'book-epub2json'
 // import { md2json } from '../../b/book-md2json'
-import { md2json } from 'book-md2json'
 // import { pdf2json } from '../../b/book-pdf2json'
+import { fb2json } from 'book-fb2json'
+import { epub2json } from 'book-epub2json'
+import { md2json } from 'book-md2json'
 import { pdf2json } from 'book-pdf2json'
 
 const Store = require('electron-store')
@@ -155,8 +155,6 @@ const handleError = (title, error) => {
   console.log('_B HE title', title)
   console.log('_B HE ERR', error)
 }
-
-console.log('_TYPE ', process.type)
 
 if (process.type === 'renderer') {
 	const errorHandler = _.debounce(error => {

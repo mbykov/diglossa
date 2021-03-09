@@ -1,11 +1,12 @@
 {
+  "version": "0.9.0",
   "name": "glossa",
   "productName": "Glossa",
-  "description": "x x x x x x x x x x x x x x ",
-  "version": "0.1.0",
-  "author": "Mr. Gumby <mr.gumby@example.com>",
-  "copyright": "© 2017, Gumby inc.",
-  "homepage": "http://example.com",
+  "description": "Bilingual Reader - an application for reading and creating bi-(multi) lingual texts",
+  "author": "M. Bykov <m.bykov@gmail.com>",
+  "copyright": "© 2017- 2021, M.Bykov",
+  "homepage": "http://diglossa.org",
+  "license": "GPL-3.0",
   "main": "app/background.js",
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
@@ -62,7 +63,6 @@
     "marked": "^1.2.7",
     "mousetrap": "^1.6.5",
     "natural": "^2.4.1",
-    "postcss-import": "^14.0.0",
     "pouchdb": "^7.2.2",
     "snowball-german": "^1.0.0",
     "stopword": "^1.0.6"

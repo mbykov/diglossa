@@ -32,11 +32,9 @@ import { preference } from './prefs'
 import { dictionary } from './dicts'
 import { search } from './search'
 
-const { app } = require('electron').remote
-let homepath = app.getPath('home')
+// const { app } = require('electron').remote
+// let homepath = app.getPath('home')
 // let lang = appstore.get('lang') || config.deflang
-
-
 const routes = { library, book, page, bookmarks, newtext, preference, dictionary, search }
 
 class History {
@@ -104,7 +102,6 @@ function closeAll() {
 ;(async function init() {
   await loadTemplates()
   const initState = {route: 'library'}
-  // if (!glang.local) glang.local = config.deflang
   dgl.langs = (books) => books.filter(book=> book.active).map(book=> book.lang),
   dgl.alllangs = (books) => books.map(book=> book.lang),
   dgl.actives = (books) => {
@@ -135,13 +132,6 @@ document.addEventListener ("click",  (ev) => {
 })
 
 
-// document.on('click', 'a[href^="http"]', function(event) {
-//   event.preventDefault();
-//   log('____HREF', this.href)
-//   shell.openExternal(this.href);
-// });
-
-
 // scroll page
 document.addEventListener("wheel", function(ev) {
   if (ev.shiftKey) return
@@ -150,7 +140,6 @@ document.addEventListener("wheel", function(ev) {
   let delta = (ev.deltaY > 0) ? 24 : -24
   opage.scrollTop += delta
 })
-
 
 mouse.bind('esc', function(ev) {
   ipcRenderer.send('hide-popup-window')
@@ -173,17 +162,14 @@ ipcRenderer.on('route', function (event, route) {
 
 ipcRenderer.on('section', function (event, route) {
   let lang = appstore.get('lang') || config.deflang
-  // log('__SECTION LANG', lang)
   loadSection(lang, route)
 })
 
 
 ipcRenderer.on('lang', function (event, lang) {
-  // log('____LANG', lang)
   appstore.set('lang', lang)
   ipcRenderer.send('lang', lang)
 })
-
 
 // todo: del ================== DEL
 mouse.bind('ctrl+l', function(ev) {
@@ -191,7 +177,6 @@ mouse.bind('ctrl+l', function(ev) {
   const state = {route: 'library'}
   router(state)
 })
-
 
 function hideSearchIcon() {
   q('#search-icon').classList.add('hidden')
