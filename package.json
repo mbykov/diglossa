@@ -1,5 +1,5 @@
 {
-  "version": "0.9.0",
+  "version": "0.9.1",
   "name": "diglossa.js",
   "productName": "Diglossa.js",
   "description": "Bilingual Reader - an application for reading and creating bi-(multi) lingual texts",
@@ -37,11 +37,23 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "rpm",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "resources/icons"
     },
-    "publish": null
+    "publish": "github"
   },
   "dependencies": {
     "@babel/runtime": "^7.12.5",

@@ -6,13 +6,14 @@ const { dialog } = require('electron').remote
 import { log, q, create, zerofill, cleanDname, cleanStr } from './lib/utils'
 
 // import { fb2json } from '../../../b/book-fb2json'
-import { fb2json } from 'book-fb2json'
 // import { epub2json } from '../../../b/book-epub2json'
-import { epub2json } from 'book-epub2json' // ??? нету
 // import { md2json } from '../../../b/book-md2json'
-import { md2json } from 'book-md2json'
 // import { pdf2json } from '../../../b/book-pdf2json'
+import { fb2json } from 'book-fb2json'
+import { epub2json } from 'book-epub2json' // ??? нету
+import { md2json } from 'book-md2json'
 import { pdf2json } from 'book-pdf2json'
+
 import { pushDocs, pushImgs, fetchChapterDocs } from './lib/pouch'
 import { preference } from './prefs'
 import { book } from './book'
@@ -24,7 +25,6 @@ const JSZip = require("jszip");
 const franc = require('franc')
 
 const fse = require('fs-extra')
-// const fetch = require('node-fetch')
 const path = require("path")
 const Store = require('electron-store')
 const bkstore = new Store({name: 'libks'})
@@ -296,45 +296,6 @@ async function importDglJson(bpath) {
   saveDglBook(pack, packages)
 } // import bare uncompressed dgl-json
 
-async function saveDglBook(pack, packages) {
-  let books = []
-  for (const pack of packages)  {
-    let { descr, docs, imgs } = pack
-    if (!docs) {
-      let mess = ['no book', descr.title].join(' ')
-      message.show(mess, 'darkred')
-      continue
-    }
-    let book = parseBookInfo(descr)
-    books.push(book)
-    book.active = true
-
-    setDocPath(docs)
-    book.cnts = parseCnts(docs) // dgl
-
-    let mess = [book.lang, '-', book.title, 'loading...'].join(' ')
-    message.show(mess, 'darkgreen', true)
-    await pushDocs(book.bid, docs)
-    if (imgs.length) await pushImgs(book.bid, imgs)
-  } // for packages
-
-
-  // todo: now: установить отметку synced
-  let origin = books.find(book=> book.origin)
-  let nonorigin = books.find(book=> !book.origin)
-  if (nonorigin) nonorigin.shown = true
-  bkstore.set(origin.bid, books)
-
-  let prefs = pack
-  delete prefs.texts
-  prefs.exportpath = appstore.get('exportpath')
-  prefstore.set(origin.bid, prefs)
-
-  router({route: 'library'})
-  let mess = ['book', origin.descr.author, origin.descr.title, 'loaded'].join(' ')
-  message.show(mess, 'darkgreen')
-}
-
 async function importDgl(zippath) {
   progress.show()
   let iszip = isZip(fse.readFileSync(zippath))
@@ -390,4 +351,42 @@ async function getZipData(zippath) {
     .catch(err=> {
       return {descr: 'err'}
     })
+}
+
+async function saveDglBook(pack, packages) {
+  let books = []
+  for (const pack of packages)  {
+    let { descr, docs, imgs } = pack
+    if (!docs) {
+      let mess = ['no book', descr.title].join(' ')
+      message.show(mess, 'darkred')
+      continue
+    }
+    let book = parseBookInfo(descr)
+    books.push(book)
+    book.active = true
+
+    setDocPath(docs)
+    book.cnts = parseCnts(docs) // dgl
+
+    let mess = [book.lang, '-', book.title, 'loading...'].join(' ')
+    message.show(mess, 'darkgreen', true)
+    await pushDocs(book.bid, docs)
+    if (imgs.length) await pushImgs(book.bid, imgs)
+  } // for packages
+
+  // todo: now: установить отметку synced
+  let origin = books.find(book=> book.origin)
+  let nonorigin = books.find(book=> !book.origin)
+  if (nonorigin) nonorigin.shown = true
+  bkstore.set(origin.bid, books)
+
+  let prefs = pack
+  delete prefs.texts
+  prefs.exportpath = appstore.get('exportpath')
+  prefstore.set(origin.bid, prefs)
+
+  router({route: 'library'})
+  let mess = ['book', origin.descr.author, origin.descr.title, 'loaded'].join(' ')
+  message.show(mess, 'darkgreen')
 }
