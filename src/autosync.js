@@ -22,8 +22,8 @@ let dgl = remote.getGlobal('dgl')
 import { page } from './page'
 import { book } from './book'
 
-let stemdictpath = '/home/michael/b/synchro.js/dicts/dict-stems-eng-rus.json'
-let stemdicts = fse.readJsonSync(stemdictpath)
+// let stemdictpath = '/home/michael/b/synchro.js/dicts/dict-stems-eng-rus.json'
+// let stemdicts = fse.readJsonSync(stemdictpath)
 
 mouse.bind('ctrl+y', function(ev) {
   if (!dgl.editMode) return
