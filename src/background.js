@@ -58,6 +58,14 @@ const createWindow = () => {
   //   positionstore.set('main', mainWindow.getBounds())
   // })
 
+  mainWindow.webContents.on('did-finish-load', () => {
+    let pckg = require('../package.json')
+    let name = pckg.name
+    let version = pckg.version
+    mainWindow.webContents.send('version', version )
+    mainWindow.setTitle([name, 'v.', version].join(' '))
+  })
+
   ipcMain.on('importBook', async (event, data) => {
     let bpath = data.bpath
     let ext = path.extname(data.bpath)

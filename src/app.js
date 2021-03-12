@@ -32,6 +32,8 @@ import { preference } from './prefs'
 import { dictionary } from './dicts'
 import { search } from './search'
 
+const axios = require('axios')
+
 // const { app } = require('electron').remote
 // let homepath = app.getPath('home')
 // let lang = appstore.get('lang') || config.deflang
@@ -169,6 +171,21 @@ ipcRenderer.on('section', function (event, route) {
 ipcRenderer.on('lang', function (event, lang) {
   appstore.set('lang', lang)
   ipcRenderer.send('lang', lang)
+})
+
+ipcRenderer.on('version', function (event, oldver) {
+  axios.get(config.version)
+    .then(function (response) {
+      if (!response || !response.data) return
+      let newver = response.data.name
+      if (oldver && newver && newver > oldver) {
+        let versionTxt = ['new version available:', newver].join(' ')
+        message.show(versionTxt, 'darkgreen', true)
+      }
+    })
+    .catch(function (error) {
+      console.log('API.GITHUB ERR')
+    })
 })
 
 // todo: del ================== DEL
