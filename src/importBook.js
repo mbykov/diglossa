@@ -9,10 +9,10 @@ import { log, q, create, zerofill, cleanDname, cleanStr } from './lib/utils'
 // import { epub2json } from '../../../b/book-epub2json'
 // import { md2json } from '../../../b/book-md2json'
 // import { pdf2json } from '../../../b/book-pdf2json'
-import { fb2json } from 'book-fb2json'
-import { epub2json } from 'book-epub2json' // ??? нету
-import { md2json } from 'book-md2json'
-import { pdf2json } from 'book-pdf2json'
+// import { fb2json } from 'book-fb2json'
+// import { epub2json } from 'book-epub2json' // ??? нету
+// import { md2json } from 'book-md2json'
+// import { pdf2json } from 'book-pdf2json'
 
 import { pushDocs, pushImgs, fetchChapterDocs } from './lib/pouch'
 import { preference } from './prefs'
@@ -50,8 +50,12 @@ mouse.bind('ctrl+o', function(ev) {
   dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'DGL, FB2, EPUB, HTML, MD', extensions: ['dgl', 'json', 'epub', 'pdf', 'md', 'fb2', 'fb2.zip'] }]})
     .then(result => {
       const bpath = result.filePaths[0]
+      if (!bpath) {
+        message.show('can not locate book', 'darkred')
+        return
+      }
       let ext = path.extname(bpath)
-      if (!bpath || !ext) {
+      if (!ext) {
         message.show('can not locate book', 'darkred')
         return
       }
@@ -69,8 +73,12 @@ ipcRenderer.on('importBook', function (event) {
   dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'DGL, FB2, EPUB, HTML, MD', extensions: ['dgl', 'json', 'epub', 'pdf', 'md', 'fb2', 'fb2.zip'] }]})
     .then(result => {
       const bpath = result.filePaths[0]
+      if (!bpath) {
+        message.show('can not locate book', 'darkred')
+        return
+      }
       let ext = path.extname(bpath)
-      if (!bpath || !ext) {
+      if (!ext) {
         message.show('can not locate book', 'darkred')
         return
       }
@@ -236,21 +244,6 @@ function parseBookInfo(info) {
 
 async function parseBookByType(bpath, type) {
   // now only md as text type
-  // let result, action
-  // if (!type) {
-  //   type = path.extname(bpath).replace('.', '')
-  //   if (type == 'zip') type = bpath.split('.').slice(-2).join('.')
-  // }
-  // if (type == 'epub') action = epub2json
-  // else if (type == 'fb2') action = fb2json
-  // else if (type == 'fb2.zip') action = fb2json
-  // else if (type == 'pdf') action = pdf2json
-  // // else if (type == 'html') action = importHTML
-  // else if (type == 'md') action = md2json
-  // else return {descr: 'book ext should be .epub, .fb2, .fb2.zip, .md or .dgl'}
-  // action = md2json
-  // result = await action(bpath)
-
   let result
   try {
     result = await md2json(bpath)

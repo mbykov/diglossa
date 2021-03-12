@@ -6,7 +6,7 @@ import { router, render } from './app'
 const mouse = require('mousetrap')
 import { message } from './lib/message'
 import { header } from './header'
-// import { autoSync } from './autosync'
+import { getFirstBlock } from './autosync'
 const fse = require('fs-extra')
 
 const Store = require('electron-store')
