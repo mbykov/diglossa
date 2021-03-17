@@ -47,7 +47,7 @@ const createWindow = () => {
     event.preventDefault()
   })
 
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
   global.templates = {}
   global.dgl = {}
 
