@@ -62,7 +62,7 @@
     "book-fb2json": "^0.9.0",
     "book-md2json": "0.9.5",
     "book-pdf2json": "^0.9.0",
-    "dict-sd2json": "^0.9.0",
+    "dict-sd2json": "0.9.1",
     "electron-store": "^6.0.1",
     "electron-util": "^0.14.2",
     "flexsearch": "0.6.32",

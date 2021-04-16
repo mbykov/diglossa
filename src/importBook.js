@@ -11,7 +11,7 @@ import { log, q, create, zerofill, cleanDname, cleanStr } from './lib/utils'
 // import { pdf2json } from '../../../b/book-pdf2json'
 // import { fb2json } from 'book-fb2json'
 // import { epub2json } from 'book-epub2json' // ??? нету
-// import { md2json } from 'book-md2json'
+import { md2json } from 'book-md2json'
 // import { pdf2json } from 'book-pdf2json'
 
 import { pushDocs, pushImgs, fetchChapterDocs } from './lib/pouch'
@@ -133,6 +133,7 @@ function guessLang(docs) {
 
 async function importBook(result) {
   let { descr, docs, imgs } = result
+  // log('__RR', result)
   let half = docs.length/2
   descr.lang = guessLang(docs.slice(half, half+200))
 
@@ -299,10 +300,11 @@ async function importDgl(zippath) {
     return
   }
   // log('__zip start')
-  let packages = await getZipData(zippath)
-  // log('__zip end pack', packages)
-  saveDglBook(packages)
+  let {pack, packages} = await getZipData(zippath)
+  // log('__zip end pack', pack)
+  // log('__zip end pckgs', packages)
 
+  saveDglBook(pack, packages)
   message.show('zip in progress', 'darkgreen')
 } // import compressed dgl
 
@@ -310,7 +312,7 @@ async function getZipData(zippath) {
   let data = await fse.readFileSync(zippath)
   let promise = new Promise(function(resolve, reject) {
     JSZip.loadAsync(data).then(function (zip) {
-      let unzipped = {descr: '', docs: []}
+      let unzipped = {descr: '', pkgs: []}
       let fnsize = _.keys(zip.files).length -1
       let fnidx = 0
       for (let fn in zip.files) {
@@ -324,7 +326,12 @@ async function getZipData(zippath) {
             else if (ext == 'md') {
               let mds = _.compact(data.split('\n'))
               let {descr, docs, imgs} = await md2json(mds)
-              unzipped.docs.push(docs)
+              // let result = await md2json(mds)
+              // result.fn= file.name
+              let filedescr = unzipped.descr.texts.find(text=> text.src == file.name)
+              // unzipped.docs.push(docs)
+              let pkg = {descr: filedescr, docs, imgs}
+              unzipped.pkgs.push(pkg)
             }
             if (fnidx == fnsize) resolve(unzipped)
           })
@@ -334,12 +341,15 @@ async function getZipData(zippath) {
 
   return promise
     .then(unzipped=> {
-      let packages = []
-      unzipped.descr.texts.forEach((descr, idx)=> {
-        let pack = {descr, docs: unzipped.docs[idx], imgs: []}
-        packages.push(pack)
-      })
-      return packages
+      log('_UNZP', unzipped)
+      // let packages = []
+      // unzipped.descr.texts.forEach((descr, idx)=> {
+      //   let pack = {descr, docs: unzipped.docs[idx], imgs: []}
+      //   packages.push(pack)
+      // })
+      // return packages
+      // return {pack: unzipped.descr, packages}
+      return {pack: unzipped.descr, packages: unzipped.pkgs}
     })
     .catch(err=> {
       return {descr: 'err'}
@@ -365,19 +375,26 @@ async function saveDglBook(pack, packages) {
     let mess = [book.lang, '-', book.title, 'loading...'].join(' ')
     message.show(mess, 'darkgreen', true)
     await pushDocs(book.bid, docs)
-    if (imgs.length) await pushImgs(book.bid, imgs)
+    if (imgs && imgs.length) await pushImgs(book.bid, imgs)
   } // for packages
 
-  // todo: now: установить отметку synced
+  // todo: now: установить отметку synced ?
   let origin = books.find(book=> book.origin)
   let nonorigin = books.find(book=> !book.origin)
   if (nonorigin) nonorigin.shown = true
   bkstore.set(origin.bid, books)
 
+  /*
+    непонятно. Если из .dgl, то все prefs заданы.
+    а вот если из fb2, etc, то нужно задать
+
+    второе:
+
+   */
   let prefs = pack
   delete prefs.texts
   prefs.exportpath = appstore.get('exportpath')
-  prefstore.set(origin.bid, prefs)
+  // prefstore.set(origin.bid, prefs)
 
   router({route: 'library'})
   let mess = ['book', origin.descr.author, origin.descr.title, 'loaded'].join(' ')
