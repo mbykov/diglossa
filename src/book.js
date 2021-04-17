@@ -89,9 +89,9 @@ export const book = {
  }
 
 export function getCSyncs(bid) {
-  let syncs = csyncstore.get(bid)
-  if (_.isEmpty(syncs)) syncs = []
-  return syncs
+  let csyncs = csyncstore.get(bid)
+  if (_.isEmpty(csyncs)) csyncs = []
+  return csyncs
 }
 
 function setPanes(books) {

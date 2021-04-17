@@ -155,11 +155,11 @@ function ndash(str) {
   return str.trim().replace(/^--/, '–').replace(/^—/, '–').replace(/ - /g, ' – '); // m-dash: —
 }
 function cleanDname(descr) {
-  if (!descr.author) descr.author = '';
-  if (!descr.title) descr.title = descr.name || '';
+  if (!descr.author) descr.author = 'author';
+  if (!descr.title) descr.title = descr.name || 'title';
   let lang = descr.lang || ''; // let str = [descr.type || '', descr.lang || '', descr.author.slice(0,25), descr.title.slice(0,25)].join('-')
 
-  let str = [lang, descr.author.slice(0, 25), descr.title.slice(0, 25)].join('-');
+  let str = [descr.author.slice(0, 25), descr.title.slice(0, 25), lang].join('-');
   return str.replace(/[)(,\.]/g, '').replace(/\s+/g, '-').replace(/\//g, '_');
 } // ev.preventDefault()
 // ev.stopPropagation()

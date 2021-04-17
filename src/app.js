@@ -128,8 +128,19 @@ document.addEventListener ("click",  (ev) => {
   if (!ohref) return
   ev.preventDefault()
   let href = ohref.textContent
-  log('_href', href)
   if (!href) return
+  shell.openExternal(href)
+})
+
+document.addEventListener ("click",  (ev) => {
+  message.hide()
+  if (!ev.ctrlKey) return
+  let owf = ev.target.closest('span.wf')
+  if (!owf) return
+  ev.preventDefault()
+  let href = owf.textContent
+  if (!href) return
+  href = 'http://diglossa.org/' + href
   shell.openExternal(href)
 })
 

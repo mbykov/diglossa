@@ -140,13 +140,16 @@ async function importBook(result) {
   let newbook = parseBookInfo(descr)
   newbook.bpath = result.bpath
 
-  newbook.cnts = parseCnts(docs) // epub
+  newbook.cnts = parseCnts(docs)
   setDocPath(docs)
   newbook.active = true
 
+  log('__BOOK', book)
+  log('__BOOK-2', book.sbooks)
+
   if (result.orbid) {
     book.sbooks.push(newbook)
-    let origin = dgl.origin(book.sbooks)
+    // let origin = dgl.origin(book.sbooks)
     if (book.sbooks[1]) book.sbooks[1].shown = true
     bkstore.set(result.orbid, book.sbooks)
   } else {
@@ -168,42 +171,6 @@ function parseCnts(docs) {
   let cnts = docs.filter(doc=> doc.level > -1)
   cnts.forEach((cnt, idx)=> cnt.idx = idx)
   return cnts
-}
-
-function setDocPath_(docs) {
-  const fillsize = docs.length.toString().length
-  let baredocs = []
-  let levnumkey = {}, path = '00', counter = 0, filled
-  let prevheader = {level: 0, path: '00'}
-  let parent = {level: 0, path: ''}
-  for (let doc of docs) {
-    if (doc.level > -1) {
-      counter = 0
-      if (levnumkey[doc.level] > -1) levnumkey[doc.level] += 1
-      else levnumkey[doc.level] = 0
-      // doc.levnum = levnumkey[level] || 0
-
-      if (prevheader.level === doc.level) path = [prevheader.path.slice(0,-1), levnumkey[doc.level]].join('')
-      else if (prevheader.level < doc.level) levnumkey[doc.level] = 0, path = [prevheader.path, doc.level, levnumkey[doc.level]].join('')
-      else if (prevheader.level > doc.level) {
-        parent = _.last(_.filter(baredocs, (bdoc, idy)=> { return bdoc.level < doc.level  })) || {level: 0, path: '00'}
-        path = [parent.path, doc.level, levnumkey[doc.level]].join('')
-      }
-      prevheader = doc
-    }
-
-    filled = zerofill(counter, fillsize)
-    if (doc.footnote) {
-      if (!doc._id) doc._id = ['ref', path, doc.ref].join('-')
-    } else {
-      doc.path = path
-      doc._id = [path, filled].join('-')
-      counter++
-    }
-
-    prevheader.size = counter
-    baredocs.push(doc)
-  }
 }
 
 function setDocPath(docs) {
