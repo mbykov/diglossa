@@ -133,7 +133,6 @@ function guessLang(docs) {
 
 async function importBook(result) {
   let { descr, docs, imgs } = result
-  // log('__RR', result)
   let half = docs.length/2
   descr.lang = guessLang(docs.slice(half, half+200))
 
