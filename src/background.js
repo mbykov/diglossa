@@ -155,13 +155,12 @@ app.on('ready', createPopup);
 app.on('ready', createWindow);
 
 ipcMain.on('lang', (event, lang) => {
-  console.log('_LANG', lang)
   MenuFactory(lang)
 })
 
 const handleError = (title, error) => {
-  console.log('_B HE title', title)
-  console.log('_B HE ERR', error)
+  console.log('_Back handleError', title)
+  console.log('_Back handleError', error)
 }
 
 if (process.type === 'renderer') {

@@ -1,4 +1,4 @@
-<img src="../resources/icons/128x128.png" id="bookImg">
+<img src="../resources/icons/256x256.png" id="bookImg">
 
 After first installation Biblos.js has bare minimum of dictionaries, <b>Wiktionary</b>, <b>Terms</b> (indeclinables), and hidden from user <b>Flex</b>. They are already synchronized with server.
 

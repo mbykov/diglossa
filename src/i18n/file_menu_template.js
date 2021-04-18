@@ -7,23 +7,23 @@ export function fileMenuTemplate() {
     label: "File",
     submenu: [
       {  label: t("home"),
-         accelerator: "CmdOrCtrl+H",
-         click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'home') } },
+         // accelerator: "CmdOrCtrl+H1",
+         click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'home') } },
 
-      {  label: t("sign in"),
-         click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'signin') } },
+      // {  label: t("sign in"),
+      //    click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'signin') } },
 
-      {  label: t("sign up"),
-         click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'signup') } },
+      // {  label: t("sign up"),
+      //    click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'signup') } },
 
-      { type: "separator" },
-
-      { type: "separator" },
-
-      {  label: t("Preferences"),
-         click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'prefsapp') } },
+      // { type: "separator" },
 
       { type: "separator" },
+
+      // {  label: t("Preferences"),
+         // click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'prefsapp') } },
+
+      // { type: "separator" },
 
       { label: t("Quit"),
         accelerator: "CmdOrCtrl+Q",

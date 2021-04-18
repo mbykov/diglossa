@@ -3,12 +3,12 @@ import { app, BrowserWindow } from "electron";
 export const engMenuTemplate = {
   label: "ENG",
   submenu: [
-    {
-      label: "DEU",
-      click: () => {
-        BrowserWindow.getFocusedWindow().webContents.send('lang', 'deu')
-      }
-    },
+    // {
+    //   label: "DEU",
+    //   click: () => {
+    //     BrowserWindow.getFocusedWindow().webContents.send('lang', 'deu')
+    //   }
+    // },
     {
       label: "RUS",
       click: () => {

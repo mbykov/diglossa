@@ -9,28 +9,32 @@ export function helpMenuTemplate() {
     label: t("Help"),
     submenu: [
       { label: t("Website"), click: () => {
-        href = 'http://diglossa.org/diglossa.js'
+        href = 'http://diglossa.org/help'
         shell.openExternal(href)
       } },
       { label: t("Source Code"), click: () => {
-        href = 'https://github.com/mbykov/diglossa.js/'
+        href = 'https://github.com/mbykov/diglossa.js'
+        shell.openExternal(href)
+      } },
+      { label: t("Download"), click: () => {
+        href = 'https://github.com/mbykov/diglossa.js/releases/latest'
         shell.openExternal(href)
       } },
       { label: t("Report an Issue…"), click: () => {
         href = 'https://github.com/mbykov/diglossa.js/issues/new/'
-        console.log('INFO', debugInfo())
+        // console.log('INFO', debugInfo())
         let body = debugInfo()
         href = [href, body].join('?body=')
         shell.openExternal(href)
       } },
-	    { label: 'Show App Data',
-		    click() {
-			    shell.openItem(app.getPath('userData'));
-		    }
-	    },
+	    // { label: 'Show App Data',
+		  //   click() {
+			//     shell.openItem(app.getPath('userData'));
+		  //   }
+	    // },
       { label: t("hot keys"), accelerator: "CmdOrCtrl+H", click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'help') } },
       { label: "Reload", accelerator: "CmdOrCtrl+R", click: () => { BrowserWindow.getFocusedWindow().webContents.reloadIgnoringCache(); }  },
-      { label: "Re-Read", accelerator: "Shift+CmdOrCtrl+R", click: () => { BrowserWindow.getFocusedWindow().webContents.send('action', 're-read-file') }  },
+      // { label: "Re-Read", accelerator: "Shift+CmdOrCtrl+R", click: () => { BrowserWindow.getFocusedWindow().webContents.send('action', 're-read-file') }  },
       { label: t("Toggle devTools"),
         accelerator: "Alt+CmdOrCtrl+I",
         click: () => {

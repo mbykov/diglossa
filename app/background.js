@@ -63,12 +63,8 @@ function aboutMenuTemplate() {
       click: () => {
         electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('section', 'acknowledgements');
       }
-    }, {
-      label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)('code'),
-      click: () => {
-        electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('section', 'code');
-      }
-    }, {
+    }, // {  label: t('code'), click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'code') } },
+    {
       label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)('contacts'),
       click: () => {
         electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('section', 'contacts');
@@ -192,12 +188,8 @@ function dictMenuTemplate() {
       click: () => {
         electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('importDict');
       }
-    }, {
-      label: "Import DSL .ifo",
-      click: () => {
-        electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('importDict');
-      }
-    }, {
+    }, // { label: "Import DSL .ifo", click: () => { BrowserWindow.getFocusedWindow().webContents.send('importDict') } },
+    {
       type: "separator"
     }, {
       label: "Export  .dgl-dict",
@@ -232,32 +224,21 @@ function fileMenuTemplate() {
     label: "File",
     submenu: [{
       label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("home"),
-      accelerator: "CmdOrCtrl+H",
+      // accelerator: "CmdOrCtrl+H1",
       click: () => {
-        electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('route', 'home');
+        electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('section', 'home');
       }
-    }, {
-      label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("sign in"),
-      click: () => {
-        electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('route', 'signin');
-      }
-    }, {
-      label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("sign up"),
-      click: () => {
-        electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('route', 'signup');
-      }
-    }, {
+    }, // {  label: t("sign in"),
+    //    click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'signin') } },
+    // {  label: t("sign up"),
+    //    click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'signup') } },
+    // { type: "separator" },
+    {
       type: "separator"
-    }, {
-      type: "separator"
-    }, {
-      label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("Preferences"),
-      click: () => {
-        electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('route', 'prefsapp');
-      }
-    }, {
-      type: "separator"
-    }, {
+    }, // {  label: t("Preferences"),
+    // click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'prefsapp') } },
+    // { type: "separator" },
+    {
       label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("Quit"),
       accelerator: "CmdOrCtrl+Q",
       click: () => {
@@ -295,32 +276,36 @@ function helpMenuTemplate() {
     submenu: [{
       label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("Website"),
       click: () => {
-        href = 'http://diglossa.org/diglossa.js';
+        href = 'http://diglossa.org/help';
         electron__WEBPACK_IMPORTED_MODULE_0__.shell.openExternal(href);
       }
     }, {
       label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("Source Code"),
       click: () => {
-        href = 'https://github.com/mbykov/diglossa.js/';
+        href = 'https://github.com/mbykov/diglossa.js';
+        electron__WEBPACK_IMPORTED_MODULE_0__.shell.openExternal(href);
+      }
+    }, {
+      label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("Download"),
+      click: () => {
+        href = 'https://github.com/mbykov/diglossa.js/releases/latest';
         electron__WEBPACK_IMPORTED_MODULE_0__.shell.openExternal(href);
       }
     }, {
       label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("Report an Issue…"),
       click: () => {
-        href = 'https://github.com/mbykov/diglossa.js/issues/new/';
-        console.log('INFO', debugInfo());
+        href = 'https://github.com/mbykov/diglossa.js/issues/new/'; // console.log('INFO', debugInfo())
+
         let body = debugInfo();
         href = [href, body].join('?body=');
         electron__WEBPACK_IMPORTED_MODULE_0__.shell.openExternal(href);
       }
-    }, {
-      label: 'Show App Data',
-
-      click() {
-        electron__WEBPACK_IMPORTED_MODULE_0__.shell.openItem(electron__WEBPACK_IMPORTED_MODULE_0__.app.getPath('userData'));
-      }
-
-    }, {
+    }, // { label: 'Show App Data',
+    //   click() {
+    //     shell.openItem(app.getPath('userData'));
+    //   }
+    // },
+    {
       label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("hot keys"),
       accelerator: "CmdOrCtrl+H",
       click: () => {
@@ -332,13 +317,8 @@ function helpMenuTemplate() {
       click: () => {
         electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.reloadIgnoringCache();
       }
-    }, {
-      label: "Re-Read",
-      accelerator: "Shift+CmdOrCtrl+R",
-      click: () => {
-        electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('action', 're-read-file');
-      }
-    }, {
+    }, // { label: "Re-Read", accelerator: "Shift+CmdOrCtrl+R", click: () => { BrowserWindow.getFocusedWindow().webContents.send('action', 're-read-file') }  },
+    {
       label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("Toggle devTools"),
       accelerator: "Alt+CmdOrCtrl+I",
       click: () => {
@@ -481,12 +461,13 @@ __webpack_require__.r(__webpack_exports__);
 
 const engMenuTemplate = {
   label: "ENG",
-  submenu: [{
-    label: "DEU",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('lang', 'deu');
-    }
-  }, {
+  submenu: [// {
+  //   label: "DEU",
+  //   click: () => {
+  //     BrowserWindow.getFocusedWindow().webContents.send('lang', 'deu')
+  //   }
+  // },
+  {
     label: "RUS",
     click: () => {
       electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('lang', 'rus');
@@ -523,12 +504,13 @@ __webpack_require__.r(__webpack_exports__);
 
 const rusMenuTemplate = {
   label: "RUS",
-  submenu: [{
-    label: "DEU",
-    click: () => {
-      electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('lang', 'deu');
-    }
-  }, {
+  submenu: [// {
+  //   label: "DEU",
+  //   click: () => {
+  //     BrowserWindow.getFocusedWindow().webContents.send('lang', 'deu')
+  //   }
+  // },
+  {
     label: "ENG",
     click: () => {
       electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('lang', 'eng');
@@ -663,7 +645,7 @@ function MenuFactory(lang) {
   \**********************/
 /***/ ((module) => {
 
-module.exports = JSON.parse('{"version":"0.9.4","name":"diglossa.js","productName":"Diglossa.js","description":"Bilingual Reader - an application for reading and creating bi-(multi) lingual texts","author":"M. Bykov <m.bykov@gmail.com>","copyright":"© 2017- 2021, M.Bykov","homepage":"http://diglossa.org","license":"GPL-3.0","main":"app/background.js","scripts":{"postinstall":"electron-builder install-app-deps","preunit":"webpack --config=build/webpack.unit.config.js --env=test --display=none","unit":"electron-mocha temp/specs.js --renderer --require source-map-support/register","pree2e":"webpack --config=build/webpack.app.config.js --env=test --display=none && webpack --config=build/webpack.e2e.config.js --env=test --display=none","e2e":"mocha temp/e2e.js --require source-map-support/register","test":"npm run unit && npm run e2e","start":"node build/start.js","release":"webpack --config=build/webpack.app.config.js --env=production && electron-builder"},"build":{"appId":"org.diglossa.diglossa","files":["app/**/*","src/**/*","resources/**/*","package.json"],"directories":{"buildResources":"resources"},"linux":{"category":"Educational software","target":[{"target":"tar.gz","arch":["x64"]},{"target":"deb","arch":["x64"]},{"target":"rpm","arch":["x64"]}],"icon":"resources/icons"},"publish":"github"},"dependencies":{"@babel/runtime":"^7.12.5","axios":"^0.21.1","book-epub2json":"0.9.1","book-fb2json":"^0.9.0","book-md2json":"0.9.5","book-pdf2json":"^0.9.0","dict-sd2json":"0.9.1","electron-store":"^6.0.1","electron-util":"^0.14.2","flexsearch":"0.6.32","franc":"^5.0.0","fs-extra":"^9.0.1","is-zip":"^1.0.0","json5":"^2.1.3","jszip":"^3.5.0","langs":"^2.0.0","lodash":"^4.17.20","mark.js":"^8.11.1","marked":"2.0.1","mousetrap":"^1.6.5","natural":"^2.4.1","pouchdb":"^7.2.2","snowball-german":"^1.0.0","stopword":"^1.0.6"},"devDependencies":{"@babel/core":"^7.12.10","@babel/preset-env":"^7.12.11","autoprefixer":"^10.1.0","babel-loader":"^8.0.0-beta.4","chai":"^4.1.0","css-loader":"^3.1.0","electron":"^11.1.1","electron-builder":"^22.9.1","electron-mocha":"^8.1.1","file-loader":"^6.2.0","mocha":"^7.1.1","postcss":"^8.2.2","postcss-loader":"^4.1.0","source-map-support":"^0.5.6","style-loader":"^1.1.4","tailwind":"^4.0.0","webpack":"^5.11.1","webpack-cli":"^4.3.1","webpack-merge":"^5.7.3","webpack-node-externals":"^2.5.2","worker-loader":"^3.0.7"}}');
+module.exports = JSON.parse('{"version":"0.9.6","name":"diglossa.js","productName":"Diglossa.js","description":"Bilingual Reader - an application for reading and creating bi-(multi) lingual texts","author":"M. Bykov <m.bykov@gmail.com>","copyright":"© 2017- 2021, M.Bykov","homepage":"http://diglossa.org","license":"GPL-3.0","main":"app/background.js","scripts":{"postinstall":"electron-builder install-app-deps","preunit":"webpack --config=build/webpack.unit.config.js --env=test --display=none","unit":"electron-mocha temp/specs.js --renderer --require source-map-support/register","pree2e":"webpack --config=build/webpack.app.config.js --env=test --display=none && webpack --config=build/webpack.e2e.config.js --env=test --display=none","e2e":"mocha temp/e2e.js --require source-map-support/register","test":"npm run unit && npm run e2e","start":"node build/start.js","release":"webpack --config=build/webpack.app.config.js --env=production && electron-builder"},"build":{"appId":"org.diglossa.diglossa","files":["app/**/*","src/**/*","resources/**/*","package.json"],"directories":{"buildResources":"resources"},"linux":{"category":"Scientific software","target":[{"target":"tar.gz","arch":["x64"]},{"target":"deb","arch":["x64"]},{"target":"rpm","arch":["x64"]}],"icon":"resources/icons"},"publish":"github"},"dependencies":{"@babel/runtime":"^7.12.5","axios":"^0.21.1","book-epub2json":"0.9.1","book-fb2json":"^0.9.0","book-md2json":"0.9.5","book-pdf2json":"^0.9.0","dict-sd2json":"0.9.1","electron-store":"^6.0.1","electron-util":"^0.14.2","flexsearch":"0.6.32","franc":"^5.0.0","fs-extra":"^9.0.1","is-zip":"^1.0.0","json5":"^2.1.3","jszip":"^3.5.0","langs":"^2.0.0","lodash":"^4.17.20","mark.js":"^8.11.1","marked":"2.0.1","mousetrap":"^1.6.5","natural":"^2.4.1","pouchdb":"^7.2.2","snowball-german":"^1.0.0","stopword":"^1.0.6"},"devDependencies":{"@babel/core":"^7.12.10","@babel/preset-env":"^7.12.11","autoprefixer":"^10.1.0","babel-loader":"^8.0.0-beta.4","chai":"^4.1.0","css-loader":"^3.1.0","electron":"^11.1.1","electron-builder":"^22.9.1","electron-mocha":"^8.1.1","file-loader":"^6.2.0","mocha":"^7.1.1","postcss":"^8.2.2","postcss-loader":"^4.1.0","source-map-support":"^0.5.6","style-loader":"^1.1.4","tailwind":"^4.0.0","webpack":"^5.11.1","webpack-cli":"^4.3.1","webpack-merge":"^5.7.3","webpack-node-externals":"^2.5.2","worker-loader":"^3.0.7"}}');
 
 /***/ }),
 
@@ -984,13 +966,12 @@ electron__WEBPACK_IMPORTED_MODULE_2__.app.on("ready", () => {
 electron__WEBPACK_IMPORTED_MODULE_2__.app.on('ready', createPopup);
 electron__WEBPACK_IMPORTED_MODULE_2__.app.on('ready', createWindow);
 electron__WEBPACK_IMPORTED_MODULE_2__.ipcMain.on('lang', (event, lang) => {
-  console.log('_LANG', lang);
   (0,_i18n_menu_factory__WEBPACK_IMPORTED_MODULE_8__.MenuFactory)(lang);
 });
 
 const handleError = (title, error) => {
-  console.log('_B HE title', title);
-  console.log('_B HE ERR', error);
+  console.log('_Back handleError', title);
+  console.log('_Back handleError', error);
 };
 
 if (process.type === 'renderer') {

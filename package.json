@@ -1,5 +1,5 @@
 {
-  "version": "0.9.5",
+  "version": "0.9.6",
   "name": "diglossa.js",
   "productName": "Diglossa.js",
   "description": "Bilingual Reader - an application for reading and creating bi-(multi) lingual texts",
@@ -30,7 +30,7 @@
       "buildResources": "resources"
     },
     "linux": {
-      "category": "Educational software",
+      "category": "Scientific software",
       "target": [
         {
           "target": "tar.gz",

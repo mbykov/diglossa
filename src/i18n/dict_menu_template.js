@@ -12,7 +12,7 @@ export function dictMenuTemplate() {
 
       { type: "separator" },
       { label: "Import StarDict .ifo", click: () => { BrowserWindow.getFocusedWindow().webContents.send('importDict') } },
-      { label: "Import DSL .ifo", click: () => { BrowserWindow.getFocusedWindow().webContents.send('importDict') } },
+      // { label: "Import DSL .ifo", click: () => { BrowserWindow.getFocusedWindow().webContents.send('importDict') } },
 
       { type: "separator" },
       { label: "Export  .dgl-dict", click: () => { BrowserWindow.getFocusedWindow().webContents.send('exportDGL-dict') } },

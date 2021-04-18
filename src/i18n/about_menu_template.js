@@ -13,7 +13,7 @@ export function aboutMenuTemplate() {
 
       {  label: t('acknowledgements'), click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'acknowledgements') } },
 
-      {  label: t('code'), click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'code') } },
+      // {  label: t('code'), click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'code') } },
 
       {  label: t('contacts'), click: () => { BrowserWindow.getFocusedWindow().webContents.send('section', 'contacts') } },
 
