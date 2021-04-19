@@ -43,6 +43,7 @@ function checkBooks() {
   message.show('select a book', 'darkred')
 }
 
+// create DGL:
 export async function exportMarkDown() {
   if (!checkBooks()) return
   // progress.show()
@@ -110,6 +111,27 @@ ipcRenderer.on('compress', async function (event) {
 })
 
 async function compressPackage(prefs) {
+  let textsdir =  path.resolve(prefs.exportpath, prefs.name)
+  let jsonpath = [textsdir, 'json'].join('.')
+  let dglpath = [textsdir, 'dgl'].join('.')
+
+  let zip = await compressDGL(jsonpath)
+  if (zip.err) return message.show('can not read json file', 'darkred')
+  zip
+    .generateNodeStream({type:'nodebuffer', streamFiles: true})
+    .pipe(fse.createWriteStream(dglpath))
+    .on('finish', function () {
+      fse.removeSync(jsonpath)
+      fse.removeSync(textsdir)
+      let mess = [prefs.name, 'compressed to', dglpath].join(' ')
+      message.show(mess, 'darkgreen')
+    })
+    .on('error', function () {
+      message.show('can not compress book', 'darkred')
+    })
+}
+
+async function compressPackage_old(prefs) {
   let zip = new JSZip()
   let exportpath = prefs.exportpath
   let name = prefs.name
@@ -160,22 +182,24 @@ ipcRenderer.on('uncompress', async function (event) {
   let dglpath = [dirpath, 'dgl'].join('.')
   let backup = dglpath + '.backup'
 
+  let iszip = isZip(fse.readFileSync(dglpath))
+  if (!iszip) {
+    message.show('not a dgl, i.e. zip file', 'darkred')
+    return
+  }
   try {
     fse.copySync(dglpath, backup)
   } catch(err) {
     message.show('no archive file', 'darkred')
     return
   }
-
-  let iszip = isZip(fse.readFileSync(dglpath))
-  if (!iszip) {
-    message.show('not a zip file', 'darkred')
-    return
-  }
-
   try {
-    await uncompressPackage(prefs)
-    fse.removeSync(dglpath)
+    let descr = await uncompressDGL(dglpath)
+    log('__zip end pack', descr)
+
+    // XXXX todo - продолжить
+    // await uncompressPackage(prefs)
+    // fse.removeSync(dglpath)
     let mess = [prefs.name, 'uncompressed'].join(' ')
     message.show(mess, 'darkgreen')
   } catch(err) {
@@ -184,6 +208,30 @@ ipcRenderer.on('uncompress', async function (event) {
 })
 
 async function uncompressPackage(prefs) {
+  // let origin = dgl.origin(book.sbooks)
+  let exportpath = prefs.exportpath
+  fse.ensureDirSync(exportpath)
+  let packname = prefs.name
+  let dirpath = path.resolve(exportpath, packname)
+  fse.ensureDirSync(dirpath)
+  let dglpath = [dirpath, 'dgl'].join('.')
+  let jsonpath = [dirpath, 'json'].join('.')
+
+  let pack = await uncompressDGL(dglpath)
+  // log('__zip end pack', pack)
+  for await (let text of pack.texts) {
+    let str = text.mds.join('\n')
+    let filepath =  [exportpath, text.src].join(path.sep)
+    fse.writeFileSync(filepath, str)
+    delete text.mds
+  }
+  fse.writeJsonSync(jsonpath, pack, {spaces: 2})
+  fse.removeSync(dglpath)
+  let mess = [prefs.name, 'uncompressed to', dglpath].join(' ')
+  message.show(mess, 'darkgreen')
+}
+
+async function uncompressPackage_old(prefs) {
   // let origin = dgl.origin(book.sbooks)
   let exportpath = prefs.exportpath
   fse.ensureDirSync(exportpath)
@@ -219,11 +267,23 @@ mouse.bind('ctrl+m', function(ev) {
   exportMarkDown() // todo: пока что
 })
 
-mouse.bind('ctrl+n', function(ev) {
+mouse.bind('ctrl+,', function(ev) {
   if (!checkBooks()) return
   let origin = dgl.origin(book.sbooks)
   let prefs = prefstore.get(origin.bid)
+  if (!prefs) {
+    let mess = 'export book to .DGL package before'
+    message.show(mess, 'darkgreen')
+    return
+  }
   compressPackage(prefs)
+})
+
+mouse.bind('ctrl+.', function(ev) {
+  if (!checkBooks()) return
+  let origin = dgl.origin(book.sbooks)
+  let prefs = prefstore.get(origin.bid)
+  uncompressPackage(prefs)
 })
 
 document.addEventListener('click', async (ev) => {

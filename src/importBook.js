@@ -23,7 +23,7 @@ const path = require("path")
 const Store = require('electron-store')
 const bkstore = new Store({name: 'libks'})
 const ftstore = new Store({name: 'fts'})
-// const prefstore = new Store({name: 'prefs'})
+const prefstore = new Store({name: 'prefs'})
 const appstore = new Store({name: 'app'})
 
 const JSON5 = require('json5')
@@ -33,6 +33,10 @@ import { message } from './lib/message'
 
 import { remote } from "electron"
 let dgl = remote.getGlobal('dgl')
+
+const { app } = require('electron').remote
+let homepath = app.getPath('home');
+let exportpath = appstore.get('exportpath')
 
 const mouse = require('mousetrap')
 const ftsopts = remote.getGlobal('ftsopts')
@@ -250,9 +254,9 @@ async function importDglJson(bpath) {
   saveDglBook(pack, packages)
 } // import bare uncompressed dgl-json
 
-async function importDgl(zippath) {
+async function importDgl(dglpath) {
   progress.show()
-  let iszip = isZip(fse.readFileSync(zippath))
+  let iszip = isZip(fse.readFileSync(dglpath))
   if (!iszip) {
     let mess = 'not compressed file, not a .dgl format'
     message.show(mess, 'darkred')
@@ -260,12 +264,9 @@ async function importDgl(zippath) {
   }
 
   // let {pack, packages} = await getZipData(zippath)
-  let descr = await uncompressDGL(zippath)
-  // log('__zip end pack', descr)
-
-  // log('__zip end pckgs', packages)
-
-  saveDglBook(descr)
+  let pack = await uncompressDGL(dglpath)
+  // log('__zip end pack', pack)
+  saveDglBook(pack)
   // saveDglBook(pack, packages)
   message.show('zip in progress', 'darkgreen')
 } // import compressed dgl
@@ -280,8 +281,9 @@ async function saveDglBook(pack) {
     let mess = [book.lang, '-', book.title, 'loading...'].join(' ')
     message.show(mess, 'darkgreen', true)
 
-    let docs = text.docs
-    let imgs = text.imgs
+    let {descr, docs, imgs} = await md2json(text.mds)
+    // docs = text.docs
+    // let imgs = text.imgs
     setDocPath(docs)
     book.cnts = parseCnts(docs) // dgl
     books.push(book)
@@ -296,10 +298,10 @@ async function saveDglBook(pack) {
   if (nonorigin) nonorigin.shown = true
   bkstore.set(origin.bid, books)
 
-  // let prefs = pack
-  // delete prefs.texts
-  // prefs.exportpath = appstore.get('exportpath')
-  // prefstore.set(origin.bid, prefs)
+  let prefs = pack
+  delete prefs.texts
+  prefs.exportpath = appstore.get('exportpath')
+  prefstore.set(origin.bid, prefs)
 
   router({route: 'library'})
   let mess = ['book', origin.descr.author, origin.descr.title, 'loaded'].join(' ')
