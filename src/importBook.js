@@ -9,7 +9,7 @@ import { uncompressDGL } from '../../b/dgl-utils'
 import { md2json } from 'book-md2json'
 
 import { pushDocs, pushImgs, fetchChapterDocs } from './lib/pouch'
-import { preference } from './prefs'
+// import { preference } from './prefs'
 import { book } from './book'
 
 import { syncDoc } from './page'
@@ -23,7 +23,7 @@ const path = require("path")
 const Store = require('electron-store')
 const bkstore = new Store({name: 'libks'})
 const ftstore = new Store({name: 'fts'})
-const prefstore = new Store({name: 'prefs'})
+// const prefstore = new Store({name: 'prefs'})
 const appstore = new Store({name: 'app'})
 
 const JSON5 = require('json5')
@@ -141,6 +141,7 @@ async function importBook(result) {
   log('__BOOK-2', book.sbooks)
 
   if (result.orbid) {
+    // todo: add book
     book.sbooks.push(newbook)
     // let origin = dgl.origin(book.sbooks)
     if (book.sbooks[1]) book.sbooks[1].shown = true
@@ -148,8 +149,8 @@ async function importBook(result) {
   } else {
     newbook.origin = true
     bkstore.set(newbook.bid, [newbook])
-    let prefs = preference.initPrefs(newbook)
-    prefstore.set(newbook.bid, prefs)
+    // let prefs = preference.initPrefs(newbook)
+    // prefstore.set(newbook.bid, prefs)
   }
 
   await pushDocs(newbook.bid, docs)
@@ -258,15 +259,15 @@ async function importDgl(zippath) {
     message.show(mess, 'darkred')
     return
   }
-  log('__zip start')
 
-  let {pack, packages} = await getZipData(zippath)
+  // let {pack, packages} = await getZipData(zippath)
   let descr = await uncompressDGL(zippath)
-  log('__zip end pack', descr)
+  // log('__zip end pack', descr)
 
   // log('__zip end pckgs', packages)
 
-  saveDglBook(pack, packages)
+  saveDglBook(descr)
+  // saveDglBook(pack, packages)
   message.show('zip in progress', 'darkgreen')
 } // import compressed dgl
 
@@ -308,7 +309,43 @@ async function getZipData(zippath) {
     })
 }
 
-async function saveDglBook(pack, packages) {
+async function saveDglBook(pack) {
+  let books = []
+  for (const text of pack.texts)  {
+    // let { descr, docs, imgs } = text
+    let book = parseBookInfo(text)
+    book.active = true
+
+    let mess = [book.lang, '-', book.title, 'loading...'].join(' ')
+    message.show(mess, 'darkgreen', true)
+
+    let docs = text.docs
+    let imgs = text.imgs
+    setDocPath(docs)
+    book.cnts = parseCnts(docs) // dgl
+    books.push(book)
+
+    await pushDocs(book.bid, docs)
+    if (imgs && imgs.length) await pushImgs(book.bid, imgs)
+  } // for texts
+
+  // todo: now: установить отметку synced ?
+  let origin = books.find(book=> book.origin)
+  let nonorigin = books.find(book=> !book.origin)
+  if (nonorigin) nonorigin.shown = true
+  bkstore.set(origin.bid, books)
+
+  // let prefs = pack
+  // delete prefs.texts
+  // prefs.exportpath = appstore.get('exportpath')
+  // prefstore.set(origin.bid, prefs)
+
+  router({route: 'library'})
+  let mess = ['book', origin.descr.author, origin.descr.title, 'loaded'].join(' ')
+  message.show(mess, 'darkgreen')
+}
+
+async function saveDglBook_old(pack, packages) {
   let books = []
   for (const pack of packages)  {
     let { descr, docs, imgs } = pack
@@ -336,16 +373,9 @@ async function saveDglBook(pack, packages) {
   if (nonorigin) nonorigin.shown = true
   bkstore.set(origin.bid, books)
 
-  /*
-    непонятно. Если из .dgl, то все prefs заданы.
-    а вот если из fb2, etc, то нужно задать
-
-    второе:
-
-   */
-  let prefs = pack
-  delete prefs.texts
-  prefs.exportpath = appstore.get('exportpath')
+  // let prefs = pack
+  // delete prefs.texts
+  // prefs.exportpath = appstore.get('exportpath')
   // prefstore.set(origin.bid, prefs)
 
   router({route: 'library'})
