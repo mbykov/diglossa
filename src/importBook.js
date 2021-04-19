@@ -5,7 +5,7 @@ import { ipcRenderer } from "electron";
 const { dialog } = require('electron').remote
 import { log, q, create, zerofill, cleanDname, cleanStr } from './lib/utils'
 
-import { uncompressDGL } from '../../b/dgl-utils'
+import { compressDGL, uncompressDGL } from '../../b/dgl-utils'
 import { md2json } from 'book-md2json'
 
 import { pushDocs, pushImgs, fetchChapterDocs } from './lib/pouch'
@@ -15,7 +15,7 @@ import { book } from './book'
 import { syncDoc } from './page'
 import { router } from './app'
 const isZip = require('is-zip')
-const JSZip = require("jszip");
+// const JSZip = require("jszip");
 const franc = require('franc')
 
 const fse = require('fs-extra')
@@ -113,7 +113,6 @@ ipcRenderer.on('importBookResult', function (event, result) {
   }
   importBook(result)
 })
-
 
 function checkBooks() {
   if (book.sbooks) return true
@@ -271,44 +270,6 @@ async function importDgl(zippath) {
   message.show('zip in progress', 'darkgreen')
 } // import compressed dgl
 
-async function getZipData(zippath) {
-  let data = await fse.readFileSync(zippath)
-  let promise = new Promise(function(resolve, reject) {
-    JSZip.loadAsync(data).then(function (zip) {
-      let unzipped = {descr: '', pkgs: []}
-      let fnsize = _.keys(zip.files).length -1
-      let fnidx = 0
-      for (let fn in zip.files) {
-        let file = zip.files[fn]
-        if (file.dir) continue
-        file.async('text')
-          .then(async (data)=> {
-            fnidx++
-            let ext = _.last(file.name.split('.'))
-            if (ext == 'json') unzipped.descr = JSON5.parse(data)
-            else if (ext == 'md') {
-              let mds = _.compact(data.split('\n'))
-              let {descr, docs, imgs} = await md2json(mds)
-              let filedescr = unzipped.descr.texts.find(text=> text.src == file.name)
-              let pkg = {descr: filedescr, docs, imgs}
-              unzipped.pkgs.push(pkg)
-            }
-            if (fnidx == fnsize) resolve(unzipped)
-          })
-      }
-    })
-  })
-
-  return promise
-    .then(unzipped=> {
-      // log('_UNZP', unzipped)
-      return {pack: unzipped.descr, packages: unzipped.pkgs}
-    })
-    .catch(err=> {
-      return {descr: 'err'}
-    })
-}
-
 async function saveDglBook(pack) {
   let books = []
   for (const text of pack.texts)  {
@@ -345,7 +306,7 @@ async function saveDglBook(pack) {
   message.show(mess, 'darkgreen')
 }
 
-async function saveDglBook_old(pack, packages) {
+async function saveDglBook_old_(pack, packages) {
   let books = []
   for (const pack of packages)  {
     let { descr, docs, imgs } = pack
@@ -381,4 +342,42 @@ async function saveDglBook_old(pack, packages) {
   router({route: 'library'})
   let mess = ['book', origin.descr.author, origin.descr.title, 'loaded'].join(' ')
   message.show(mess, 'darkgreen')
+}
+
+async function getZipData_(zippath) {
+  let data = await fse.readFileSync(zippath)
+  let promise = new Promise(function(resolve, reject) {
+    JSZip.loadAsync(data).then(function (zip) {
+      let unzipped = {descr: '', pkgs: []}
+      let fnsize = _.keys(zip.files).length -1
+      let fnidx = 0
+      for (let fn in zip.files) {
+        let file = zip.files[fn]
+        if (file.dir) continue
+        file.async('text')
+          .then(async (data)=> {
+            fnidx++
+            let ext = _.last(file.name.split('.'))
+            if (ext == 'json') unzipped.descr = JSON5.parse(data)
+            else if (ext == 'md') {
+              let mds = _.compact(data.split('\n'))
+              let {descr, docs, imgs} = await md2json(mds)
+              let filedescr = unzipped.descr.texts.find(text=> text.src == file.name)
+              let pkg = {descr: filedescr, docs, imgs}
+              unzipped.pkgs.push(pkg)
+            }
+            if (fnidx == fnsize) resolve(unzipped)
+          })
+      }
+    })
+  })
+
+  return promise
+    .then(unzipped=> {
+      // log('_UNZP', unzipped)
+      return {pack: unzipped.descr, packages: unzipped.pkgs}
+    })
+    .catch(err=> {
+      return {descr: 'err'}
+    })
 }

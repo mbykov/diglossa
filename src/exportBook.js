@@ -14,6 +14,7 @@ import { syncDoc, page, getSyncs } from './page'
 import { router } from './app'
 const isZip = require('is-zip')
 const JSZip = require("jszip");
+import { compressDGL, uncompressDGL } from '../../b/dgl-utils'
 
 const fse = require('fs-extra')
 // const fetch = require('node-fetch')
@@ -41,17 +42,6 @@ function checkBooks() {
   if (dgl.bid && book.sbooks) return true
   message.show('select a book', 'darkred')
 }
-
-ipcRenderer.on('exportMD', function (event) {
-  if (!checkBooks()) return
-  try {
-    progress.show()
-    exportMarkDown()
-  } catch(err) {
-    let mess = 'can not export this book'
-    message.show(mess, 'darkred')
-  }
-})
 
 export async function exportMarkDown() {
   if (!checkBooks()) return
@@ -315,9 +305,7 @@ function exportFtsIdxJson_(book, docs) {
   })
 }
 
-// это нужно унести в cli ?
-// поближе к ~/b/diglossa.clone.fts
-async function createExternalPackage(bid) {
+async function createExternalPackage_(bid) {
   let libook = bkstore.store[bid]
   if (!libook) return
 
