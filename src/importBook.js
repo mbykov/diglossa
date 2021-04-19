@@ -5,14 +5,8 @@ import { ipcRenderer } from "electron";
 const { dialog } = require('electron').remote
 import { log, q, create, zerofill, cleanDname, cleanStr } from './lib/utils'
 
-// import { fb2json } from '../../../b/book-fb2json'
-// import { epub2json } from '../../../b/book-epub2json'
-// import { md2json } from '../../../b/book-md2json'
-// import { pdf2json } from '../../../b/book-pdf2json'
-// import { fb2json } from 'book-fb2json'
-// import { epub2json } from 'book-epub2json' // ??? нету
+import { uncompressDGL } from '../../b/dgl-utils'
 import { md2json } from 'book-md2json'
-// import { pdf2json } from 'book-pdf2json'
 
 import { pushDocs, pushImgs, fetchChapterDocs } from './lib/pouch'
 import { preference } from './prefs'
@@ -259,15 +253,17 @@ async function importDglJson(bpath) {
 async function importDgl(zippath) {
   progress.show()
   let iszip = isZip(fse.readFileSync(zippath))
-  // log('_zip', iszip, zippath)
   if (!iszip) {
     let mess = 'not compressed file, not a .dgl format'
     message.show(mess, 'darkred')
     return
   }
-  // log('__zip start')
+  log('__zip start')
+
   let {pack, packages} = await getZipData(zippath)
-  // log('__zip end pack', pack)
+  let descr = await uncompressDGL(zippath)
+  log('__zip end pack', descr)
+
   // log('__zip end pckgs', packages)
 
   saveDglBook(pack, packages)
@@ -292,10 +288,7 @@ async function getZipData(zippath) {
             else if (ext == 'md') {
               let mds = _.compact(data.split('\n'))
               let {descr, docs, imgs} = await md2json(mds)
-              // let result = await md2json(mds)
-              // result.fn= file.name
               let filedescr = unzipped.descr.texts.find(text=> text.src == file.name)
-              // unzipped.docs.push(docs)
               let pkg = {descr: filedescr, docs, imgs}
               unzipped.pkgs.push(pkg)
             }
@@ -307,14 +300,7 @@ async function getZipData(zippath) {
 
   return promise
     .then(unzipped=> {
-      log('_UNZP', unzipped)
-      // let packages = []
-      // unzipped.descr.texts.forEach((descr, idx)=> {
-      //   let pack = {descr, docs: unzipped.docs[idx], imgs: []}
-      //   packages.push(pack)
-      // })
-      // return packages
-      // return {pack: unzipped.descr, packages}
+      // log('_UNZP', unzipped)
       return {pack: unzipped.descr, packages: unzipped.pkgs}
     })
     .catch(err=> {
