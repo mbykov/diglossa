@@ -5,7 +5,8 @@ import { ipcRenderer } from "electron";
 const { dialog } = require('electron').remote
 import { log, q, create, zerofill, cleanDname, cleanStr } from './lib/utils'
 
-import { compressDGL, uncompressDGL } from '../../b/dgl-utils'
+// import { compressDGL, uncompressDGL } from '../../b/dgl-utils'
+import { compressDGL, uncompressDGL } from 'dgl-utils'
 import { md2json } from 'book-md2json'
 
 import { pushDocs, pushImgs, fetchChapterDocs } from './lib/pouch'

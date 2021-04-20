@@ -14,7 +14,8 @@ import { syncDoc, page, getSyncs } from './page'
 import { router } from './app'
 const isZip = require('is-zip')
 // const JSZip = require("jszip");
-import { compressDGL, uncompressDGL } from '../../b/dgl-utils'
+// import { compressDGL, uncompressDGL } from '../../b/dgl-utils'
+import { compressDGL, uncompressDGL } from 'dgl-utils'
 
 const fse = require('fs-extra')
 // const fetch = require('node-fetch')
