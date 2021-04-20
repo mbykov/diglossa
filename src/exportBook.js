@@ -13,7 +13,7 @@ import { syncDoc, page, getSyncs } from './page'
 // import { preference } from './prefs'
 import { router } from './app'
 const isZip = require('is-zip')
-const JSZip = require("jszip");
+// const JSZip = require("jszip");
 import { compressDGL, uncompressDGL } from '../../b/dgl-utils'
 
 const fse = require('fs-extra')
@@ -93,7 +93,6 @@ export async function exportMarkDown() {
     let mess =  ['could not export', origin.descr.title].join(' ')
     message.show(mess, 'darkred')
   }
-
   // if (prefs.compress) compressPackage(packname, dirpath, infopath)
 }
 
@@ -131,48 +130,48 @@ async function compressPackage(prefs) {
     })
 }
 
-async function compressPackage_old(prefs) {
-  let zip = new JSZip()
-  let exportpath = prefs.exportpath
-  let name = prefs.name
-  let localpath = [name, 'json'].join('.')
-  let info
-  let jsonpath = path.resolve(exportpath, localpath)
-  try {
-    info = fse.readFileSync(jsonpath).toString()
-  } catch(err) {
-    message.show('no package.json file; already compressed?', 'darkred')
-    return
-  }
+// async function compressPackage_old(prefs) {
+//   let zip = new JSZip()
+//   let exportpath = prefs.exportpath
+//   let name = prefs.name
+//   let localpath = [name, 'json'].join('.')
+//   let info
+//   let jsonpath = path.resolve(exportpath, localpath)
+//   try {
+//     info = fse.readFileSync(jsonpath).toString()
+//   } catch(err) {
+//     message.show('no package.json file; already compressed?', 'darkred')
+//     return
+//   }
 
-  zip.file(localpath, info)
-  // zip.folder(name)
-  let textsdir =  path.resolve(exportpath, name)
-  let mdfilenames = _.compact(fse.readdirSync(textsdir).map(file => {
-    if (path.extname(file) == '.md') return path.resolve(textsdir, file)
-  }))
+//   zip.file(localpath, info)
+//   // zip.folder(name)
+//   let textsdir =  path.resolve(exportpath, name)
+//   let mdfilenames = _.compact(fse.readdirSync(textsdir).map(file => {
+//     if (path.extname(file) == '.md') return path.resolve(textsdir, file)
+//   }))
 
-  mdfilenames.forEach(file=> {
-    let fn = file.split(path.sep).slice(-1)[0]
-    let localfnpath = [name, fn].join(path.sep)
-    let md = fse.readFileSync(file).toString()
-    zip.file(localfnpath, md)
-  })
+//   mdfilenames.forEach(file=> {
+//     let fn = file.split(path.sep).slice(-1)[0]
+//     let localfnpath = [name, fn].join(path.sep)
+//     let md = fse.readFileSync(file).toString()
+//     zip.file(localfnpath, md)
+//   })
 
-  let dglpath = jsonpath.replace(/\.json$/, '.dgl')
-  zip
-    .generateNodeStream({type:'nodebuffer', streamFiles: true})
-    .pipe(fse.createWriteStream(dglpath))
-    .on('finish', function () {
-      fse.removeSync(jsonpath)
-      fse.removeSync(textsdir)
-      let mess = [name, 'exported and compressed to', dglpath].join(' ')
-      message.show(mess, 'darkgreen')
-    })
-    .on('error', function () {
-      message.show('can not compress book', 'darkred')
-    })
-}
+//   let dglpath = jsonpath.replace(/\.json$/, '.dgl')
+//   zip
+//     .generateNodeStream({type:'nodebuffer', streamFiles: true})
+//     .pipe(fse.createWriteStream(dglpath))
+//     .on('finish', function () {
+//       fse.removeSync(jsonpath)
+//       fse.removeSync(textsdir)
+//       let mess = [name, 'exported and compressed to', dglpath].join(' ')
+//       message.show(mess, 'darkgreen')
+//     })
+//     .on('error', function () {
+//       message.show('can not compress book', 'darkred')
+//     })
+// }
 
 ipcRenderer.on('uncompress', async function (event) {
   if (!checkBooks()) return
@@ -208,7 +207,6 @@ ipcRenderer.on('uncompress', async function (event) {
 })
 
 async function uncompressPackage(prefs) {
-  // let origin = dgl.origin(book.sbooks)
   let exportpath = prefs.exportpath
   fse.ensureDirSync(exportpath)
   let packname = prefs.name
@@ -218,7 +216,6 @@ async function uncompressPackage(prefs) {
   let jsonpath = [dirpath, 'json'].join('.')
 
   let pack = await uncompressDGL(dglpath)
-  // log('__zip end pack', pack)
   for await (let text of pack.texts) {
     let str = text.mds.join('\n')
     let filepath =  [exportpath, text.src].join(path.sep)
@@ -231,35 +228,35 @@ async function uncompressPackage(prefs) {
   message.show(mess, 'darkgreen')
 }
 
-async function uncompressPackage_old(prefs) {
-  // let origin = dgl.origin(book.sbooks)
-  let exportpath = prefs.exportpath
-  fse.ensureDirSync(exportpath)
-  let packname = prefs.name
-  let dirpath = path.resolve(exportpath, packname)
-  fse.ensureDirSync(dirpath)
-  let dglpath = [dirpath, 'dgl'].join('.')
+// async function uncompressPackage_old(prefs) {
+//   // let origin = dgl.origin(book.sbooks)
+//   let exportpath = prefs.exportpath
+//   fse.ensureDirSync(exportpath)
+//   let packname = prefs.name
+//   let dirpath = path.resolve(exportpath, packname)
+//   fse.ensureDirSync(dirpath)
+//   let dglpath = [dirpath, 'dgl'].join('.')
 
-  await fse.readFile(dglpath, function(err, data) {
-    if (err) throw err;
-    JSZip.loadAsync(data).then(function (zip) {
-      let localdirfile = _.find(zip.files, file=> file.dir)
-      let localdirpath = [dirpath, localdirfile.name].join(path.sep)
-      let filepath
-      for  (let fn in zip.files) {
-        let file = zip.files[fn]
-        if (file.dir) continue
-        file.async('text')
-          .then(data=> {
-            filepath =  [exportpath, file.name].join(path.sep)
-            fse.writeFileSync(filepath, data)
-          })
-      }
-    })
-  })
-}
+//   await fse.readFile(dglpath, function(err, data) {
+//     if (err) throw err;
+//     JSZip.loadAsync(data).then(function (zip) {
+//       let localdirfile = _.find(zip.files, file=> file.dir)
+//       let localdirpath = [dirpath, localdirfile.name].join(path.sep)
+//       let filepath
+//       for  (let fn in zip.files) {
+//         let file = zip.files[fn]
+//         if (file.dir) continue
+//         file.async('text')
+//           .then(data=> {
+//             filepath =  [exportpath, file.name].join(path.sep)
+//             fse.writeFileSync(filepath, data)
+//           })
+//       }
+//     })
+//   })
+// }
 
-// todo: del
+// todo: del ctrl+m
 mouse.bind('ctrl+m', function(ev) {
   if (!checkBooks()) return
   progress.show()
@@ -267,6 +264,7 @@ mouse.bind('ctrl+m', function(ev) {
   exportMarkDown() // todo: пока что
 })
 
+// todo: del ctrl+,
 mouse.bind('ctrl+,', function(ev) {
   if (!checkBooks()) return
   let origin = dgl.origin(book.sbooks)
@@ -279,6 +277,7 @@ mouse.bind('ctrl+,', function(ev) {
   compressPackage(prefs)
 })
 
+// todo: del ctrl+.
 mouse.bind('ctrl+.', function(ev) {
   if (!checkBooks()) return
   let origin = dgl.origin(book.sbooks)
