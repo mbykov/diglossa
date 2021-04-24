@@ -266,7 +266,7 @@ async function importDgl(dglpath) {
 
   // let {pack, packages} = await getZipData(zippath)
   let pack = await uncompressDGL(dglpath)
-  // log('__zip end pack', pack)
+  log('__zip end pack', pack.texts)
   saveDglBook(pack)
   // saveDglBook(pack, packages)
   message.show('zip in progress', 'darkgreen')
@@ -283,8 +283,7 @@ async function saveDglBook(pack) {
     message.show(mess, 'darkgreen', true)
 
     let {descr, docs, imgs} = await md2json(text.mds)
-    // docs = text.docs
-    // let imgs = text.imgs
+    log('__descr-docs', docs)
     setDocPath(docs)
     book.cnts = parseCnts(docs) // dgl
     books.push(book)
