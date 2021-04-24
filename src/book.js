@@ -235,7 +235,7 @@ mouse.bind('2', function(ev) {
 
 mouse.bind('3', function(ev) {
   // todo: change page panes
-  log('_как 3 отразится на fts, exports, etc?_')
+  // log('_как 3 отразится на fts, exports, etc?_')
 })
 
 function showSearchIcon() {
@@ -245,5 +245,5 @@ function showSearchIcon() {
 // todo: del
 mouse.bind('ctrl+i', function(ev) {
   console.clear()
-  log('_B:', book.sbooks)
+  console.log('_B:', book.sbooks)
 })

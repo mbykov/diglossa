@@ -24,7 +24,6 @@ let templates = remote.getGlobal('templates')
 
 // todo: del
 mouse.bind(['v'], function(ev) {
-  log('_LIB-store', libstore.store)
   console.clear()
   let bks = {}
   for (let bid in libstore.store) {
@@ -137,7 +136,6 @@ export const library = {
       book = books.find(book=> book.bid == bid)
       book.active = false
     }
-    // log('_DEACT BKS', this.bks)
     setStore(this.bks)
     parseLib(orbid)
   },

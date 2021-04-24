@@ -267,7 +267,6 @@ export async function fetchChapterDocs(queries) {
 export async function pushDocs(dname, docs, pouchpath) {
   if (!pouchpath) pouchpath = path.resolve(upath, 'pouch')
   await fse.ensureDirSync(pouchpath)
-  // log('_pouch-docs dname', dname)
   const dpath = path.resolve(pouchpath, dname)
   let pouch = new PouchDB(dpath)
   await pouch.close()
@@ -306,15 +305,13 @@ export async function updateDocs(dname, docs, pouchpath) {
       .then(function (orig) {
         if (doc.md && doc.md == orig.md) return false
         doc._rev = orig._rev
-        // log('_orig', orig)
         return pouch.put(doc)
       })
       .catch(function (err) {
         if (err.name === 'not_found') {
-          // log('_new doc', doc)
           return pouch.put(doc)
         } else {
-          log('_not not-found-err', doc._id)
+          // log('_not not-found-err', doc._id)
           throw err;
         }
       })
@@ -326,7 +323,7 @@ export async function updateDocs(dname, docs, pouchpath) {
       // return 'updating docs: ok'
       // pouch.close()
     // })
-  log('_updated docs: ok')
+  // log('_updated docs: ok')
   pouch.close()
 }
 

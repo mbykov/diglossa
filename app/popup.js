@@ -824,7 +824,6 @@ function createDict() {
 }
 
 function drawRdict(rdict) {
-  log('_DRAW-R-DICT', rdict);
   let odict = createDict();
   let odname = odict.querySelector('.dict-dname');
   odname.textContent = rdict.dname;
@@ -870,8 +869,7 @@ function drawDict(dict) {
       let morphs;
       if (!dict.pos) dict.pos = 'verb';
       if (dict.pos == 'verb') morphs = dict.morphs.map(m => [m.tense, m.numper].join('.'));else morphs = dict.morphs.map(m => [m.gend, m.numcase].join('.'));
-      morphs = lodash__WEBPACK_IMPORTED_MODULE_1___default().uniq(morphs); // log('_MRPHS', morphs)
-
+      morphs = lodash__WEBPACK_IMPORTED_MODULE_1___default().uniq(morphs);
       omorph.textContent = ': ' + morphs.join(', ');
       odd.appendChild(omorph);
     }
@@ -955,7 +953,6 @@ mouse.bind('tab', function (ev) {
     }
   }
 
-  log('_N', nextddl);
   let ndds = nextddl.querySelectorAll('.dict-dd');
   showResults(ndds);
 });

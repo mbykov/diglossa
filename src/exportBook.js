@@ -152,9 +152,7 @@ ipcRenderer.on('uncompress', async function (event) {
   }
   try {
     let descr = await uncompressDGL(dglpath)
-    log('__zip end pack', descr)
 
-    // XXXX todo - продолжить
     // await uncompressPackage(prefs)
     // fse.removeSync(dglpath)
     let mess = [prefs.name, 'uncompressed'].join(' ')
@@ -250,7 +248,6 @@ export async function getSyncedDocs(book, syncs) {
     sdocs.push(...syncdocs)
   }
 
-  // log('___SDOCS', sdocs.length)
   const fillsize = sdocs.length.toString().length
   let doc
   sdocs = sdocs.map(sdoc=> {
@@ -321,7 +318,6 @@ async function createExternalPackage_(bid) {
     message.show(mess, 'darkgreen', true)
 
     let sdocs = await getSyncedDocs(book, true)
-    log('__SDOCS__', book.bid, sdocs)
 
     let descr = {
       "_id": "description",

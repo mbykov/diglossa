@@ -50,12 +50,6 @@ mouse.bind('ctrl+e', function(ev) {
   semaphore.ready()
 })
 
-// todo: del
-mouse.bind('ctrl+x', function(ev) {
-  log('_dgl', dgl.bid, 'idx:', dgl.idx)
-  log('_book', book.sbooks)
-})
-
 // что тут происхоит при смене языка ?
 export const semaphore = {
   async ready() {

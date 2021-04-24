@@ -170,9 +170,6 @@ function drawPage(chapters) {
   let trns = dgl.trns(chapters)
   let oBlock
 
-  log('_CHDOCS', src.chdocs)
-  // log('_CHDOCS-T', trn.chdocs)
-
   src.chdocs.forEach((doc, blockid)=> {
     const aligns = []
     oBlock = create('div', 'block')

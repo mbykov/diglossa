@@ -141,9 +141,6 @@ async function importBook(result) {
   setDocPath(docs)
   newbook.active = true
 
-  log('__BOOK', book)
-  log('__BOOK-2', book.sbooks)
-
   if (result.orbid) {
     // todo: add book
     book.sbooks.push(newbook)
@@ -266,7 +263,6 @@ async function importDgl(dglpath) {
 
   // let {pack, packages} = await getZipData(zippath)
   let pack = await uncompressDGL(dglpath)
-  log('__zip end pack', pack.texts)
   saveDglBook(pack)
   // saveDglBook(pack, packages)
   message.show('zip in progress', 'darkgreen')
@@ -283,7 +279,6 @@ async function saveDglBook(pack) {
     message.show(mess, 'darkgreen', true)
 
     let {descr, docs, imgs} = await md2json(text.mds)
-    log('__descr-docs', docs)
     setDocPath(docs)
     book.cnts = parseCnts(docs) // dgl
     books.push(book)
@@ -307,79 +302,3 @@ async function saveDglBook(pack) {
   let mess = ['book', origin.descr.author, origin.descr.title, 'loaded'].join(' ')
   message.show(mess, 'darkgreen')
 }
-
-// async function saveDglBook_old_(pack, packages) {
-//   let books = []
-//   for (const pack of packages)  {
-//     let { descr, docs, imgs } = pack
-//     if (!docs) {
-//       let mess = ['no book', descr.title].join(' ')
-//       message.show(mess, 'darkred')
-//       continue
-//     }
-//     let book = parseBookInfo(descr)
-//     books.push(book)
-//     book.active = true
-
-//     setDocPath(docs)
-//     book.cnts = parseCnts(docs) // dgl
-
-//     let mess = [book.lang, '-', book.title, 'loading...'].join(' ')
-//     message.show(mess, 'darkgreen', true)
-//     await pushDocs(book.bid, docs)
-//     if (imgs && imgs.length) await pushImgs(book.bid, imgs)
-//   } // for packages
-
-//   // todo: now: установить отметку synced ?
-//   let origin = books.find(book=> book.origin)
-//   let nonorigin = books.find(book=> !book.origin)
-//   if (nonorigin) nonorigin.shown = true
-//   bkstore.set(origin.bid, books)
-
-//   // let prefs = pack
-//   // delete prefs.texts
-//   // prefs.exportpath = appstore.get('exportpath')
-//   // prefstore.set(origin.bid, prefs)
-
-//   router({route: 'library'})
-//   let mess = ['book', origin.descr.author, origin.descr.title, 'loaded'].join(' ')
-//   message.show(mess, 'darkgreen')
-// }
-
-// async function getZipData_(zippath) {
-//   let data = await fse.readFileSync(zippath)
-//   let promise = new Promise(function(resolve, reject) {
-//     JSZip.loadAsync(data).then(function (zip) {
-//       let unzipped = {descr: '', pkgs: []}
-//       let fnsize = _.keys(zip.files).length -1
-//       let fnidx = 0
-//       for (let fn in zip.files) {
-//         let file = zip.files[fn]
-//         if (file.dir) continue
-//         file.async('text')
-//           .then(async (data)=> {
-//             fnidx++
-//             let ext = _.last(file.name.split('.'))
-//             if (ext == 'json') unzipped.descr = JSON5.parse(data)
-//             else if (ext == 'md') {
-//               let mds = _.compact(data.split('\n'))
-//               let {descr, docs, imgs} = await md2json(mds)
-//               let filedescr = unzipped.descr.texts.find(text=> text.src == file.name)
-//               let pkg = {descr: filedescr, docs, imgs}
-//               unzipped.pkgs.push(pkg)
-//             }
-//             if (fnidx == fnsize) resolve(unzipped)
-//           })
-//       }
-//     })
-//   })
-
-//   return promise
-//     .then(unzipped=> {
-//       // log('_UNZP', unzipped)
-//       return {pack: unzipped.descr, packages: unzipped.pkgs}
-//     })
-//     .catch(err=> {
-//       return {descr: 'err'}
-//     })
-// }

@@ -63,7 +63,6 @@ function createDict() {
 }
 
 function drawRdict(rdict) {
-  log('_DRAW-R-DICT', rdict)
   let odict = createDict()
   let odname = odict.querySelector('.dict-dname')
   odname.textContent = rdict.dname
@@ -111,7 +110,6 @@ function drawDict(dict) {
       if (dict.pos == 'verb') morphs = dict.morphs.map(m=> [m.tense, m.numper].join('.'))
       else morphs = dict.morphs.map(m=> [m.gend, m.numcase].join('.'))
       morphs = _.uniq(morphs)
-      // log('_MRPHS', morphs)
 
       omorph.textContent = ': ' + morphs.join(', ')
       odd.appendChild(omorph)
@@ -197,7 +195,6 @@ mouse.bind('tab', function(ev) {
       return
     }
   }
-  log('_N', nextddl)
   let ndds = nextddl.querySelectorAll('.dict-dd')
   showResults(ndds)
 })

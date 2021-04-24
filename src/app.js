@@ -175,7 +175,6 @@ ipcRenderer.on('route', function (event, route) {
 
 ipcRenderer.on('section', function (event, route) {
   let lang = appstore.get('lang') || config.deflang
-  log('___langg', lang, 'ROUTE', route)
   loadSection(lang, route)
 })
 

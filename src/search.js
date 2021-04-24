@@ -111,7 +111,7 @@ async function generateFTS() {
 
       let clean, doc
       let cleans = chdocs.map((chdoc, idx)=> {
-        if (!chdoc.md) log('_NO MD', idx, chdoc)
+        // if (!chdoc.md) log('_NO MD', idx, chdoc)
         let ids = chapters.map((chapter, idy)=> {
           doc = chapter.chdocs[idx]
           if (!doc) return false
