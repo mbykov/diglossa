@@ -31,7 +31,7 @@ function appendFile(ext) {
       if (!reExt.test(spath)) return
       html = fse.readFileSync(spath).toString()
     } catch (err) {
-      log('__ERR LOADING TMPL', err)
+      console.log('__ERR LOADING TMPL', err)
     }
     templates[sname.replace(/\.html$/, '')] = html
   })
@@ -43,11 +43,10 @@ export function loadSection(lang, sname) {
   let spath = path.resolve(apath, 'src/i18n', lang, [sname, 'md'].join('.'))
   try {
     md = fse.readFileSync(spath).toString()
-    // log('____SNAME', lang, sname, spath)
   } catch (err) {
     lang = config.deflang
     let spath = path.resolve(apath, 'src/i18n', lang, [sname, 'md'].join('.'))
-    // log('____SNAME-ERR', lang, sname, spath)
+    console.log('_SECTION NAME-ERR', lang, sname, spath)
     md = fse.readFileSync(spath).toString()
   }
   let osec = create('div', 'page')

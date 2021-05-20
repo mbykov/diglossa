@@ -10,12 +10,14 @@ export function bookMenuTemplate() {
          accelerator: "CmdOrCtrl+L",
          click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'library') } },
 
-      {  label: t("bookmarks"),
+      // {  label: t("bookmarks"),
          // accelerator: "CmdOrCtrl+B",
-         click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'bookmarks') } },
+         // click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'bookmarks') } },
 
       { type: "separator" },
-      { label: "Import book", click: () => { BrowserWindow.getFocusedWindow().webContents.send('importBook') } },
+      { label: "Import book",
+        accelerator: "CmdOrCtrl+O",
+        click: () => { BrowserWindow.getFocusedWindow().webContents.send('importBook') } },
       { label: "Add parallel book", click: () => { BrowserWindow.getFocusedWindow().webContents.send('addParallelBook') } },
       { label: "Generate FTS", click: () => { BrowserWindow.getFocusedWindow().webContents.send('generateFTS') } },
 

@@ -124,7 +124,7 @@ document.addEventListener("wheel", function(ev) {
 }, false)
 
 // jump bookmarks
-mouse.bind('ctrl+b', function(ev) {
+mouse.bind('ctrl+_b', function(ev) {
   const state = {route: 'bookmarks'}
   const opar = q('p.ptext:hover')
   if (opar && dgl.idx) {

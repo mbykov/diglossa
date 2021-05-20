@@ -5,6 +5,7 @@
 
 - Peter E. Hauer (Linguasoft, Viena)</p>
 - моих старых друзей и всю команду из <span class="external">http://basealt.ru</span>
+- С.Н. Кабанова, за неизменную поддержку
 
 ## ПО
 - <span class="external">https://nodejs.org</span>

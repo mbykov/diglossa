@@ -69,7 +69,6 @@ export async function exportMarkDown() {
     let bsyncs = syncs.filter(sync=> sync.bid == sbook.bid)
     let sdocs = await getSyncedDocs(sbook, bsyncs)
     let mds = docs2md(sdocs)
-
     let mdstr = mds.join('\n\n')
     let bidname = [sbook.descr.author.slice(0,25).replace(/ /g, ''), sbook.descr.title.slice(0,25).replace(/ /g, '-')].join('-')
     let mdname = [bidname, sbook.lang, 'md'].join('.')

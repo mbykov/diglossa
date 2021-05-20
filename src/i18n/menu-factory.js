@@ -5,6 +5,7 @@ const log = console.log
 import { fileMenuTemplate } from "./file_menu_template";
 import { bookMenuTemplate } from "./book_menu_template";
 import { dictMenuTemplate } from "./dict_menu_template";
+import { bmksMenuTemplate } from "./bmks_menu_template";
 import { aboutMenuTemplate } from "./about_menu_template";
 // import { editMenuTemplate } from "./edit_menu_template";
 import { helpMenuTemplate } from "./help_menu_template";
@@ -18,7 +19,7 @@ import { zhoMenuTemplate } from "./lang_zho_menu_template";
 // const platform = process.platform;
 
 export function MenuFactory(lang) {
-  const menus = [fileMenuTemplate(), bookMenuTemplate(), dictMenuTemplate(), aboutMenuTemplate(), helpMenuTemplate()];
+  const menus = [fileMenuTemplate(), bookMenuTemplate(), dictMenuTemplate(), bmksMenuTemplate(), aboutMenuTemplate(), helpMenuTemplate()];
 
   // if (env.name !== "production") {
   //   menus.push(devMenuTemplate);

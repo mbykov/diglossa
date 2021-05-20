@@ -7,7 +7,7 @@ export function dictMenuTemplate() {
     label: t("dictionary"),
     submenu: [
       {  label: t("dictionary list"),
-         // accelerator: "CmdOrCtrl+D", ======= ли то, либо это
+         accelerator: "CmdOrCtrl+D",
          click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'dictionary') } },
 
       { type: "separator" },
@@ -15,7 +15,7 @@ export function dictMenuTemplate() {
       // { label: "Import DSL .ifo", click: () => { BrowserWindow.getFocusedWindow().webContents.send('importDict') } },
 
       { type: "separator" },
-      { label: "Export  .dgl-dict", click: () => { BrowserWindow.getFocusedWindow().webContents.send('exportDGL-dict') } },
+      // { label: "Export  .dgl-dict", click: () => { BrowserWindow.getFocusedWindow().webContents.send('exportDGL-dict') } },
 
     ]
   }
