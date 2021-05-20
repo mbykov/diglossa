@@ -20,7 +20,7 @@
   },
   "build": {
     "appId": "org.diglossa.diglossa",
-    asar: false,
+    "asar": false,
     "files": [
       "app/**/*",
       "src/**/*",
