@@ -14,7 +14,7 @@ e-book examples: http://diglossa.org/examples
 
 packages now are only for Linux, packages for Windows and MacOS will be a little later
 
-![diglossa.js](/resource/dgl-screenshot.png?raw=true "Diglossa.js")
+![diglossa.js](https://github.com/mbykov/diglossa.js/blob/master/resource/dgl-screenshot.png?raw=true "Diglossa.js")
 
 
 ## License
