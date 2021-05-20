@@ -1,12 +1,17 @@
 # Diglossa.js
 
-Bi-(Multi)-lingual Reader - an application for creating, distributing and reading bi-(multi) lingual texts
-
-Asa well as ordinary, but powerful  e-Book reader
-
-based on electron.js and couchdb
+Multi-lingual Reader - an application for working with multi-lingual texts.
 
 ## v.0.9 in progress, beta
+
+diglossa.js is an application for
+
+a) **reading** any e-books
+b) **editing the structure** of e-books
+c) **auto-checking** paragraphs synchronization
+d) **generating** contextual multilingual dictionaries
+
+based on electron.js and couchdb
 
 project description: http://diglossa.org/description
 
