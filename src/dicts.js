@@ -19,18 +19,20 @@ export const dictionary = {
   async ready(state) {
     render('dicts')
     this.dstore = dictstore.store
-    // log('___DICTS', this.dstore)
+    this.dicts = _.values(dictstore.store)
     this.parseDictionary()
     progress.hide()
   },
   parseDictionary() {
     const tbody = q('#dict-table .tbody')
-    for (let dname in this.dstore) {
-      let dict = this.dstore[dname]
-      // log('_DNAME', dname)
+    let dicts = this.dicts
+    for (let ditem of dicts) {
+      let dname = ditem.dname
+      let dict = _.find(dicts, dict=> dict.dname == dname)
       const tmpl = q('.table-line.tmpl')
       const orow = tmpl.cloneNode(true)
       orow.classList.remove('tmpl')
+      orow.setAttribute('dname', dname)
       let oname = orow.querySelector('.td-name')
       oname.textContent = dict.name
       let otype = orow.querySelector('.td-type')
@@ -46,11 +48,11 @@ export const dictionary = {
     let rdicts = await queryDB(stem, dstore)
     firePopup(wf, rdicts)
   },
+
   //  τῆς δὲ ἀρχὴ τὰ
   async queryDictComplex(wf, qstems, dstore) {
     let {dictdocs, flsdocs, termdocs} = await queryDBcomplex(qstems, dstore)
     qstems = qstems.filter(qstem=> !qstem.indecl)
-    // log('__bef-synth', dictdocs, flsdocs, termdocs)
     let synths = plugin.synthesize(qstems, dictdocs, flsdocs)
     synths.push(...termdocs)
 
@@ -66,7 +68,6 @@ export const dictionary = {
       rdicts.push(rdict)
     }
 
-    log('_CMP-POP-DATA', rdicts)
     if (rdicts.length) ipcRenderer.send('show-popup-window', rdicts)
     else ipcRenderer.send('hide-popup-window')
   }
@@ -85,7 +86,6 @@ function firePopup(wf, docs) {
     rdicts.push(rdict)
   }
 
-  // log('_FIRE POP-DATA', rdicts)
   if (rdicts.length) ipcRenderer.send('show-popup-window', rdicts)
   else ipcRenderer.send('hide-popup-window')
 }
@@ -99,8 +99,6 @@ document.addEventListener("mouseover", function(ev) {
   let lang = parent.getAttribute('lang')
   let wf = target.textContent
 
-  // log('__DD', wf, lang)
-
   let dicts = _.values(dictstore.store)
   if (!ev.shiftKey) dicts = _.filter(dicts, dict=> dict.lang == lang)
 
@@ -112,11 +110,10 @@ document.addEventListener("mouseover", function(ev) {
 
   const stemmer = porter(lang)
   const stem = stemmer ? stemmer(wf) : wf
-  // log('____STEM', stem, 'wf:', wf)
 // let siblings = getSiblings(target, lang)
 
-  dictionary.queryDict(wf, stem, dicts)
   // todo: plugin
+  dictionary.queryDict(wf, stem, dicts)
   if (lang == 'grc') {
     // const qstems = stemmerGrc(wf)
     // dictionary.queryDictComplex(wf, qstems, dicts)
@@ -141,12 +138,13 @@ function getSiblings(el, lang) {
 }
 
 document.addEventListener('click',  (ev) => {
-  const otable = q('.dict-table')
+  const otable = q('#dict-table')
   if (!otable) return
-  let odel = ev.target.closest('td.td-delete')
-  let oparent = ev.target.closest('tr.table-line')
+  let odel = ev.target.closest('.td-delete')
+  let oparent = ev.target.closest('.table-line')
   if (!oparent) return
   let dname = oparent.getAttribute('dname')
+  if (!dname) return
   progress.show()
   let direction = (ev.ctrlKey && ev.altKey) ? 'down' : (ev.ctrlKey) ? 'up' : null
   if (odel) deleteDict(dname)
@@ -156,11 +154,13 @@ document.addEventListener('click',  (ev) => {
 
 async function deleteDict(dname) {
   const dicts = dictionary.dicts
+  if (!dicts.length) return
   let current = _.find(dicts, dict=> dict.dname == dname)
   const others = _.filter(dicts, dict=> dict.dname != dname)
   await deleteDB(dname)
   others.forEach((dict, idx)=> dict.idx = idx)
-  // setDstore(others)
+  dictionary.dicts = others
+  setDstore(others)
   let mess = ['dict', current.name, 'removed'].join(' ')
   message.show(mess, 'darkgreen')
 }
@@ -168,6 +168,7 @@ async function deleteDict(dname) {
 function moveRow(dname, direction) {
   const dicts = dictionary.dicts
   let current = _.find(dicts, dict=> dict.dname == dname)
+  if (!current) return
   let idx = current.idx
   let step = (direction == 'up') ? -1 : 1
   let sibling = _.find(dicts, dict=> dict.idx == current.idx + step)
@@ -177,7 +178,11 @@ function moveRow(dname, direction) {
 
 function toggleActive(dname) {
   const dicts = dictionary.dicts
+  log('_A', dname)
+  log('_Adicts', dicts)
   let current = _.find(dicts, dict=> dict.dname == dname)
+  if (!current) return
+  log('_C', current)
   current.active = (current.active) ? false : true
   setDstore(dicts)
 }
@@ -190,6 +195,5 @@ function setDstore(dicts) {
   dicts.forEach(dict=> dstore[dict.dname] = dict)
   dictstore.clear()
   dictstore.set(dstore)
-  // log('_dstore', dstore)
   dictionary.ready({dicts: dicts})
 }

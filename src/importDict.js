@@ -19,7 +19,7 @@ const JSON5 = require('json5')
 const fse = require('fs-extra')
 const Store = require('electron-store')
 const dictstore = new Store({name: 'dicts'})
-const dstore = dictstore.store
+let  dstore = dictstore.store
 
 export const getimportDict = {}
 
@@ -79,6 +79,8 @@ async function saveDict(dict, docs) {
   let dname = cleanDname(dict)
   dict.dname = dname
   dict.idx = 0
+  dstore = dictstore.store
+
   let olddict = _.find(dstore, dict=> dict.dname == dict.dname)
   if (olddict) dictstore.delete(olddict.dname)
 
