@@ -1,5 +1,5 @@
 {
-  "version": "0.9.85",
+  "version": "0.9.86",
   "name": "diglossa.js",
   "productName": "Diglossa.js",
   "description": "Bilingual Reader - an application for reading and creating bi-(multi) lingual texts",
@@ -61,7 +61,7 @@
     "axios": "^0.21.1",
     "book-epub2json": "0.9.1",
     "book-fb2json": "^0.9.0",
-    "book-md2json": "0.9.5",
+    "book-md2json": "0.9.55",
     "book-pdf2json": "^0.9.0",
     "dgl-utils": "0.8.2",
     "dict-sd2json": "0.9.1",

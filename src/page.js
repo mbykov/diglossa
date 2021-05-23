@@ -50,7 +50,6 @@ export const page = {
     await this.syncChapters(chapters, syncs)
     drawPage(chapters)
 
-
     header.ready(state.idx)
     this.localquery = ''
     if (state && state.blockid) this.scroll(state)
@@ -131,6 +130,9 @@ export const page = {
         })
       }
     })
+  },
+  drawPage() {
+    drawPage(this.chapters)
   },
   scroll(state) {
     let qblockid = state.blockid
@@ -292,7 +294,7 @@ function parsePar(doc, lang) {
   opar.classList.add('ptext')
   opar.setAttribute('_id', doc._id) // отсюда узнаю path при поиске ref
   opar.setAttribute('lang', lang)
-  if (doc.refnote) opar.setAttribute('refnote', JSON.stringify(doc.refnote))
+  if (doc.refnotes) opar.setAttribute('refnotes', JSON.stringify(doc.refnotes))
   if (doc.imgsrc) opar.setAttribute('imgsrc', doc.imgsrc)
   if (doc.type == 'list') opar.classList.add('plist')
   else if (doc.type == 'ulist') opar.classList.add('plist'), opar.classList.add('ul')
@@ -391,30 +393,22 @@ document.addEventListener("mouseover", function(ev) {
 
 // show footnote
 document.addEventListener ("click",  async (ev) => {
-  if (dgl.editMode) return
-  if (!dgl.bid) return
+  if (!dgl.bid || dgl.editMode) return
   let owf = ev.target.closest('span.ref')
   if (!owf) return
-  let ref = owf.textContent
-  if (!ref) return
-
-  return // todo:
-
-  let bid = owf.closest('#src') ? dgl.origin().bid : dgl.shown().bid
+  let reftext = owf.textContent
+  if (!reftext) return
+  let bid = owf.closest('#src') ? dgl.origin(book.sbooks).bid : dgl.shown(book.sbooks).bid
   if (!bid) return
 
   let opar = ev.target.closest('p.ptext')
   let parid = opar.getAttribute('_id')
-  let refnote = opar.getAttribute('refnote')
+  let refnotes = opar.getAttribute('refnotes')
+  if (!refnotes) return
   let path = _.first(parid.split('-'))
-  let ref_id
-  ref = ref.replace('[', '').replace(']', '')
-  if (refnote) {
-    let notes = JSON.parse(refnote)
-    if (notes[ref]) ref_id = ['ref', notes[ref]].join('-') // 'ref' уже прописан в модуле
-   } else {
-    ref_id = ['ref', path, ref].join('-')
-  }
+  let ref = reftext.replace(/[\[\]]/g, '')
+  let notes = JSON.parse(refnotes)
+  let ref_id = notes[ref]
   let res = await fetchFN([ref_id], [bid])
   let fntext = ''
   if (!res[0]) fntext = 'not found'

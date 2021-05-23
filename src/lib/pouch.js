@@ -179,7 +179,6 @@ export async function fetchBlock(params) {
   return Promise.all(dbs.map(async function (db) {
     return db.allDocs(db.options)
       .then(res=> {
-        // log('___poush:', db.options, res)
         if (!res.rows.length) return
         let doc = res.rows[0].doc
         if (!doc) return

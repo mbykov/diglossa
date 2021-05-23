@@ -50,12 +50,12 @@ mouse.bind('ctrl+o', function(ev) {
     .then(result => {
       const bpath = result.filePaths[0]
       if (!bpath) {
-        message.show('can not locate book', 'darkred')
+        message.show('can not locate book. Select a book', 'darkred')
         return
       }
       let ext = path.extname(bpath)
       if (!ext) {
-        message.show('can not locate book', 'darkred')
+        message.show('can not locate book. Select a book', 'darkred')
         return
       }
       progress.show()
@@ -73,12 +73,12 @@ ipcRenderer.on('importBook', function (event) {
     .then(result => {
       const bpath = result.filePaths[0]
       if (!bpath) {
-        message.show('can not locate book', 'darkred')
+        message.show('can not locate book. Select a book', 'darkred')
         return
       }
       let ext = path.extname(bpath)
       if (!ext) {
-        message.show('can not locate book', 'darkred')
+        message.show('can not locate book. Select a book', 'darkred')
         return
       }
       progress.show()
@@ -186,7 +186,7 @@ function setDocPath(docs) {
 
     filled = zerofill(counter, fillsize)
     if (doc.footnote) {
-      if (!doc._id) doc._id = ['ref', path, doc.ref].join('-')
+      // if (!doc._id) doc._id = ['ref', path, doc.ref].join('-')
     } else {
       doc.path = path
       doc._id = [path, filled].join('-')

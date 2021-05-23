@@ -115,7 +115,7 @@ async function compressPackage(prefs) {
   let dglpath = [textsdir, 'dgl'].join('.')
 
   let zip = await compressDGL(jsonpath)
-  if (zip.err) return message.show('can not read json file', 'darkred')
+  if (zip.err) return message.show('can not read json file. Select a book', 'darkred')
   zip
     .generateNodeStream({type:'nodebuffer', streamFiles: true})
     .pipe(fse.createWriteStream(dglpath))
@@ -126,7 +126,7 @@ async function compressPackage(prefs) {
       message.show(mess, 'darkgreen')
     })
     .on('error', function () {
-      message.show('can not compress book', 'darkred')
+      message.show('can not compress book. Select a book', 'darkred')
     })
 }
 
