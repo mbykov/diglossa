@@ -327,24 +327,34 @@ function wrapSpan(opar) {
 
 // todo: mousetrap
 let scrollByKey = function(ev) {
-  let osrc = q('.page')
-  if (!osrc) return
-  let height = osrc.clientHeight
+  const opage = q('.page')
+  if (!opage) return
+  let height = opage.clientHeight
   if (ev.keyCode == 38) { // arrow up
-    if (ev.ctrlKey) osrc.scrollTop = 0
-    else osrc.scrollTop = osrc.scrollTop - 24
+    if (ev.ctrlKey) opage.scrollTop = 0
+    else opage.scrollTop = opage.scrollTop - 24
   } else if (ev.keyCode == 40) { // arrow down
-    osrc.scrollTop = osrc.scrollTop + 24
+    opage.scrollTop = opage.scrollTop + 24
   } else if (ev.keyCode == 33) { // pageUp
-    osrc.scrollTop = osrc.scrollTop - height + 60
+    opage.scrollTop = opage.scrollTop - height + 60
   } else if (ev.keyCode == 34) { // pageDown
-    osrc.scrollTop = osrc.scrollTop + height - 60
+    opage.scrollTop = opage.scrollTop + height - 60
   } else if (ev.keyCode == 36) { // home, ctrl-home
-    osrc.scrollTop = 0
+    opage.scrollTop = 0
   } else if (ev.keyCode == 35) { // end, ctrl-end
-    osrc.scrollTop = osrc.scrollHeight - osrc.clientHeight;
+    opage.scrollTop = opage.scrollHeight - opage.clientHeight;
   }
-  else return
+  // show position:
+  let osrc = q('#src')
+  if (!osrc) return
+  let hidden = osrc.classList.contains('hidden')
+  if (hidden) osrc = q('#trn')
+  let scrolltop = opage.scrollTop
+  height  = osrc.clientHeight
+  let ohr = q('.show-page-position')
+  if (!ohr) return
+  ohr.style.width = (scrolltop/height)*90 + '%'
+  if (dgl.route == 'book') ohr.style.width = 0
 }
 
 function getPanes() {
@@ -529,16 +539,5 @@ function showSearchIcon() {
 function showPagePosition() {
   let obody = q('body')
   let opos = create('hr', 'show-page-position')
-  // opos.textContent = '_000_'
   obody.appendChild(opos)
 }
-
-document.addEventListener("wheel", function(ev) {
-  const osrc = q('#src')
-  const opage = q('.page')
-  if (!osrc) return
-  let scrolltop = opage.scrollTop
-  let height  = osrc.clientHeight
-  let ohr = q('.show-page-position')
-  ohr.style.width = (scrolltop/height)*110 + '%'
-}, false)

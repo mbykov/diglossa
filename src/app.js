@@ -153,6 +153,17 @@ document.addEventListener("wheel", function(ev) {
   if (!opage) return
   let delta = (ev.deltaY > 0) ? 24 : -24
   opage.scrollTop += delta
+
+  const osrc = q('#src')
+  if (!osrc) return
+  let hidden = osrc.classList.contains('hidden')
+  if (hidden) osrc = q('#trn')
+  let scrolltop = opage.scrollTop
+  let height  = osrc.clientHeight
+  let ohr = q('.show-page-position')
+  if (!ohr) return
+  ohr.style.width = (scrolltop/height)*100 + '%'
+  if (dgl.route == 'book') ohr.style.width = 0
 })
 
 mouse.bind('esc', function(ev) {

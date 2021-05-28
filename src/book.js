@@ -235,7 +235,7 @@ mouse.bind('2', function(ev) {
 
 mouse.bind('3', function(ev) {
   // todo: change page panes
-  // log('_как 3 отразится на fts, exports, etc?_')
+  // _как 3 отразится на fts, exports, etc?_'
 })
 
 function showSearchIcon() {

@@ -358,7 +358,7 @@ tr:nth-child(odd):not(.hidden) {
   z-index: 100;
   width: 0;
   border-style: solid;
-  border-width: 1px;
+  border-width: 2px;
   border-top: 1px;
 }
 

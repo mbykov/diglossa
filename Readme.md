@@ -15,7 +15,7 @@ based on electron.js and couchdb
 
 project description: http://diglossa.org/description
 
-e-book examples: http://diglossa.org/examples
+e-book examples: http://diglossa.org/en/examples
 
 packages now are only for Linux, packages for Windows and MacOS will be a little later
 
