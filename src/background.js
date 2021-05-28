@@ -159,8 +159,8 @@ ipcMain.on('lang', (event, lang) => {
 })
 
 const handleError = (title, error) => {
-  console.log('_Back handleError', title)
-  console.log('_Back handleError', error)
+  console.log('_Back handleError-title', title)
+  console.log('_Back handleError-error', error)
 }
 
 if (process.type === 'renderer') {

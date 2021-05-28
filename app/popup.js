@@ -152,7 +152,7 @@ function cleanStr(str) {
   return str.trim().replace(/\n+/g, '\n').replace(/↵+/, '\n').replace(/  +/, ' ').replace(/ /g, ''); // .replace(/\s+/, ' ')
 }
 function ndash(str) {
-  return str.trim().replace(/^--/, '–').replace(/^—/, '–').replace(/ - /g, ' – '); // m-dash: —
+  return str.trim().replace(/^-/, '–').replace(/^—/, '–').replace(/ - /g, ' – '); // m-dash: —
 }
 function cleanDname(descr) {
   if (!descr.author) descr.author = 'author';

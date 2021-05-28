@@ -1,6 +1,6 @@
 'use strict'
 
-import { log, q, qs, empty, create, remove, getCoords, placePopup, scrollToPosition, removeAll } from './lib/utils'
+import { log, q, qs, empty, create, remove, getCoords, placePopup, scrollToPosition, removeAll, ndash } from './lib/utils'
 import _ from 'lodash'
 import { router, render } from './app'
 import { fetchChapterDocs, fetchChapter, fetchFN } from "./lib/pouch";
@@ -289,7 +289,8 @@ export function alignPars(opars) {
 function parsePar(doc, lang) {
   let parent = create('div')
   if (!doc.md) doc.md = '**empty paragraph**'
-  parent.innerHTML = marked(doc.md)
+  let md = ndash(doc.md)
+  parent.innerHTML = marked(md)
   let opar = parent.firstChild
   opar.classList.add('ptext')
   opar.setAttribute('_id', doc._id) // отсюда узнаю path при поиске ref
