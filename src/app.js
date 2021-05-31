@@ -122,9 +122,15 @@ function closeAll() {
 })()
 
 document.addEventListener ("click",  (ev) => {
+  const omessage = q('#message-text')
+  let version = omessage.classList.contains('version')
+  if (version) {
+    omessage.classList.remove('version')
+    shell.openExternal(config.version)
+  }
   message.hide()
   if (ev.target.nodeName == 'BUTTON') return
-  // if (ev.target.nodeName == 'A') return
+  if (ev.target.nodeName == 'A') return
   let ohref = ev.target.closest('.external')
   if (!ohref) return
   ev.preventDefault()
@@ -134,7 +140,6 @@ document.addEventListener ("click",  (ev) => {
 })
 
 document.addEventListener ("click",  (ev) => {
-  message.hide()
   if (!ev.ctrlKey) return
   let owf = ev.target.closest('span.wf')
   if (!owf) return
@@ -200,18 +205,27 @@ ipcRenderer.on('lang', function (event, lang) {
   ipcRenderer.send('lang', lang)
 })
 
-ipcRenderer.on('version', function (event, oldver) {
-  axios.get(config.version)
-    .then(function (response) {
-      if (!response || !response.data) return
-      let newver = response.data.name
+ipcRenderer.on('version', async function (event, oldver) {
+  fetch(config.version)
+    .then(res=> {
+      let redirected = res.url
+      let newver = _.last(redirected.split('/'))
+      if (!newver) return
+      newver = newver.replace(/v/g, '')
       if (oldver && newver && newver > oldver) {
         let versionTxt = ['new version available:', newver].join(' ')
         message.show(versionTxt, 'darkgreen', true)
+        const omessage = q('#message-text')
+        omessage.classList.add('version')
+        // let omessage = omess.querySelector('#message-text')
+        // progress.hide()
+        // omess.classList.remove('hidden')
+        // omessage.classList.remove('darkred')
+        // omessage.textContent = versionTxt
       }
     })
-    .catch(function (error) {
-      console.log('API.GITHUB ERR')
+    .catch(err=> {
+      console.log('FETCH VERSION ERR', err)
     })
 })
 

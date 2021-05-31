@@ -1,5 +1,5 @@
 {
-  "version": "0.9.89",
+  "version": "0.9.0",
   "name": "diglossa.js",
   "productName": "Diglossa.js",
   "description": "Bilingual Reader - an application for reading and creating bi-(multi) lingual texts",
@@ -46,13 +46,13 @@
           ]
         },
         {
-          "target": "rpm",
+          "target": "AppImage",
           "arch": [
             "x64"
           ]
         },
         {
-          "target": "AppImage",
+          "target": "rpm",
           "arch": [
             "x64"
           ]
