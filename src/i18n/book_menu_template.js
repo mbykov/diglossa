@@ -10,15 +10,15 @@ export function bookMenuTemplate() {
          accelerator: "CmdOrCtrl+L",
          click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'library') } },
 
-      {  label: t("lookup"),
-         accelerator: "CmdOrCtrl+U",
-         click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'lookup') } },
-
       // {  label: t("bookmarks"),
          // accelerator: "CmdOrCtrl+B",
          // click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'bookmarks') } },
 
       { type: "separator" },
+      {  label: t("lookup book heap"),
+         accelerator: "CmdOrCtrl+U",
+         click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'lookup') } },
+
       { label: "Import book",
         accelerator: "CmdOrCtrl+O",
         click: () => { BrowserWindow.getFocusedWindow().webContents.send('importBook') } },

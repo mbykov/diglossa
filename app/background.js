@@ -140,17 +140,17 @@ function bookMenuTemplate() {
       click: () => {
         electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('route', 'library');
       }
-    }, {
-      label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("lookup"),
-      accelerator: "CmdOrCtrl+U",
-      click: () => {
-        electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('route', 'lookup');
-      }
     }, // {  label: t("bookmarks"),
     // accelerator: "CmdOrCtrl+B",
     // click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'bookmarks') } },
     {
       type: "separator"
+    }, {
+      label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("lookup book heap"),
+      accelerator: "CmdOrCtrl+U",
+      click: () => {
+        electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('route', 'lookup');
+      }
     }, {
       label: "Import book",
       accelerator: "CmdOrCtrl+O",

@@ -1,16 +1,21 @@
 <div class="text-gray-900 bg-gray-200 page">
 
   <div class="mt-8 p-4 ">
-    <h1 class="text-3xl">Look up book heap:</h1>
+    <h1 class="text-3xl">Lookup book heap:</h1>
 
-  <div id="package" class="flex flex-col bg-white shadow-md rounded m-4">
+  <div id="heap" class="flex flex-col bg-white shadow-md rounded m-4">
     <div class="tr-header table-line flex border-b" type="dir">
       <div class="w-40 left p-3 flex-grow-0 font-bold">book heap:</div>
       <div id="heappath" class="p-3 flex-grow"></div>
     </div>
   </div>
 
-    <div id="prefs-table" class="flex flex-col bg-white shadow-md rounded m-4">
+  <div id="heap" class="flex flex-col rounded m-4">
+    <input class="searchinput bg-white rounded-lg border-gray-300 border p-2 shadow-lg" type="text" autofocus placeholder="search input"  />
+  </div>
+
+
+    <div id="lookup-table" class="flex flex-col bg-white shadow-md rounded m-4">
     <div class="tr-header flex border-b">
       <div class="w-40 left p-3 flex-grow-0 font-bold">name</div>
       <div class="p-3 flex-grow  font-bold">value</div>

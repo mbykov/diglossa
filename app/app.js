@@ -3811,33 +3811,17 @@ const Store = __webpack_require__(/*! electron-store */ "electron-store"); // co
 const appstore = new Store({
   name: 'app'
 });
-let heappath = appstore.get('heappath'); // let defaults = {
-//   'name': 'example',
-//   version: '1.0.0',
-//   'editor': 'John Doe',
-//   email: 'john.doe@example.com',
-//   homepage: 'http://example.com',
-//   license: 'CC BY-SA',
-//   keywords: 'diglossa, bilingua, dgl',
-//   'exportpath': exportpath,
-// }
-
 const lookup = {
   async ready() {
     (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_LOOKUP');
     (0,_app__WEBPACK_IMPORTED_MODULE_2__.render)('lookup');
-    this.tbody = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('#prefs-table .tbody');
-    const odata = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('#pref-package-data'); // let origin = dgl.origin(books)
-    // let oauthor = odata.querySelector('#pref-book-author')
-    // oauthor.textContent = origin.descr.author
-    // let otitle = odata.querySelector('#pref-book-title')
-    // otitle.textContent = origin.descr.title
-    // this.origin = origin
-    // let prefs = prefstore.get(origin.bid) || this.initPrefs(origin)
-    // this.prefs = prefs
+    let heappath = appstore.get('heappath');
+    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_HEAP PATH', heappath); // this.tbody = q('#lookup-table .tbody')
+    // const odata = q('#pref-package-data')
 
     const oheappath = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('#heappath');
-    oheappath.textContent = heappath; // this.stripes()
+    oheappath.textContent = heappath;
+    lookupBook(heappath); // this.stripes()
   },
 
   addRow(type, name, value) {
@@ -3890,7 +3874,6 @@ document.addEventListener('click', ev => {
       properties: ['openDirectory']
     }).then(result => {
       const bpath = result.filePaths[0];
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_EX BPATH', bpath);
       if (!bpath) return;
       appstore.set('heappath', bpath);
       lookup.ready();
@@ -3908,6 +3891,10 @@ document.addEventListener('keydown', ev => {
   let value = orow.querySelector('.td-value').textContent.trim();
   lookup.ready();
 });
+
+function lookupBook(bpath) {
+  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_lookupBook');
+}
 
 /***/ }),
 

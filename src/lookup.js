@@ -16,38 +16,18 @@ const Store = require('electron-store')
 // const prefstore = new Store({name: 'prefs'})
 const appstore = new Store({name: 'app'})
 
-let heappath = appstore.get('heappath')
-
-// let defaults = {
-//   'name': 'example',
-//   version: '1.0.0',
-//   'editor': 'John Doe',
-//   email: 'john.doe@example.com',
-//   homepage: 'http://example.com',
-//   license: 'CC BY-SA',
-//   keywords: 'diglossa, bilingua, dgl',
-//   'exportpath': exportpath,
-// }
-
 export const lookup = {
   async ready() {
     log('_LOOKUP')
     render('lookup')
 
-    this.tbody = q('#prefs-table .tbody')
-    const odata = q('#pref-package-data')
-
-    // let origin = dgl.origin(books)
-    // let oauthor = odata.querySelector('#pref-book-author')
-    // oauthor.textContent = origin.descr.author
-    // let otitle = odata.querySelector('#pref-book-title')
-    // otitle.textContent = origin.descr.title
-    // this.origin = origin
-    // let prefs = prefstore.get(origin.bid) || this.initPrefs(origin)
-    // this.prefs = prefs
-
+    let heappath = appstore.get('heappath')
+    log('_HEAP PATH', heappath)
+    // this.tbody = q('#lookup-table .tbody')
+    // const odata = q('#pref-package-data')
     const oheappath = q('#heappath')
     oheappath.textContent = heappath
+    lookupBook(heappath)
     // this.stripes()
   },
 
@@ -100,7 +80,6 @@ document.addEventListener('click',  (ev) => {
     dialog.showOpenDialog({properties: ['openDirectory'] })
       .then(result => {
         const bpath = result.filePaths[0]
-        log('_EX BPATH', bpath)
         if (!bpath) return
         appstore.set('heappath', bpath)
         lookup.ready()
@@ -120,3 +99,7 @@ document.addEventListener('keydown', ev => {
   let value = orow.querySelector('.td-value').textContent.trim()
   lookup.ready()
 })
+
+function lookupBook(bpath) {
+  log('_lookupBook')
+}
