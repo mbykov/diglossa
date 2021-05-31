@@ -40,6 +40,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _prefs__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./prefs */ "./src/prefs.js");
 /* harmony import */ var _dicts__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./dicts */ "./src/dicts.js");
 /* harmony import */ var _search__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./search */ "./src/search.js");
+/* harmony import */ var _lookup__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./lookup */ "./src/lookup.js");
  // import "./css/tailwind.css";
 
 
@@ -75,6 +76,7 @@ let templates = electron__WEBPACK_IMPORTED_MODULE_4__.remote.getGlobal('template
 
 
 
+
 const axios = __webpack_require__(/*! axios */ "axios"); // const { app } = require('electron').remote
 // let homepath = app.getPath('home')
 // let lang = appstore.get('lang') || config.deflang
@@ -88,7 +90,8 @@ const routes = {
   newtext: _newtext__WEBPACK_IMPORTED_MODULE_18__.newtext,
   preference: _prefs__WEBPACK_IMPORTED_MODULE_19__.preference,
   dictionary: _dicts__WEBPACK_IMPORTED_MODULE_20__.dictionary,
-  search: _search__WEBPACK_IMPORTED_MODULE_21__.search
+  search: _search__WEBPACK_IMPORTED_MODULE_21__.search,
+  lookup: _lookup__WEBPACK_IMPORTED_MODULE_22__.lookup
 };
 
 class History {
@@ -236,10 +239,7 @@ mouse.bind('ctrl+d', function (ev) {
   router({
     route: 'dictionary'
   });
-}); // mouse.bind('ctrl+b', function(ev) {
-// router({route: 'bookmarks'})
-// })
-
+});
 electron__WEBPACK_IMPORTED_MODULE_4__.ipcRenderer.on('route', function (event, route) {
   router({
     route
@@ -3762,6 +3762,155 @@ function parseRow(book) {
 
 /***/ }),
 
+/***/ "./src/lookup.js":
+/*!***********************!*\
+  !*** ./src/lookup.js ***!
+  \***********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "lookup": () => (/* binding */ lookup)
+/* harmony export */ });
+/* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./lib/utils */ "./src/lib/utils.js");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lodash */ "lodash");
+/* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./app */ "./src/app.js");
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! electron */ "electron");
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _book__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./book */ "./src/book.js");
+/* harmony import */ var _lib_progress__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/progress */ "./src/lib/progress.js");
+/* harmony import */ var _lib_message__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./lib/message */ "./src/lib/message.js");
+
+
+
+
+
+
+const mouse = __webpack_require__(/*! mousetrap */ "mousetrap");
+
+const {
+  app
+} = __webpack_require__(/*! electron */ "electron").remote;
+
+
+let dgl = electron__WEBPACK_IMPORTED_MODULE_3__.remote.getGlobal('dgl');
+
+const {
+  dialog
+} = __webpack_require__(/*! electron */ "electron").remote;
+
+
+
+
+
+const Store = __webpack_require__(/*! electron-store */ "electron-store"); // const prefstore = new Store({name: 'prefs'})
+
+
+const appstore = new Store({
+  name: 'app'
+});
+let heappath = appstore.get('heappath'); // let defaults = {
+//   'name': 'example',
+//   version: '1.0.0',
+//   'editor': 'John Doe',
+//   email: 'john.doe@example.com',
+//   homepage: 'http://example.com',
+//   license: 'CC BY-SA',
+//   keywords: 'diglossa, bilingua, dgl',
+//   'exportpath': exportpath,
+// }
+
+const lookup = {
+  async ready() {
+    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_LOOKUP');
+    (0,_app__WEBPACK_IMPORTED_MODULE_2__.render)('lookup');
+    this.tbody = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('#prefs-table .tbody');
+    const odata = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('#pref-package-data'); // let origin = dgl.origin(books)
+    // let oauthor = odata.querySelector('#pref-book-author')
+    // oauthor.textContent = origin.descr.author
+    // let otitle = odata.querySelector('#pref-book-title')
+    // otitle.textContent = origin.descr.title
+    // this.origin = origin
+    // let prefs = prefstore.get(origin.bid) || this.initPrefs(origin)
+    // this.prefs = prefs
+
+    const oheappath = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('#heappath');
+    oheappath.textContent = heappath; // this.stripes()
+  },
+
+  addRow(type, name, value) {
+    const tmpl = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('.table-line.tmpl');
+    const orow = tmpl.cloneNode(true);
+    orow.classList.remove('tmpl');
+    orow.setAttribute('type', type);
+    orow.setAttribute('prefname', name);
+    orow.setAttribute('contenteditable', true);
+    let oname = orow.querySelector('.td-name');
+    let ovalue = orow.querySelector('.td-value');
+    oname.textContent = name;
+    ovalue.textContent = value;
+    this.tbody.appendChild(orow);
+  },
+
+  stripes() {
+    let orows = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.qs)('.table-line:not(.hidden)');
+    let n = 0;
+
+    for (let orow of orows) {
+      if (n % 2 === 1) orow.classList.remove('odd'), orow.classList.add('even');else orow.classList.add('odd'), orow.classList.remove('even');
+      n++;
+    }
+  }
+
+};
+document.addEventListener('click', ev => {
+  // const otable = q('#prefs-table')
+  // if (!otable) return
+  let orow = ev.target.closest('.table-line');
+  if (!orow) return;
+  let type = orow.getAttribute('type');
+
+  if (type == 'file') {// dialog.showOpenDialog({properties: ['openFile'] })
+    //   .then(result => {
+    //     const bpath = result.filePaths[0]
+    //     if (!bpath) return
+    //     let name = orow.querySelector('.td-name').textContent
+    //     // let ovalue = orow.querySelector('.td-value')
+    //     // ovalue.textContent = bpath
+    //     let type = orow.getAttribute('type')
+    //     preference.savePrefs(type, name, bpath)
+    //     preference.ready()
+    //   }).catch(err => {
+    //     console.log(err)
+    //   })
+  } else if (type == 'dir') {
+    dialog.showOpenDialog({
+      properties: ['openDirectory']
+    }).then(result => {
+      const bpath = result.filePaths[0];
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_EX BPATH', bpath);
+      if (!bpath) return;
+      appstore.set('heappath', bpath);
+      lookup.ready();
+    }).catch(err => {
+      console.log(err);
+    });
+  }
+});
+document.addEventListener('keydown', ev => {
+  if (ev.key !== 'Enter') return;
+  ev.preventDefault();
+  let orow = ev.target.closest('.table-line');
+  if (!orow) return;
+  let name = orow.querySelector('.td-name').textContent.trim();
+  let value = orow.querySelector('.td-value').textContent.trim();
+  lookup.ready();
+});
+
+/***/ }),
+
 /***/ "./src/newtext.js":
 /*!************************!*\
   !*** ./src/newtext.js ***!
@@ -4637,9 +4786,7 @@ document.addEventListener('click', ev => {
       properties: ['openDirectory']
     }).then(result => {
       const bpath = result.filePaths[0];
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_EX BPATH', bpath);
-      if (!bpath) return; // let oppp = q('#exportpath').textContent
-
+      if (!bpath) return;
       exportpath = bpath;
       let type = orow.getAttribute('type'); // preference.savePrefs(type, 'exportpath', bpath)
 

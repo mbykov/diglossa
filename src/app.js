@@ -32,13 +32,14 @@ import { newtext } from './newtext'
 import { preference } from './prefs'
 import { dictionary } from './dicts'
 import { search } from './search'
+import { lookup } from './lookup'
 
 const axios = require('axios')
 
 // const { app } = require('electron').remote
 // let homepath = app.getPath('home')
 // let lang = appstore.get('lang') || config.deflang
-const routes = { library, book, page, bookmarks, newtext, preference, dictionary, search }
+const routes = { library, book, page, bookmarks, newtext, preference, dictionary, search, lookup }
 
 class History {
   constructor() {
@@ -185,10 +186,6 @@ mouse.bind('ctrl+v', function(ev) {
 mouse.bind('ctrl+d', function(ev) {
   router({route: 'dictionary'})
 })
-
-// mouse.bind('ctrl+b', function(ev) {
-  // router({route: 'bookmarks'})
-// })
 
 ipcRenderer.on('route', function (event, route) {
   router({route})

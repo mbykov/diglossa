@@ -146,9 +146,7 @@ document.addEventListener('click',  (ev) => {
     dialog.showOpenDialog({properties: ['openDirectory'] })
       .then(result => {
         const bpath = result.filePaths[0]
-        log('_EX BPATH', bpath)
         if (!bpath) return
-        // let oppp = q('#exportpath').textContent
         exportpath = bpath
         let type = orow.getAttribute('type')
         // preference.savePrefs(type, 'exportpath', bpath)
