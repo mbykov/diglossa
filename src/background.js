@@ -1,6 +1,6 @@
 import path from "path";
 import url from "url";
-import { app, BrowserWindow, ipcMain, shell } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 
 import { config } from "./config";
 

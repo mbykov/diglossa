@@ -3,7 +3,7 @@
 import { log, q, create } from './lib/utils'
 import { ipcRenderer } from "electron";
 import _ from 'lodash'
-import { router, render } from './app'
+import { render } from './app'
 const Store = require('electron-store')
 const dictstore = new Store({name: 'dicts'})
 import { queryDB, queryDBcomplex, deleteDB } from "./lib/pouch";

@@ -2,7 +2,7 @@
 
 import _ from 'lodash'
 import { log, q, qs, previousSiblings, scrollToPosition } from './lib/utils'
-import { router, render } from './app'
+import { render } from './app'
 const mouse = require('mousetrap')
 import { message } from './lib/message'
 import { header } from './header'

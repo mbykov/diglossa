@@ -1,27 +1,22 @@
 <img src="../resources/icons/256x256.png" id="bookImg">
 
-After first installation Biblos.js has bare minimum of dictionaries, <b>Wiktionary</b>, <b>Terms</b> (indeclinables), and hidden from user <b>Flex</b>. They are already synchronized with server.
+**diglossa** - slow reading tool
 
-&nbsp;
+Powerful reader for any e-book (**.epub**, **.pdf**, **.fb2**, **.csv**, **.html**, **.md**, **.txt**), including e-books based on its own format **.dgl**. <span class="external">http://diglossa.org/en/format</span>.
 
-<span class="uk-badge">1</span>
-<span class="uk-badge">100</span>
+Examples of books in **.dgl** format - <span class="external">http://diglossa.org/en/books</span>. Change the translation language of the book in the right pane - **shift-mouse-wheel**.
 
-After first installation Biblos.js has bare minimum of dictionaries, <b>Wiktionary</b>, <b>Terms</b> (indeclinables), and hidden from user <b>Flex</b>. They are already synchronized with server.
+Editor of any e-book structure for the purpose of synchronisation. Capable of **auto-checking** paragraph synchronisation. <span class="external">http://diglossa.org/en/editor</span>.
 
-&nbsp;
+Allows you to plug regular dictionaries in open formats (**.stardict**, **.dsl**), and generates multilingual context dictionaries based on dgl-books. Call connected local dictionaries - **alt-mouse-move** over the word. Automatic text language detection.
 
-<a href="#" data-section="remote-dicts">Clone</a> (copy) additional dictionaries from server. <!-- or <a href="#" data-section="csv">import</a> dictionary from CSV files. --> <a href="#" data-section="remote-dicts">Arrage and activate / deactivate</a> them as you like.
+Search the shared database of many dgl-books in the browser - <span class="external">http://diglossa.org/поиск</span> - click on the word.
 
-&nbsp;
+Local search by section - just type. Full-text search across all downloaded books - **ctrl+f**.
 
-Then just copy some Greek text from anywhere on your desktop with **Ctrl-C**; then move the mouse over text to see the readings:
+You can paste **ctrl-v** any text fragment and use installed dictionaries as usual. It is recommended to call local dictionaries with **shift-alt-move** to search all local dictionaries. As the language of the text in a short snippet may not be detected correctly.
 
-&nbsp;
 
-μὴ κτήσησθε χρυσὸν μηδὲ ἄργυρον μηδὲ χαλκὸν εἰς τὰς ζώνας ὑμῶν, 10 μὴ πήραν εἰς ὁδὸν μηδὲ δύο χιτῶνας μηδὲ ὑποδήματα μηδὲ ῥάβδον· ἄξιος γὰρ ἐστιν ὁ ἐργάτης τῆς τροφῆς αὐτοῦ. 11 εἰς ἣν δ’ ἂν πόλιν ἢ κώμην εἰσέλθητε, ἐξετάσατε τίς ἐν αὐτῇ ἄξιός ἐστι· κἀκεῖ μείνατε ἕως ἂν ἐξέλθητε. 12 εἰσερχόμενοι δὲ εἰς τὴν οἰκίαν ἀσπάσασθε αὐτήν λέγοντες· εἰρήνη τῷ οἰκῳ τούτῳ. 13 καὶ ἐὰν μὲν ᾖ ἡ οἰκία ἀξία, ἐλέθτω ἡ εἰρήνη ὑμῶν ἐπ’ αὐτήν· ἐὰν δὲ μὴ ᾖ ἀξία, ἡ εἰρήνη ὑμῶν πρὸς ὑμᾶς ἐπιστραφήτω (*Matthew 10:9-13*)
-
-&nbsp;
 
 &nbsp;
 

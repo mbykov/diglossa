@@ -181,9 +181,9 @@ mouse.bind('ctrl+d', function(ev) {
   router({route: 'dictionary'})
 })
 
-mouse.bind('ctrl+b', function(ev) {
-  router({route: 'bookmarks'})
-})
+// mouse.bind('ctrl+b', function(ev) {
+  // router({route: 'bookmarks'})
+// })
 
 ipcRenderer.on('route', function (event, route) {
   router({route})

@@ -229,12 +229,10 @@ mouse.bind('ctrl+d', function (ev) {
   router({
     route: 'dictionary'
   });
-});
-mouse.bind('ctrl+b', function (ev) {
-  router({
-    route: 'bookmarks'
-  });
-});
+}); // mouse.bind('ctrl+b', function(ev) {
+// router({route: 'bookmarks'})
+// })
+
 electron__WEBPACK_IMPORTED_MODULE_4__.ipcRenderer.on('route', function (event, route) {
   router({
     route
@@ -759,7 +757,7 @@ document.addEventListener("click", ev => {
     bid: dgl.bid,
     idx
   };
-  (0,_app__WEBPACK_IMPORTED_MODULE_0__.router)(state);
+  (0,_app__WEBPACK_IMPORTED_MODULE_0__.router)(state); // to-page
 }); // switch shown lang
 
 document.addEventListener("wheel", function (ev) {
@@ -970,7 +968,7 @@ document.addEventListener("wheel", function (ev) {
   let next = (0,_header__WEBPACK_IMPORTED_MODULE_4__.rotateBlock)(oblock);
 }, false); // jump bookmarks
 
-mouse.bind('ctrl+_b', function (ev) {
+mouse.bind('ctrl+b', function (ev) {
   const state = {
     route: 'bookmarks'
   };

@@ -187,7 +187,7 @@ document.addEventListener ("click",  (ev) => {
   if (!opar) return
   const idx = opar.getAttribute('idx') * 1
   const state = {route: 'page', bid: dgl.bid, idx}
-  router(state)
+  router(state) // to-page
 })
 
 // switch shown lang

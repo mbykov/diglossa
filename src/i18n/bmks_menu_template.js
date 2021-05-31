@@ -8,7 +8,6 @@ export function bmksMenuTemplate() {
     submenu: [
       {  label: t("bookmarks"),
          // accelerator: "CmdOrCtrl+b",
-         accelerator: "CmdOrCtrl+b",
          click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'bookmarks') } },
 
       { type: "separator" },

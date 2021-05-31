@@ -2,7 +2,7 @@
 
 import _ from 'lodash'
 import { log, q, qs, empty, create, remove, span, p, div, space, ctext } from './lib/utils'
-import { router, render } from './app'
+import { render } from './app'
 import { remote, clipboard } from "electron"
 const franc = require('franc')
 
