@@ -12,7 +12,7 @@ import { remote } from "electron"
 const { dialog } = require('electron').remote
 // import { book } from './book'
 import { progress } from './lib/progress'
-import { message } from './lib/message'
+// import { message } from './lib/message'
 
 const Store = require('electron-store')
 // const prefstore = new Store({name: 'prefs'})
@@ -44,7 +44,7 @@ export const lookup = {
   },
 
   stripes() {
-    let orows = qs('.table-line:not(.hidden)')
+    let orows = qs('.lookup-line')
     let n = 0
     for (let orow of orows) {
       if ((n % 2) === 1) orow.classList.remove('odd'), orow.classList.add('even')
@@ -55,14 +55,9 @@ export const lookup = {
 }
 
 document.addEventListener('click',  (ev) => {
-  const otable = q('#lookup-table')
+  const otable = q('#lookup-button')
   if (!otable) return
   log('_CLICK')
-  let osearch = ev.target.closest('.searchinput')
-  if (osearch) {
-    let str = osearch.value
-    log('_SEARCH', str)
-  }
 
   let orow = ev.target.closest('.table-line')
   if (!orow) return
@@ -104,12 +99,10 @@ document.addEventListener('keydown', ev => {
   let query = osearch.value
   if (!query) return
   lookupBook(lookup.heappath, query)
-  // lookup.ready()
 })
 
 function lookupBook(srcdir, query) {
-  log('_lookupBook')
-
+  progress.show()
   let restr = new RegExp(query, 'i')
   let pattern = [srcdir, '**/*'].join('/')
   console.log('PATT', pattern)
@@ -117,20 +110,17 @@ function lookupBook(srcdir, query) {
   glob(pattern, function (er, fns) {
     fns = fns.filter(fn=> restr.test(fn))
     log('_FNS', fns.length)
-    for (let fn of fns) {
-      log('_FN', fn)
-    }
-  })
+    let oresults = q('#search-list')
+    empty(oresults)
 
-  // console.log("after")
-  // let fns = fse.readdirSync(srcdir)
-  // log('_fns', fns)
-  // if (books.length > 1) {
-  //   log('_MANY', books)
-  // } else if (!books.length) {
-  //   log('_NO', books)
-  // } else {
-  //   let bookname = books[0]
-  //   log('_ONE', bookname)
-  // }
+    for (let fn of fns) {
+      const tmpl = q('.lookup-line.tmpl')
+      const orow = tmpl.cloneNode(true)
+      orow.classList.remove('tmpl')
+      orow.textContent = fn
+      oresults.appendChild(orow)
+    }
+    lookup.stripes()
+    progress.hide()
+  })
 }

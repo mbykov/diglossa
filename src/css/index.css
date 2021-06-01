@@ -376,3 +376,7 @@ tr:nth-child(odd):not(.hidden) {
 .version {
     cursor: pointer;
 }
+
+.lookup-line {
+    cursor: pointer;
+}

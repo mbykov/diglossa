@@ -217,6 +217,7 @@ export const search = {
     }
     progress.hide()
   },
+
   async parseBlock(ftsres) {
     let books = bkstore.get(ftsres.bid)
     if (!books) return
