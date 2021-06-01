@@ -1,34 +1,36 @@
 <div class="text-gray-900 bg-gray-200 page">
 
-  <div class="mt-8 p-4 ">
+  <div id="lookup" class="mt-8 p-4 ">
     <h1 class="text-3xl">Lookup book heap:</h1>
 
-  <div id="heap" class="flex flex-col bg-white shadow-md rounded m-4">
-    <div class="tr-header table-line flex border-b" type="dir">
-      <div class="w-40 left p-3 flex-grow-0 font-bold">book heap:</div>
-      <div id="heappath" class="p-3 flex-grow"></div>
+    <div id="heap" class="flex flex-col bg-white shadow-md rounded m-4">
+      <div class="tr-header flex border-b" type="dir">
+        <div class="w-40 left p-3 flex-grow-0 font-bold">book heap:</div>
+        <div id="heappath" class="p-3 flex-grow"></div>
+      </div>
     </div>
+
+    <div id="heap" class="flex flex-col rounded m-4">
+      <input class="searchinput bg-white rounded-lg border-gray-300 border p-2 shadow-lg" type="text" autofocus placeholder="search input"  />
+    </div>
+
+    <div id="search-list" class="flex flex-col bg-white shadow-md rounded m-4">
+      <div class="tr-header table-line border-b p-2" type="dir">
+        search results:
+      </div>
+    </div>
+
+    <div id="lookup-button" class="flex flex-col ">
+      <div class="flex justify-end">
+        <button type="button" class="create-package mr-3 text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 rounded focus:outline-none focus:shadow-outline">
+          import book
+        </button>
+      </div>
+    </div>
+
   </div>
 
-  <div id="heap" class="flex flex-col rounded m-4">
-    <input class="searchinput bg-white rounded-lg border-gray-300 border p-2 shadow-lg" type="text" autofocus placeholder="search input"  />
+  <div class="lookup-line flex tmpl border-b p-2">
   </div>
 
-  <div id="search-list" class="flex flex-col bg-white shadow-md rounded m-4">
-    <div class="tr-header table-line border-b p-2" type="dir">
-      search results:
-    </div>
-</div>
-
-  <div id="lookup-button" class="flex flex-col ">
-    <div class="flex justify-end">
-      <button type="button" class="create-package mr-3 text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 rounded focus:outline-none focus:shadow-outline">
-        import book
-      </button>
-    </div>
-  </div>
-
-</div>
-
-<div class="lookup-line flex tmpl border-b p-2">
 </div>

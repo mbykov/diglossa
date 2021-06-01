@@ -3176,6 +3176,7 @@ function treeBlock(doc) {
 function treePar(doc) {
   let opar = (0,_utils__WEBPACK_IMPORTED_MODULE_1__.create)('p'); // opar.textContent = doc.md.replace(/#/g, '')
 
+  if (!doc.md) doc.md = 'no text';
   opar.innerHTML = marked(doc.md);
   opar.setAttribute('path', doc.path);
   opar.setAttribute('size', doc.size);
@@ -3794,14 +3795,14 @@ const {
   app
 } = __webpack_require__(/*! electron */ "electron").remote;
 
- // let dgl = remote.getGlobal('dgl')
+
 
 const {
   dialog
-} = __webpack_require__(/*! electron */ "electron").remote; // import { book } from './book'
+} = __webpack_require__(/*! electron */ "electron").remote;
 
 
- // import { message } from './lib/message'
+
 
 const Store = __webpack_require__(/*! electron-store */ "electron-store"); // const prefstore = new Store({name: 'prefs'})
 
@@ -3845,39 +3846,38 @@ const lookup = {
 
 };
 document.addEventListener('click', ev => {
-  const otable = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('#lookup-button');
-  if (!otable) return;
+  let olookup = ev.target.closest('#lookup');
+  if (!olookup) return;
   (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_CLICK');
-  let orow = ev.target.closest('.table-line');
-  if (!orow) return;
-  let type = orow.getAttribute('type');
-
-  if (type == 'input') {// dialog.showOpenDialog({properties: ['openFile'] })
-    //   .then(result => {
-    //     const bpath = result.filePaths[0]
-    //     if (!bpath) return
-    //     let name = orow.querySelector('.td-name').textContent
-    //     // let ovalue = orow.querySelector('.td-value')
-    //     // ovalue.textContent = bpath
-    //     let type = orow.getAttribute('type')
-    //     preference.savePrefs(type, name, bpath)
-    //     preference.ready()
-    //   }).catch(err => {
-    //     console.log(err)
-    //   })
-  } else if (type == 'dir') {
-    dialog.showOpenDialog({
-      properties: ['openDirectory']
-    }).then(result => {
-      const bpath = result.filePaths[0];
-      if (!bpath) return;
-      appstore.set('heappath', bpath);
-      lookup.ready();
-    }).catch(err => {
-      console.log(err);
-    });
-  }
+  let oheappath = ev.target.closest('#heappath');
+  if (oheappath) openHeadpath();
+  let orow = ev.target.closest('.lookup-line');
+  if (orow) fireImport(orow);
 });
+
+function fireImport(orow) {
+  let bpath = orow.textContent;
+  if (!bpath) return;
+  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_IMPORT', bpath);
+  electron__WEBPACK_IMPORTED_MODULE_3__.ipcRenderer.send('importBook', {
+    bpath
+  });
+}
+
+function openHeadpath() {
+  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_OPEN');
+  dialog.showOpenDialog({
+    properties: ['openDirectory']
+  }).then(result => {
+    const bpath = result.filePaths[0];
+    if (!bpath) return;
+    appstore.set('heappath', bpath);
+    lookup.ready();
+  }).catch(err => {
+    console.log(err);
+  });
+}
+
 document.addEventListener('keydown', ev => {
   if (ev.key !== 'Enter') return;
   ev.preventDefault();

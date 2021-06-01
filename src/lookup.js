@@ -8,11 +8,9 @@ import { router, render } from './app'
 const mouse = require('mousetrap')
 const { app } = require('electron').remote
 import { remote } from "electron"
-// let dgl = remote.getGlobal('dgl')
 const { dialog } = require('electron').remote
-// import { book } from './book'
 import { progress } from './lib/progress'
-// import { message } from './lib/message'
+import { ipcRenderer } from "electron";
 
 const Store = require('electron-store')
 // const prefstore = new Store({name: 'prefs'})
@@ -55,40 +53,34 @@ export const lookup = {
 }
 
 document.addEventListener('click',  (ev) => {
-  const otable = q('#lookup-button')
-  if (!otable) return
+  let olookup = ev.target.closest('#lookup')
+  if (!olookup) return
   log('_CLICK')
-
-  let orow = ev.target.closest('.table-line')
-  if (!orow) return
-  let type = orow.getAttribute('type')
-  if (type == 'input') {
-    // dialog.showOpenDialog({properties: ['openFile'] })
-    //   .then(result => {
-    //     const bpath = result.filePaths[0]
-    //     if (!bpath) return
-    //     let name = orow.querySelector('.td-name').textContent
-    //     // let ovalue = orow.querySelector('.td-value')
-    //     // ovalue.textContent = bpath
-    //     let type = orow.getAttribute('type')
-    //     preference.savePrefs(type, name, bpath)
-    //     preference.ready()
-    //   }).catch(err => {
-    //     console.log(err)
-    //   })
-  } else if (type == 'dir') {
-    dialog.showOpenDialog({properties: ['openDirectory'] })
-      .then(result => {
-        const bpath = result.filePaths[0]
-        if (!bpath) return
-        appstore.set('heappath', bpath)
-        lookup.ready()
-      }).catch(err => {
-        console.log(err)
-      })
-
-  }
+  let oheappath = ev.target.closest('#heappath')
+  if (oheappath) openHeadpath()
+  let orow = ev.target.closest('.lookup-line')
+  if (orow) fireImport(orow)
 })
+
+function fireImport(orow) {
+  let bpath = orow.textContent
+  if (!bpath) return
+  log('_IMPORT', bpath)
+  ipcRenderer.send('importBook', {bpath})
+}
+
+function openHeadpath() {
+  log('_OPEN')
+  dialog.showOpenDialog({properties: ['openDirectory'] })
+    .then(result => {
+      const bpath = result.filePaths[0]
+      if (!bpath) return
+      appstore.set('heappath', bpath)
+      lookup.ready()
+    }).catch(err => {
+      console.log(err)
+    })
+}
 
 document.addEventListener('keydown', ev => {
   if (ev.key !== 'Enter') return

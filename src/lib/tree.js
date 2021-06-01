@@ -45,6 +45,7 @@ function treeBlock(doc) {
 function treePar(doc) {
   let opar = create('p')
   // opar.textContent = doc.md.replace(/#/g, '')
+  if (!doc.md) doc.md = 'no text'
   opar.innerHTML = marked(doc.md)
   opar.setAttribute('path', doc.path)
   opar.setAttribute('size', doc.size)
