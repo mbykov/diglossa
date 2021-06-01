@@ -34,8 +34,6 @@ import { dictionary } from './dicts'
 import { search } from './search'
 import { lookup } from './lookup'
 
-const axios = require('axios')
-
 // const { app } = require('electron').remote
 // let homepath = app.getPath('home')
 // let lang = appstore.get('lang') || config.deflang

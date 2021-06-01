@@ -2,13 +2,15 @@
 
 import { log, q, qs, create, empty, cleanDname } from './lib/utils'
 import _ from 'lodash'
+const fse = require('fs-extra')
+const glob = require("glob")
 import { router, render } from './app'
 const mouse = require('mousetrap')
 const { app } = require('electron').remote
 import { remote } from "electron"
-let dgl = remote.getGlobal('dgl')
+// let dgl = remote.getGlobal('dgl')
 const { dialog } = require('electron').remote
-import { book } from './book'
+// import { book } from './book'
 import { progress } from './lib/progress'
 import { message } from './lib/message'
 
@@ -18,16 +20,12 @@ const appstore = new Store({name: 'app'})
 
 export const lookup = {
   async ready() {
-    log('_LOOKUP')
     render('lookup')
-
     let heappath = appstore.get('heappath')
     log('_HEAP PATH', heappath)
-    // this.tbody = q('#lookup-table .tbody')
-    // const odata = q('#pref-package-data')
     const oheappath = q('#heappath')
     oheappath.textContent = heappath
-    lookupBook(heappath)
+    this.heappath = heappath
     // this.stripes()
   },
 
@@ -57,12 +55,19 @@ export const lookup = {
 }
 
 document.addEventListener('click',  (ev) => {
-  // const otable = q('#prefs-table')
-  // if (!otable) return
+  const otable = q('#lookup-table')
+  if (!otable) return
+  log('_CLICK')
+  let osearch = ev.target.closest('.searchinput')
+  if (osearch) {
+    let str = osearch.value
+    log('_SEARCH', str)
+  }
+
   let orow = ev.target.closest('.table-line')
   if (!orow) return
   let type = orow.getAttribute('type')
-  if (type == 'file') {
+  if (type == 'input') {
     // dialog.showOpenDialog({properties: ['openFile'] })
     //   .then(result => {
     //     const bpath = result.filePaths[0]
@@ -93,13 +98,39 @@ document.addEventListener('click',  (ev) => {
 document.addEventListener('keydown', ev => {
   if (ev.key !== 'Enter') return
   ev.preventDefault()
-  let orow = ev.target.closest('.table-line')
-  if (!orow) return
-  let name = orow.querySelector('.td-name').textContent.trim()
-  let value = orow.querySelector('.td-value').textContent.trim()
-  lookup.ready()
+  log('_ENTER')
+  let osearch = ev.target.closest('.searchinput')
+  if (!osearch) return
+  let query = osearch.value
+  if (!query) return
+  lookupBook(lookup.heappath, query)
+  // lookup.ready()
 })
 
-function lookupBook(bpath) {
+function lookupBook(srcdir, query) {
   log('_lookupBook')
+
+  let restr = new RegExp(query, 'i')
+  let pattern = [srcdir, '**/*'].join('/')
+  console.log('PATT', pattern)
+
+  glob(pattern, function (er, fns) {
+    fns = fns.filter(fn=> restr.test(fn))
+    log('_FNS', fns.length)
+    for (let fn of fns) {
+      log('_FN', fn)
+    }
+  })
+
+  // console.log("after")
+  // let fns = fse.readdirSync(srcdir)
+  // log('_fns', fns)
+  // if (books.length > 1) {
+  //   log('_MANY', books)
+  // } else if (!books.length) {
+  //   log('_NO', books)
+  // } else {
+  //   let bookname = books[0]
+  //   log('_ONE', bookname)
+  // }
 }

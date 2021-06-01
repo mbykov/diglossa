@@ -75,12 +75,9 @@ let templates = electron__WEBPACK_IMPORTED_MODULE_4__.remote.getGlobal('template
 
 
 
-
-
-const axios = __webpack_require__(/*! axios */ "axios"); // const { app } = require('electron').remote
+ // const { app } = require('electron').remote
 // let homepath = app.getPath('home')
 // let lang = appstore.get('lang') || config.deflang
-
 
 const routes = {
   library: _library__WEBPACK_IMPORTED_MODULE_14__.library,
@@ -3779,12 +3776,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./app */ "./src/app.js");
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! electron */ "electron");
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _book__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./book */ "./src/book.js");
-/* harmony import */ var _lib_progress__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/progress */ "./src/lib/progress.js");
-/* harmony import */ var _lib_message__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./lib/message */ "./src/lib/message.js");
+/* harmony import */ var _lib_progress__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./lib/progress */ "./src/lib/progress.js");
+/* harmony import */ var _lib_message__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/message */ "./src/lib/message.js");
 
 
 
+
+
+const fse = __webpack_require__(/*! fs-extra */ "fs-extra");
+
+const glob = __webpack_require__(/*! glob */ "glob");
 
 
 
@@ -3794,12 +3795,11 @@ const {
   app
 } = __webpack_require__(/*! electron */ "electron").remote;
 
-
-let dgl = electron__WEBPACK_IMPORTED_MODULE_3__.remote.getGlobal('dgl');
+ // let dgl = remote.getGlobal('dgl')
 
 const {
   dialog
-} = __webpack_require__(/*! electron */ "electron").remote;
+} = __webpack_require__(/*! electron */ "electron").remote; // import { book } from './book'
 
 
 
@@ -3813,15 +3813,12 @@ const appstore = new Store({
 });
 const lookup = {
   async ready() {
-    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_LOOKUP');
     (0,_app__WEBPACK_IMPORTED_MODULE_2__.render)('lookup');
     let heappath = appstore.get('heappath');
-    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_HEAP PATH', heappath); // this.tbody = q('#lookup-table .tbody')
-    // const odata = q('#pref-package-data')
-
+    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_HEAP PATH', heappath);
     const oheappath = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('#heappath');
     oheappath.textContent = heappath;
-    lookupBook(heappath); // this.stripes()
+    this.heappath = heappath; // this.stripes()
   },
 
   addRow(type, name, value) {
@@ -3850,13 +3847,21 @@ const lookup = {
 
 };
 document.addEventListener('click', ev => {
-  // const otable = q('#prefs-table')
-  // if (!otable) return
+  const otable = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('#lookup-table');
+  if (!otable) return;
+  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_CLICK');
+  let osearch = ev.target.closest('.searchinput');
+
+  if (osearch) {
+    let str = osearch.value;
+    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_SEARCH', str);
+  }
+
   let orow = ev.target.closest('.table-line');
   if (!orow) return;
   let type = orow.getAttribute('type');
 
-  if (type == 'file') {// dialog.showOpenDialog({properties: ['openFile'] })
+  if (type == 'input') {// dialog.showOpenDialog({properties: ['openFile'] })
     //   .then(result => {
     //     const bpath = result.filePaths[0]
     //     if (!bpath) return
@@ -3885,15 +3890,37 @@ document.addEventListener('click', ev => {
 document.addEventListener('keydown', ev => {
   if (ev.key !== 'Enter') return;
   ev.preventDefault();
-  let orow = ev.target.closest('.table-line');
-  if (!orow) return;
-  let name = orow.querySelector('.td-name').textContent.trim();
-  let value = orow.querySelector('.td-value').textContent.trim();
-  lookup.ready();
+  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_ENTER');
+  let osearch = ev.target.closest('.searchinput');
+  if (!osearch) return;
+  let query = osearch.value;
+  if (!query) return;
+  lookupBook(lookup.heappath, query); // lookup.ready()
 });
 
-function lookupBook(bpath) {
+function lookupBook(srcdir, query) {
   (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_lookupBook');
+  let restr = new RegExp(query, 'i');
+  let pattern = [srcdir, '**/*'].join('/');
+  console.log('PATT', pattern);
+  glob(pattern, function (er, fns) {
+    fns = fns.filter(fn => restr.test(fn));
+    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_FNS', fns.length);
+
+    for (let fn of fns) {
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_FN', fn);
+    }
+  }); // console.log("after")
+  // let fns = fse.readdirSync(srcdir)
+  // log('_fns', fns)
+  // if (books.length > 1) {
+  //   log('_MANY', books)
+  // } else if (!books.length) {
+  //   log('_NO', books)
+  // } else {
+  //   let bookname = books[0]
+  //   log('_ONE', bookname)
+  // }
 }
 
 /***/ }),
@@ -6055,17 +6082,6 @@ module.exports = function (list, options) {
 
 /***/ }),
 
-/***/ "axios":
-/*!************************!*\
-  !*** external "axios" ***!
-  \************************/
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("axios");;
-
-/***/ }),
-
 /***/ "book-md2json":
 /*!*******************************!*\
   !*** external "book-md2json" ***!
@@ -6151,6 +6167,17 @@ module.exports = require("franc");;
 
 "use strict";
 module.exports = require("fs-extra");;
+
+/***/ }),
+
+/***/ "glob":
+/*!***********************!*\
+  !*** external "glob" ***!
+  \***********************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("glob");;
 
 /***/ }),
 
