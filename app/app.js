@@ -610,9 +610,11 @@ const book = {
   reSync(sync) {
     let sbook = this.sbooks.find(book => book.bid == sync.bid);
     sbook.cnts = syncCnt(sbook.cnts, sync);
-    let csyncs = getCSyncs(sbook.bid);
+    let origin = book.sbooks.find(sbook => sbook.origin);
+    let csyncs = getCSyncs(origin.bid);
     csyncs.push(sync);
     csyncstore.set(dgl.bid, csyncs);
+    let csyncs2 = getCSyncs(sbook.bid);
     _semaphore__WEBPACK_IMPORTED_MODULE_8__.semaphore.ready();
     this.drawCont();
   },
@@ -823,7 +825,7 @@ function showSearchIcon() {
 
 mouse.bind('ctrl+i', function (ev) {
   console.clear();
-  console.log('_B:', book.sbooks);
+  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_B:', book.sbooks);
 });
 
 /***/ }),
@@ -4248,8 +4250,7 @@ function syncDoc(docs, sync) {
 
   switch (sync.action) {
     case 'delete':
-      doc.skip = true; // mess = 'paragraph deleted'
-
+      doc.skip = true;
       break;
 
     case 'empty':

@@ -215,7 +215,6 @@ export function syncDoc(docs, sync) {
   switch(sync.action) {
   case 'delete':
     doc.skip = true
-    // mess = 'paragraph deleted'
     break
   case 'empty':
     doc.md = 'x'

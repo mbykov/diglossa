@@ -56,9 +56,11 @@ export const book = {
   reSync(sync) {
     let sbook = this.sbooks.find(book=> book.bid == sync.bid)
     sbook.cnts = syncCnt(sbook.cnts, sync)
-    let csyncs = getCSyncs(sbook.bid)
+    let origin = book.sbooks.find(sbook=> sbook.origin)
+    let csyncs = getCSyncs(origin.bid)
     csyncs.push(sync)
     csyncstore.set(dgl.bid, csyncs)
+    let csyncs2 = getCSyncs(sbook.bid)
     semaphore.ready()
     this.drawCont()
   },
@@ -245,5 +247,5 @@ function showSearchIcon() {
 // todo: del
 mouse.bind('ctrl+i', function(ev) {
   console.clear()
-  console.log('_B:', book.sbooks)
+  log('_B:', book.sbooks)
 })
