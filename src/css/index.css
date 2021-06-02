@@ -377,6 +377,10 @@ tr:nth-child(odd):not(.hidden) {
     cursor: pointer;
 }
 
+#heap {
+    cursor: pointer;
+}
+
 .lookup-line {
     cursor: pointer;
 }

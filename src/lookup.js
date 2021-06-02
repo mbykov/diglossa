@@ -15,20 +15,24 @@ import { ipcRenderer } from "electron";
 const Store = require('electron-store')
 // const prefstore = new Store({name: 'prefs'})
 const appstore = new Store({name: 'app'})
+import { message } from './lib/message'
 
 export const lookup = {
   async ready() {
     render('lookup')
     let heappath = appstore.get('heappath')
-    log('_HEAP PATH', heappath)
+    if (!heappath) {
+      message.show('set path to heap of the books')
+    }
     const oheappath = q('#heappath')
     oheappath.textContent = heappath
     this.heappath = heappath
-    // this.stripes()
+    let oinput = q('.searchinput')
+    oinput.focus();
   },
 
   addRow(type, name, value) {
-    const tmpl = q('.table-line.tmpl')
+    const tmpl = q('.search-result-line.tmpl')
     const orow = tmpl.cloneNode(true)
     orow.classList.remove('tmpl')
     orow.setAttribute('type', type)
@@ -55,10 +59,13 @@ export const lookup = {
 document.addEventListener('click',  (ev) => {
   let olookup = ev.target.closest('#lookup')
   if (!olookup) return
-  let oheappath = ev.target.closest('#heappath')
-  if (oheappath) openHeadpath()
+  let oheap = ev.target.closest('#heap')
   let orow = ev.target.closest('.lookup-line')
-  if (orow) fireImport(orow)
+  let oinput = ev.target.closest('.searchinput')
+  if (oheap && !oinput) {
+    // let oheappath = oheap.querySelector('#heappath')
+    openHeappath()
+  } else if (orow) fireImport(orow)
 })
 
 function fireImport(orow) {
@@ -67,8 +74,7 @@ function fireImport(orow) {
   ipcRenderer.send('importBook', {bpath})
 }
 
-function openHeadpath() {
-  log('_OPEN')
+function openHeappath() {
   dialog.showOpenDialog({properties: ['openDirectory'] })
     .then(result => {
       const bpath = result.filePaths[0]
