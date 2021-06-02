@@ -139,7 +139,8 @@ document.addEventListener ("click",  (ev) => {
 })
 
 document.addEventListener ("click",  (ev) => {
-  if (!ev.ctrlKey) return
+  if (ev.ctrlKey) return
+  if (dgl.editMode) return
   let owf = ev.target.closest('span.wf')
   if (!owf) return
   ev.preventDefault()

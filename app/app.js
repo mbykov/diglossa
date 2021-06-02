@@ -193,7 +193,8 @@ document.addEventListener("click", ev => {
   electron__WEBPACK_IMPORTED_MODULE_4__.shell.openExternal(href);
 });
 document.addEventListener("click", ev => {
-  if (!ev.ctrlKey) return;
+  if (ev.ctrlKey) return;
+  if (dgl.editMode) return;
   let owf = ev.target.closest('span.wf');
   if (!owf) return;
   ev.preventDefault();
@@ -3848,7 +3849,6 @@ const lookup = {
 document.addEventListener('click', ev => {
   let olookup = ev.target.closest('#lookup');
   if (!olookup) return;
-  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_CLICK');
   let oheappath = ev.target.closest('#heappath');
   if (oheappath) openHeadpath();
   let orow = ev.target.closest('.lookup-line');
@@ -3858,7 +3858,6 @@ document.addEventListener('click', ev => {
 function fireImport(orow) {
   let bpath = orow.textContent;
   if (!bpath) return;
-  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_IMPORT', bpath);
   electron__WEBPACK_IMPORTED_MODULE_3__.ipcRenderer.send('importBook', {
     bpath
   });

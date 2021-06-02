@@ -55,7 +55,6 @@ export const lookup = {
 document.addEventListener('click',  (ev) => {
   let olookup = ev.target.closest('#lookup')
   if (!olookup) return
-  log('_CLICK')
   let oheappath = ev.target.closest('#heappath')
   if (oheappath) openHeadpath()
   let orow = ev.target.closest('.lookup-line')
@@ -65,7 +64,6 @@ document.addEventListener('click',  (ev) => {
 function fireImport(orow) {
   let bpath = orow.textContent
   if (!bpath) return
-  log('_IMPORT', bpath)
   ipcRenderer.send('importBook', {bpath})
 }
 
