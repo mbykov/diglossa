@@ -3881,22 +3881,24 @@ function openHeadpath() {
 document.addEventListener('keydown', ev => {
   if (ev.key !== 'Enter') return;
   ev.preventDefault();
-  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_ENTER');
-  let osearch = ev.target.closest('.searchinput');
-  if (!osearch) return;
-  let query = osearch.value;
+  let oinput = ev.target.closest('.searchinput');
+  if (!oinput) return;
+  let query = oinput.value;
   if (!query) return;
   lookupBook(lookup.heappath, query);
+  oinput.focus();
 });
 
 function lookupBook(srcdir, query) {
   _lib_progress__WEBPACK_IMPORTED_MODULE_4__.progress.show();
   let restr = new RegExp(query, 'i');
   let pattern = [srcdir, '**/*'].join('/');
-  console.log('PATT', pattern);
   glob(pattern, function (er, fns) {
-    fns = fns.filter(fn => restr.test(fn));
-    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_FNS', fns.length);
+    let qs = query.split(/ ,?/);
+    qs.forEach(query => {
+      let req = new RegExp(query, 'i');
+      fns = fns.filter(fn => req.test(fn));
+    });
     let oresults = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('#search-list');
     (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.empty)(oresults);
 
