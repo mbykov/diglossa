@@ -1315,7 +1315,7 @@ function setDstore(dicts) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "getExportBook": () => (/* binding */ getExportBook),
-/* harmony export */   "exportMarkDown": () => (/* binding */ exportMarkDown),
+/* harmony export */   "createDglPackage": () => (/* binding */ createDglPackage),
 /* harmony export */   "getSyncedDocs": () => (/* binding */ getSyncedDocs)
 /* harmony export */ });
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash */ "lodash");
@@ -1375,6 +1375,9 @@ const prefstore = new Store({
 const syncstore = new Store({
   name: 'syncs'
 });
+const appstore = new Store({
+  name: 'appstore'
+});
 
 
 
@@ -1392,14 +1395,14 @@ function checkBooks() {
 } // create book-DGL:
 
 
-async function exportMarkDown() {
+async function createDglPackage() {
   if (!checkBooks()) return; // progress.show()
 
   let origin = dgl.origin(_book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks);
   let prefs = prefstore.get(origin.bid); // || preference.initPrefs(origin)
 
   if (!prefs) return;
-  let exportpath = prefs.exportpath;
+  let exportpath = appstore.get('exportpath');
   fse.ensureDirSync(exportpath);
   let packname = prefs.name;
   let dirpath = path.resolve(exportpath, packname);
@@ -1542,7 +1545,7 @@ mouse.bind('ctrl+m', function (ev) {
   if (!checkBooks()) return;
   _lib_progress__WEBPACK_IMPORTED_MODULE_9__.progress.show(); // createExternalPackage(dgl.bid)
 
-  exportMarkDown(); // todo: пока что
+  createDglPackage(); // ctrl+m todo: del
 }); // todo: del ctrl+,
 
 mouse.bind('ctrl+,', function (ev) {
@@ -1581,7 +1584,7 @@ document.addEventListener('click', async ev => {
   }
 
   prefstore.set(origin.bid, prefs);
-  await exportMarkDown();
+  await createDglPackage();
   const state = {
     route: 'library'
   };
@@ -4658,7 +4661,7 @@ const prefstore = new Store({
   name: 'prefs'
 });
 const appstore = new Store({
-  name: 'app'
+  name: 'appstore'
 });
 let homepath = app.getPath('home');
 let exportpath = appstore.get('exportpath');
@@ -4675,8 +4678,8 @@ let defaults = {
   email: 'john.doe@example.com',
   homepage: 'http://example.com',
   license: 'CC BY-SA',
-  keywords: 'diglossa, bilingua, dgl',
-  'exportpath': exportpath // files: {
+  keywords: 'diglossa, bilingua, dgl' // 'exportpath': exportpath,
+  // files: {
   //   css: 'path-to-file',
   //   images: 'path-to-file',
   //   info: 'path-to-file',

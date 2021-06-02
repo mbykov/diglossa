@@ -14,7 +14,7 @@ import { message } from './lib/message'
 
 const Store = require('electron-store')
 const prefstore = new Store({name: 'prefs'})
-const appstore = new Store({name: 'app'})
+const appstore = new Store({name: 'appstore'})
 
 let homepath = app.getPath('home');
 let exportpath = appstore.get('exportpath')
@@ -31,7 +31,7 @@ let defaults = {
   homepage: 'http://example.com',
   license: 'CC BY-SA',
   keywords: 'diglossa, bilingua, dgl',
-  'exportpath': exportpath,
+  // 'exportpath': exportpath,
   // files: {
   //   css: 'path-to-file',
   //   images: 'path-to-file',

@@ -25,6 +25,7 @@ const bkstore = new Store({name: 'libks'})
 const ftstore = new Store({name: 'fts'})
 const prefstore = new Store({name: 'prefs'})
 const syncstore = new Store({name: 'syncs'})
+const appstore = new Store({name: 'appstore'})
 
 import { progress } from './lib/progress'
 import { message } from './lib/message'
@@ -45,13 +46,13 @@ function checkBooks() {
 }
 
 // create book-DGL:
-export async function exportMarkDown() {
+export async function createDglPackage() {
   if (!checkBooks()) return
   // progress.show()
   let origin = dgl.origin(book.sbooks)
   let prefs = prefstore.get(origin.bid)  // || preference.initPrefs(origin)
   if (!prefs) return
-  let exportpath = prefs.exportpath
+  let exportpath = appstore.get('exportpath')
   fse.ensureDirSync(exportpath)
 
   let packname = prefs.name
@@ -188,7 +189,7 @@ mouse.bind('ctrl+m', function(ev) {
   if (!checkBooks()) return
   progress.show()
   // createExternalPackage(dgl.bid)
-  exportMarkDown() // todo: пока что
+  createDglPackage() // ctrl+m todo: del
 })
 
 // todo: del ctrl+,
@@ -226,7 +227,7 @@ document.addEventListener('click', async (ev) => {
     prefs[prefname] = value
   }
   prefstore.set(origin.bid, prefs)
-  await exportMarkDown()
+  await createDglPackage()
   const state = {route: 'library'}
   router(state)
   let mess =  [origin.descr.title, 'exported'].join(' ')
