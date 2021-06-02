@@ -111,7 +111,8 @@ ipcRenderer.on('compress', async function (event) {
 })
 
 async function compressPackage(prefs) {
-  let textsdir =  path.resolve(prefs.exportpath, prefs.name)
+  let exportpath = appstore.get('exportpath')
+  let textsdir =  path.resolve(exportpath, prefs.name)
   let jsonpath = [textsdir, 'json'].join('.')
   let dglpath = [textsdir, 'dgl'].join('.')
 
@@ -135,7 +136,8 @@ ipcRenderer.on('uncompress', async function (event) {
   if (!checkBooks()) return
   let origin = dgl.origin(book.sbooks)
   let prefs = prefstore.get(origin.bid)
-  let dirpath = path.resolve(prefs.exportpath, prefs.name)
+  let exportpath = appstore.get('exportpath')
+  let dirpath = path.resolve(exportpath, prefs.name)
   let dglpath = [dirpath, 'dgl'].join('.')
   let backup = dglpath + '.backup'
 
@@ -152,9 +154,6 @@ ipcRenderer.on('uncompress', async function (event) {
   }
   try {
     let descr = await uncompressDGL(dglpath)
-
-    // await uncompressPackage(prefs)
-    // fse.removeSync(dglpath)
     let mess = [prefs.name, 'uncompressed'].join(' ')
     message.show(mess, 'darkgreen')
   } catch(err) {
@@ -163,7 +162,7 @@ ipcRenderer.on('uncompress', async function (event) {
 })
 
 async function uncompressPackage(prefs) {
-  let exportpath = prefs.exportpath
+  let exportpath = appstore.get('exportpath')
   fse.ensureDirSync(exportpath)
   let packname = prefs.name
   let dirpath = path.resolve(exportpath, packname)

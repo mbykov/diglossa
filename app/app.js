@@ -1465,7 +1465,8 @@ electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.on('compress', async function 
 });
 
 async function compressPackage(prefs) {
-  let textsdir = path.resolve(prefs.exportpath, prefs.name);
+  let exportpath = appstore.get('exportpath');
+  let textsdir = path.resolve(exportpath, prefs.name);
   let jsonpath = [textsdir, 'json'].join('.');
   let dglpath = [textsdir, 'dgl'].join('.');
   let zip = await (0,dgl_utils__WEBPACK_IMPORTED_MODULE_8__.compressDGL)(jsonpath);
@@ -1487,7 +1488,8 @@ electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.on('uncompress', async functio
   if (!checkBooks()) return;
   let origin = dgl.origin(_book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks);
   let prefs = prefstore.get(origin.bid);
-  let dirpath = path.resolve(prefs.exportpath, prefs.name);
+  let exportpath = appstore.get('exportpath');
+  let dirpath = path.resolve(exportpath, prefs.name);
   let dglpath = [dirpath, 'dgl'].join('.');
   let backup = dglpath + '.backup';
   let iszip = isZip(fse.readFileSync(dglpath));
@@ -1505,9 +1507,7 @@ electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.on('uncompress', async functio
   }
 
   try {
-    let descr = await (0,dgl_utils__WEBPACK_IMPORTED_MODULE_8__.uncompressDGL)(dglpath); // await uncompressPackage(prefs)
-    // fse.removeSync(dglpath)
-
+    let descr = await (0,dgl_utils__WEBPACK_IMPORTED_MODULE_8__.uncompressDGL)(dglpath);
     let mess = [prefs.name, 'uncompressed'].join(' ');
     _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkgreen');
   } catch (err) {
@@ -1516,7 +1516,7 @@ electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.on('uncompress', async functio
 });
 
 async function uncompressPackage(prefs) {
-  let exportpath = prefs.exportpath;
+  let exportpath = appstore.get('exportpath');
   fse.ensureDirSync(exportpath);
   let packname = prefs.name;
   let dirpath = path.resolve(exportpath, packname);
@@ -2228,12 +2228,10 @@ async function importDgl(dglpath) {
     let mess = 'not compressed file, not a .dgl format';
     _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkred');
     return;
-  } // let {pack, packages} = await getZipData(zippath)
-
+  }
 
   let pack = await (0,dgl_utils__WEBPACK_IMPORTED_MODULE_3__.uncompressDGL)(dglpath);
-  saveDglBook(pack); // saveDglBook(pack, packages)
-
+  saveDglBook(pack);
   _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('zip in progress', 'darkgreen');
 } // import compressed dgl
 
@@ -3811,11 +3809,10 @@ const {
 
 
 
-const Store = __webpack_require__(/*! electron-store */ "electron-store"); // const prefstore = new Store({name: 'prefs'})
-
+const Store = __webpack_require__(/*! electron-store */ "electron-store");
 
 const appstore = new Store({
-  name: 'app'
+  name: 'appstore'
 });
 
 const lookup = {
@@ -3824,7 +3821,7 @@ const lookup = {
     let heappath = appstore.get('heappath');
 
     if (!heappath) {
-      _lib_message__WEBPACK_IMPORTED_MODULE_5__.message.show('set path to heap of the books');
+      _lib_message__WEBPACK_IMPORTED_MODULE_5__.message.show('set path to heap of the books', 'darkred');
     }
 
     const oheappath = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('#heappath');
@@ -3900,6 +3897,12 @@ document.addEventListener('keydown', ev => {
   if (!oinput) return;
   let query = oinput.value;
   if (!query) return;
+
+  if (!lookup.heappath) {
+    _lib_message__WEBPACK_IMPORTED_MODULE_5__.message.show('set path to heap of the books', 'darkred');
+    return;
+  }
+
   lookupBook(lookup.heappath, query);
   oinput.focus();
 });

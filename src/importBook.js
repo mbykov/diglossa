@@ -261,10 +261,8 @@ async function importDgl(dglpath) {
     return
   }
 
-  // let {pack, packages} = await getZipData(zippath)
   let pack = await uncompressDGL(dglpath)
   saveDglBook(pack)
-  // saveDglBook(pack, packages)
   message.show('zip in progress', 'darkgreen')
 } // import compressed dgl
 

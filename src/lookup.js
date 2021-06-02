@@ -13,8 +13,7 @@ import { progress } from './lib/progress'
 import { ipcRenderer } from "electron";
 
 const Store = require('electron-store')
-// const prefstore = new Store({name: 'prefs'})
-const appstore = new Store({name: 'app'})
+const appstore = new Store({name: 'appstore'})
 import { message } from './lib/message'
 
 export const lookup = {
@@ -22,7 +21,7 @@ export const lookup = {
     render('lookup')
     let heappath = appstore.get('heappath')
     if (!heappath) {
-      message.show('set path to heap of the books')
+      message.show('set path to heap of the books', 'darkred')
     }
     const oheappath = q('#heappath')
     oheappath.textContent = heappath
@@ -93,6 +92,10 @@ document.addEventListener('keydown', ev => {
   if (!oinput) return
   let query = oinput.value
   if (!query) return
+  if (!lookup.heappath) {
+    message.show('set path to heap of the books', 'darkred')
+    return
+  }
   lookupBook(lookup.heappath, query)
   oinput.focus();
 })
