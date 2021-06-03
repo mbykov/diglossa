@@ -12,6 +12,7 @@ const { dialog } = require('electron').remote
 import { progress } from './lib/progress'
 import { ipcRenderer } from "electron";
 import { book } from './book'
+let dgl = remote.getGlobal('dgl')
 
 const Store = require('electron-store')
 const appstore = new Store({name: 'appstore'})
@@ -79,11 +80,12 @@ function fireImport(orow, shift) {
   let bpath = orow.textContent
   if (!bpath) return
   let sbooks = book.sbooks
-  if (shift && !sbooks) {
+  let origin = dgl.origin(book.sbooks)
+  if (shift && !origin) {
     message.show('select book before', 'darkred')
     return
   }
-  if (shift) ipcRenderer.send('addBook', {bpath})
+  if (shift) ipcRenderer.send('importBook', {bpath, orbid: origin.bid})
   else ipcRenderer.send('importBook', {bpath})
 }
 

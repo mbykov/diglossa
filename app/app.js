@@ -3800,6 +3800,7 @@ const {
 
 
 
+let dgl = electron__WEBPACK_IMPORTED_MODULE_3__.remote.getGlobal('dgl');
 
 const Store = __webpack_require__(/*! electron-store */ "electron-store");
 
@@ -3872,14 +3873,16 @@ function fireImport(orow, shift) {
   let bpath = orow.textContent;
   if (!bpath) return;
   let sbooks = _book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks;
+  let origin = dgl.origin(_book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks);
 
-  if (shift && !sbooks) {
+  if (shift && !origin) {
     _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('select book before', 'darkred');
     return;
   }
 
-  if (shift) electron__WEBPACK_IMPORTED_MODULE_3__.ipcRenderer.send('addBook', {
-    bpath
+  if (shift) electron__WEBPACK_IMPORTED_MODULE_3__.ipcRenderer.send('importBook', {
+    bpath,
+    orbid: origin.bid
   });else electron__WEBPACK_IMPORTED_MODULE_3__.ipcRenderer.send('importBook', {
     bpath
   });
@@ -4736,6 +4739,7 @@ const preference = {
 
   initPrefs(origin) {
     let defaults = {
+      name: '',
       version: '1.0.0',
       'editor': 'John Doe',
       email: 'john.doe@example.com',

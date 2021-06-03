@@ -64,6 +64,7 @@ export const preference = {
 
   initPrefs(origin) {
     let defaults = {
+      name: '',
       version: '1.0.0',
       'editor': 'John Doe',
       email: 'john.doe@example.com',
