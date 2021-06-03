@@ -1396,22 +1396,17 @@ function checkBooks() {
 
 async function createDglPackage(prefs) {
   if (!checkBooks()) return;
-  let origin = dgl.origin(_book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks);
   let exportpath = appstore.get('exportpath');
   fse.ensureDirSync(exportpath);
   let packname = prefs.name;
   let dirpath = path.resolve(exportpath, packname);
   fse.ensureDirSync(dirpath);
   let dgls = [];
-  let csyncs = (0,_book__WEBPACK_IMPORTED_MODULE_5__.getCSyncs)(origin.bid);
-  let books = bkstore.get(origin.bid);
-  books = dgl.actives(books);
-  _book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks = _book__WEBPACK_IMPORTED_MODULE_5__.book.syncCnts(books, csyncs);
+  let origin = dgl.origin(_book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks);
   let syncs = (0,_page__WEBPACK_IMPORTED_MODULE_6__.getSyncs)(origin.bid);
 
   for await (let sbook of _book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks) {
-    let bsyncs = syncs.filter(sync => sync.bid == sbook.bid); // bsyncs = bsyncs.filter(sync => sync.idx === dgl.idx)
-
+    let bsyncs = syncs.filter(sync => sync.bid == sbook.bid);
     let sdocs = await getSyncedDocs(sbook, bsyncs);
     let mds = docs2md(sdocs);
     let mdstr = mds.join('\n\n');
@@ -1446,6 +1441,38 @@ async function createDglPackage(prefs) {
     _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkred');
   } // if (prefs.compress) compressPackage(packname, dirpath, infopath)
 
+}
+async function getSyncedDocs(book, syncs) {
+  let cnts = book.cnts;
+  let sdocs = [];
+
+  for await (let cnt of cnts) {
+    let query = {
+      bid: book.bid,
+      path: cnt.path,
+      size: cnt.size
+    };
+    let chdocs = await (0,_lib_pouch__WEBPACK_IMPORTED_MODULE_4__.fetchChapter)(query);
+    let chsyncs = syncs.filter(sync => sync.idx === cnt.idx);
+    let syncdocs = _page__WEBPACK_IMPORTED_MODULE_6__.page.syncChapter(chsyncs, chdocs);
+    sdocs.push(...syncdocs);
+  }
+
+  const fillsize = sdocs.length.toString().length;
+  let doc;
+  sdocs = sdocs.map(sdoc => {
+    doc = {
+      path: sdoc.path,
+      _id: sdoc._id,
+      idx: sdoc.idx,
+      md: sdoc.md
+    };
+    if (sdoc.level) doc.level = sdoc.level;
+    if (sdoc.type) doc.type = sdoc.type;
+    if (sdoc.size) doc.size = sdoc.size;
+    return doc;
+  });
+  return sdocs;
 }
 electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.on('compress', async function (event) {
   if (!checkBooks()) return;
@@ -1534,29 +1561,8 @@ async function uncompressPackage(prefs) {
   fse.removeSync(dglpath);
   let mess = [prefs.name, 'uncompressed to', dglpath].join(' ');
   _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgreen');
-} // todo: del ctrl+,
+}
 
-
-mouse.bind('ctrl+,', function (ev) {
-  if (!checkBooks()) return;
-  let origin = dgl.origin(_book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks);
-  let prefs = prefstore.get(origin.bid);
-
-  if (!prefs) {
-    let mess = 'export book to .DGL package before';
-    _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgreen');
-    return;
-  }
-
-  compressPackage(prefs);
-}); // todo: del ctrl+.
-
-mouse.bind('ctrl+.', function (ev) {
-  if (!checkBooks()) return;
-  let origin = dgl.origin(_book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks);
-  let prefs = prefstore.get(origin.bid);
-  uncompressPackage(prefs);
-});
 document.addEventListener('click', async ev => {
   let obutton = ev.target.closest('.create-package');
   if (!obutton) return;
@@ -1582,40 +1588,6 @@ document.addEventListener('click', async ev => {
   let mess = [origin.descr.title, 'exported'].join(' ');
   _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgreen');
 });
-async function getSyncedDocs(book, syncs) {
-  let cnts = book.cnts;
-  let sdocs = [];
-
-  for await (let cnt of cnts) {
-    let query = {
-      bid: book.bid,
-      path: cnt.path,
-      size: cnt.size
-    };
-    let sbooks = await (0,_lib_pouch__WEBPACK_IMPORTED_MODULE_4__.fetchChapterDocs)([query]);
-    let syncdocs = sbooks[0].chdocs;
-    syncs.forEach(sync => {
-      syncdocs = (0,_page__WEBPACK_IMPORTED_MODULE_6__.syncDoc)(syncdocs, sync);
-    });
-    sdocs.push(...syncdocs);
-  }
-
-  const fillsize = sdocs.length.toString().length;
-  let doc;
-  sdocs = sdocs.map(sdoc => {
-    doc = {
-      path: sdoc.path,
-      _id: sdoc._id,
-      idx: sdoc.idx,
-      md: sdoc.md
-    };
-    if (sdoc.level) doc.level = sdoc.level;
-    if (sdoc.type) doc.type = sdoc.type;
-    if (sdoc.size) doc.size = sdoc.size;
-    return doc;
-  });
-  return sdocs;
-}
 
 function docs2md(docs) {
   return docs.map(doc => {
@@ -2627,7 +2599,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "fetchBlock": () => (/* binding */ fetchBlock),
 /* harmony export */   "fetchBook": () => (/* binding */ fetchBook),
 /* harmony export */   "fetchChapter": () => (/* binding */ fetchChapter),
-/* harmony export */   "fetchChapterDocs": () => (/* binding */ fetchChapterDocs),
 /* harmony export */   "pushDocs": () => (/* binding */ pushDocs),
 /* harmony export */   "updateDocs": () => (/* binding */ updateDocs),
 /* harmony export */   "pushImgs": () => (/* binding */ pushImgs),
@@ -2876,47 +2847,9 @@ async function fetchChapter(query) {
   };
   return db.allDocs(db.options).then(res => {
     const chdocs = res.rows.map(row => row.doc);
-    return chdocs; // return {bid: query.bid, chdocs: chdocs}
+    return chdocs;
   }).catch(err => {
-    (0,_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_ERR fetchChapterDocs:', db.dname, err);
-  });
-}
-async function fetchChapterDocs(queries) {
-  const dbs = queries.map(book => newDBdname(book.bid));
-  let chpath, limit;
-  dbs.forEach((db, idx) => {
-    chpath = queries[idx].path;
-    limit = queries[idx].size;
-    let startkey = [chpath, '-'].join(''); // let endkey = [chpath, '-\ufff0'].join('')
-    // let opts = {include_docs: true, startkey, endkey}
-
-    let opts = {
-      include_docs: true,
-      startkey,
-      limit
-    };
-    db.options = opts;
-  });
-  return Promise.all(dbs.map(async function (db) {
-    return db.allDocs(db.options).then(res => {
-      const chdocs = res.rows.map(row => row.doc);
-      return queries.map(query => {
-        if (query.bid != db.dname) return false;
-        let chapter = {
-          bid: query.bid,
-          lang: query.lang,
-          chdocs: chdocs
-        };
-        if (query.active) chapter.active = true;
-        if (query.origin) chapter.origin = true;
-        if (query.shown) chapter.shown = true;
-        return chapter;
-      });
-    }).catch(err => {
-      (0,_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_ERR fetchChapterDocs:', db.dname, err);
-    });
-  })).then(res => {
-    return lodash__WEBPACK_IMPORTED_MODULE_0___default().compact(lodash__WEBPACK_IMPORTED_MODULE_0___default().flatten(res));
+    (0,_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_ERR fetchChapter:', db.dname, err);
   });
 }
 async function pushDocs(dname, docs, pouchpath) {

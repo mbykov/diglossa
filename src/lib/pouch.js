@@ -221,45 +221,9 @@ export async function fetchChapter(query) {
     .then(res=> {
       const chdocs = res.rows.map(row=> row.doc)
       return chdocs
-      // return {bid: query.bid, chdocs: chdocs}
     })
     .catch(err=> {
-      log('_ERR fetchChapterDocs:', db.dname, err)
-    })
-}
-
-export async function fetchChapterDocs(queries) {
-  const dbs = queries.map(book=> newDBdname(book.bid))
-  let chpath, limit
-  dbs.forEach((db, idx)=> {
-    chpath = queries[idx].path
-    limit = queries[idx].size
-    let startkey = [chpath, '-'].join('')
-    // let endkey = [chpath, '-\ufff0'].join('')
-    // let opts = {include_docs: true, startkey, endkey}
-    let opts = {include_docs: true, startkey, limit}
-    db.options = opts
-  })
-
-  return Promise.all(dbs.map(async function (db) {
-    return db.allDocs(db.options)
-      .then(res=> {
-        const chdocs = res.rows.map(row=> row.doc)
-        return queries.map(query=> {
-          if (query.bid != db.dname) return false
-          let chapter = {bid: query.bid, lang: query.lang, chdocs: chdocs}
-          if (query.active) chapter.active = true
-          if (query.origin) chapter.origin = true
-          if (query.shown) chapter.shown = true
-          return chapter
-        })
-      })
-      .catch(err=> {
-        log('_ERR fetchChapterDocs:', db.dname, err)
-      })
-  }))
-    .then(res=> {
-      return _.compact(_.flatten(res))
+      log('_ERR fetchChapter:', db.dname, err)
     })
 }
 

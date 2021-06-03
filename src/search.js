@@ -4,7 +4,7 @@ import _ from 'lodash'
 import { clipboard, ipcRenderer } from "electron";
 import { log, q, empty, create, tokenizer } from './lib/utils'
 import { router, render } from './app'
-import { fetchBook, fetchChapterDocs, fetchBlock } from "./lib/pouch";
+import { fetchBook, fetchBlock } from "./lib/pouch";
 const mouse = require('mousetrap')
 const FlexSearch = require("flexsearch")
 import { progress } from './lib/progress'

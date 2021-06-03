@@ -9,7 +9,7 @@ import { log, q, create, zerofill, cleanDname, cleanStr } from './lib/utils'
 import { compressDGL, uncompressDGL } from 'dgl-utils'
 import { md2json } from 'book-md2json'
 
-import { pushDocs, pushImgs, fetchChapterDocs } from './lib/pouch'
+import { pushDocs, pushImgs } from './lib/pouch'
 // import { preference } from './prefs'
 import { book } from './book'
 

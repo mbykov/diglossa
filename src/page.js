@@ -3,7 +3,7 @@
 import { log, q, qs, empty, create, remove, getCoords, placePopup, scrollToPosition, removeAll, ndash } from './lib/utils'
 import _ from 'lodash'
 import { render } from './app'
-import { fetchChapterDocs, fetchChapter, fetchFN } from "./lib/pouch";
+import { fetchChapter, fetchFN } from "./lib/pouch";
 const mouse = require('mousetrap')
 const marked = require('marked')
 // const stopword = require('stopword')

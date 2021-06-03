@@ -6,7 +6,7 @@ const { app } = require('electron').remote
 let apath = app.getAppPath()
 import { config } from './config'
 import { log, q, qs, zerofill, initBookPrefs, stubEditor } from './lib/utils'
-import { pushDocs, fetchBook, fetchChapterDocs, updateDocs } from './lib/pouch'
+import { pushDocs, fetchBook, fetchChapter, updateDocs } from './lib/pouch'
 
 import { book, syncCnt, getCSyncs } from './book'
 import { syncDoc, page, getSyncs } from './page'
@@ -48,7 +48,6 @@ function checkBooks() {
 // create book-DGL:
 export async function createDglPackage(prefs) {
   if (!checkBooks()) return
-  let origin = dgl.origin(book.sbooks)
   let exportpath = appstore.get('exportpath')
   fse.ensureDirSync(exportpath)
 
@@ -57,15 +56,11 @@ export async function createDglPackage(prefs) {
   fse.ensureDirSync(dirpath)
   let dgls = []
 
-  let csyncs = getCSyncs(origin.bid)
-  let books = bkstore.get(origin.bid)
-  books = dgl.actives(books)
-  book.sbooks = book.syncCnts(books, csyncs)
+  let origin = dgl.origin(book.sbooks)
   let syncs  = getSyncs(origin.bid)
 
   for await (let sbook of book.sbooks) {
     let bsyncs = syncs.filter(sync=> sync.bid == sbook.bid)
-    // bsyncs = bsyncs.filter(sync => sync.idx === dgl.idx)
     let sdocs = await getSyncedDocs(sbook, bsyncs)
     let mds = docs2md(sdocs)
     let mdstr = mds.join('\n\n')
@@ -93,6 +88,29 @@ export async function createDglPackage(prefs) {
     message.show(mess, 'darkred')
   }
   // if (prefs.compress) compressPackage(packname, dirpath, infopath)
+}
+
+export async function getSyncedDocs(book, syncs) {
+  let cnts = book.cnts
+  let sdocs = []
+  for await (let cnt of cnts) {
+    let query = {bid: book.bid, path: cnt.path, size: cnt.size}
+    let chdocs = await fetchChapter(query)
+    let chsyncs = syncs.filter(sync => sync.idx === cnt.idx)
+    let syncdocs = page.syncChapter(chsyncs, chdocs)
+    sdocs.push(...syncdocs)
+  }
+
+  const fillsize = sdocs.length.toString().length
+  let doc
+  sdocs = sdocs.map(sdoc=> {
+    doc = {path: sdoc.path, _id: sdoc._id, idx: sdoc.idx, md: sdoc.md}
+    if (sdoc.level) doc.level = sdoc.level
+    if (sdoc.type) doc.type = sdoc.type
+    if (sdoc.size) doc.size = sdoc.size
+    return doc
+  })
+  return sdocs
 }
 
 ipcRenderer.on('compress', async function (event) {
@@ -181,27 +199,6 @@ async function uncompressPackage(prefs) {
   message.show(mess, 'darkgreen')
 }
 
-// todo: del ctrl+,
-mouse.bind('ctrl+,', function(ev) {
-  if (!checkBooks()) return
-  let origin = dgl.origin(book.sbooks)
-  let prefs = prefstore.get(origin.bid)
-  if (!prefs) {
-    let mess = 'export book to .DGL package before'
-    message.show(mess, 'darkgreen')
-    return
-  }
-  compressPackage(prefs)
-})
-
-// todo: del ctrl+.
-mouse.bind('ctrl+.', function(ev) {
-  if (!checkBooks()) return
-  let origin = dgl.origin(book.sbooks)
-  let prefs = prefstore.get(origin.bid)
-  uncompressPackage(prefs)
-})
-
 document.addEventListener('click', async (ev) => {
   let obutton = ev.target.closest('.create-package')
   if (!obutton) return
@@ -223,32 +220,6 @@ document.addEventListener('click', async (ev) => {
   let mess =  [origin.descr.title, 'exported'].join(' ')
   message.show(mess, 'darkgreen')
 })
-
-export async function getSyncedDocs(book, syncs) {
-  let cnts = book.cnts
-
-  let sdocs = []
-  for await (let cnt of cnts) {
-    let query = {bid: book.bid, path: cnt.path, size: cnt.size}
-    let sbooks = await fetchChapterDocs([query])
-    let syncdocs = sbooks[0].chdocs
-    syncs.forEach(sync=> {
-      syncdocs = syncDoc(syncdocs, sync)
-    })
-    sdocs.push(...syncdocs)
-  }
-
-  const fillsize = sdocs.length.toString().length
-  let doc
-  sdocs = sdocs.map(sdoc=> {
-    doc = {path: sdoc.path, _id: sdoc._id, idx: sdoc.idx, md: sdoc.md}
-    if (sdoc.level) doc.level = sdoc.level
-    if (sdoc.type) doc.type = sdoc.type
-    if (sdoc.size) doc.size = sdoc.size
-    return doc
-  })
-   return sdocs
-}
 
 function docs2md(docs) {
   return docs.map(doc=> {
