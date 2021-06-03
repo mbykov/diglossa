@@ -10,7 +10,7 @@ import { pushDocs, fetchBook, fetchChapterDocs, updateDocs } from './lib/pouch'
 
 import { book, syncCnt, getCSyncs } from './book'
 import { syncDoc, page, getSyncs } from './page'
-// import { preference } from './prefs'
+import { preference } from './prefs'
 import { router } from './app'
 const isZip = require('is-zip')
 // const JSZip = require("jszip");
@@ -46,12 +46,9 @@ function checkBooks() {
 }
 
 // create book-DGL:
-export async function createDglPackage() {
+export async function createDglPackage(prefs) {
   if (!checkBooks()) return
-  // progress.show()
   let origin = dgl.origin(book.sbooks)
-  let prefs = prefstore.get(origin.bid)  // || preference.initPrefs(origin)
-  if (!prefs) return
   let exportpath = appstore.get('exportpath')
   fse.ensureDirSync(exportpath)
 
@@ -183,14 +180,6 @@ async function uncompressPackage(prefs) {
   message.show(mess, 'darkgreen')
 }
 
-// todo: del ctrl+m
-mouse.bind('ctrl+m', function(ev) {
-  if (!checkBooks()) return
-  progress.show()
-  // createExternalPackage(dgl.bid)
-  createDglPackage() // ctrl+m todo: del
-})
-
 // todo: del ctrl+,
 mouse.bind('ctrl+,', function(ev) {
   if (!checkBooks()) return
@@ -217,6 +206,7 @@ document.addEventListener('click', async (ev) => {
   if (!obutton) return
   progress.show()
   let origin = dgl.origin(book.sbooks)
+  // let prefs = preference.prefs
   let prefs = prefstore.get(origin.bid)
   let rows = qs('.table-line')
   for (let orow of rows) {
@@ -226,7 +216,7 @@ document.addEventListener('click', async (ev) => {
     prefs[prefname] = value
   }
   prefstore.set(origin.bid, prefs)
-  await createDglPackage()
+  await createDglPackage(prefs)
   const state = {route: 'library'}
   router(state)
   let mess =  [origin.descr.title, 'exported'].join(' ')

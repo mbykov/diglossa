@@ -23,25 +23,6 @@ if (!exportpath) {
   appstore.set('exportpath', exportpath)
 }
 
-let defaults = {
-  'name': 'example',
-  version: '1.0.0',
-  'editor': 'John Doe',
-  email: 'john.doe@example.com',
-  homepage: 'http://example.com',
-  license: 'CC BY-SA',
-  keywords: 'diglossa, bilingua, dgl',
-  // 'exportpath': exportpath,
-  // files: {
-  //   css: 'path-to-file',
-  //   images: 'path-to-file',
-  //   info: 'path-to-file',
-  //   annotation: 'path-to-file',
-  //   license: 'path-to-file',
-  //   acknowledgements: 'path-to-file'
-  // },
-}
-
 export const preference = {
   async ready() {
     let books = book.sbooks
@@ -82,8 +63,24 @@ export const preference = {
   },
 
   initPrefs(origin) {
-    defaults.name = [origin.descr.author, origin.descr.title].join('-')
-    // defaults.exportpath =  '/home/michael/diglossa.export.md' // todo: export dirpath - NB!!! - пока прописан жестко diglossa.export.md <<<====== NB!!! ?????????
+    let defaults = {
+      version: '1.0.0',
+      'editor': 'John Doe',
+      email: 'john.doe@example.com',
+      homepage: 'http://example.com',
+      license: 'CC BY-SA',
+      keywords: 'diglossa, bilingua, dgl',
+      // 'exportpath': exportpath,
+      // files: {
+      //   css: 'path-to-file',
+      //   images: 'path-to-file',
+      //   info: 'path-to-file',
+      //   annotation: 'path-to-file',
+      //   license: 'path-to-file',
+      //   acknowledgements: 'path-to-file'
+      // },
+    }
+    defaults.name = [origin.descr.author, origin.descr.title].join(' ').replace(/ +/g, '-')
     prefstore.set(origin.bid, defaults)
     return defaults
   },
@@ -123,43 +120,22 @@ export const preference = {
 }
 
 document.addEventListener('click',  (ev) => {
-  // const otable = q('#prefs-table')
-  // if (!otable) return
-  let orow = ev.target.closest('.table-line')
-  if (!orow) return
-  let type = orow.getAttribute('type')
-  if (type == 'file') {
-    // dialog.showOpenDialog({properties: ['openFile'] })
-    //   .then(result => {
-    //     const bpath = result.filePaths[0]
-    //     if (!bpath) return
-    //     let name = orow.querySelector('.td-name').textContent
-    //     // let ovalue = orow.querySelector('.td-value')
-    //     // ovalue.textContent = bpath
-    //     let type = orow.getAttribute('type')
-    //     preference.savePrefs(type, name, bpath)
-    //     preference.ready()
-    //   }).catch(err => {
-    //     console.log(err)
-    //   })
-  } else if (type == 'dir') {
-    dialog.showOpenDialog({properties: ['openDirectory'] })
-      .then(result => {
-        const bpath = result.filePaths[0]
-        if (!bpath) return
-        exportpath = bpath
-        let type = orow.getAttribute('type')
-        // preference.savePrefs(type, 'exportpath', bpath)
-        appstore.set('exportpath', bpath)
-        let prefname = [preference.origin.bid, exportpath].join('.')
-        prefstore.set(prefname, bpath)
-        preference.ready()
-      }).catch(err => {
-        console.log(err)
-      })
-
-  }
+  let opack = ev.target.closest('#package')
+  if (opack) openDialogExportPath()
 })
+
+function openDialogExportPath() {
+  dialog.showOpenDialog({properties: ['openDirectory'] })
+    .then(result => {
+      const bpath = result.filePaths[0]
+      if (!bpath) return
+      exportpath = bpath
+      appstore.set('exportpath', bpath)
+      preference.ready()
+    }).catch(err => {
+      console.log(err)
+    })
+}
 
 document.addEventListener('keydown', ev => {
   if (ev.key !== 'Enter') return
@@ -169,7 +145,6 @@ document.addEventListener('keydown', ev => {
   let name = orow.querySelector('.td-name').textContent.trim()
   let value = orow.querySelector('.td-value').textContent.trim()
   let prefname = [preference.origin.bid, name].join('.')
-  // preference.savePrefs('value', name, value)
   prefstore.set(prefname, value)
   preference.ready()
 })

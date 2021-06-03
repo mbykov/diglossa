@@ -1327,11 +1327,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _lib_pouch__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./lib/pouch */ "./src/lib/pouch.js");
 /* harmony import */ var _book__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./book */ "./src/book.js");
 /* harmony import */ var _page__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./page */ "./src/page.js");
-/* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./app */ "./src/app.js");
-/* harmony import */ var dgl_utils__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! dgl-utils */ "dgl-utils");
-/* harmony import */ var dgl_utils__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(dgl_utils__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var _lib_progress__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./lib/progress */ "./src/lib/progress.js");
-/* harmony import */ var _lib_message__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./lib/message */ "./src/lib/message.js");
+/* harmony import */ var _prefs__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./prefs */ "./src/prefs.js");
+/* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./app */ "./src/app.js");
+/* harmony import */ var dgl_utils__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! dgl-utils */ "dgl-utils");
+/* harmony import */ var dgl_utils__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(dgl_utils__WEBPACK_IMPORTED_MODULE_9__);
+/* harmony import */ var _lib_progress__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./lib/progress */ "./src/lib/progress.js");
+/* harmony import */ var _lib_message__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./lib/message */ "./src/lib/message.js");
 
 
 
@@ -1346,7 +1347,7 @@ let apath = app.getAppPath();
 
 
 
- // import { preference } from './prefs'
+
 
 
 
@@ -1391,17 +1392,13 @@ const getExportBook = {};
 
 function checkBooks() {
   if (dgl.bid && _book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks) return true;
-  _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('select a book', 'darkred');
+  _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show('select a book', 'darkred');
 } // create book-DGL:
 
 
-async function createDglPackage() {
-  if (!checkBooks()) return; // progress.show()
-
+async function createDglPackage(prefs) {
+  if (!checkBooks()) return;
   let origin = dgl.origin(_book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks);
-  let prefs = prefstore.get(origin.bid); // || preference.initPrefs(origin)
-
-  if (!prefs) return;
   let exportpath = appstore.get('exportpath');
   fse.ensureDirSync(exportpath);
   let packname = prefs.name;
@@ -1447,7 +1444,7 @@ async function createDglPackage() {
     });
   } catch (err) {
     let mess = ['could not export', origin.descr.title].join(' ');
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkred');
+    _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkred');
   } // if (prefs.compress) compressPackage(packname, dirpath, infopath)
 
 }
@@ -1460,7 +1457,7 @@ electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.on('compress', async function 
     compressPackage(prefs);
     let mess = [prefs.name, 'compressed'].join(' ');
   } catch (err) {
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('can not compress book', 'darkred');
+    _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show('can not compress book', 'darkred');
   }
 });
 
@@ -1469,8 +1466,8 @@ async function compressPackage(prefs) {
   let textsdir = path.resolve(exportpath, prefs.name);
   let jsonpath = [textsdir, 'json'].join('.');
   let dglpath = [textsdir, 'dgl'].join('.');
-  let zip = await (0,dgl_utils__WEBPACK_IMPORTED_MODULE_8__.compressDGL)(jsonpath);
-  if (zip.err) return _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('can not read json file. Select a book', 'darkred');
+  let zip = await (0,dgl_utils__WEBPACK_IMPORTED_MODULE_9__.compressDGL)(jsonpath);
+  if (zip.err) return _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show('can not read json file. Select a book', 'darkred');
   zip.generateNodeStream({
     type: 'nodebuffer',
     streamFiles: true
@@ -1478,9 +1475,9 @@ async function compressPackage(prefs) {
     fse.removeSync(jsonpath);
     fse.removeSync(textsdir);
     let mess = [prefs.name, 'compressed to', dglpath].join(' ');
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkgreen');
+    _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgreen');
   }).on('error', function () {
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('can not compress book. Select a book', 'darkred');
+    _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show('can not compress book. Select a book', 'darkred');
   });
 }
 
@@ -1495,23 +1492,23 @@ electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.on('uncompress', async functio
   let iszip = isZip(fse.readFileSync(dglpath));
 
   if (!iszip) {
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('not a dgl, i.e. zip file', 'darkred');
+    _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show('not a dgl, i.e. zip file', 'darkred');
     return;
   }
 
   try {
     fse.copySync(dglpath, backup);
   } catch (err) {
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('no archive file', 'darkred');
+    _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show('no archive file', 'darkred');
     return;
   }
 
   try {
-    let descr = await (0,dgl_utils__WEBPACK_IMPORTED_MODULE_8__.uncompressDGL)(dglpath);
+    let descr = await (0,dgl_utils__WEBPACK_IMPORTED_MODULE_9__.uncompressDGL)(dglpath);
     let mess = [prefs.name, 'uncompressed'].join(' ');
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkgreen');
+    _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgreen');
   } catch (err) {
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('can not uncompress file', 'darkred');
+    _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show('can not uncompress file', 'darkred');
   }
 });
 
@@ -1523,7 +1520,7 @@ async function uncompressPackage(prefs) {
   fse.ensureDirSync(dirpath);
   let dglpath = [dirpath, 'dgl'].join('.');
   let jsonpath = [dirpath, 'json'].join('.');
-  let pack = await (0,dgl_utils__WEBPACK_IMPORTED_MODULE_8__.uncompressDGL)(dglpath);
+  let pack = await (0,dgl_utils__WEBPACK_IMPORTED_MODULE_9__.uncompressDGL)(dglpath);
 
   for await (let text of pack.texts) {
     let str = text.mds.join('\n');
@@ -1537,16 +1534,9 @@ async function uncompressPackage(prefs) {
   });
   fse.removeSync(dglpath);
   let mess = [prefs.name, 'uncompressed to', dglpath].join(' ');
-  _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkgreen');
-} // todo: del ctrl+m
+  _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgreen');
+} // todo: del ctrl+,
 
-
-mouse.bind('ctrl+m', function (ev) {
-  if (!checkBooks()) return;
-  _lib_progress__WEBPACK_IMPORTED_MODULE_9__.progress.show(); // createExternalPackage(dgl.bid)
-
-  createDglPackage(); // ctrl+m todo: del
-}); // todo: del ctrl+,
 
 mouse.bind('ctrl+,', function (ev) {
   if (!checkBooks()) return;
@@ -1555,7 +1545,7 @@ mouse.bind('ctrl+,', function (ev) {
 
   if (!prefs) {
     let mess = 'export book to .DGL package before';
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkgreen');
+    _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgreen');
     return;
   }
 
@@ -1571,8 +1561,9 @@ mouse.bind('ctrl+.', function (ev) {
 document.addEventListener('click', async ev => {
   let obutton = ev.target.closest('.create-package');
   if (!obutton) return;
-  _lib_progress__WEBPACK_IMPORTED_MODULE_9__.progress.show();
-  let origin = dgl.origin(_book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks);
+  _lib_progress__WEBPACK_IMPORTED_MODULE_10__.progress.show();
+  let origin = dgl.origin(_book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks); // let prefs = preference.prefs
+
   let prefs = prefstore.get(origin.bid);
   let rows = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.qs)('.table-line');
 
@@ -1584,13 +1575,13 @@ document.addEventListener('click', async ev => {
   }
 
   prefstore.set(origin.bid, prefs);
-  await createDglPackage();
+  await createDglPackage(prefs);
   const state = {
     route: 'library'
   };
-  (0,_app__WEBPACK_IMPORTED_MODULE_7__.router)(state);
+  (0,_app__WEBPACK_IMPORTED_MODULE_8__.router)(state);
   let mess = [origin.descr.title, 'exported'].join(' ');
-  _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkgreen');
+  _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgreen');
 });
 async function getSyncedDocs(book, syncs) {
   let cnts = book.cnts;
@@ -1678,7 +1669,7 @@ async function createExternalPackage_(bid) {
 
   for await (let book of libook.books) {
     let mess = ['clean', book.title, '...'].join(' ');
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkgreen', true);
+    _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgreen', true);
     let sdocs = await getSyncedDocs(book, true);
     let descr = {
       "_id": "description",
@@ -1722,7 +1713,7 @@ async function createExternalPackage_(bid) {
     spaces: 2
   });
   let mess = 'package created';
-  _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkgreen');
+  _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgreen');
 }
 
 /***/ }),
@@ -4685,24 +4676,6 @@ if (!exportpath) {
   appstore.set('exportpath', exportpath);
 }
 
-let defaults = {
-  'name': 'example',
-  version: '1.0.0',
-  'editor': 'John Doe',
-  email: 'john.doe@example.com',
-  homepage: 'http://example.com',
-  license: 'CC BY-SA',
-  keywords: 'diglossa, bilingua, dgl' // 'exportpath': exportpath,
-  // files: {
-  //   css: 'path-to-file',
-  //   images: 'path-to-file',
-  //   info: 'path-to-file',
-  //   annotation: 'path-to-file',
-  //   license: 'path-to-file',
-  //   acknowledgements: 'path-to-file'
-  // },
-
-};
 const preference = {
   async ready() {
     let books = _book__WEBPACK_IMPORTED_MODULE_4__.book.sbooks;
@@ -4745,8 +4718,24 @@ const preference = {
   },
 
   initPrefs(origin) {
-    defaults.name = [origin.descr.author, origin.descr.title].join('-'); // defaults.exportpath =  '/home/michael/diglossa.export.md' // todo: export dirpath - NB!!! - пока прописан жестко diglossa.export.md <<<====== NB!!! ?????????
+    let defaults = {
+      version: '1.0.0',
+      'editor': 'John Doe',
+      email: 'john.doe@example.com',
+      homepage: 'http://example.com',
+      license: 'CC BY-SA',
+      keywords: 'diglossa, bilingua, dgl' // 'exportpath': exportpath,
+      // files: {
+      //   css: 'path-to-file',
+      //   images: 'path-to-file',
+      //   info: 'path-to-file',
+      //   annotation: 'path-to-file',
+      //   license: 'path-to-file',
+      //   acknowledgements: 'path-to-file'
+      // },
 
+    };
+    defaults.name = [origin.descr.author, origin.descr.title].join(' ').replace(/ +/g, '-');
     prefstore.set(origin.bid, defaults);
     return defaults;
   },
@@ -4785,43 +4774,24 @@ const preference = {
 
 };
 document.addEventListener('click', ev => {
-  // const otable = q('#prefs-table')
-  // if (!otable) return
-  let orow = ev.target.closest('.table-line');
-  if (!orow) return;
-  let type = orow.getAttribute('type');
-
-  if (type == 'file') {// dialog.showOpenDialog({properties: ['openFile'] })
-    //   .then(result => {
-    //     const bpath = result.filePaths[0]
-    //     if (!bpath) return
-    //     let name = orow.querySelector('.td-name').textContent
-    //     // let ovalue = orow.querySelector('.td-value')
-    //     // ovalue.textContent = bpath
-    //     let type = orow.getAttribute('type')
-    //     preference.savePrefs(type, name, bpath)
-    //     preference.ready()
-    //   }).catch(err => {
-    //     console.log(err)
-    //   })
-  } else if (type == 'dir') {
-    dialog.showOpenDialog({
-      properties: ['openDirectory']
-    }).then(result => {
-      const bpath = result.filePaths[0];
-      if (!bpath) return;
-      exportpath = bpath;
-      let type = orow.getAttribute('type'); // preference.savePrefs(type, 'exportpath', bpath)
-
-      appstore.set('exportpath', bpath);
-      let prefname = [preference.origin.bid, exportpath].join('.');
-      prefstore.set(prefname, bpath);
-      preference.ready();
-    }).catch(err => {
-      console.log(err);
-    });
-  }
+  let opack = ev.target.closest('#package');
+  if (opack) openDialogExportPath();
 });
+
+function openDialogExportPath() {
+  dialog.showOpenDialog({
+    properties: ['openDirectory']
+  }).then(result => {
+    const bpath = result.filePaths[0];
+    if (!bpath) return;
+    exportpath = bpath;
+    appstore.set('exportpath', bpath);
+    preference.ready();
+  }).catch(err => {
+    console.log(err);
+  });
+}
+
 document.addEventListener('keydown', ev => {
   if (ev.key !== 'Enter') return;
   ev.preventDefault();
@@ -4829,8 +4799,7 @@ document.addEventListener('keydown', ev => {
   if (!orow) return;
   let name = orow.querySelector('.td-name').textContent.trim();
   let value = orow.querySelector('.td-value').textContent.trim();
-  let prefname = [preference.origin.bid, name].join('.'); // preference.savePrefs('value', name, value)
-
+  let prefname = [preference.origin.bid, name].join('.');
   prefstore.set(prefname, value);
   preference.ready();
 });
