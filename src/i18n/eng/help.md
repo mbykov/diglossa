@@ -13,6 +13,8 @@
 
 ## reading text
 
+**ctrl-u** - looup in a heap of the books by substring, i.e. "stout nero epub murder"
+
 **shift-mouse (text)** - change paragraph language
 
 **shift-mouse (header)** - change the whole chapter translation language
@@ -54,6 +56,8 @@ if your cursor is over a paragraph, this paragraph will be presented as a new bo
 
 **ctrl+y** (sYnc) - start auto-check of paragraph synchronization
 
+**space** - continue automatic sync check without making changes
+
 ### in edit mode:
 
 **d** - delete
@@ -74,9 +78,9 @@ if your cursor is over a paragraph, this paragraph will be presented as a new bo
 
 **arraw-left** - Increase header level (only in table of contents)
 
-**space** - continue automatic sync check without making changes
-
 ## search
+
+**ctrl+g** - generate FTS indexes for the book
 
 **ctrl+f** - full text search input form
 

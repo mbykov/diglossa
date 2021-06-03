@@ -3742,7 +3742,6 @@ document.addEventListener('keydown', ev => {
   }
 
   lookupBook(lookup.heappath, query);
-  oinput.focus();
 });
 
 function lookupBook(srcdir, query) {
