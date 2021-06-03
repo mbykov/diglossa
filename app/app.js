@@ -1355,8 +1355,7 @@ const isZip = __webpack_require__(/*! is-zip */ "is-zip"); // const JSZip = requ
 
 
 
-const fse = __webpack_require__(/*! fs-extra */ "fs-extra"); // const fetch = require('node-fetch')
-
+const fse = __webpack_require__(/*! fs-extra */ "fs-extra");
 
 const path = __webpack_require__(/*! path */ "path");
 
@@ -1596,95 +1595,6 @@ function docs2md(docs) {
     md += doc.md;
     return md;
   });
-} // нужно отдельно - parse cnts и check sync
-
-
-function exportFtsIdxJson_(book, docs) {
-  book.cnts.forEach(cnt => {
-    let start = 0;
-    docs.every((doc, idx) => {
-      if (doc._id < cnt._id) return true;
-      start = idx;
-    });
-    let ftspath = [book.lang, book.bid, cnt.idx].join('.');
-    let chdocs = docs.slice(start, start + cnt.size);
-    chdocs.forEach((chdoc, idx) => chdoc.blockid = idx);
-    let ftsidx = new FlexSearch(ftsopts);
-    ftsidx.add(chdocs);
-    let json = ftsidx.export(); // let ftsbook =  {cntidx: cnt.idx, lang: book.lang, json: json}
-
-    ftstore.set(ftspath, json);
-  });
-}
-
-async function createExternalPackage_(bid) {
-  let libook = bkstore.store[bid];
-  if (!libook) return; // new:
-  // books = bkstore.get(state.bid)
-  // books = dgl.actives(books)
-
-  return;
-  const extpath = _config__WEBPACK_IMPORTED_MODULE_2__.config.extpath;
-  let external_dir = path.resolve(apath, extpath);
-  let origin = libook.books.find(book => book.origin);
-  let ftspack = {
-    bid: origin.bid,
-    books: []
-  };
-  let packname = [origin.bid, 'json'].join('.');
-  let packpath = path.resolve(external_dir, packname); // let origin_dir = path.resolve(external_dir, origin.bid)
-  // await fse.emptyDirSync(origin_dir)
-
-  let jsondocs = [];
-  let bids = libook.books.map(book => book.bid);
-
-  for await (let book of libook.books) {
-    let mess = ['clean', book.title, '...'].join(' ');
-    _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgreen', true);
-    let sdocs = await getSyncedDocs(book, true);
-    let descr = {
-      "_id": "description",
-      title: book.descr.title,
-      author: book.descr.author,
-      lang: book.lang
-    };
-    let ddoc = {
-      "_id": "_design/auth",
-      "language": "javascript",
-      "validate_doc_update": "function(n,o,u){if(n._id&&!n._id.indexOf(\"_local/\"))return;if(!u||!u.roles||u.roles.indexOf(\"_admin\")==-1){throw({forbidden:'Denied.'})}}"
-    };
-    sdocs.push(descr);
-    sdocs.push(ddoc);
-    let book_dir = path.resolve(external_dir, book.bid);
-    await fse.emptyDirSync(book_dir);
-    await (0,_lib_pouch__WEBPACK_IMPORTED_MODULE_4__.pushDocs)(book.bid, sdocs, external_dir);
-    let ftsidx = new FlexSearch(ftsopts);
-    ftsidx.add(sdocs);
-    let json = ftsidx.export();
-    let jsondoc = {
-      _id: book.bid,
-      lang: book.lang,
-      json
-    };
-    jsondoc.bids = bids;
-
-    if (book.origin) {
-      jsondoc.origin = true;
-    }
-
-    jsondocs.push(jsondoc);
-    ftspack.books.push(book.bid);
-  }
-
-  fse.writeJsonSync(packpath, ftspack, {
-    spaces: 2
-  });
-  await (0,_lib_pouch__WEBPACK_IMPORTED_MODULE_4__.updateDocs)('ftsidx', jsondocs, external_dir);
-  fse.writeJsonSync(packpath, jsondocs, {
-    spaces: 2
-  });
-  let mess = 'package created';
-  _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgreen');
 }
 
 /***/ }),
@@ -2595,7 +2505,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "queryDBcomplex": () => (/* binding */ queryDBcomplex),
 /* harmony export */   "queryDB": () => (/* binding */ queryDB),
 /* harmony export */   "fetchFN": () => (/* binding */ fetchFN),
-/* harmony export */   "fetchBlock_": () => (/* binding */ fetchBlock_),
 /* harmony export */   "fetchBlock": () => (/* binding */ fetchBlock),
 /* harmony export */   "fetchBook": () => (/* binding */ fetchBook),
 /* harmony export */   "fetchChapter": () => (/* binding */ fetchChapter),
@@ -2777,21 +2686,6 @@ function showProgress(total, size) {
   if (percent >= 100) odprog.textContent = '', odprog.classList.add('hidden');
 }
 
-async function fetchBlock_(_id, bids) {
-  const dbs = bids.map(bid => newDBdname(bid));
-  dbs.forEach(db => {
-    let opts = {
-      include_docs: true,
-      keys: [_id]
-    };
-    db.options = opts;
-  });
-  return Promise.all(dbs.map(async function (db) {
-    return db.allDocs(db.options).then(res => {
-      return res.rows[0].doc;
-    });
-  }));
-}
 async function fetchBlock(params) {
   const dbs = params.map(param => newDBdname(param.bid));
   dbs.forEach((db, idx) => {

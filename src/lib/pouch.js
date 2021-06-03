@@ -154,21 +154,6 @@ function showProgress(total, size) {
   if (percent >= 100) odprog.textContent = '', odprog.classList.add('hidden')
 }
 
-export async function fetchBlock_(_id, bids) {
-  const dbs = bids.map(bid=> newDBdname(bid))
-  dbs.forEach(db=> {
-    let opts = {include_docs: true, keys: [_id]}
-    db.options = opts
-  })
-
-  return Promise.all(dbs.map(async function (db) {
-    return db.allDocs(db.options)
-      .then(res=> {
-        return res.rows[0].doc
-      })
-  }))
-}
-
 export async function fetchBlock(params) {
   const dbs = params.map(param=> newDBdname(param.bid))
   dbs.forEach((db, idx)=> {

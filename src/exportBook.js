@@ -18,7 +18,6 @@ const isZip = require('is-zip')
 import { compressDGL, uncompressDGL } from 'dgl-utils'
 
 const fse = require('fs-extra')
-// const fetch = require('node-fetch')
 const path = require("path")
 const Store = require('electron-store')
 const bkstore = new Store({name: 'libks'})
@@ -229,94 +228,4 @@ function docs2md(docs) {
     md += doc.md
     return md
   })
-}
-
-// нужно отдельно - parse cnts и check sync
-function exportFtsIdxJson_(book, docs) {
-  book.cnts.forEach(cnt=> {
-    let start = 0
-    docs.every((doc, idx)=> {
-      if (doc._id < cnt._id) return true
-      start = idx
-    })
-
-    let ftspath = [book.lang, book.bid, cnt.idx].join('.')
-    let chdocs = docs.slice(start, start+cnt.size)
-    chdocs.forEach((chdoc, idx)=> chdoc.blockid = idx)
-
-    let ftsidx = new FlexSearch(ftsopts)
-    ftsidx.add(chdocs)
-    let json = ftsidx.export()
-    // let ftsbook =  {cntidx: cnt.idx, lang: book.lang, json: json}
-    ftstore.set(ftspath, json)
-  })
-}
-
-async function createExternalPackage_(bid) {
-  let libook = bkstore.store[bid]
-  if (!libook) return
-
-  // new:
-  // books = bkstore.get(state.bid)
-  // books = dgl.actives(books)
-  return
-
-  const extpath = config.extpath
-  let external_dir = path.resolve(apath, extpath)
-  let origin = libook.books.find(book=> book.origin)
-
-  let ftspack = {bid: origin.bid, books: []}
-  let packname = [origin.bid, 'json'].join('.')
-  let packpath = path.resolve(external_dir, packname)
-
-  // let origin_dir = path.resolve(external_dir, origin.bid)
-  // await fse.emptyDirSync(origin_dir)
-
-  let jsondocs = []
-  let bids = libook.books.map(book=> book.bid)
-  for await (let book of libook.books) {
-    let mess = ['clean', book.title, '...'].join(' ')
-    message.show(mess, 'darkgreen', true)
-
-    let sdocs = await getSyncedDocs(book, true)
-
-    let descr = {
-      "_id": "description",
-      title: book.descr.title,
-      author: book.descr.author,
-      lang: book.lang
-    }
-
-    let ddoc = {
-      "_id": "_design/auth",
-      "language": "javascript",
-      "validate_doc_update": "function(n,o,u){if(n._id&&!n._id.indexOf(\"_local/\"))return;if(!u||!u.roles||u.roles.indexOf(\"_admin\")==-1){throw({forbidden:'Denied.'})}}"
-    }
-    sdocs.push(descr)
-    sdocs.push(ddoc)
-
-    let book_dir = path.resolve(external_dir, book.bid)
-    await fse.emptyDirSync(book_dir)
-    await pushDocs(book.bid, sdocs, external_dir)
-
-    let ftsidx = new FlexSearch(ftsopts)
-    ftsidx.add(sdocs)
-    let json = ftsidx.export()
-
-    let jsondoc = {_id: book.bid, lang: book.lang, json}
-    jsondoc.bids = bids
-    if (book.origin) {
-      jsondoc.origin = true
-    }
-    jsondocs.push(jsondoc)
-    ftspack.books.push(book.bid)
-  }
-
-  fse.writeJsonSync(packpath, ftspack, {spaces: 2})
-  await updateDocs('ftsidx', jsondocs, external_dir)
-
-  fse.writeJsonSync(packpath, jsondocs, {spaces: 2})
-
-  let mess = 'package created'
-  message.show(mess, 'darkgreen')
 }
