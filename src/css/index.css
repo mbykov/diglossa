@@ -384,3 +384,8 @@ tr:nth-child(odd):not(.hidden) {
 .lookup-line {
     cursor: pointer;
 }
+
+#lookup-help-button {
+    cursor: pointer;
+    color: maroon;
+}

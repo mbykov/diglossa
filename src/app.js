@@ -93,8 +93,8 @@ export function render(template, selector = '#app') {
 function closeAll() {
   let ofn = q('#footnote')
   if (ofn) ofn.parentElement.removeChild(ofn)
-  let oimgs = qs('img.floatimg')
-  oimgs.forEach(el => { el.parentElement.removeChild(el) })
+  // let oimgs = qs('img.floating')
+  // oimgs.forEach(el => { el.parentElement.removeChild(el) })
   progress.hide()
   message.hide()
   page.localquery = ''
@@ -127,7 +127,7 @@ document.addEventListener ("click",  (ev) => {
     omessage.classList.remove('version')
     shell.openExternal(config.version)
   }
-  message.hide()
+  // message.hide()
   if (ev.target.nodeName == 'BUTTON') return
   if (ev.target.nodeName == 'A') return
   let ohref = ev.target.closest('.external')

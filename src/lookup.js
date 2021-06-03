@@ -11,6 +11,7 @@ import { remote } from "electron"
 const { dialog } = require('electron').remote
 import { progress } from './lib/progress'
 import { ipcRenderer } from "electron";
+import { book } from './book'
 
 const Store = require('electron-store')
 const appstore = new Store({name: 'appstore'})
@@ -58,19 +59,32 @@ export const lookup = {
 document.addEventListener('click',  (ev) => {
   let olookup = ev.target.closest('#lookup')
   if (!olookup) return
+  ev.stopPropagation()
+  let ohelp = ev.target.closest('#lookup-help-button')
   let oheap = ev.target.closest('#heap')
   let orow = ev.target.closest('.lookup-line')
   let oinput = ev.target.closest('.searchinput')
   if (oheap && !oinput) {
-    // let oheappath = oheap.querySelector('#heappath')
     openHeappath()
-  } else if (orow) fireImport(orow)
+  } else if (ohelp) {
+    ohelp = q('#lookup-help')
+    ohelp.classList.toggle('hidden')
+  } else if (orow) {
+    let shift = (ev.shiftKey) ? true: false
+    fireImport(orow, shift)
+  }
 })
 
-function fireImport(orow) {
+function fireImport(orow, shift) {
   let bpath = orow.textContent
   if (!bpath) return
-  ipcRenderer.send('importBook', {bpath})
+  let sbooks = book.sbooks
+  if (shift && !sbooks) {
+    message.show('select book before', 'darkred')
+    return
+  }
+  if (shift) ipcRenderer.send('addBook', {bpath})
+  else ipcRenderer.send('importBook', {bpath})
 }
 
 function openHeappath() {

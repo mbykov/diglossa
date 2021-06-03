@@ -11,12 +11,22 @@
     </div>
 
     <div id="heap" class="flex flex-col rounded m-4">
-      <input class="searchinput bg-white rounded-lg border-gray-300 border p-2 shadow-lg" type="text" autofocus placeholder="some substrings, case insensitive"  />
+      <input class="searchinput bg-white rounded-lg border-gray-300 border p-2 shadow-lg" type="text" autofocus placeholder="some substrings, case insensitive, i.e. stout nero epub murder"  />
     </div>
 
     <div id="search-list" class="flex flex-col bg-white shadow-md rounded m-4">
       <div class="tr-header search-result-line border-b p-2" type="dir">
         search results:
+      </div>
+    </div>
+
+    <div class="flex flex-col m-4">
+      <div id="lookup-help-button" class="justify-end tr-header border-b p-2 " type="dir">
+        help
+      </div>
+      <div id="lookup-help" class="tr-header border-b p-2 bg-white shadow-md rounded hidden" type="dir">
+        <b>click</b> a row to import book
+        <br> <b>shift-click</b> to add parallel book. Origin should be already opend
       </div>
     </div>
 
