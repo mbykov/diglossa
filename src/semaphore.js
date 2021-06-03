@@ -165,10 +165,22 @@ mouse.bind('b', function(ev) {
   let text = oed.textContent
   let prev, pprev, next, nnext
   prev = oed.previousSibling.textContent
-  if (prev) pprev = oed.previousSibling.previousSibling.textContent
+  if (prev) pprev = oed.previousSibling.previousSibling
+  if (pprev) pprev = pprev.textContent
   next = oed.nextSibling.textContent
-  if (next) nnext = oed.nextSibling.nextSibling.textContent
+  if (next) nnext = oed.nextSibling.nextSibling
+  if (nnext) nnext = nnext.textContent
   let context = [pprev, prev, text, next, nnext].join('')
+
+  // quotation marks and dashes placed afte wf:
+  let restricted = ['–', '\"']
+  if (oed.previousSibling && oed.previousElementSibling != oed.previousSibling && restricted.includes(oed.previousSibling.textContent.trim())) {
+    text = [oed.previousSibling.textContent, text].join('')
+    let re = new RegExp(oed.previousSibling.textContent + '$')
+    prev = prev.replace(re, '')
+    context = [pprev, prev, text, next, nnext].join('')
+  }
+
   let param = {context, text}
   synchronize('breakParagraph', param)
 })

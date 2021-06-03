@@ -80,13 +80,13 @@ function fireImport(orow, shift) {
   let bpath = orow.textContent
   if (!bpath) return
   let sbooks = book.sbooks
-  let origin = dgl.origin(book.sbooks)
-  if (shift && !origin) {
+  if (shift && book) {
+    let origin = dgl.origin(book.sbooks)
+    ipcRenderer.send('importBook', {bpath, orbid: origin.bid})
+  } else if (shift) {
     message.show('select book before', 'darkred')
     return
-  }
-  if (shift) ipcRenderer.send('importBook', {bpath, orbid: origin.bid})
-  else ipcRenderer.send('importBook', {bpath})
+  } else ipcRenderer.send('importBook', {bpath})
 }
 
 function openHeappath() {

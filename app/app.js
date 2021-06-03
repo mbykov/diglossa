@@ -3700,17 +3700,17 @@ function fireImport(orow, shift) {
   let bpath = orow.textContent;
   if (!bpath) return;
   let sbooks = _book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks;
-  let origin = dgl.origin(_book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks);
 
-  if (shift && !origin) {
+  if (shift && _book__WEBPACK_IMPORTED_MODULE_5__.book) {
+    let origin = dgl.origin(_book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks);
+    electron__WEBPACK_IMPORTED_MODULE_3__.ipcRenderer.send('importBook', {
+      bpath,
+      orbid: origin.bid
+    });
+  } else if (shift) {
     _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('select book before', 'darkred');
     return;
-  }
-
-  if (shift) electron__WEBPACK_IMPORTED_MODULE_3__.ipcRenderer.send('importBook', {
-    bpath,
-    orbid: origin.bid
-  });else electron__WEBPACK_IMPORTED_MODULE_3__.ipcRenderer.send('importBook', {
+  } else electron__WEBPACK_IMPORTED_MODULE_3__.ipcRenderer.send('importBook', {
     bpath
   });
 }
@@ -5330,10 +5330,25 @@ mouse.bind('b', function (ev) {
   let text = oed.textContent;
   let prev, pprev, next, nnext;
   prev = oed.previousSibling.textContent;
-  if (prev) pprev = oed.previousSibling.previousSibling.textContent;
+  if (prev) pprev = oed.previousSibling.previousSibling;
+  if (pprev) pprev = pprev.textContent;
   next = oed.nextSibling.textContent;
-  if (next) nnext = oed.nextSibling.nextSibling.textContent;
-  let context = [pprev, prev, text, next, nnext].join('');
+  if (next) nnext = oed.nextSibling.nextSibling;
+  if (nnext) nnext = nnext.textContent;
+  let context = [pprev, prev, text, next, nnext].join(''); // quotation marks and dashes
+
+  let restricted = ['–', '\"'];
+  let tn = oed.previousSibling.textContent;
+  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_NODE', tn);
+  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_INCLUDES', restricted.includes(oed.previousSibling.textContent.trim()));
+
+  if (oed.previousSibling && oed.previousElementSibling != oed.previousSibling && restricted.includes(oed.previousSibling.textContent.trim())) {
+    text = [oed.previousSibling.textContent, text].join('');
+    let re = new RegExp(oed.previousSibling.textContent + '$');
+    prev = prev.replace(re, '');
+    context = [pprev, prev, text, next, nnext].join('');
+  }
+
   let param = {
     context,
     text
