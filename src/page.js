@@ -74,7 +74,6 @@ export const page = {
       chapter.chdocs = await this.syncChapter(booksyncs, chapter.chdocs)
     }
     this.chapters = chapters
-    // return chapters
   },
   async getChapter(sbook, cntidx) {
     let cnt = sbook.cnts[cntidx]
@@ -94,8 +93,9 @@ export const page = {
     let syncs = getSyncs(origin.bid)
     syncs = syncs.slice(0,-1)
     syncstore.set(origin.bid, syncs)
+    let chsyncs = syncs.filter(sync => sync.idx === dgl.idx)
     let chapters = _.cloneDeep(this.copy)
-    await this.syncChapters(chapters, syncs)
+    await this.syncChapters(chapters, chsyncs)
     drawPage(chapters)
     semaphore.ready()
   },
@@ -434,7 +434,6 @@ document.addEventListener ("click",  async (ev) => {
 
 // hide footnote
 document.addEventListener ("click",  async (ev) => {
-  // todo: сейчас закрываю по esc и по клику. а как правильно?
   let ofn = q('#footnote')
   if (ofn) remove(ofn)
 })
@@ -476,6 +475,7 @@ document.addEventListener("keydown", localSearch)
 async function exitEditMode(ev) { // ESC
   if (ev.which != 27) return
   if (!q('.header') || !dgl.editMode) return
+  progress.show()
   dgl.editMode = false
   removeEditStyle()
   let origin = book.sbooks.find(sbook=> sbook.origin)
@@ -485,7 +485,8 @@ async function exitEditMode(ev) { // ESC
 
   if (dgl.idx > -1) {
     let chapters = _.cloneDeep(page.copy)
-    await page.syncChapters(chapters, syncs)
+    let chsyncs = syncs.filter(sync => sync.idx === dgl.idx)
+    await page.syncChapters(chapters, chsyncs)
     drawPage(chapters)
   }
 
@@ -493,7 +494,7 @@ async function exitEditMode(ev) { // ESC
   let omarks = qs('.synchroMark')
   removeAll(omarks)
   message.show('all last changes lost', 'darkgreen')
-  // else book.reload() // todo: book.reload()
+  // todo: book.reload()
 }
 
 document.addEventListener("keydown", exitEditMode)
@@ -510,6 +511,7 @@ document.addEventListener ("click",  (ev) => {
 
 async function saveEditChanges() {
   if (!q('.header') || !dgl.editMode) return
+  progress.show()
   dgl.editMode = false
   removeEditStyle()
   message.hide()

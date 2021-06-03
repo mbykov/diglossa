@@ -13,3 +13,6 @@ export const progress = {
     oprogress.classList.add('hidden')
   }
 }
+
+function wait() {
+}

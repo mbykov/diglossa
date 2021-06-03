@@ -2885,6 +2885,8 @@ const progress = {
 
 };
 
+function wait() {}
+
 /***/ }),
 
 /***/ "./src/lib/stemmer.js":
@@ -3645,7 +3647,7 @@ const lookup = {
     const oheappath = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('#heappath');
     oheappath.textContent = heappath;
     this.heappath = heappath;
-    let oinput = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('.searchinput');
+    let oinput = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('.lookupinput');
     oinput.focus();
   },
 
@@ -3681,7 +3683,7 @@ document.addEventListener('click', ev => {
   let ohelp = ev.target.closest('#lookup-help-button');
   let oheap = ev.target.closest('#heap');
   let orow = ev.target.closest('.lookup-line');
-  let oinput = ev.target.closest('.searchinput');
+  let oinput = ev.target.closest('.lookupinput');
 
   if (oheap && !oinput) {
     openHeappath();
@@ -3729,7 +3731,7 @@ function openHeappath() {
 document.addEventListener('keydown', ev => {
   if (ev.key !== 'Enter') return;
   ev.preventDefault();
-  let oinput = ev.target.closest('.searchinput');
+  let oinput = ev.target.closest('.lookupinput');
   if (!oinput) return;
   let query = oinput.value;
   if (!query) return;
@@ -3946,7 +3948,7 @@ const page = {
       chapter.chdocs = await this.syncChapter(booksyncs, chapter.chdocs);
     }
 
-    this.chapters = chapters; // return chapters
+    this.chapters = chapters;
   },
 
   async getChapter(sbook, cntidx) {
@@ -3973,10 +3975,11 @@ const page = {
     let syncs = getSyncs(origin.bid);
     syncs = syncs.slice(0, -1);
     syncstore.set(origin.bid, syncs);
+    let chsyncs = syncs.filter(sync => sync.idx === dgl.idx);
 
     let chapters = lodash__WEBPACK_IMPORTED_MODULE_1___default().cloneDeep(this.copy);
 
-    await this.syncChapters(chapters, syncs);
+    await this.syncChapters(chapters, chsyncs);
     drawPage(chapters);
     _semaphore__WEBPACK_IMPORTED_MODULE_5__.semaphore.ready();
   },
@@ -4355,7 +4358,6 @@ document.addEventListener("click", async ev => {
 }); // hide footnote
 
 document.addEventListener("click", async ev => {
-  // todo: сейчас закрываю по esc и по клику. а как правильно?
   let ofn = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('#footnote');
   if (ofn) (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.remove)(ofn);
 });
@@ -4392,6 +4394,7 @@ async function exitEditMode(ev) {
   // ESC
   if (ev.which != 27) return;
   if (!(0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('.header') || !dgl.editMode) return;
+  _lib_progress__WEBPACK_IMPORTED_MODULE_8__.progress.show();
   dgl.editMode = false;
   (0,_semaphore__WEBPACK_IMPORTED_MODULE_5__.removeEditStyle)();
   let origin = _book__WEBPACK_IMPORTED_MODULE_7__.book.sbooks.find(sbook => sbook.origin);
@@ -4402,14 +4405,15 @@ async function exitEditMode(ev) {
   if (dgl.idx > -1) {
     let chapters = lodash__WEBPACK_IMPORTED_MODULE_1___default().cloneDeep(page.copy);
 
-    await page.syncChapters(chapters, syncs);
+    let chsyncs = syncs.filter(sync => sync.idx === dgl.idx);
+    await page.syncChapters(chapters, chsyncs);
     drawPage(chapters);
   }
 
   _header__WEBPACK_IMPORTED_MODULE_4__.header.ready();
   let omarks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.qs)('.synchroMark');
   (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.removeAll)(omarks);
-  _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('all last changes lost', 'darkgreen'); // else book.reload() // todo: book.reload()
+  _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('all last changes lost', 'darkgreen'); // todo: book.reload()
 }
 
 document.addEventListener("keydown", exitEditMode);
@@ -4424,6 +4428,7 @@ document.addEventListener("click", ev => {
 
 async function saveEditChanges() {
   if (!(0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('.header') || !dgl.editMode) return;
+  _lib_progress__WEBPACK_IMPORTED_MODULE_8__.progress.show();
   dgl.editMode = false;
   (0,_semaphore__WEBPACK_IMPORTED_MODULE_5__.removeEditStyle)();
   _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.hide();

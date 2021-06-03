@@ -28,7 +28,7 @@ export const lookup = {
     const oheappath = q('#heappath')
     oheappath.textContent = heappath
     this.heappath = heappath
-    let oinput = q('.searchinput')
+    let oinput = q('.lookupinput')
     oinput.focus();
   },
 
@@ -64,7 +64,7 @@ document.addEventListener('click',  (ev) => {
   let ohelp = ev.target.closest('#lookup-help-button')
   let oheap = ev.target.closest('#heap')
   let orow = ev.target.closest('.lookup-line')
-  let oinput = ev.target.closest('.searchinput')
+  let oinput = ev.target.closest('.lookupinput')
   if (oheap && !oinput) {
     openHeappath()
   } else if (ohelp) {
@@ -104,7 +104,7 @@ function openHeappath() {
 document.addEventListener('keydown', ev => {
   if (ev.key !== 'Enter') return
   ev.preventDefault()
-  let oinput = ev.target.closest('.searchinput')
+  let oinput = ev.target.closest('.lookupinput')
   if (!oinput) return
   let query = oinput.value
   if (!query) return
