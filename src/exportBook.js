@@ -65,6 +65,7 @@ export async function createDglPackage(prefs) {
 
   for await (let sbook of book.sbooks) {
     let bsyncs = syncs.filter(sync=> sync.bid == sbook.bid)
+    // bsyncs = bsyncs.filter(sync => sync.idx === dgl.idx)
     let sdocs = await getSyncedDocs(sbook, bsyncs)
     let mds = docs2md(sdocs)
     let mdstr = mds.join('\n\n')

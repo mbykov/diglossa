@@ -13,7 +13,6 @@ import { pushDocs, pushImgs, fetchChapterDocs } from './lib/pouch'
 // import { preference } from './prefs'
 import { book } from './book'
 
-import { syncDoc } from './page'
 import { router } from './app'
 const isZip = require('is-zip')
 // const JSZip = require("jszip");

@@ -178,9 +178,9 @@ document.addEventListener("click", ev => {
   if (version) {
     omessage.classList.remove('version');
     electron__WEBPACK_IMPORTED_MODULE_4__.shell.openExternal(_config__WEBPACK_IMPORTED_MODULE_9__.config.version);
-  } // message.hide()
+  }
 
-
+  _lib_message__WEBPACK_IMPORTED_MODULE_7__.message.hide();
   if (ev.target.nodeName == 'BUTTON') return;
   if (ev.target.nodeName == 'A') return;
   let ohref = ev.target.closest('.external');
@@ -1410,7 +1410,8 @@ async function createDglPackage(prefs) {
   let syncs = (0,_page__WEBPACK_IMPORTED_MODULE_6__.getSyncs)(origin.bid);
 
   for await (let sbook of _book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks) {
-    let bsyncs = syncs.filter(sync => sync.bid == sbook.bid);
+    let bsyncs = syncs.filter(sync => sync.bid == sbook.bid); // bsyncs = bsyncs.filter(sync => sync.idx === dgl.idx)
+
     let sdocs = await getSyncedDocs(sbook, bsyncs);
     let mds = docs2md(sdocs);
     let mdstr = mds.join('\n\n');
@@ -1877,10 +1878,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var book_md2json__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(book_md2json__WEBPACK_IMPORTED_MODULE_4__);
 /* harmony import */ var _lib_pouch__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./lib/pouch */ "./src/lib/pouch.js");
 /* harmony import */ var _book__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./book */ "./src/book.js");
-/* harmony import */ var _page__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./page */ "./src/page.js");
-/* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./app */ "./src/app.js");
-/* harmony import */ var _lib_progress__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./lib/progress */ "./src/lib/progress.js");
-/* harmony import */ var _lib_message__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./lib/message */ "./src/lib/message.js");
+/* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./app */ "./src/app.js");
+/* harmony import */ var _lib_progress__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./lib/progress */ "./src/lib/progress.js");
+/* harmony import */ var _lib_message__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./lib/message */ "./src/lib/message.js");
 
 
 
@@ -1895,7 +1895,6 @@ const {
 
 
  // import { preference } from './prefs'
-
 
 
 
@@ -1954,23 +1953,23 @@ mouse.bind('ctrl+o', function (ev) {
     const bpath = result.filePaths[0];
 
     if (!bpath) {
-      _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('can not locate book. Select a book', 'darkred');
+      _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show('can not locate book. Select a book', 'darkred');
       return;
     }
 
     let ext = path.extname(bpath);
 
     if (!ext) {
-      _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('can not locate book. Select a book', 'darkred');
+      _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show('can not locate book. Select a book', 'darkred');
       return;
     }
 
-    _lib_progress__WEBPACK_IMPORTED_MODULE_9__.progress.show();
+    _lib_progress__WEBPACK_IMPORTED_MODULE_8__.progress.show();
     if (ext == '.dgl') importDgl(bpath);else if (ext == '.json') importDglJson(bpath);else electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.send('importBook', {
       bpath
     });
   }).catch(err => {
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('can not import book', 'darkred');
+    _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show('can not import book', 'darkred');
     console.log(err);
   });
 });
@@ -1985,23 +1984,23 @@ electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.on('importBook', function (eve
     const bpath = result.filePaths[0];
 
     if (!bpath) {
-      _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('can not locate book. Select a book', 'darkred');
+      _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show('can not locate book. Select a book', 'darkred');
       return;
     }
 
     let ext = path.extname(bpath);
 
     if (!ext) {
-      _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('can not locate book. Select a book', 'darkred');
+      _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show('can not locate book. Select a book', 'darkred');
       return;
     }
 
-    _lib_progress__WEBPACK_IMPORTED_MODULE_9__.progress.show();
+    _lib_progress__WEBPACK_IMPORTED_MODULE_8__.progress.show();
     if (ext == '.dgl') importDgl(bpath);else if (ext == '.json') importDglJson(bpath);else electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.send('importBook', {
       bpath
     });
   }).catch(err => {
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('can not import book', 'darkred');
+    _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show('can not import book', 'darkred');
     console.log(err);
   });
 });
@@ -2018,24 +2017,24 @@ electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.on('addParallelBook', function
     if (!bpath) return;
 
     if (!_book__WEBPACK_IMPORTED_MODULE_6__.book) {
-      _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('select book to add to', 'darkred');
+      _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show('select book to add to', 'darkred');
       return;
     }
 
-    _lib_progress__WEBPACK_IMPORTED_MODULE_9__.progress.show();
+    _lib_progress__WEBPACK_IMPORTED_MODULE_8__.progress.show();
     let origin = dgl.origin(_book__WEBPACK_IMPORTED_MODULE_6__.book.sbooks);
     electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.send('importBook', {
       bpath,
       orbid: origin.bid
     });
   }).catch(err => {
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('can not read book', 'darkred');
+    _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show('can not read book', 'darkred');
     console.log(err);
   });
 });
 electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.on('importBookResult', function (event, result) {
   if (!result.docs) {
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('can not parse book', 'darkred');
+    _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show('can not parse book', 'darkred');
     return;
   }
 
@@ -2043,7 +2042,7 @@ electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.on('importBookResult', functio
 });
 
 function checkBooks() {
-  if (_book__WEBPACK_IMPORTED_MODULE_6__.book.sbooks) return true;else _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('select a book', 'darkred');
+  if (_book__WEBPACK_IMPORTED_MODULE_6__.book.sbooks) return true;else _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show('select a book', 'darkred');
 }
 
 function guessLang(docs) {
@@ -2079,11 +2078,11 @@ async function importBook(result) {
 
   await (0,_lib_pouch__WEBPACK_IMPORTED_MODULE_5__.pushDocs)(newbook.bid, docs);
   if (imgs.length) await (0,_lib_pouch__WEBPACK_IMPORTED_MODULE_5__.pushImgs)(newbook.bid, imgs);
-  (0,_app__WEBPACK_IMPORTED_MODULE_8__.router)({
+  (0,_app__WEBPACK_IMPORTED_MODULE_7__.router)({
     route: 'library'
   });
   let mess = ['book', newbook.author, newbook.title, 'loaded'].join(' ');
-  _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkgreen');
+  _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show(mess, 'darkgreen');
 } // import common book
 
 
@@ -2171,7 +2170,7 @@ async function importDglJson(bpath) {
     dgls = pack.texts;
   } catch (err) {
     let mess = 'not a .dgl format';
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkred');
+    _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show(mess, 'darkred');
     return;
   }
 
@@ -2191,7 +2190,7 @@ async function importDglJson(bpath) {
 
     if (!docs) {
       let mess = ['incorrect info.json, no book', dgldescr.src];
-      _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkred');
+      _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show(mess, 'darkred');
       return;
     }
 
@@ -2210,18 +2209,18 @@ async function importDglJson(bpath) {
 
 
 async function importDgl(dglpath) {
-  _lib_progress__WEBPACK_IMPORTED_MODULE_9__.progress.show();
+  _lib_progress__WEBPACK_IMPORTED_MODULE_8__.progress.show();
   let iszip = isZip(fse.readFileSync(dglpath));
 
   if (!iszip) {
     let mess = 'not compressed file, not a .dgl format';
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkred');
+    _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show(mess, 'darkred');
     return;
   }
 
   let pack = await (0,dgl_utils__WEBPACK_IMPORTED_MODULE_3__.uncompressDGL)(dglpath);
   saveDglBook(pack);
-  _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show('zip in progress', 'darkgreen');
+  _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show('zip in progress', 'darkgreen');
 } // import compressed dgl
 
 
@@ -2233,7 +2232,7 @@ async function saveDglBook(pack) {
     let book = parseBookInfo(text);
     book.active = true;
     let mess = [book.lang, '-', book.title, 'loading...'].join(' ');
-    _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkgreen', true);
+    _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show(mess, 'darkgreen', true);
     let {
       descr,
       docs,
@@ -2257,11 +2256,11 @@ async function saveDglBook(pack) {
   delete prefs.texts;
   prefs.exportpath = appstore.get('exportpath');
   prefstore.set(origin.bid, prefs);
-  (0,_app__WEBPACK_IMPORTED_MODULE_8__.router)({
+  (0,_app__WEBPACK_IMPORTED_MODULE_7__.router)({
     route: 'library'
   });
   let mess = ['book', origin.descr.author, origin.descr.title, 'loaded'].join(' ');
-  _lib_message__WEBPACK_IMPORTED_MODULE_10__.message.show(mess, 'darkgreen');
+  _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show(mess, 'darkgreen');
 }
 
 /***/ }),
@@ -2586,7 +2585,6 @@ const omess = (0,_utils__WEBPACK_IMPORTED_MODULE_0__.q)('#message');
 let timer;
 const message = {
   show(str, color, auto) {
-    (0,_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_message', str);
     let omessage = omess.querySelector('#message-text');
     _progress__WEBPACK_IMPORTED_MODULE_1__.progress.hide();
     omess.classList.remove('hidden');
@@ -4065,11 +4063,12 @@ const page = {
     (0,_app__WEBPACK_IMPORTED_MODULE_2__.render)('book');
     if (!state || !state.bid) throw new Error('_PAGE NO STATE');
     let sbooks = bkstore.get(state.bid);
-    sbooks = dgl.actives(sbooks); // let origin = sbooks.find(sbook=> sbook.origin)
+    sbooks = dgl.actives(sbooks);
+    dgl.idx = state.idx;
+    if (state.idx < 0) throw new Error('_PAGE NO CHAPTER IDX'); // todo: del
 
     let syncs = getSyncs(state.bid);
-    dgl.idx = state.idx;
-    if (state.idx < 0) throw new Error('_PAGE NO CHAPTER IDX');
+    syncs = syncs.filter(sync => sync.idx === dgl.idx);
 
     if (state.jump) {
       dgl.bid = state.bid;
@@ -4602,23 +4601,19 @@ async function saveEditChanges() {
   (0,_semaphore__WEBPACK_IMPORTED_MODULE_5__.removeEditStyle)();
   _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.hide();
   let origin = _book__WEBPACK_IMPORTED_MODULE_7__.book.sbooks.find(sbook => sbook.origin);
-  let syncs = getSyncs(origin.bid);
+  let syncs = getSyncs(origin.bid); // if (dgl.idx) {
+  //   let syncs = getSyncs(origin.bid)
+  //   // syncs = syncs.map(sync=> {
+  //   //   let newsync = {bid: sync.bid, action: sync.action, idx: sync.idx, blockid: sync.blockid}
+  //   //   if (sync.param) newsync.param = sync.param
+  //   //   return newsync
+  //   // })
+  //   syncs.forEach(sync=> delete sync.tmp)
+  //   syncstore.set(dgl.bid, syncs)
+  // }
 
-  if (dgl.idx) {
-    let syncs = getSyncs(origin.bid);
-    syncs = syncs.map(sync => {
-      let newsync = {
-        bid: sync.bid,
-        action: sync.action,
-        idx: sync.idx,
-        blockid: sync.blockid
-      };
-      if (sync.param) newsync.param = sync.param;
-      return newsync;
-    });
-    syncstore.set(dgl.bid, syncs);
-  }
-
+  syncs.forEach(sync => delete sync.tmp);
+  syncstore.set(dgl.bid, syncs);
   _header__WEBPACK_IMPORTED_MODULE_4__.header.ready();
   _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('changes saved', 'darkgreen');
   let omarks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.qs)('.synchroMark');
@@ -4975,9 +4970,7 @@ async function generateFTS() {
           lang: sbook.lang
         };
       });
-      queries = lodash__WEBPACK_IMPORTED_MODULE_0___default().compact(queries); // let chapters = await fetchChapterDocs(queries)
-      // chapters = page.syncDocs(syncs, chapters)
-
+      queries = lodash__WEBPACK_IMPORTED_MODULE_0___default().compact(queries);
       let chapters = await _page__WEBPACK_IMPORTED_MODULE_6__.page.getChapters(_book__WEBPACK_IMPORTED_MODULE_8__.book, cnt.idx);
       chapters = await syncChapters(chapters, syncs);
       let chapter = chapters.find(chapter => chapter.bid == sbook.bid);

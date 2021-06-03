@@ -32,11 +32,10 @@ export const page = {
 
     let sbooks = bkstore.get(state.bid)
     sbooks = dgl.actives(sbooks)
-    // let origin = sbooks.find(sbook=> sbook.origin)
-    let syncs = getSyncs(state.bid)
-
     dgl.idx = state.idx
-    if (state.idx < 0) throw new Error('_PAGE NO CHAPTER IDX')
+    if (state.idx < 0) throw new Error('_PAGE NO CHAPTER IDX') // todo: del
+    let syncs = getSyncs(state.bid)
+    syncs = syncs.filter(sync => sync.idx === dgl.idx)
 
     if (state.jump) {
       dgl.bid = state.bid
@@ -106,6 +105,7 @@ export const page = {
   reSync(sync) {
     let chapter = this.chapters.find(chapter=> chapter.bid == sync.bid)
     chapter.chdocs = syncDoc(chapter.chdocs, sync)
+
     let origin = book.sbooks.find(sbook=> sbook.origin)
     let syncs = getSyncs(origin.bid)
     syncs.push(sync)
@@ -516,15 +516,18 @@ async function saveEditChanges() {
   let origin = book.sbooks.find(sbook=> sbook.origin)
   let syncs = getSyncs(origin.bid)
 
-  if (dgl.idx) {
-    let syncs = getSyncs(origin.bid)
-    syncs = syncs.map(sync=> {
-      let newsync = {bid: sync.bid, action: sync.action, idx: sync.idx, blockid: sync.blockid}
-      if (sync.param) newsync.param = sync.param
-      return newsync
-    })
-    syncstore.set(dgl.bid, syncs)
-  }
+  // if (dgl.idx) {
+  //   let syncs = getSyncs(origin.bid)
+  //   // syncs = syncs.map(sync=> {
+  //   //   let newsync = {bid: sync.bid, action: sync.action, idx: sync.idx, blockid: sync.blockid}
+  //   //   if (sync.param) newsync.param = sync.param
+  //   //   return newsync
+  //   // })
+  //   syncs.forEach(sync=> delete sync.tmp)
+  //   syncstore.set(dgl.bid, syncs)
+  // }
+  syncs.forEach(sync=> delete sync.tmp)
+  syncstore.set(dgl.bid, syncs)
   header.ready()
   message.show('changes saved', 'darkgreen')
   let omarks = qs('.synchroMark')

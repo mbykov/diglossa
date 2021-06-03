@@ -101,8 +101,6 @@ async function generateFTS() {
       })
       queries = _.compact(queries)
 
-      // let chapters = await fetchChapterDocs(queries)
-      // chapters = page.syncDocs(syncs, chapters)
       let chapters = await page.getChapters(book, cnt.idx)
       chapters = await syncChapters(chapters, syncs)
 

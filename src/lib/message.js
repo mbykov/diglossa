@@ -8,7 +8,6 @@ let timer
 
 export const message = {
   show(str, color, auto) {
-    log('_message', str)
     let omessage = omess.querySelector('#message-text')
     progress.hide()
     omess.classList.remove('hidden')
