@@ -127,7 +127,8 @@ document.addEventListener ("click",  (ev) => {
     omessage.classList.remove('version')
     shell.openExternal(config.version)
   }
-  message.hide()
+  if (ev.target.closest('#message')) message.hide()
+
   if (ev.target.nodeName == 'BUTTON') return
   if (ev.target.nodeName == 'A') return
   let ohref = ev.target.closest('.external')

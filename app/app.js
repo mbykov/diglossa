@@ -180,7 +180,7 @@ document.addEventListener("click", ev => {
     electron__WEBPACK_IMPORTED_MODULE_4__.shell.openExternal(_config__WEBPACK_IMPORTED_MODULE_9__.config.version);
   }
 
-  _lib_message__WEBPACK_IMPORTED_MODULE_7__.message.hide();
+  if (ev.target.closest('#message')) _lib_message__WEBPACK_IMPORTED_MODULE_7__.message.hide();
   if (ev.target.nodeName == 'BUTTON') return;
   if (ev.target.nodeName == 'A') return;
   let ohref = ev.target.closest('.external');
@@ -1529,10 +1529,29 @@ document.addEventListener('click', async ev => {
   let ocmp = ev.target.closest('#compress-dgl');
   let ounc = ev.target.closest('#uncompress-dgl');
 
-  try {
-    if (ocreate) createDglPackage(prefs);else if (ocmp) compressPackage(prefs);else if (ounc) uncompressPackage(prefs);
-  } catch (err) {
-    let mess = 'can not create dgl package';
+  if (ocmp) {
+    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_CMP', checkJSON(prefs));
+
+    if (!checkJSON(prefs)) {
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_CMP FALSE');
+      let mess = 'no json file to compress';
+      _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgred'); // return
+    } else compressPackage(prefs);
+  }
+
+  if (ounc) {
+    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_UNC', checkDGL(prefs));
+
+    if (!checkDGL(prefs)) {
+      let mess = 'no dgl file to uncompress';
+      _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgred'); // return
+    } else uncompressPackage(prefs);
+  }
+
+  if (ocreate) {
+    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_OCREATE');
+    createDglPackage(prefs);
+    let mess = 'dgl package created';
     _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgred');
   }
 });
@@ -1556,6 +1575,40 @@ function checkPrefs() {
 function checkBooks() {
   if (dgl.bid && _book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks) return true;
   _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show('select a book', 'darkred');
+}
+
+function checkJSON(prefs) {
+  let exportpath = appstore.get('exportpath');
+  fse.ensureDirSync(exportpath);
+  let packname = prefs.name;
+  let dirpath = path.resolve(exportpath, packname);
+  let dglpath = [dirpath, 'dgl'].join('.');
+  let jsonpath = [dirpath, 'json'].join('.');
+  let exists = true;
+
+  try {
+    if (fse.existsSync(jsonpath)) return true;else return false;
+  } catch (err) {
+    console.error('ERR: compress json:', err);
+    return false;
+  }
+}
+
+function checkDGL(prefs) {
+  let exportpath = appstore.get('exportpath');
+  fse.ensureDirSync(exportpath);
+  let packname = prefs.name;
+  let dirpath = path.resolve(exportpath, packname);
+  let dglpath = [dirpath, 'dgl'].join('.');
+  let jsonpath = [dirpath, 'json'].join('.');
+  let exists = true;
+
+  try {
+    if (fse.existsSync(dglpath)) return true;else return false;
+  } catch (err) {
+    console.error('ERR: compress json:', err);
+    return false;
+  }
 }
 
 /***/ }),

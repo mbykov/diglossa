@@ -38,7 +38,6 @@ export const getExportBook = {}
 async function createDglPackage(prefs) {
   let exportpath = appstore.get('exportpath')
   fse.ensureDirSync(exportpath)
-
   let packname = prefs.name
   let dirpath = path.resolve(exportpath, packname)
   fse.ensureDirSync(dirpath)
@@ -141,6 +140,7 @@ async function uncompressPackage(prefs) {
   let dirpath = path.resolve(exportpath, packname)
   let dglpath = [dirpath, 'dgl'].join('.')
   let jsonpath = [dirpath, 'json'].join('.')
+
   fse.ensureDirSync(dirpath)
 
   let pack = await uncompressDGL(dglpath)
@@ -167,12 +167,25 @@ document.addEventListener('click', async (ev) => {
   let ocreate = ev.target.closest('#create-dgl')
   let ocmp = ev.target.closest('#compress-dgl')
   let ounc = ev.target.closest('#uncompress-dgl')
-  try {
-    if (ocreate) createDglPackage(prefs)
-    else if (ocmp) compressPackage(prefs)
-    else if (ounc) uncompressPackage(prefs)
-  } catch(err) {
-    let mess = 'can not create dgl package'
+
+  if (ocmp) {
+    if (!checkJSON(prefs)) {
+      let mess = 'no json file to compress'
+      message.show(mess, 'darkgred')
+    }
+    else compressPackage(prefs)
+  }
+
+  if (ounc) {
+    if (!checkDGL(prefs)) {
+      let mess = 'no dgl file to uncompress'
+      message.show(mess, 'darkgred')
+    }
+    else uncompressPackage(prefs)
+  }
+  if (ocreate) {
+    createDglPackage(prefs)
+    let mess = 'dgl package created'
     message.show(mess, 'darkgred')
   }
 })
@@ -194,4 +207,38 @@ function checkPrefs() {
 function checkBooks() {
   if (dgl.bid && book.sbooks) return true
   message.show('select a book', 'darkred')
+}
+
+function checkJSON(prefs) {
+  let exportpath = appstore.get('exportpath')
+  fse.ensureDirSync(exportpath)
+  let packname = prefs.name
+  let dirpath = path.resolve(exportpath, packname)
+  let dglpath = [dirpath, 'dgl'].join('.')
+  let jsonpath = [dirpath, 'json'].join('.')
+  let exists = true
+  try {
+    if (fse.existsSync(jsonpath)) return true
+    else return false
+  } catch(err) {
+    console.error('ERR: compress json:', err)
+    return false
+  }
+}
+
+function checkDGL(prefs) {
+  let exportpath = appstore.get('exportpath')
+  fse.ensureDirSync(exportpath)
+  let packname = prefs.name
+  let dirpath = path.resolve(exportpath, packname)
+  let dglpath = [dirpath, 'dgl'].join('.')
+  let jsonpath = [dirpath, 'json'].join('.')
+  let exists = true
+  try {
+    if (fse.existsSync(dglpath)) return true
+    else return false
+  } catch(err) {
+    console.error('ERR: compress json:', err)
+    return false
+  }
 }
