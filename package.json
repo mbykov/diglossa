@@ -34,6 +34,24 @@
       "category": "Scientific software",
       "target": [
         {
+          "target": "tar.gz",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
           "target": "rpm",
           "arch": [
             "x64"
