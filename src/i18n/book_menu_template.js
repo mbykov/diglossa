@@ -23,6 +23,9 @@ export function bookMenuTemplate() {
         accelerator: "CmdOrCtrl+O",
         click: () => { BrowserWindow.getFocusedWindow().webContents.send('importBook') } },
       { label: "Add parallel book", click: () => { BrowserWindow.getFocusedWindow().webContents.send('addParallelBook') } },
+
+      { type: "separator" },
+
       { label: "Generate FTS", click: () => { BrowserWindow.getFocusedWindow().webContents.send('generateFTS') } },
 
       { type: "separator" },
@@ -31,8 +34,8 @@ export function bookMenuTemplate() {
 
       // { type: "separator" },
 
-      { label: "Compress package", click: () => { BrowserWindow.getFocusedWindow().webContents.send('compress') } },
-      { label: "Uncompress package", click: () => { BrowserWindow.getFocusedWindow().webContents.send('uncompress') } },
+      // { label: "Compress package", click: () => { BrowserWindow.getFocusedWindow().webContents.send('compress') } },
+      // { label: "Uncompress package", click: () => { BrowserWindow.getFocusedWindow().webContents.send('uncompress') } },
       // { label: "Publish", click: () => { BrowserWindow.getFocusedWindow().webContents.send('publishDGL') } },
 
     ]

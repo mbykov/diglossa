@@ -32,21 +32,10 @@ import { message } from './lib/message'
 import { remote } from "electron"
 let dgl = remote.getGlobal('dgl')
 
-// todo: del
-const mouse = require('mousetrap')
-// const FlexSearch = require("flexsearch")
-const ftsopts = remote.getGlobal('ftsopts')
-
 export const getExportBook = {}
 
-function checkBooks() {
-  if (dgl.bid && book.sbooks) return true
-  message.show('select a book', 'darkred')
-}
-
 // create book-DGL:
-export async function createDglPackage(prefs) {
-  if (!checkBooks()) return
+async function createDglPackage(prefs) {
   let exportpath = appstore.get('exportpath')
   fse.ensureDirSync(exportpath)
 
@@ -86,7 +75,8 @@ export async function createDglPackage(prefs) {
     let mess =  ['could not export', origin.descr.title].join(' ')
     message.show(mess, 'darkred')
   }
-  // if (prefs.compress) compressPackage(packname, dirpath, infopath)
+  let mess = [prefs.name, 'created', exportpath].join(' ')
+  message.show(mess, 'darkgreen')
 }
 
 export async function getSyncedDocs(book, syncs) {
@@ -112,18 +102,15 @@ export async function getSyncedDocs(book, syncs) {
   return sdocs
 }
 
-ipcRenderer.on('compress', async function (event) {
-  if (!checkBooks()) return
-  let origin = dgl.origin(book.sbooks)
-  let prefs = prefstore.get(origin.bid)
-
-  try {
-    compressPackage(prefs)
-    let mess = [prefs.name, 'compressed'].join(' ')
-  } catch(err) {
-    message.show('can not compress book', 'darkred')
-  }
-})
+function docs2md(docs) {
+  return docs.map(doc=> {
+    let md = ''
+    if (doc.level) md = '#'.repeat(doc.level) + ' '
+    else if (doc.type == 'list') md = '-'
+    md += doc.md
+    return md
+  })
+}
 
 async function compressPackage(prefs) {
   let exportpath = appstore.get('exportpath')
@@ -146,35 +133,6 @@ async function compressPackage(prefs) {
       message.show('can not compress book. Select a book', 'darkred')
     })
 }
-
-ipcRenderer.on('uncompress', async function (event) {
-  if (!checkBooks()) return
-  let origin = dgl.origin(book.sbooks)
-  let prefs = prefstore.get(origin.bid)
-  let exportpath = appstore.get('exportpath')
-  let dirpath = path.resolve(exportpath, prefs.name)
-  let dglpath = [dirpath, 'dgl'].join('.')
-  let backup = dglpath + '.backup'
-
-  let iszip = isZip(fse.readFileSync(dglpath))
-  if (!iszip) {
-    message.show('not a dgl, i.e. zip file', 'darkred')
-    return
-  }
-  try {
-    fse.copySync(dglpath, backup)
-  } catch(err) {
-    message.show('no archive file', 'darkred')
-    return
-  }
-  try {
-    let descr = await uncompressDGL(dglpath)
-    let mess = [prefs.name, 'uncompressed'].join(' ')
-    message.show(mess, 'darkgreen')
-  } catch(err) {
-    message.show('can not uncompress file', 'darkred')
-  }
-})
 
 async function uncompressPackage(prefs) {
   let exportpath = appstore.get('exportpath')
@@ -199,13 +157,29 @@ async function uncompressPackage(prefs) {
 }
 
 document.addEventListener('click', async (ev) => {
-  let obutton = ev.target.closest('.create-package')
-  if (!obutton) return
+  let oblock = ev.target.closest('#create-dgl-block')
+  if (!oblock) return
+  if (!checkBooks()) return
   progress.show()
+  let prefs = checkPrefs()
+
+  let ocreate = ev.target.closest('#create-dgl')
+  let ocmp = ev.target.closest('#compress-dgl')
+  let ounc = ev.target.closest('#uncompress-dgl')
+  try {
+    if (ocreate) createDglPackage(prefs)
+    else if (ocmp) compressPackage(prefs)
+    else if (ounc) uncompressPackage(prefs)
+  } catch(err) {
+    let mess = 'can not create dgl package'
+    message.show(mess, 'darkgred')
+  }
+})
+
+function checkPrefs() {
   let origin = dgl.origin(book.sbooks)
-  // let prefs = preference.prefs
   let prefs = prefstore.get(origin.bid)
-  let rows = qs('.table-line')
+  let rows = qs('.prefs-line')
   for (let orow of rows) {
     let prefname = orow.getAttribute('prefname')
     if (!prefname) continue
@@ -213,19 +187,10 @@ document.addEventListener('click', async (ev) => {
     prefs[prefname] = value
   }
   prefstore.set(origin.bid, prefs)
-  await createDglPackage(prefs)
-  const state = {route: 'library'}
-  router(state)
-  let mess =  [origin.descr.title, 'exported'].join(' ')
-  message.show(mess, 'darkgreen')
-})
+  return prefs
+}
 
-function docs2md(docs) {
-  return docs.map(doc=> {
-    let md = ''
-    if (doc.level) md = '#'.repeat(doc.level) + ' '
-    else if (doc.type == 'list') md = '-'
-    md += doc.md
-    return md
-  })
+function checkBooks() {
+  if (dgl.bid && book.sbooks) return true
+  message.show('select a book', 'darkred')
 }

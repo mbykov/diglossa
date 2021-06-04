@@ -377,6 +377,10 @@ tr:nth-child(odd):not(.hidden) {
     cursor: pointer;
 }
 
+.export-to-block {
+    cursor: pointer;
+}
+
 #heap {
     cursor: pointer;
 }

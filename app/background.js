@@ -163,6 +163,8 @@ function bookMenuTemplate() {
         electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('addParallelBook');
       }
     }, {
+      type: "separator"
+    }, {
       label: "Generate FTS",
       click: () => {
         electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('generateFTS');
@@ -175,18 +177,10 @@ function bookMenuTemplate() {
       click: () => {
         electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('route', 'preference');
       }
-    }, // { type: "separator" },
-    {
-      label: "Compress package",
-      click: () => {
-        electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('compress');
-      }
-    }, {
-      label: "Uncompress package",
-      click: () => {
-        electron__WEBPACK_IMPORTED_MODULE_0__.BrowserWindow.getFocusedWindow().webContents.send('uncompress');
-      }
-    } // { label: "Publish", click: () => { BrowserWindow.getFocusedWindow().webContents.send('publishDGL') } },
+    } // { type: "separator" },
+    // { label: "Compress package", click: () => { BrowserWindow.getFocusedWindow().webContents.send('compress') } },
+    // { label: "Uncompress package", click: () => { BrowserWindow.getFocusedWindow().webContents.send('uncompress') } },
+    // { label: "Publish", click: () => { BrowserWindow.getFocusedWindow().webContents.send('publishDGL') } },
     ]
   };
   return menu;

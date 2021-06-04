@@ -25,15 +25,12 @@ if (!exportpath) {
 
 export const preference = {
   async ready() {
-    let books = book.sbooks
-    if (!books) {
-      message.show('select a book first','darkred')
-      return
-    }
+    if (!checkBooks()) return
     render('prefs')
     this.tbody = q('#prefs-table .tbody')
     const odata = q('#pref-package-data')
-    let origin = dgl.origin(books)
+
+    let origin = dgl.origin(book.sbooks)
     let oauthor = odata.querySelector('#pref-book-author')
     oauthor.textContent = origin.descr.author
     let otitle = odata.querySelector('#pref-book-title')
@@ -86,31 +83,22 @@ export const preference = {
     return defaults
   },
 
-  // savePrefs(type, name, value) {
-  //   let bid = this.origin.bid
-  //   let prefs = this.prefs
-  //   if (type == 'dir') prefs[name] = value
-  //   else if (type == 'file') prefs.files[name] = value
-  //   else if (type == 'value') prefs[name] = value
-  //   prefstore.set(bid, prefs)
-  // },
-
   addRow(type, name, value) {
-    const tmpl = q('.table-line.tmpl')
+    const tmpl = q('.prefs-line.tmpl')
     const orow = tmpl.cloneNode(true)
     orow.classList.remove('tmpl')
     orow.setAttribute('type', type)
     orow.setAttribute('prefname', name)
-    orow.setAttribute('contenteditable', true)
     let oname = orow.querySelector('.td-name')
     let ovalue = orow.querySelector('.td-value')
+    ovalue.setAttribute('contenteditable', true)
     oname.textContent = name
     ovalue.textContent = value
     this.tbody.appendChild(orow)
   },
 
   stripes() {
-    let orows = qs('.table-line:not(.hidden)')
+    let orows = qs('.prefs-line:not(.hidden)')
     let n = 0
     for (let orow of orows) {
       if ((n % 2) === 1) orow.classList.remove('odd'), orow.classList.add('even')
@@ -141,17 +129,28 @@ function openDialogExportPath() {
 document.addEventListener('keydown', ev => {
   if (ev.key !== 'Enter') return
   ev.preventDefault()
-  let orow = ev.target.closest('.table-line')
+  if (!checkBooks()) return
+  let orow = ev.target.closest('.prefs-line')
   if (!orow) return
+  let origin = dgl.origin(book.sbooks)
+  let prefs = prefstore.get(origin.bid)
+
   let name = orow.querySelector('.td-name').textContent.trim()
   let value = orow.querySelector('.td-value').textContent.trim()
   let prefname = [preference.origin.bid, name].join('.')
   prefstore.set(prefname, value)
-  preference.ready()
-})
 
+  prefstore.set(origin.bid, prefs)
+  preference.ready()
+
+})
 
 mouse.bind('ctrl+p', function(ev) {
   const state = {route: 'preference'}
   router(state)
 })
+
+function checkBooks() {
+  if (dgl.bid && book.sbooks) return true
+  message.show('select a book', 'darkred')
+}

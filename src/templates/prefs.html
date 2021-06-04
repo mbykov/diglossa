@@ -6,14 +6,14 @@
       <div id="pref-package-data" class="font-bold p4 m4">
         <span id="pref-book-author"></span> -
         <span id="pref-book-title"></span></div>
-      <div class="">
-        <button type="button" class="create-package mr-3 text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 rounded focus:outline-none focus:shadow-outline">create package</button>
-      </div>
+      <!-- <div class=""> -->
+      <!--   <button type="button" class="create-package mr-3 text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 rounded focus:outline-none focus:shadow-outline">create package</button> -->
+      <!-- </div> -->
     </div>
   </div>
 
   <div id="package" class="flex flex-col bg-white shadow-md rounded m-4">
-    <div class="tr-header table-line flex border-b" type="dir">
+    <div class="export-to-block flex border-b">
       <div class="w-40 left p-3 flex-grow-0 font-bold">export-to path:</div>
       <div id="exportpath" class="p-3 flex-grow"></div>
     </div>
@@ -29,15 +29,23 @@
     <div class="flex justify-between">
       <div class="w-32 font-bold p4 m4">
       </div>
-      <div class="m-8">
-        <button type="button" class="create-package mr-3 text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 rounded focus:outline-none focus:shadow-outline">create package</button>
+      <div id="create-dgl-block" class="m-8">
+        <button id="create-dgl" type="button" class="create-package mr-3 text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 rounded focus:outline-none focus:shadow-outline">
+          create package
+        </button>
+        <button id="compress-dgl" type="button" class="create-package mr-3 text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 rounded focus:outline-none focus:shadow-outline">
+          compress
+        </button>
+        <button id="uncompress-dgl" type="button" class="create-package mr-3 text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 rounded focus:outline-none focus:shadow-outline">
+          uncompress
+        </button>
       </div>
     </div>
   </div>
 
 </div>
 
-<div class="table-line flex tmpl lib border-b">
+<div class="prefs-line flex tmpl lib border-b">
   <div class="td-name w-40 p-3 px-5 flex-grow-0"></div>
   <div class="td-value p-3 maroon flex-grow "></div>
 </div>
