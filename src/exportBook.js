@@ -139,11 +139,12 @@ async function uncompressPackage(prefs) {
   fse.ensureDirSync(exportpath)
   let packname = prefs.name
   let dirpath = path.resolve(exportpath, packname)
-  fse.ensureDirSync(dirpath)
   let dglpath = [dirpath, 'dgl'].join('.')
   let jsonpath = [dirpath, 'json'].join('.')
+  fse.ensureDirSync(dirpath)
 
   let pack = await uncompressDGL(dglpath)
+  if (!pack || !pack.texts) return
   for await (let text of pack.texts) {
     let str = text.mds.join('\n')
     let filepath =  [exportpath, text.src].join(path.sep)
