@@ -378,9 +378,11 @@ const langs = __webpack_require__(/*! langs */ "langs");
 let dgl = electron__WEBPACK_IMPORTED_MODULE_6__.remote.getGlobal('dgl');
 
 
+let stop = false;
 mouse.bind('ctrl+y', function (ev) {
   if (!dgl.editMode) return;
   if (_book__WEBPACK_IMPORTED_MODULE_8__.book.sbooks.length < 2) return;
+  stop = false;
   let start = 0;
   let oed = getFirstBlock();
   if (!oed) return;
@@ -392,7 +394,7 @@ mouse.bind('ctrl+y', function (ev) {
 async function autoSync(blockid) {
   let synced = true;
 
-  while (synced) {
+  while (synced && !stop) {
     synced = await nextLamp(blockid);
     blockid++;
   }
@@ -408,6 +410,7 @@ function nextLamp(blockid) {
 
     let synced = await checkBlock(osrc, otrn);
     if (synced) otrn.classList.add('em-green-circle');else otrn.classList.add('em-red-circle');
+    if (stop) return false;
     return synced;
   });
 }
@@ -502,9 +505,11 @@ mouse.bind('space', function (ev) {
   let otrnpar = ored.closest('.block');
   let blockid = otrnpar.getAttribute('blockid');
   let next = blockid * 1 + 1;
-  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_blockid', blockid);
   setLamps(next);
   autoSync(next);
+});
+document.addEventListener("keydown", function (ev) {
+  if (ev.which == 27) stop = true;
 });
 
 /***/ }),
