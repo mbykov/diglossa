@@ -377,8 +377,6 @@ const langs = __webpack_require__(/*! langs */ "langs");
 
 let dgl = electron__WEBPACK_IMPORTED_MODULE_6__.remote.getGlobal('dgl');
 
- // let stemdictpath = '/home/michael/b/synchro.js/dicts/dict-stems-eng-rus.json'
-// let stemdicts = fse.readJsonSync(stemdictpath)
 
 mouse.bind('ctrl+y', function (ev) {
   if (!dgl.editMode) return;
@@ -420,8 +418,7 @@ async function checkBlock(osrc, otrn) {
   let src = oparsrc.textContent;
   let opartrn = otrn.querySelector('p.ptext:not(.hidden)');
   let trnlang = opartrn.getAttribute('lang');
-  let trn = opartrn.textContent; // log XXX
-
+  let trn = opartrn.textContent;
   let oblock = otrn.closest('.block');
   let blockid = oblock.getAttribute('blockid');
   let srcwfs = wordforms(src, srclang);
@@ -484,8 +481,7 @@ const sleep = ms => {
 };
 
 function getFirstBlock() {
-  const oblock = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('.block:hover'); // const oblock = q('.editable')
-
+  const oblock = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('.block:hover');
   if (!oblock) _lib_message__WEBPACK_IMPORTED_MODULE_3__.message.show('select paragraph to start', 'darkred');
   return oblock;
 }
@@ -495,8 +491,7 @@ function setLamps(startidx) {
   let idx = 0;
 
   for (let block of blocks) {
-    if (idx < startidx) block.classList.add('em-green-circle'), block.classList.remove('em-red-circle'); // else if (idx == startidx) block.classList.remove('em-green-circle'), block.classList.add('em-red-circle')
-    else block.classList.remove('em-green-circle'), block.classList.remove('em-red-circle');
+    if (idx < startidx) block.classList.add('em-green-circle'), block.classList.remove('em-red-circle');else block.classList.remove('em-green-circle'), block.classList.remove('em-red-circle');
     idx++;
   }
 }
@@ -1530,26 +1525,20 @@ document.addEventListener('click', async ev => {
   let ounc = ev.target.closest('#uncompress-dgl');
 
   if (ocmp) {
-    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_CMP', checkJSON(prefs));
-
     if (!checkJSON(prefs)) {
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_CMP FALSE');
       let mess = 'no json file to compress';
-      _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgred'); // return
+      _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgred');
     } else compressPackage(prefs);
   }
 
   if (ounc) {
-    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_UNC', checkDGL(prefs));
-
     if (!checkDGL(prefs)) {
       let mess = 'no dgl file to uncompress';
-      _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgred'); // return
+      _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgred');
     } else uncompressPackage(prefs);
   }
 
   if (ocreate) {
-    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_OCREATE');
     createDglPackage(prefs);
     let mess = 'dgl package created';
     _lib_message__WEBPACK_IMPORTED_MODULE_11__.message.show(mess, 'darkgred');
@@ -4013,7 +4002,6 @@ const page = {
   },
 
   localSearch() {
-    // let instance = this.markInstance
     let instance = new Mark((0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('.page'));
 
     if (this.localquery.length < 2) {
@@ -4040,7 +4028,6 @@ const page = {
     let qblockid = state.blockid;
 
     if (state.context) {
-      // todo: тоже изменить
       let recontext = new RegExp('^' + state.context);
 
       for (let book of this.sbooks) {
@@ -4110,8 +4097,7 @@ function getSyncs(bid) {
   let syncs = syncstore.get(bid);
   if (lodash__WEBPACK_IMPORTED_MODULE_1___default().isEmpty(syncs)) syncs = [];
   return syncs;
-} // todo: export - del - для create external package
-
+}
 function syncDoc(docs, sync) {
   let blockid = sync.blockid;
   let doc = docs[blockid];
@@ -4228,8 +4214,7 @@ function parsePar(doc, lang) {
 
 function wrapSpan(opar) {
   opar.innerHTML = opar.innerHTML.replace(/(\[[^\]]{1,4}\])/g, "<span class=\"ref\">$1</span>");
-  let nodes = opar.childNodes; // let names = _.map(nodes, node=> node.nodeName)
-
+  let nodes = opar.childNodes;
   let html = '';
   nodes.forEach(node => {
     if (node.nodeType == 3) {
@@ -4243,7 +4228,7 @@ function wrapSpan(opar) {
     }
   });
   return html;
-} // todo: mousetrap
+} // todo: mousetrap ?
 
 
 let scrollByKey = function (ev) {
@@ -4392,7 +4377,7 @@ document.addEventListener("wheel", function (ev) {
   }
 
   page.reload();
-}, false); // ===============
+}, false);
 
 let localSearch = function (ev) {
   if (dgl.editMode) return;
@@ -4424,9 +4409,9 @@ async function exitEditMode(ev) {
   }
 
   _header__WEBPACK_IMPORTED_MODULE_4__.header.ready();
-  let omarks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.qs)('.synchroMark');
-  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.removeAll)(omarks);
-  _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('all last changes lost', 'darkgreen'); // todo: book.reload()
+  let omarks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.qs)('.em-green-circle');
+  omarks.forEach(omark => omark.classList.remove('em-green-circle'));
+  _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('all last changes lost', 'darkgreen');
 }
 
 document.addEventListener("keydown", exitEditMode);
@@ -4446,23 +4431,13 @@ async function saveEditChanges() {
   (0,_semaphore__WEBPACK_IMPORTED_MODULE_5__.removeEditStyle)();
   _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.hide();
   let origin = _book__WEBPACK_IMPORTED_MODULE_7__.book.sbooks.find(sbook => sbook.origin);
-  let syncs = getSyncs(origin.bid); // if (dgl.idx) {
-  //   let syncs = getSyncs(origin.bid)
-  //   // syncs = syncs.map(sync=> {
-  //   //   let newsync = {bid: sync.bid, action: sync.action, idx: sync.idx, blockid: sync.blockid}
-  //   //   if (sync.param) newsync.param = sync.param
-  //   //   return newsync
-  //   // })
-  //   syncs.forEach(sync=> delete sync.tmp)
-  //   syncstore.set(dgl.bid, syncs)
-  // }
-
+  let syncs = getSyncs(origin.bid);
   syncs.forEach(sync => delete sync.tmp);
   syncstore.set(dgl.bid, syncs);
   _header__WEBPACK_IMPORTED_MODULE_4__.header.ready();
   _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('changes saved', 'darkgreen');
-  let omarks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.qs)('.synchroMark');
-  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.removeAll)(omarks);
+  let omarks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.qs)('.em-green-circle');
+  omarks.forEach(omark => omark.classList.remove('em-green-circle'));
 }
 
 function showSearchIcon() {
@@ -5217,7 +5192,7 @@ mouse.bind('ctrl+e', function (ev) {
   dgl.editMode = true;
   _lib_message__WEBPACK_IMPORTED_MODULE_3__.message.hide();
   semaphore.ready();
-}); // что тут происхоит при смене языка ?
+}); // todo: semaphore - что тут происхоит при смене языка ?
 
 const semaphore = {
   async ready() {
@@ -5237,7 +5212,6 @@ async function setSemaphore() {
   let otrn = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('#em-lang-shown');
 
   if (dgl.idx && _page__WEBPACK_IMPORTED_MODULE_6__.page) {
-    // let chapters = await page.getChapters(book, dgl.idx)
     let chapters = await _page__WEBPACK_IMPORTED_MODULE_6__.page.chapters;
     let origin = dgl.origin(chapters);
     let shown = dgl.shown(chapters);
@@ -5344,9 +5318,9 @@ mouse.bind('b', function (ev) {
   next = oed.nextSibling.textContent;
   if (next) nnext = oed.nextSibling.nextSibling;
   if (nnext) nnext = nnext.textContent;
-  let context = [pprev, prev, text, next, nnext].join(''); // quotation marks and dashes placed afte wf:
+  let context = [pprev, prev, text, next, nnext].join(''); // quotation marks and dashes placed before wf:
 
-  let restricted = ['–', '\"'];
+  let restricted = ['–', '\"', "«"];
 
   if (oed.previousSibling && oed.previousElementSibling != oed.previousSibling && restricted.includes(oed.previousSibling.textContent.trim())) {
     text = [oed.previousSibling.textContent, text].join('');
@@ -5392,8 +5366,9 @@ document.addEventListener("click", ev => {
   oed = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('.editable-wf');
   if (oed) oed.classList.remove('editable-wf');
   owf.classList.add('editable-wf');
-});
-mouse.bind('ctrl+t', function (ev) {
+}); // todo:  truncate??? а будет ли работать align pars без пересчета?
+
+mouse.bind('ctrl+t_', function (ev) {
   if (!dgl.editMode) return;
   if (!dgl.idx) return;
   let oblocks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.qs)('.page .block');
@@ -5402,8 +5377,7 @@ mouse.bind('ctrl+t', function (ev) {
 
   lodash__WEBPACK_IMPORTED_MODULE_0___default().each(oblocks, oblock => {
     if (trnk) oblock.classList.remove('truncate'), oblock.classList.remove('truncated');else oblock.classList.add('truncate'), oblock.classList.add('truncated');
-  }); // todo: ??? а будет ли работать align pars без пересчета?
-
+  });
 });
 
 /***/ }),

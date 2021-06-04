@@ -22,9 +22,6 @@ let dgl = remote.getGlobal('dgl')
 import { page } from './page'
 import { book } from './book'
 
-// let stemdictpath = '/home/michael/b/synchro.js/dicts/dict-stems-eng-rus.json'
-// let stemdicts = fse.readJsonSync(stemdictpath)
-
 mouse.bind('ctrl+y', function(ev) {
   if (!dgl.editMode) return
   if (book.sbooks.length < 2) return
@@ -68,7 +65,6 @@ async function checkBlock(osrc, otrn) {
   let trnlang = opartrn.getAttribute('lang')
   let trn = opartrn.textContent
 
-  // log XXX
   let oblock = otrn.closest('.block')
   let blockid = oblock.getAttribute('blockid')
 
@@ -137,7 +133,6 @@ const sleep = ms => {
 
 export function getFirstBlock() {
   const oblock = q('.block:hover')
-  // const oblock = q('.editable')
   if (!oblock) message.show('select paragraph to start', 'darkred')
   return oblock
 }
@@ -147,7 +142,6 @@ function setLamps(startidx) {
   let idx = 0
   for (let block of blocks) {
     if (idx < startidx) block.classList.add('em-green-circle'), block.classList.remove('em-red-circle')
-    // else if (idx == startidx) block.classList.remove('em-green-circle'), block.classList.add('em-red-circle')
     else block.classList.remove('em-green-circle'), block.classList.remove('em-red-circle')
     idx++
   }

@@ -50,7 +50,7 @@ mouse.bind('ctrl+e', function(ev) {
   semaphore.ready()
 })
 
-// что тут происхоит при смене языка ?
+// todo: semaphore - что тут происхоит при смене языка ?
 export const semaphore = {
   async ready() {
     setEmptyHeader()
@@ -67,7 +67,6 @@ async function setSemaphore() {
   let osrc = q('#em-lang-origin')
   let otrn = q('#em-lang-shown')
   if (dgl.idx && page) {
-    // let chapters = await page.getChapters(book, dgl.idx)
     let chapters = await page.chapters
     let origin = dgl.origin(chapters)
     let shown = dgl.shown(chapters)
@@ -172,8 +171,8 @@ mouse.bind('b', function(ev) {
   if (nnext) nnext = nnext.textContent
   let context = [pprev, prev, text, next, nnext].join('')
 
-  // quotation marks and dashes placed afte wf:
-  let restricted = ['–', '\"']
+  // quotation marks and dashes placed before wf:
+  let restricted = ['–', '\"', "«"]
   if (oed.previousSibling && oed.previousElementSibling != oed.previousSibling && restricted.includes(oed.previousSibling.textContent.trim())) {
     text = [oed.previousSibling.textContent, text].join('')
     let re = new RegExp(oed.previousSibling.textContent + '$')
@@ -224,7 +223,8 @@ document.addEventListener ("click",  (ev) => {
   owf.classList.add('editable-wf')
 })
 
-mouse.bind('ctrl+t', function(ev) {
+// todo:  truncate??? а будет ли работать align pars без пересчета?
+mouse.bind('ctrl+t_', function(ev) {
   if (!dgl.editMode) return
   if (!dgl.idx) return
   let oblocks = qs('.page .block')
@@ -234,5 +234,4 @@ mouse.bind('ctrl+t', function(ev) {
     if (trnk) oblock.classList.remove('truncate'), oblock.classList.remove('truncated')
     else oblock.classList.add('truncate'), oblock.classList.add('truncated')
   })
-  // todo: ??? а будет ли работать align pars без пересчета?
 })

@@ -115,7 +115,6 @@ export const page = {
     semaphore.ready()
   },
   localSearch() {
-    // let instance = this.markInstance
     let instance = new Mark(q('.page'))
     if (this.localquery.length < 2) {
       instance.unmark()
@@ -137,7 +136,6 @@ export const page = {
   scroll(state) {
     let qblockid = state.blockid
     if (state.context) {
-      // todo: тоже изменить
       let recontext = new RegExp('^' + state.context)
       for (let book of this.sbooks) {
         let blockid = 0
@@ -205,7 +203,6 @@ export function getSyncs(bid) {
   return syncs
 }
 
-// todo: export - del - для create external package
 export function syncDoc(docs, sync) {
   let blockid = sync.blockid
   let doc = docs[blockid]
@@ -308,7 +305,6 @@ function parsePar(doc, lang) {
 function wrapSpan(opar) {
   opar.innerHTML = opar.innerHTML.replace(/(\[[^\]]{1,4}\])/g, "<span class=\"ref\">$1</span>")
   let nodes = opar.childNodes
-  // let names = _.map(nodes, node=> node.nodeName)
   let html = ''
   nodes.forEach(node=> {
     if (node.nodeType == 3) {
@@ -324,7 +320,7 @@ function wrapSpan(opar) {
   return html
 }
 
-// todo: mousetrap
+// todo: mousetrap ?
 let scrollByKey = function(ev) {
   const opage = q('.page')
   if (!opage) return
@@ -457,8 +453,6 @@ document.addEventListener("wheel", function(ev) {
   page.reload()
 }, false)
 
-// ===============
-
 let localSearch = function(ev) {
   if (dgl.editMode) return
   if (dgl.route != 'page') return
@@ -491,10 +485,9 @@ async function exitEditMode(ev) { // ESC
   }
 
   header.ready()
-  let omarks = qs('.synchroMark')
-  removeAll(omarks)
+  let omarks = qs('.em-green-circle')
+  omarks.forEach(omark=> omark.classList.remove('em-green-circle'))
   message.show('all last changes lost', 'darkgreen')
-  // todo: book.reload()
 }
 
 document.addEventListener("keydown", exitEditMode)
@@ -518,22 +511,12 @@ async function saveEditChanges() {
   let origin = book.sbooks.find(sbook=> sbook.origin)
   let syncs = getSyncs(origin.bid)
 
-  // if (dgl.idx) {
-  //   let syncs = getSyncs(origin.bid)
-  //   // syncs = syncs.map(sync=> {
-  //   //   let newsync = {bid: sync.bid, action: sync.action, idx: sync.idx, blockid: sync.blockid}
-  //   //   if (sync.param) newsync.param = sync.param
-  //   //   return newsync
-  //   // })
-  //   syncs.forEach(sync=> delete sync.tmp)
-  //   syncstore.set(dgl.bid, syncs)
-  // }
   syncs.forEach(sync=> delete sync.tmp)
   syncstore.set(dgl.bid, syncs)
   header.ready()
   message.show('changes saved', 'darkgreen')
-  let omarks = qs('.synchroMark')
-  removeAll(omarks)
+  let omarks = qs('.em-green-circle')
+  omarks.forEach(omark=> omark.classList.remove('em-green-circle'))
 }
 
 function showSearchIcon() {
