@@ -3637,6 +3637,8 @@ const {
 
 let dgl = electron__WEBPACK_IMPORTED_MODULE_3__.remote.getGlobal('dgl');
 
+const Mark = __webpack_require__(/*! mark.js */ "mark.js");
+
 const Store = __webpack_require__(/*! electron-store */ "electron-store");
 
 const appstore = new Store({
@@ -3754,10 +3756,11 @@ document.addEventListener('keydown', ev => {
 
 function lookupBook(srcdir, query) {
   _lib_progress__WEBPACK_IMPORTED_MODULE_4__.progress.show();
-  let restr = new RegExp(query, 'i');
+  let resrc = new RegExp('^' + srcdir + '/');
   let pattern = [srcdir, '**/*'].join('/');
+  let qs = query.split(/ ,?/);
   glob(pattern, function (er, fns) {
-    let qs = query.split(/ ,?/);
+    fns = fns.map(fn => fn.replace(resrc, ''));
     qs.forEach(query => {
       let req = new RegExp(query, 'i');
       fns = fns.filter(fn => req.test(fn));
@@ -3775,6 +3778,15 @@ function lookupBook(srcdir, query) {
 
     lookup.stripes();
     _lib_progress__WEBPACK_IMPORTED_MODULE_4__.progress.hide();
+    mark((0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('#search-list'), query);
+  });
+}
+
+function mark(el, query) {
+  let markInstance = new Mark(el);
+  markInstance.mark(query, {
+    "element": "span",
+    "className": "highlight"
   });
 }
 
@@ -4621,6 +4633,7 @@ function openDialogExportPath() {
 
 document.addEventListener('keydown', ev => {
   if (ev.key !== 'Enter') return;
+  if (dgl.route != 'preference') return;
   ev.preventDefault();
   if (!checkBooks()) return;
   let orow = ev.target.closest('.prefs-line');
@@ -5089,6 +5102,7 @@ document.getElementById('search-icon').onclick = function () {
 };
 
 let escInput = function (ev) {
+  if (dgl.route != 'book' && dgl.route != 'page' && dgl.route != 'search') return;
   if (ev.which == 27) hideSearchField();else if (ev.which == 13) fireFTSearch();
 };
 

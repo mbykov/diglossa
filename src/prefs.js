@@ -128,6 +128,7 @@ function openDialogExportPath() {
 
 document.addEventListener('keydown', ev => {
   if (ev.key !== 'Enter') return
+  if (dgl.route != 'preference') return
   ev.preventDefault()
   if (!checkBooks()) return
   let orow = ev.target.closest('.prefs-line')

@@ -13,6 +13,7 @@ import { progress } from './lib/progress'
 import { ipcRenderer } from "electron";
 import { book } from './book'
 let dgl = remote.getGlobal('dgl')
+const Mark = require('mark.js')
 
 const Store = require('electron-store')
 const appstore = new Store({name: 'appstore'})
@@ -117,11 +118,12 @@ document.addEventListener('keydown', ev => {
 
 function lookupBook(srcdir, query) {
   progress.show()
-  let restr = new RegExp(query, 'i')
+  let resrc = new RegExp('^' + srcdir + '/')
   let pattern = [srcdir, '**/*'].join('/')
+  let qs = query.split(/ ,?/)
 
   glob(pattern, function (er, fns) {
-    let qs = query.split(/ ,?/)
+    fns = fns.map(fn=> fn.replace(resrc, ''))
     qs.forEach(query=> {
       let req = new RegExp(query, 'i')
       fns = fns.filter(fn=> req.test(fn))
@@ -138,5 +140,15 @@ function lookupBook(srcdir, query) {
     }
     lookup.stripes()
     progress.hide()
+
+    mark(q('#search-list'), query)
+  })
+}
+
+function mark(el, query) {
+  let markInstance = new Mark(el)
+  markInstance.mark(query, {
+    "element": "span",
+    "className": "highlight"
   })
 }

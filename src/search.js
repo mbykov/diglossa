@@ -374,6 +374,7 @@ document.getElementById('search-icon').onclick = function () {
 };
 
 let escInput = function(ev) {
+  if (dgl.route != 'book' && dgl.route != 'page' && dgl.route != 'search') return
   if (ev.which == 27) hideSearchField()
   else if (ev.which == 13) fireFTSearch()
 }
