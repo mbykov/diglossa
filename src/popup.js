@@ -149,9 +149,9 @@ mouse.bind(['alt+right'], function(ev) {
   popup.forward()
 })
 
-mouse.bind(['ctrl+v'], function(ev) {
-  popup.log()
-})
+// mouse.bind(['ctrl+v'], function(ev) {
+//   popup.log()
+// })
 
 mouse.bind('space', function(ev) {
   const ddfirst = q('.dict-dd')

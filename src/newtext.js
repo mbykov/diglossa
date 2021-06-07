@@ -14,7 +14,6 @@ export const newtext = {
     let lang = franc(str)
     if (lang == 'ell') lang = 'grc'
     // lang = 'grc'
-    // todo: прокатать dicts
     let rows = str.trim().split('\n')
     rows.forEach(row=> {
       let html = ''

@@ -1184,7 +1184,8 @@ function firePopup(wf, docs) {
 }
 
 document.addEventListener("mouseover", function (ev) {
-  if (!ev.altKey || !(0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('.page')) return;
+  // if (!ev.altKey || !q('.page')) return
+  if (!ev.altKey) return;
   let target = ev.target;
   if (target.nodeName != 'SPAN') return;
   let parent = target.closest('p.ptext');
@@ -3825,7 +3826,6 @@ const newtext = {
     let str = electron__WEBPACK_IMPORTED_MODULE_3__.clipboard.readText();
     let lang = franc(str);
     if (lang == 'ell') lang = 'grc'; // lang = 'grc'
-    // todo: прокатать dicts
 
     let rows = str.trim().split('\n');
     rows.forEach(row => {

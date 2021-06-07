@@ -91,7 +91,8 @@ function firePopup(wf, docs) {
 }
 
 document.addEventListener("mouseover", function(ev) {
-  if (!ev.altKey || !q('.page')) return
+  // if (!ev.altKey || !q('.page')) return
+  if (!ev.altKey) return
   let target = ev.target
   if (target.nodeName != 'SPAN') return
   let parent = target.closest('p.ptext')

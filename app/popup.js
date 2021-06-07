@@ -903,10 +903,10 @@ mouse.bind(['alt+left'], function (ev) {
 });
 mouse.bind(['alt+right'], function (ev) {
   popup.forward();
-});
-mouse.bind(['ctrl+v'], function (ev) {
-  popup.log();
-});
+}); // mouse.bind(['ctrl+v'], function(ev) {
+//   popup.log()
+// })
+
 mouse.bind('space', function (ev) {
   const ddfirst = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.q)('.dict-dd');
   const dds = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.qs)('.dict-dd');
