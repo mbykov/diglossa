@@ -199,7 +199,9 @@ export async function fetchChapter(query) {
   let chpath, limit
   chpath = query.path
   limit = query.size
-  let startkey = [chpath, '-'].join('')
+  // let startkey = [chpath, '-'].join('')
+  let startkey = chpath
+  log('_FETCH', startkey, limit)
   db.options = {include_docs: true, startkey, limit}
 
   return db.allDocs(db.options)

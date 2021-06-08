@@ -220,19 +220,16 @@ export function syncDoc(docs, sync) {
     break
   case 'empty':
     doc.md = 'x'
-    // mess = 'paragraph emptied'
     break
   case 'copy':
     newdoc = _.clone(doc)
     docs.splice(blockid+1, 0, newdoc)
-    // mess = 'paragraph copied'
     break
   case 'mergeNext':
     let next = docs[blockid+1]
     if (!next) return docs
     doc.md = [doc.md, next.md].join(' ')
     next.skip = true
-    // mess = 'paragraphs merged'
     break
   case 'breakParagraph':
     let md = doc.md.toString()
@@ -246,48 +243,18 @@ export function syncDoc(docs, sync) {
     newdoc = _.clone(doc)
     newdoc.md = tail
     docs.splice(blockid+1, 0, newdoc)
-    // mess = ['paragraph broken by \"', sync.param.text, '\"'].join(' ')
     break
-  // case 'breakSection':
-  //   log('_BR SEC', sync)
-  //   log('_BR SEC-book', book.sbooks)
-  //   log('_BR SEC-doc', doc)
-  //   let sbook = book.sbooks.find(book=> book.bid == sync.bid)
-  //   let oldcnt = sbook.cnts[sync.idx]
-  //   let newcnt = _.clone(oldcnt)
-  //   oldcnt = _.clone(oldcnt)
-  //   log('_newcnt', newcnt)
-  //   newcnt.md = doc.md.slice(0, 25)
-  //   let size = oldcnt.size
-  //   log('_SIZE', oldcnt.size, size, size - sync.blockid)
-  //   newcnt.size = size - sync.blockid
-  //   oldcnt.size = sync.blockid
-  //   log('_OLD CNT', oldcnt)
-  //   log('_NEW CNT', newcnt)
-  //   // // sbook.cnts = syncCnt(sbook.cnts, sync)
-
-  //   sbook.cnts.splice(sync.idx, 1, oldcnt, newcnt)
-  //   log('_SBOOKS', book.sbooks)
-  //   sbook.cnts.forEach((cnt, idx)=> cnt.idx = idx)
-
-  //   let csyncs = getCSyncs(sync.bid)
-  //   let csync = {action: 'breakSection', bid: sync.bid}
-  //   // csyncs.push(sync)
-  //   // csyncstore.set(sync.bid, csyncs)
-  //   break
   case 'insertAfter':
     newdoc = _.clone(doc)
     newdoc.md = 'x'
     newdoc.fake = true
     docs.splice(blockid+1, 0, newdoc)
-    // mess = 'empty paragraph inserted'
     break
   case 'insertBefore':
     newdoc = _.clone(doc)
     newdoc.md = 'x'
     newdoc.fake = true
     docs.splice(blockid, 0, newdoc)
-    // mess = ''empty paragraph inserted'
     break
   case 'action':
     break

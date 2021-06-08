@@ -604,7 +604,6 @@ const book = {
   },
 
   reSync(sync) {
-    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_re_book_sync_', sync);
     let sbook = this.sbooks.find(book => book.bid == sync.bid);
     sbook.cnts = syncCnt(sbook.cnts, sync);
     let origin = book.sbooks.find(sbook => sbook.origin);
@@ -617,15 +616,11 @@ const book = {
   },
 
   break(sync) {
-    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_book_break', sync);
     let origin = book.sbooks.find(sbook => sbook.origin);
     let csyncs = getCSyncs(origin.bid);
     csyncs.push(sync);
     csyncstore.set(origin.bid, csyncs);
     this.sbooks = this.syncCnts(this.srcbooks, csyncs);
-    let sbook = this.sbooks.find(book => book.bid == sync.bid);
-    sbook.cnts = syncCnt(sbook.cnts, sync); // но, что после релоад?
-
     _semaphore__WEBPACK_IMPORTED_MODULE_8__.semaphore.ready();
     this.drawCont();
     _lib_progress__WEBPACK_IMPORTED_MODULE_4__.progress.hide();
@@ -767,20 +762,16 @@ function syncCnt(cnts, sync) {
       break;
 
     case 'breakSection':
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('___BOOK-sync, sync');
       let size = cnt.size;
-
-      let newcnt = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(cnt);
 
       let oldcnt = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(cnt);
 
+      let newcnt = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(cnt);
+
       newcnt.md = sync.param.md;
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_SIZE', size, size - sync.blockid);
       newcnt.size = size - sync.blockid;
       oldcnt.size = sync.blockid;
       newcnt.path = sync.param.path;
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_OLD CNT', oldcnt);
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_NEW CNT', newcnt);
       cnts.splice(sync.idx, 1, oldcnt, newcnt);
       break;
 
@@ -2799,8 +2790,10 @@ async function fetchChapter(query) {
   const db = newDBdname(query.bid);
   let chpath, limit;
   chpath = query.path;
-  limit = query.size;
-  let startkey = [chpath, '-'].join('');
+  limit = query.size; // let startkey = [chpath, '-'].join('')
+
+  let startkey = chpath;
+  (0,_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_FETCH', startkey, limit);
   db.options = {
     include_docs: true,
     startkey,
@@ -4198,22 +4191,19 @@ function syncDoc(docs, sync) {
       break;
 
     case 'empty':
-      doc.md = 'x'; // mess = 'paragraph emptied'
-
+      doc.md = 'x';
       break;
 
     case 'copy':
       newdoc = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(doc);
-      docs.splice(blockid + 1, 0, newdoc); // mess = 'paragraph copied'
-
+      docs.splice(blockid + 1, 0, newdoc);
       break;
 
     case 'mergeNext':
       let next = docs[blockid + 1];
       if (!next) return docs;
       doc.md = [doc.md, next.md].join(' ');
-      next.skip = true; // mess = 'paragraphs merged'
-
+      next.skip = true;
       break;
 
     case 'breakParagraph':
@@ -4227,49 +4217,21 @@ function syncDoc(docs, sync) {
       doc.md = head;
       newdoc = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(doc);
       newdoc.md = tail;
-      docs.splice(blockid + 1, 0, newdoc); // mess = ['paragraph broken by \"', sync.param.text, '\"'].join(' ')
-
+      docs.splice(blockid + 1, 0, newdoc);
       break;
-    // case 'breakSection':
-    //   log('_BR SEC', sync)
-    //   log('_BR SEC-book', book.sbooks)
-    //   log('_BR SEC-doc', doc)
-    //   let sbook = book.sbooks.find(book=> book.bid == sync.bid)
-    //   let oldcnt = sbook.cnts[sync.idx]
-    //   let newcnt = _.clone(oldcnt)
-    //   oldcnt = _.clone(oldcnt)
-    //   log('_newcnt', newcnt)
-    //   newcnt.md = doc.md.slice(0, 25)
-    //   let size = oldcnt.size
-    //   log('_SIZE', oldcnt.size, size, size - sync.blockid)
-    //   newcnt.size = size - sync.blockid
-    //   oldcnt.size = sync.blockid
-    //   log('_OLD CNT', oldcnt)
-    //   log('_NEW CNT', newcnt)
-    //   // // sbook.cnts = syncCnt(sbook.cnts, sync)
-    //   sbook.cnts.splice(sync.idx, 1, oldcnt, newcnt)
-    //   log('_SBOOKS', book.sbooks)
-    //   sbook.cnts.forEach((cnt, idx)=> cnt.idx = idx)
-    //   let csyncs = getCSyncs(sync.bid)
-    //   let csync = {action: 'breakSection', bid: sync.bid}
-    //   // csyncs.push(sync)
-    //   // csyncstore.set(sync.bid, csyncs)
-    //   break
 
     case 'insertAfter':
       newdoc = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(doc);
       newdoc.md = 'x';
       newdoc.fake = true;
-      docs.splice(blockid + 1, 0, newdoc); // mess = 'empty paragraph inserted'
-
+      docs.splice(blockid + 1, 0, newdoc);
       break;
 
     case 'insertBefore':
       newdoc = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(doc);
       newdoc.md = 'x';
       newdoc.fake = true;
-      docs.splice(blockid, 0, newdoc); // mess = ''empty paragraph inserted'
-
+      docs.splice(blockid, 0, newdoc);
       break;
 
     case 'action':

@@ -53,7 +53,6 @@ export const book = {
     return sbooks
   },
   reSync(sync) {
-    log('_re_book_sync_', sync)
     let sbook = this.sbooks.find(book=> book.bid == sync.bid)
     sbook.cnts = syncCnt(sbook.cnts, sync)
     let origin = book.sbooks.find(sbook=> sbook.origin)
@@ -65,15 +64,11 @@ export const book = {
     progress.hide()
   },
   break(sync) {
-    log('_book_break', sync)
     let origin = book.sbooks.find(sbook=> sbook.origin)
     let csyncs = getCSyncs(origin.bid)
     csyncs.push(sync)
     csyncstore.set(origin.bid, csyncs)
     this.sbooks = this.syncCnts(this.srcbooks, csyncs)
-    let sbook = this.sbooks.find(book=> book.bid == sync.bid)
-    sbook.cnts = syncCnt(sbook.cnts, sync)
-    // но, что после релоад?
     semaphore.ready()
     this.drawCont()
     progress.hide()
@@ -188,17 +183,13 @@ function syncCnt(cnts, sync) {
     cnts.splice(cnt.idx+1, 0, fakecnt)
     break
   case 'breakSection':
-    log('___BOOK-sync, sync')
     let size = cnt.size
-    let newcnt = _.clone(cnt)
     let oldcnt = _.clone(cnt)
+    let newcnt = _.clone(cnt)
     newcnt.md = sync.param.md
-    log('_SIZE', size, size - sync.blockid)
     newcnt.size = size - sync.blockid
     oldcnt.size = sync.blockid
     newcnt.path = sync.param.path
-    log('_OLD CNT', oldcnt)
-    log('_NEW CNT', newcnt)
     cnts.splice(sync.idx, 1, oldcnt, newcnt)
     break
   case 'action':
