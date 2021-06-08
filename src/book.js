@@ -60,7 +60,7 @@ export const book = {
     let csyncs = getCSyncs(origin.bid)
     csyncs.push(sync)
     csyncstore.set(dgl.bid, csyncs)
-    let csyncs2 = getCSyncs(sbook.bid)
+    // let csyncs2 = getCSyncs(sbook.bid)
     semaphore.ready()
     this.drawCont()
   },
@@ -127,18 +127,23 @@ function getPanes() {
   return {osrc, otrn}
 }
 
-// todo: export - del
-export function syncCnt(cnts, sync) {
+function syncCnt(cnts, sync) {
   let cnt = cnts.find(cnt=> cnt.path == sync.path)
   if (!cnt) return cnts
-  let fakecnt, mess, next, prev
+  let fakecnt, next, prev
 
   switch(sync.action) {
   case 'delete':
     cnts = cnts.filter(cnt=> cnt.path != sync.path)
     break
   case 'right':
-    cnt.level += 1
+    log('_RIGHT', cnt.level)
+    cnt.level = (cnt.level == 4) ? 4 : cnt.level++
+    log('_RIGHT2', cnt.level)
+    break
+  case 'left':
+    log('_LEFT', cnt.level)
+    cnt.level = (cnt.level == 1) ? 1 : cnt.level--
     break
   case 'mergeNext':
     next = cnts[cnt.idx+1]
@@ -162,8 +167,6 @@ export function syncCnt(cnts, sync) {
     break
   case 'empty':
     cnt.size = 1
-    mess = ['s_ection', cnt.md, 'emptied'].join(' ')
-    message.show(mess,'darkgreen')
     break
   case 'copy':
     fakecnt = _.clone(cnt)

@@ -342,6 +342,20 @@ tr:nth-child(odd):not(.hidden) {
 /*   border-color: eee8dd; */
 /* } */
 
+.editable {
+    /* background-color: #69b6d5; */
+    border-style: dotted;
+    border-width: 2px;
+    border-color: eee8dd;
+}
+
+.editable-wf {
+    /* background-color: #69b6d5; */
+    border-style: dotted;
+    border-width: 2px;
+    border-color: eee8dd;
+}
+
 .truncated {
   height: 2rem;
 }
