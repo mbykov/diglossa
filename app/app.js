@@ -610,8 +610,7 @@ const book = {
     let origin = book.sbooks.find(sbook => sbook.origin);
     let csyncs = getCSyncs(origin.bid);
     csyncs.push(sync);
-    csyncstore.set(dgl.bid, csyncs); // let csyncs2 = getCSyncs(sbook.bid)
-
+    csyncstore.set(dgl.bid, csyncs);
     _semaphore__WEBPACK_IMPORTED_MODULE_8__.semaphore.ready();
     this.drawCont();
   },
@@ -700,7 +699,7 @@ function getPanes() {
 function syncCnt(cnts, sync) {
   let cnt = cnts.find(cnt => cnt.path == sync.path);
   if (!cnt) return cnts;
-  let fakecnt, mess, next, prev;
+  let fakecnt, next, prev;
 
   switch (sync.action) {
     case 'delete':
@@ -708,14 +707,12 @@ function syncCnt(cnts, sync) {
       break;
 
     case 'right':
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_RIGHT', cnt.level);
-      cnt.level = cnt.level == 4 ? 4 : cnt.level++;
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_RIGHT2', cnt.level);
+      cnt.level = cnt.level == 4 ? 4 : cnt.level + 1;
       break;
 
     case 'left':
       (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_LEFT', cnt.level);
-      cnt.level = cnt.level == 1 ? 1 : cnt.level--;
+      cnt.level = cnt.level == 1 ? 1 : cnt.level - 1;
       break;
 
     case 'mergeNext':
@@ -743,8 +740,6 @@ function syncCnt(cnts, sync) {
 
     case 'empty':
       cnt.size = 1;
-      mess = ['s_ection', cnt.md, 'emptied'].join(' ');
-      _lib_message__WEBPACK_IMPORTED_MODULE_5__.message.show(mess, 'darkgreen');
       break;
 
     case 'copy':
@@ -831,6 +826,50 @@ mouse.bind('ctrl+i', function (ev) {
   console.clear();
   (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_B:', book.sbooks);
 });
+
+async function exitEditModeBook(ev) {
+  // ESC book, remove tmp csyncs
+  if (ev.which != 27) return;
+  if (!dgl.editMode) return;
+  if (dgl.route != 'book') return;
+  _lib_progress__WEBPACK_IMPORTED_MODULE_4__.progress.show();
+  dgl.editMode = false;
+  (0,_semaphore__WEBPACK_IMPORTED_MODULE_8__.removeEditStyle)();
+  let origin = book.sbooks.find(sbook => sbook.origin);
+  let csyncs = getCSyncs(origin.bid);
+  csyncs = csyncs.filter(sync => !sync.tmp);
+  csyncstore.set(origin.bid, csyncs);
+  book.sbooks = book.syncCnts(book.srcbooks, csyncs);
+  book.drawCont();
+  _header__WEBPACK_IMPORTED_MODULE_7__.header.ready();
+  let omarks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.qs)('.em-green-circle');
+  omarks.forEach(omark => omark.classList.remove('em-green-circle'));
+  _lib_message__WEBPACK_IMPORTED_MODULE_5__.message.show('all last changes lost', 'darkgreen');
+}
+
+document.addEventListener("keydown", exitEditModeBook);
+
+function drawCont_() {
+  let books = this.sbooks;
+  let {
+    osrc,
+    otrn
+  } = setPanes(books);
+  const src = dgl.origin(books);
+
+  let roots = lodash__WEBPACK_IMPORTED_MODULE_1___default().filter(src.cnts, doc => doc.level == 1);
+
+  let oroots = (0,_lib_tree__WEBPACK_IMPORTED_MODULE_9__.createTree)(src.cnts, roots, [src]);
+  oroots.forEach(oroot => osrc.appendChild(oroot));
+  const trn = dgl.shown(books);
+  if (!trn) return;
+
+  let trnroots = lodash__WEBPACK_IMPORTED_MODULE_1___default().filter(trn.cnts, doc => doc.level == 1);
+
+  const trns = dgl.trns(books);
+  oroots = (0,_lib_tree__WEBPACK_IMPORTED_MODULE_9__.createTree)(trn.cnts, trnroots, trns);
+  oroots.forEach(oroot => otrn.appendChild(oroot));
+}
 
 /***/ }),
 
@@ -4411,10 +4450,11 @@ let localSearch = function (ev) {
 
 document.addEventListener("keydown", localSearch);
 
-async function exitEditMode(ev) {
-  // ESC
+async function exitEditModePage(ev) {
+  // ESC page, remove tmp syncs
   if (ev.which != 27) return;
-  if (!(0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('.header') || !dgl.editMode) return;
+  if (!dgl.editMode) return;
+  if (dgl.route != 'page') return;
   _lib_progress__WEBPACK_IMPORTED_MODULE_8__.progress.show();
   dgl.editMode = false;
   (0,_semaphore__WEBPACK_IMPORTED_MODULE_5__.removeEditStyle)();
@@ -4437,7 +4477,7 @@ async function exitEditMode(ev) {
   _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('all last changes lost', 'darkgreen');
 }
 
-document.addEventListener("keydown", exitEditMode);
+document.addEventListener("keydown", exitEditModePage);
 mouse.bind('ctrl+s', async function (ev) {
   saveEditChanges();
 });
@@ -5377,6 +5417,9 @@ mouse.bind('c', function (ev) {
 });
 mouse.bind('right', function (ev) {
   synchronize('right');
+});
+mouse.bind('left', function (ev) {
+  synchronize('left');
 }); // set editable block and wf
 
 document.addEventListener("click", ev => {

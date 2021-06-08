@@ -8,7 +8,7 @@ import { progress } from './lib/progress'
 import { message } from './lib/message'
 import { page } from './page'
 import { header, rotateBlock } from './header'
-import { semaphore } from './semaphore'
+import { semaphore, removeEditStyle } from './semaphore'
 import { createTree } from './lib/tree'
 
 const mouse = require('mousetrap')
@@ -60,7 +60,6 @@ export const book = {
     let csyncs = getCSyncs(origin.bid)
     csyncs.push(sync)
     csyncstore.set(dgl.bid, csyncs)
-    // let csyncs2 = getCSyncs(sbook.bid)
     semaphore.ready()
     this.drawCont()
   },
@@ -137,13 +136,11 @@ function syncCnt(cnts, sync) {
     cnts = cnts.filter(cnt=> cnt.path != sync.path)
     break
   case 'right':
-    log('_RIGHT', cnt.level)
-    cnt.level = (cnt.level == 4) ? 4 : cnt.level++
-    log('_RIGHT2', cnt.level)
+    cnt.level = (cnt.level == 4) ? 4 : cnt.level + 1
     break
   case 'left':
     log('_LEFT', cnt.level)
-    cnt.level = (cnt.level == 1) ? 1 : cnt.level--
+    cnt.level = (cnt.level == 1) ? 1 : cnt.level - 1
     break
   case 'mergeNext':
     next = cnts[cnt.idx+1]
@@ -252,3 +249,42 @@ mouse.bind('ctrl+i', function(ev) {
   console.clear()
   log('_B:', book.sbooks)
 })
+
+async function exitEditModeBook(ev) { // ESC book, remove tmp csyncs
+  if (ev.which != 27) return
+  if (!dgl.editMode) return
+  if (dgl.route != 'book') return
+  progress.show()
+  dgl.editMode = false
+  removeEditStyle()
+  let origin = book.sbooks.find(sbook=> sbook.origin)
+  let csyncs = getCSyncs(origin.bid)
+  csyncs = csyncs.filter(sync=> !sync.tmp)
+  csyncstore.set(origin.bid, csyncs)
+  book.sbooks = book.syncCnts(book.srcbooks, csyncs)
+  book.drawCont()
+
+  header.ready()
+  let omarks = qs('.em-green-circle')
+  omarks.forEach(omark=> omark.classList.remove('em-green-circle'))
+  message.show('all last changes lost', 'darkgreen')
+}
+
+document.addEventListener("keydown", exitEditModeBook)
+
+function drawCont_() {
+  let books = this.sbooks
+  let {osrc, otrn} = setPanes(books)
+  const src = dgl.origin(books)
+
+  let roots = _.filter(src.cnts, doc=> doc.level == 1)
+  let oroots = createTree(src.cnts, roots, [src])
+  oroots.forEach(oroot=> osrc.appendChild(oroot))
+
+  const trn = dgl.shown(books)
+  if (!trn) return
+  let trnroots = _.filter(trn.cnts, doc=> doc.level == 1)
+  const trns = dgl.trns(books)
+  oroots = createTree(trn.cnts, trnroots, trns)
+  oroots.forEach(oroot=> otrn.appendChild(oroot))
+}

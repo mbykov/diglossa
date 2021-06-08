@@ -466,9 +466,10 @@ let localSearch = function(ev) {
 
 document.addEventListener("keydown", localSearch)
 
-async function exitEditMode(ev) { // ESC
+async function exitEditModePage(ev) { // ESC page, remove tmp syncs
   if (ev.which != 27) return
-  if (!q('.header') || !dgl.editMode) return
+  if (!dgl.editMode) return
+  if (dgl.route != 'page') return
   progress.show()
   dgl.editMode = false
   removeEditStyle()
@@ -490,7 +491,7 @@ async function exitEditMode(ev) { // ESC
   message.show('all last changes lost', 'darkgreen')
 }
 
-document.addEventListener("keydown", exitEditMode)
+document.addEventListener("keydown", exitEditModePage)
 
 mouse.bind('ctrl+s', async function(ev) {
   saveEditChanges()

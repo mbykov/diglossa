@@ -208,6 +208,10 @@ mouse.bind('right', function(ev) {
   synchronize('right')
 })
 
+mouse.bind('left', function(ev) {
+  synchronize('left')
+})
+
 // set editable block and wf
 document.addEventListener ("click",  (ev) => {
   if (!dgl.editMode) return
