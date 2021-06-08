@@ -1060,7 +1060,7 @@ mouse.bind('ctrl+b', function (ev) {
 
     const bmk = {
       bid: dgl.bid,
-      idx: dgl.idx,
+      idx: _page__WEBPACK_IMPORTED_MODULE_6__.page.idx,
       blockid,
       descr,
       docs
@@ -1887,7 +1887,7 @@ const mouse = __webpack_require__(/*! mousetrap */ "mousetrap");
 const ftsopts = electron__WEBPACK_IMPORTED_MODULE_1__.remote.getGlobal('ftsopts');
 const getImportBook = {}; // todo: del ctrl+o
 
-mouse.bind('ctrl+o', function (ev) {
+mouse.bind('ctrl+o_', function (ev) {
   dialog.showOpenDialog({
     properties: ['openFile'],
     filters: [{
@@ -2798,7 +2798,6 @@ async function fetchChapter(query) {
   limit = query.size; // let startkey = [chpath, '-'].join('')
 
   let startkey = chpath;
-  (0,_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_FETCH', startkey, limit);
   db.options = {
     include_docs: true,
     startkey,
@@ -5103,7 +5102,7 @@ mouse.bind('ctrl+f', function (ev) {
   const state = {
     route: 'search',
     bid: dgl.bid,
-    idx: dgl.idx,
+    idx: _page__WEBPACK_IMPORTED_MODULE_6__.page.idx,
     blockid,
     query,
     lang,

@@ -136,7 +136,7 @@ mouse.bind('ctrl+b', function(ev) {
     let selector = ['.block[blockid="', blockid, '"] .ptext'].join('')
     let pars = qs(selector)
     const docs = _.map(pars, opar=> { return {md: opar.textContent, lang: opar.getAttribute('lang')}})
-    const bmk = {bid: dgl.bid, idx: dgl.idx, blockid, descr, docs}
+    const bmk = {bid: dgl.bid, idx: page.idx, blockid, descr, docs}
     state.bmk = bmk
   }
   router(state)

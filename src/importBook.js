@@ -44,7 +44,7 @@ const ftsopts = remote.getGlobal('ftsopts')
 export const getImportBook = {}
 
 // todo: del ctrl+o
-mouse.bind('ctrl+o', function(ev) {
+mouse.bind('ctrl+o_', function(ev) {
   dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'DGL, FB2, EPUB, HTML, MD', extensions: ['dgl', 'json', 'epub', 'pdf', 'md', 'fb2', 'fb2.zip'] }]})
     .then(result => {
       const bpath = result.filePaths[0]

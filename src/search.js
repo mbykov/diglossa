@@ -326,7 +326,7 @@ mouse.bind('ctrl+f', function(ev) {
   const blockid = oblock.getAttribute('blockid') * 1
   // const books = bkstore.get(dgl.bid)
   const origin = dgl.origin(book.sbooks)
-  const state = {route: 'search', bid: dgl.bid, idx: dgl.idx, blockid, query, lang, descr: origin.descr}
+  const state = {route: 'search', bid: dgl.bid, idx: page.idx, blockid, query, lang, descr: origin.descr}
   // search.query(state)
   router(state)
 })
