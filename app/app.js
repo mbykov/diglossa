@@ -763,10 +763,11 @@ function syncCnt(cnts, sync) {
 
       let oldcnt = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(cnt);
 
-      newcnt.md = sync.md;
+      newcnt.md = sync.param.md;
       (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_SIZE', size, size - sync.blockid);
       newcnt.size = size - sync.blockid;
       oldcnt.size = sync.blockid;
+      newcnt._id = sync.param._id;
       (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_OLD CNT', oldcnt);
       (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_NEW CNT', newcnt);
       cnts.splice(sync.idx, 1, oldcnt, newcnt);
@@ -4218,37 +4219,31 @@ function syncDoc(docs, sync) {
       docs.splice(blockid + 1, 0, newdoc); // mess = ['paragraph broken by \"', sync.param.text, '\"'].join(' ')
 
       break;
-
-    case 'breakSection':
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_BR SEC', sync);
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_BR SEC-book', _book__WEBPACK_IMPORTED_MODULE_7__.book.sbooks);
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_BR SEC-doc', doc);
-      let sbook = _book__WEBPACK_IMPORTED_MODULE_7__.book.sbooks.find(book => book.bid == sync.bid);
-      let oldcnt = sbook.cnts[sync.idx];
-
-      let newcnt = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(oldcnt);
-
-      oldcnt = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(oldcnt);
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_newcnt', newcnt);
-      newcnt.md = doc.md.slice(0, 25);
-      let size = oldcnt.size;
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_SIZE', oldcnt.size, size, size - sync.blockid);
-      newcnt.size = size - sync.blockid;
-      oldcnt.size = sync.blockid;
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_OLD CNT', oldcnt);
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_NEW CNT', newcnt); // // sbook.cnts = syncCnt(sbook.cnts, sync)
-
-      sbook.cnts.splice(sync.idx, 1, oldcnt, newcnt);
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_SBOOKS', _book__WEBPACK_IMPORTED_MODULE_7__.book.sbooks);
-      sbook.cnts.forEach((cnt, idx) => cnt.idx = idx);
-      let csyncs = (0,_book__WEBPACK_IMPORTED_MODULE_7__.getCSyncs)(sync.bid);
-      let csync = {
-        action: 'breakSection',
-        bid: sync.bid
-      }; // csyncs.push(sync)
-      // csyncstore.set(sync.bid, csyncs)
-
-      break;
+    // case 'breakSection':
+    //   log('_BR SEC', sync)
+    //   log('_BR SEC-book', book.sbooks)
+    //   log('_BR SEC-doc', doc)
+    //   let sbook = book.sbooks.find(book=> book.bid == sync.bid)
+    //   let oldcnt = sbook.cnts[sync.idx]
+    //   let newcnt = _.clone(oldcnt)
+    //   oldcnt = _.clone(oldcnt)
+    //   log('_newcnt', newcnt)
+    //   newcnt.md = doc.md.slice(0, 25)
+    //   let size = oldcnt.size
+    //   log('_SIZE', oldcnt.size, size, size - sync.blockid)
+    //   newcnt.size = size - sync.blockid
+    //   oldcnt.size = sync.blockid
+    //   log('_OLD CNT', oldcnt)
+    //   log('_NEW CNT', newcnt)
+    //   // // sbook.cnts = syncCnt(sbook.cnts, sync)
+    //   sbook.cnts.splice(sync.idx, 1, oldcnt, newcnt)
+    //   log('_SBOOKS', book.sbooks)
+    //   sbook.cnts.forEach((cnt, idx)=> cnt.idx = idx)
+    //   let csyncs = getCSyncs(sync.bid)
+    //   let csync = {action: 'breakSection', bid: sync.bid}
+    //   // csyncs.push(sync)
+    //   // csyncstore.set(sync.bid, csyncs)
+    //   break
 
     case 'insertAfter':
       newdoc = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(doc);
@@ -5393,22 +5388,14 @@ function synchronize(action, param) {
     sync.blockid = blockid;
     sync.idx = _page__WEBPACK_IMPORTED_MODULE_6__.page.idx;
     if (param) sync.param = param;
-
-    if (action == 'breakSection') {
-      let md = oblock.textContent.split(' ').slice(0, 5).join(' ');
-      sync.md = md;
-    }
-
     _page__WEBPACK_IMPORTED_MODULE_6__.page.reSync(sync);
   } else {
-    const opar = oblock.querySelector('p.tree-text:hover:not(.hidden)'); // wtf: ???
-
+    const opar = oblock.querySelector('p.tree-text:hover:not(.hidden)');
     if (!opar) return; // const path = opar.getAttribute('path')
     // sync.path = path
 
     const idx = opar.getAttribute('idx');
-    sync.idx = idx * 1; // if (param) sync.param = param
-
+    sync.idx = idx * 1;
     _book__WEBPACK_IMPORTED_MODULE_7__.book.reSync(sync);
   }
 }
@@ -5421,16 +5408,22 @@ mouse.bind('d', function (ev) {
   synchronize('delete');
 });
 mouse.bind('B', function (ev) {
-  let oed = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('.editable-wf');
+  const opar = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('p.ptext:hover:not(.hidden)');
 
-  if (!oed) {
+  if (!opar) {
     _lib_message__WEBPACK_IMPORTED_MODULE_3__.message.show('choose paragraph to break section', 'darkred');
     return;
-  } // let text = oed.textContent
-  // let param = {md: text.slice(0, 25)}
+  }
 
+  let text = opar.textContent;
 
-  synchronize('breakSection');
+  const _id = opar.getAttribute('_id');
+
+  let param = {
+    md: text.slice(0, 25),
+    _id
+  };
+  synchronize('breakSection', param);
 });
 mouse.bind('b', function (ev) {
   let oed = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('.editable-wf');

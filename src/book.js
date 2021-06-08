@@ -182,10 +182,11 @@ function syncCnt(cnts, sync) {
     let size = cnt.size
     let newcnt = _.clone(cnt)
     let oldcnt = _.clone(cnt)
-    newcnt.md = sync.md
+    newcnt.md = sync.param.md
     log('_SIZE', size, size - sync.blockid)
     newcnt.size = size - sync.blockid
     oldcnt.size = sync.blockid
+    newcnt._id = sync.param._id
     log('_OLD CNT', oldcnt)
     log('_NEW CNT', newcnt)
     cnts.splice(sync.idx, 1, oldcnt, newcnt)
@@ -194,7 +195,6 @@ function syncCnt(cnts, sync) {
     break
   default:
   }
-
   cnts.forEach((cnt, idx)=> cnt.idx = idx)
   return cnts
 }

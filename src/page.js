@@ -248,33 +248,33 @@ export function syncDoc(docs, sync) {
     docs.splice(blockid+1, 0, newdoc)
     // mess = ['paragraph broken by \"', sync.param.text, '\"'].join(' ')
     break
-  case 'breakSection':
-    log('_BR SEC', sync)
-    log('_BR SEC-book', book.sbooks)
-    log('_BR SEC-doc', doc)
-    let sbook = book.sbooks.find(book=> book.bid == sync.bid)
-    let oldcnt = sbook.cnts[sync.idx]
-    let newcnt = _.clone(oldcnt)
-    oldcnt = _.clone(oldcnt)
-    log('_newcnt', newcnt)
-    newcnt.md = doc.md.slice(0, 25)
-    let size = oldcnt.size
-    log('_SIZE', oldcnt.size, size, size - sync.blockid)
-    newcnt.size = size - sync.blockid
-    oldcnt.size = sync.blockid
-    log('_OLD CNT', oldcnt)
-    log('_NEW CNT', newcnt)
-    // // sbook.cnts = syncCnt(sbook.cnts, sync)
+  // case 'breakSection':
+  //   log('_BR SEC', sync)
+  //   log('_BR SEC-book', book.sbooks)
+  //   log('_BR SEC-doc', doc)
+  //   let sbook = book.sbooks.find(book=> book.bid == sync.bid)
+  //   let oldcnt = sbook.cnts[sync.idx]
+  //   let newcnt = _.clone(oldcnt)
+  //   oldcnt = _.clone(oldcnt)
+  //   log('_newcnt', newcnt)
+  //   newcnt.md = doc.md.slice(0, 25)
+  //   let size = oldcnt.size
+  //   log('_SIZE', oldcnt.size, size, size - sync.blockid)
+  //   newcnt.size = size - sync.blockid
+  //   oldcnt.size = sync.blockid
+  //   log('_OLD CNT', oldcnt)
+  //   log('_NEW CNT', newcnt)
+  //   // // sbook.cnts = syncCnt(sbook.cnts, sync)
 
-    sbook.cnts.splice(sync.idx, 1, oldcnt, newcnt)
-    log('_SBOOKS', book.sbooks)
-    sbook.cnts.forEach((cnt, idx)=> cnt.idx = idx)
+  //   sbook.cnts.splice(sync.idx, 1, oldcnt, newcnt)
+  //   log('_SBOOKS', book.sbooks)
+  //   sbook.cnts.forEach((cnt, idx)=> cnt.idx = idx)
 
-    let csyncs = getCSyncs(sync.bid)
-    let csync = {action: 'breakSection', bid: sync.bid}
-    // csyncs.push(sync)
-    // csyncstore.set(sync.bid, csyncs)
-    break
+  //   let csyncs = getCSyncs(sync.bid)
+  //   let csync = {action: 'breakSection', bid: sync.bid}
+  //   // csyncs.push(sync)
+  //   // csyncstore.set(sync.bid, csyncs)
+  //   break
   case 'insertAfter':
     newdoc = _.clone(doc)
     newdoc.md = 'x'
