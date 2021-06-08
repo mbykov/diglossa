@@ -245,7 +245,8 @@ export function syncDoc(docs, sync) {
     // mess = ['paragraph broken by \"', sync.param.text, '\"'].join(' ')
     break
   case 'breakSection':
-    // todo:
+    // todo: breakSection
+    log('_BR SEC', sync)
     break
   case 'insertAfter':
     newdoc = _.clone(doc)

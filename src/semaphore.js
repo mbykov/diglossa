@@ -160,6 +160,10 @@ mouse.bind('d', function(ev) {
   synchronize('delete')
 })
 
+mouse.bind('B', function(ev) {
+  synchronize('breakSection')
+})
+
 mouse.bind('b', function(ev) {
   let oed = q('.editable-wf')
   if (!oed) {

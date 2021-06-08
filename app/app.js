@@ -4190,7 +4190,8 @@ function syncDoc(docs, sync) {
       break;
 
     case 'breakSection':
-      // todo:
+      // todo: breakSection
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_BR SEC', sync);
       break;
 
     case 'insertAfter':
@@ -5352,6 +5353,9 @@ mouse.bind('ctrl+z', function (ev) {
 });
 mouse.bind('d', function (ev) {
   synchronize('delete');
+});
+mouse.bind('B', function (ev) {
+  synchronize('breakSection');
 });
 mouse.bind('b', function (ev) {
   let oed = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('.editable-wf');
