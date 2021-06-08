@@ -893,6 +893,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _app__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./app */ "./src/app.js");
 /* harmony import */ var _header__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./header */ "./src/header.js");
 /* harmony import */ var _book__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./book */ "./src/book.js");
+/* harmony import */ var _page__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./page */ "./src/page.js");
 
 
 
@@ -907,6 +908,7 @@ const bmkstore = new Store({
 });
 
 const mouse = __webpack_require__(/*! mousetrap */ "mousetrap");
+
 
 
 
@@ -1035,7 +1037,7 @@ mouse.bind('ctrl+b', function (ev) {
   };
   const opar = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('p.ptext:hover');
 
-  if (opar && dgl.idx) {
+  if (opar && _page__WEBPACK_IMPORTED_MODULE_6__.page.idx) {
     const oblock = opar.closest('.block');
     const blockid = oblock.getAttribute('blockid');
 
@@ -1045,7 +1047,7 @@ mouse.bind('ctrl+b', function (ev) {
       title: origin.descr.title,
       author: origin.descr.author
     };
-    descr.sname = origin.cnts[dgl.idx].md;
+    descr.sname = origin.cnts[_page__WEBPACK_IMPORTED_MODULE_6__.page.idx] ? origin.cnts[_page__WEBPACK_IMPORTED_MODULE_6__.page.idx].md : 'right header';
     let selector = ['.block[blockid="', blockid, '"] .ptext'].join('');
     let pars = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.qs)(selector);
 
@@ -1726,7 +1728,7 @@ function showRightHeader(cntidx) {
     let htext;
     if (dgl.route == 'book') htext = sbook.descr.title;else if (dgl.route == 'page') {
       let cnt = sbook.cnts[cntidx];
-      htext = cnt ? sbook.cnts[cntidx].md : 'right header';
+      htext = cnt ? cnt.md : 'right header';
     }
     htext = [': ', htext].join('');
     let oli = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.create)('p');
@@ -1757,7 +1759,10 @@ function showSimpleHeader(cntidx) {
   oli.setAttribute('bid', origin.bid);
   oli.classList.remove('hidden');
   let htext;
-  if (dgl.route == 'book') htext = origin.descr.title;else if (dgl.route == 'page') htext = origin.cnts[cntidx].md;
+  if (dgl.route == 'book') htext = origin.descr.title;else if (dgl.route == 'page') {
+    let cnt = origin.cnts[cntidx];
+    htext = cnt ? cnt.md : 'right header';
+  }
   oli.textContent = htext;
   oheader.appendChild(oul);
 }

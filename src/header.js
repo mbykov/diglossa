@@ -50,7 +50,7 @@ function showRightHeader(cntidx) {
     if (dgl.route == 'book') htext = sbook.descr.title
     else if (dgl.route == 'page') {
       let cnt = sbook.cnts[cntidx]
-      htext = (cnt) ? sbook.cnts[cntidx].md : 'right header'
+      htext = (cnt) ? cnt.md : 'right header'
     }
     htext = [': ', htext].join('')
     let oli = create('p')
@@ -83,7 +83,10 @@ function showSimpleHeader(cntidx) {
   oli.classList.remove('hidden')
   let htext
   if (dgl.route == 'book') htext = origin.descr.title
-  else if (dgl.route == 'page') htext = origin.cnts[cntidx].md
+  else if (dgl.route == 'page') {
+    let cnt = origin.cnts[cntidx]
+    htext = (cnt) ? cnt.md : 'right header'
+  }
   oli.textContent = htext
   oheader.appendChild(oul)
 }

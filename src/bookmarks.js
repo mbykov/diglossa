@@ -10,6 +10,7 @@ const mouse = require('mousetrap')
 import { remote } from "electron"
 import { rotateBlock } from './header'
 import { book } from './book'
+import { page } from './page'
 let dgl = remote.getGlobal('dgl')
 
 export const bookmarks = {
@@ -126,12 +127,12 @@ document.addEventListener("wheel", function(ev) {
 mouse.bind('ctrl+b', function(ev) {
   const state = {route: 'bookmarks'}
   const opar = q('p.ptext:hover')
-  if (opar && dgl.idx) {
+  if (opar && page.idx) {
     const oblock = opar.closest('.block')
     const blockid = oblock.getAttribute('blockid')
     const origin = _.find(book.sbooks, book=> book.origin)
     const descr = {title: origin.descr.title, author: origin.descr.author}
-    descr.sname = origin.cnts[dgl.idx].md
+    descr.sname = (origin.cnts[page.idx]) ? origin.cnts[page.idx].md : 'right header'
     let selector = ['.block[blockid="', blockid, '"] .ptext'].join('')
     let pars = qs(selector)
     const docs = _.map(pars, opar=> { return {md: opar.textContent, lang: opar.getAttribute('lang')}})
