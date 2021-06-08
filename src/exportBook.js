@@ -8,7 +8,7 @@ import { config } from './config'
 import { log, q, qs, zerofill, initBookPrefs, stubEditor } from './lib/utils'
 import { pushDocs, fetchBook, fetchChapter, updateDocs } from './lib/pouch'
 
-import { book, getCSyncs } from './book'
+import { book } from './book'
 import { syncDoc, page, getSyncs } from './page'
 import { preference } from './prefs'
 import { router } from './app'

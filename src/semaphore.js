@@ -134,18 +134,25 @@ function synchronize(action, param) {
   }
 
   let bid = oblock.closest('#src') ? book.origin().bid : book.shown().bid
-  let sync = {bid, action, tmp: true} // idx не нужен, bid только для origin/shown
+  let sync = {bid, action, tmp: true}
   if (page.idx > -1) {
     const blockid = oblock.getAttribute('blockid') * 1
     sync.blockid = blockid
     sync.idx = page.idx
     if (param) sync.param = param
+    if (action == 'breakSection') {
+      let md = oblock.textContent.split(' ').slice(0,5).join(' ')
+      sync.md = md
+     }
     page.reSync(sync)
   } else {
-    const opar = oblock.querySelector('p.tree-text:hover:not(.hidden)')
+    const opar = oblock.querySelector('p.tree-text:hover:not(.hidden)') // wtf: ???
     if (!opar) return
-    const path = opar.getAttribute('path')
-    sync.path = path
+    // const path = opar.getAttribute('path')
+    // sync.path = path
+    const idx = opar.getAttribute('idx')
+    sync.idx = idx*1
+    // if (param) sync.param = param
     book.reSync(sync)
   }
 }
@@ -161,6 +168,13 @@ mouse.bind('d', function(ev) {
 })
 
 mouse.bind('B', function(ev) {
+  let oed = q('.editable-wf')
+  if (!oed) {
+    message.show('choose paragraph to break section', 'darkred')
+    return
+  }
+  // let text = oed.textContent
+  // let param = {md: text.slice(0, 25)}
   synchronize('breakSection')
 })
 

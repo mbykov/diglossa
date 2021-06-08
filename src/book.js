@@ -21,20 +21,17 @@ export const book = {
   async ready(state) {
     progress.show()
     render('book')
-    delete dgl.idx
-    delete book.idx
-    let books
-    if (state && state.bid) {
-      books = bkstore.get(state.bid)
-      books = dgl.actives(books)
-    } else {
-      throw new Error('_BOOK NO STATE')
-    }
+    delete dgl.idx // todo: del
+    delete book.idx // todo: del
+    if (!state.bid) throw new Error('_BOOK NO STATE') // todo: del
+    let books = bkstore.get(state.bid)
+    books = dgl.actives(books)
     let csyncs = getCSyncs(state.bid)
     this.bid = state.bid
     this.srcbooks = books
     this.sbooks = this.syncCnts(this.srcbooks, csyncs)
-    this.drawCont()
+    if (state.sync) this.reSync(state.sync)
+    else this.drawCont()
     showSearchIcon()
     header.ready()
     progress.hide()
@@ -56,6 +53,7 @@ export const book = {
     return sbooks
   },
   reSync(sync) {
+    log('_re_book_sync_', sync)
     let sbook = this.sbooks.find(book=> book.bid == sync.bid)
     sbook.cnts = syncCnt(sbook.cnts, sync)
     let origin = book.sbooks.find(sbook=> sbook.origin)
@@ -64,7 +62,12 @@ export const book = {
     csyncstore.set(origin.bid, csyncs)
     semaphore.ready()
     this.drawCont()
+    progress.hide()
   },
+  // break(sync) {
+  //   log('_book_break', sync)
+  //   // let cnt = cnts.find(cnt=> cnt.path == sync.path)
+  // },
   undo() {
     let csyncs = getCSyncs(this.bid)
     csyncs = csyncs.slice(0,-1)
@@ -129,13 +132,15 @@ function getPanes() {
 }
 
 function syncCnt(cnts, sync) {
-  let cnt = cnts.find(cnt=> cnt.path == sync.path)
+  // let cnt = cnts.find(cnt=> cnt.path == sync.path)
+  let cnt = cnts.find(cnt=> cnt.idx == sync.idx)
   if (!cnt) return cnts
   let fakecnt, next, prev
 
   switch(sync.action) {
   case 'delete':
-    cnts = cnts.filter(cnt=> cnt.path != sync.path)
+    // cnts = cnts.filter(cnt=> cnt.path != sync.path)
+    cnts = cnts.filter(cnt=> cnt.idx != sync.idx)
     break
   case 'right':
     cnt.level = (cnt.level == 4) ? 4 : cnt.level + 1
@@ -149,7 +154,8 @@ function syncCnt(cnts, sync) {
     let md = [cnt.md, '.'].join('').replace('..', '.')
     cnt.md = [md, next.md].join(' ')
     cnt.size = cnt.size + next.size
-    cnts = cnts.filter(cnt=> cnt.path != next.path)
+    // cnts = cnts.filter(cnt=> cnt.path != next.path)
+    cnts = cnts.filter(cnt=> cnt.idx != next.idx)
     break
   case 'insertAfter':
     fakecnt = _.clone(cnt)
@@ -171,7 +177,18 @@ function syncCnt(cnts, sync) {
     fakecnt.md = 'x - copied s_ection'
     cnts.splice(cnt.idx+1, 0, fakecnt)
     break
-  case 'action':
+  case 'breakSection':
+    log('___BOOK-sync, sync')
+    let size = cnt.size
+    let newcnt = _.clone(cnt)
+    let oldcnt = _.clone(cnt)
+    newcnt.md = sync.md
+    log('_SIZE', size, size - sync.blockid)
+    newcnt.size = size - sync.blockid
+    oldcnt.size = sync.blockid
+    log('_OLD CNT', oldcnt)
+    log('_NEW CNT', newcnt)
+    cnts.splice(sync.idx, 1, oldcnt, newcnt)
     break
   case 'action':
     break

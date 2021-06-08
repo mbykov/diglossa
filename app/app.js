@@ -566,22 +566,19 @@ const book = {
   async ready(state) {
     _lib_progress__WEBPACK_IMPORTED_MODULE_4__.progress.show();
     (0,_app__WEBPACK_IMPORTED_MODULE_0__.render)('book');
-    delete dgl.idx;
-    delete book.idx;
-    let books;
+    delete dgl.idx; // todo: del
 
-    if (state && state.bid) {
-      books = bkstore.get(state.bid);
-      books = dgl.actives(books);
-    } else {
-      throw new Error('_BOOK NO STATE');
-    }
+    delete book.idx; // todo: del
 
+    if (!state.bid) throw new Error('_BOOK NO STATE'); // todo: del
+
+    let books = bkstore.get(state.bid);
+    books = dgl.actives(books);
     let csyncs = getCSyncs(state.bid);
     this.bid = state.bid;
     this.srcbooks = books;
     this.sbooks = this.syncCnts(this.srcbooks, csyncs);
-    this.drawCont();
+    if (state.sync) this.reSync(state.sync);else this.drawCont();
     showSearchIcon();
     _header__WEBPACK_IMPORTED_MODULE_7__.header.ready();
     _lib_progress__WEBPACK_IMPORTED_MODULE_4__.progress.hide();
@@ -607,6 +604,7 @@ const book = {
   },
 
   reSync(sync) {
+    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_re_book_sync_', sync);
     let sbook = this.sbooks.find(book => book.bid == sync.bid);
     sbook.cnts = syncCnt(sbook.cnts, sync);
     let origin = book.sbooks.find(sbook => sbook.origin);
@@ -615,8 +613,13 @@ const book = {
     csyncstore.set(origin.bid, csyncs);
     _semaphore__WEBPACK_IMPORTED_MODULE_8__.semaphore.ready();
     this.drawCont();
+    _lib_progress__WEBPACK_IMPORTED_MODULE_4__.progress.hide();
   },
 
+  // break(sync) {
+  //   log('_book_break', sync)
+  //   // let cnt = cnts.find(cnt=> cnt.path == sync.path)
+  // },
   undo() {
     let csyncs = getCSyncs(this.bid);
     csyncs = csyncs.slice(0, -1);
@@ -699,13 +702,15 @@ function getPanes() {
 }
 
 function syncCnt(cnts, sync) {
-  let cnt = cnts.find(cnt => cnt.path == sync.path);
+  // let cnt = cnts.find(cnt=> cnt.path == sync.path)
+  let cnt = cnts.find(cnt => cnt.idx == sync.idx);
   if (!cnt) return cnts;
   let fakecnt, next, prev;
 
   switch (sync.action) {
     case 'delete':
-      cnts = cnts.filter(cnt => cnt.path != sync.path);
+      // cnts = cnts.filter(cnt=> cnt.path != sync.path)
+      cnts = cnts.filter(cnt => cnt.idx != sync.idx);
       break;
 
     case 'right':
@@ -721,8 +726,9 @@ function syncCnt(cnts, sync) {
       if (!next) return cnts;
       let md = [cnt.md, '.'].join('').replace('..', '.');
       cnt.md = [md, next.md].join(' ');
-      cnt.size = cnt.size + next.size;
-      cnts = cnts.filter(cnt => cnt.path != next.path);
+      cnt.size = cnt.size + next.size; // cnts = cnts.filter(cnt=> cnt.path != next.path)
+
+      cnts = cnts.filter(cnt => cnt.idx != next.idx);
       break;
 
     case 'insertAfter':
@@ -749,7 +755,21 @@ function syncCnt(cnts, sync) {
       cnts.splice(cnt.idx + 1, 0, fakecnt);
       break;
 
-    case 'action':
+    case 'breakSection':
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('___BOOK-sync, sync');
+      let size = cnt.size;
+
+      let newcnt = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(cnt);
+
+      let oldcnt = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(cnt);
+
+      newcnt.md = sync.md;
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_SIZE', size, size - sync.blockid);
+      newcnt.size = size - sync.blockid;
+      oldcnt.size = sync.blockid;
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_OLD CNT', oldcnt);
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_NEW CNT', newcnt);
+      cnts.splice(sync.idx, 1, oldcnt, newcnt);
       break;
 
     case 'action':
@@ -4037,6 +4057,16 @@ const page = {
   },
 
   reSync(sync) {
+    if (sync.action == 'breakSection') {
+      (0,_app__WEBPACK_IMPORTED_MODULE_2__.router)({
+        route: 'book',
+        bid: _book__WEBPACK_IMPORTED_MODULE_7__.book.bid,
+        sync: sync
+      }); // break-section back to book
+
+      return;
+    }
+
     let chapter = this.chapters.find(chapter => chapter.bid == sync.bid);
     chapter.chdocs = syncDoc(chapter.chdocs, sync);
     let origin = _book__WEBPACK_IMPORTED_MODULE_7__.book.sbooks.find(sbook => sbook.origin);
@@ -4190,15 +4220,41 @@ function syncDoc(docs, sync) {
       break;
 
     case 'breakSection':
-      // todo: breakSection
       (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_BR SEC', sync);
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_BR SEC-book', _book__WEBPACK_IMPORTED_MODULE_7__.book.sbooks);
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_BR SEC-doc', doc);
+      let sbook = _book__WEBPACK_IMPORTED_MODULE_7__.book.sbooks.find(book => book.bid == sync.bid);
+      let oldcnt = sbook.cnts[sync.idx];
+
+      let newcnt = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(oldcnt);
+
+      oldcnt = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(oldcnt);
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_newcnt', newcnt);
+      newcnt.md = doc.md.slice(0, 25);
+      let size = oldcnt.size;
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_SIZE', oldcnt.size, size, size - sync.blockid);
+      newcnt.size = size - sync.blockid;
+      oldcnt.size = sync.blockid;
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_OLD CNT', oldcnt);
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_NEW CNT', newcnt); // // sbook.cnts = syncCnt(sbook.cnts, sync)
+
+      sbook.cnts.splice(sync.idx, 1, oldcnt, newcnt);
+      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_SBOOKS', _book__WEBPACK_IMPORTED_MODULE_7__.book.sbooks);
+      sbook.cnts.forEach((cnt, idx) => cnt.idx = idx);
+      let csyncs = (0,_book__WEBPACK_IMPORTED_MODULE_7__.getCSyncs)(sync.bid);
+      let csync = {
+        action: 'breakSection',
+        bid: sync.bid
+      }; // csyncs.push(sync)
+      // csyncstore.set(sync.bid, csyncs)
+
       break;
 
     case 'insertAfter':
       newdoc = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(doc);
       newdoc.md = 'x';
       newdoc.fake = true;
-      docs.splice(blockid + 1, 0, newdoc); // mess = 'empty paragraph incerted'
+      docs.splice(blockid + 1, 0, newdoc); // mess = 'empty paragraph inserted'
 
       break;
 
@@ -4206,7 +4262,7 @@ function syncDoc(docs, sync) {
       newdoc = lodash__WEBPACK_IMPORTED_MODULE_1___default().clone(doc);
       newdoc.md = 'x';
       newdoc.fake = true;
-      docs.splice(blockid, 0, newdoc); // mess = ''empty paragraph incerted'
+      docs.splice(blockid, 0, newdoc); // mess = ''empty paragraph inserted'
 
       break;
 
@@ -5330,19 +5386,29 @@ function synchronize(action, param) {
     bid,
     action,
     tmp: true
-  }; // idx не нужен, bid только для origin/shown
+  };
 
   if (_page__WEBPACK_IMPORTED_MODULE_6__.page.idx > -1) {
     const blockid = oblock.getAttribute('blockid') * 1;
     sync.blockid = blockid;
     sync.idx = _page__WEBPACK_IMPORTED_MODULE_6__.page.idx;
     if (param) sync.param = param;
+
+    if (action == 'breakSection') {
+      let md = oblock.textContent.split(' ').slice(0, 5).join(' ');
+      sync.md = md;
+    }
+
     _page__WEBPACK_IMPORTED_MODULE_6__.page.reSync(sync);
   } else {
-    const opar = oblock.querySelector('p.tree-text:hover:not(.hidden)');
-    if (!opar) return;
-    const path = opar.getAttribute('path');
-    sync.path = path;
+    const opar = oblock.querySelector('p.tree-text:hover:not(.hidden)'); // wtf: ???
+
+    if (!opar) return; // const path = opar.getAttribute('path')
+    // sync.path = path
+
+    const idx = opar.getAttribute('idx');
+    sync.idx = idx * 1; // if (param) sync.param = param
+
     _book__WEBPACK_IMPORTED_MODULE_7__.book.reSync(sync);
   }
 }
@@ -5355,6 +5421,15 @@ mouse.bind('d', function (ev) {
   synchronize('delete');
 });
 mouse.bind('B', function (ev) {
+  let oed = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('.editable-wf');
+
+  if (!oed) {
+    _lib_message__WEBPACK_IMPORTED_MODULE_3__.message.show('choose paragraph to break section', 'darkred');
+    return;
+  } // let text = oed.textContent
+  // let param = {md: text.slice(0, 25)}
+
+
   synchronize('breakSection');
 });
 mouse.bind('b', function (ev) {

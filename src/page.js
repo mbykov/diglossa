@@ -2,7 +2,7 @@
 
 import { log, q, qs, empty, create, remove, getCoords, placePopup, scrollToPosition, removeAll, ndash } from './lib/utils'
 import _ from 'lodash'
-import { render } from './app'
+import { router, render } from './app'
 import { fetchChapter, fetchFN } from "./lib/pouch";
 const mouse = require('mousetrap')
 const marked = require('marked')
@@ -104,6 +104,10 @@ export const page = {
     drawPage(this.chapters)
   },
   reSync(sync) {
+    if (sync.action == 'breakSection') {
+      router({route: 'book', bid: book.bid, sync: sync}) // break-section back to book
+      return
+    }
     let chapter = this.chapters.find(chapter=> chapter.bid == sync.bid)
     chapter.chdocs = syncDoc(chapter.chdocs, sync)
 
@@ -245,22 +249,45 @@ export function syncDoc(docs, sync) {
     // mess = ['paragraph broken by \"', sync.param.text, '\"'].join(' ')
     break
   case 'breakSection':
-    // todo: breakSection
     log('_BR SEC', sync)
+    log('_BR SEC-book', book.sbooks)
+    log('_BR SEC-doc', doc)
+    let sbook = book.sbooks.find(book=> book.bid == sync.bid)
+    let oldcnt = sbook.cnts[sync.idx]
+    let newcnt = _.clone(oldcnt)
+    oldcnt = _.clone(oldcnt)
+    log('_newcnt', newcnt)
+    newcnt.md = doc.md.slice(0, 25)
+    let size = oldcnt.size
+    log('_SIZE', oldcnt.size, size, size - sync.blockid)
+    newcnt.size = size - sync.blockid
+    oldcnt.size = sync.blockid
+    log('_OLD CNT', oldcnt)
+    log('_NEW CNT', newcnt)
+    // // sbook.cnts = syncCnt(sbook.cnts, sync)
+
+    sbook.cnts.splice(sync.idx, 1, oldcnt, newcnt)
+    log('_SBOOKS', book.sbooks)
+    sbook.cnts.forEach((cnt, idx)=> cnt.idx = idx)
+
+    let csyncs = getCSyncs(sync.bid)
+    let csync = {action: 'breakSection', bid: sync.bid}
+    // csyncs.push(sync)
+    // csyncstore.set(sync.bid, csyncs)
     break
   case 'insertAfter':
     newdoc = _.clone(doc)
     newdoc.md = 'x'
     newdoc.fake = true
     docs.splice(blockid+1, 0, newdoc)
-    // mess = 'empty paragraph incerted'
+    // mess = 'empty paragraph inserted'
     break
   case 'insertBefore':
     newdoc = _.clone(doc)
     newdoc.md = 'x'
     newdoc.fake = true
     docs.splice(blockid, 0, newdoc)
-    // mess = ''empty paragraph incerted'
+    // mess = ''empty paragraph inserted'
     break
   case 'action':
     break
