@@ -41,6 +41,10 @@ export function removeEditStyle() {
   if (oed) oed.classList.remove('editable')
   oed = q('.editable-wf')
   if (oed) oed.classList.remove('editable-wf')
+  let omarks = qs('.em-green-circle')
+  omarks.forEach(omark=> omark.classList.remove('em-green-circle'))
+  omarks = qs('.em-red-circle')
+  omarks.forEach(omark=> omark.classList.remove('em-red-circle'))
 }
 
 mouse.bind('ctrl+e', function(ev) {
@@ -55,7 +59,7 @@ export const semaphore = {
   async ready() {
     setEmptyHeader()
     setSemaphore()
-    if (!dgl.idx) setCntSynchroMarks()
+    if (!page.idx) setCntSynchroMarks()
   }
 }
 
@@ -66,7 +70,7 @@ async function setSemaphore() {
   let oright = q('#em-trn-size')
   let osrc = q('#em-lang-origin')
   let otrn = q('#em-lang-shown')
-  if (dgl.idx && page) {
+  if (page && page.idx) {
     let chapters = await page.chapters
     let origin = dgl.origin(chapters)
     let shown = dgl.shown(chapters)
@@ -128,12 +132,13 @@ function synchronize(action, param) {
     message.show('select chapter / paragraph to synchronize', 'darkred')
     return
   }
+
   let bid = oblock.closest('#src') ? book.origin().bid : book.shown().bid
   let sync = {bid, action, tmp: true} // idx не нужен, bid только для origin/shown
-  if (dgl.idx > -1) {
+  if (page.idx > -1) {
     const blockid = oblock.getAttribute('blockid') * 1
     sync.blockid = blockid
-    sync.idx = dgl.idx
+    sync.idx = page.idx
     if (param) sync.param = param
     page.reSync(sync)
   } else {
@@ -147,7 +152,7 @@ function synchronize(action, param) {
 
 mouse.bind('ctrl+z', function(ev) {
   if (!dgl.editMode) return
-  if (dgl.idx > -1) page.undo()
+  if (page.idx > -1) page.undo()
   else book.undo()
 })
 
@@ -230,7 +235,7 @@ document.addEventListener ("click",  (ev) => {
 // todo:  truncate??? а будет ли работать align pars без пересчета?
 mouse.bind('ctrl+t_', function(ev) {
   if (!dgl.editMode) return
-  if (!dgl.idx) return
+  if (!page.idx) return
   let oblocks = qs('.page .block')
   let oblock = q('.page .block[blockid="0"]')
   let trnk = oblock.classList.contains('truncate') ? true : false

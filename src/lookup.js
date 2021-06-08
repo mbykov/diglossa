@@ -14,6 +14,7 @@ import { ipcRenderer } from "electron";
 import { book } from './book'
 let dgl = remote.getGlobal('dgl')
 const Mark = require('mark.js')
+const path = require("path")
 
 const Store = require('electron-store')
 const appstore = new Store({name: 'appstore'})
@@ -80,6 +81,7 @@ document.addEventListener('click',  (ev) => {
 function fireImport(orow, shift) {
   let bpath = orow.textContent
   if (!bpath) return
+  bpath = path.resolve(lookup.heappath, bpath)
   let sbooks = book.sbooks
   if (shift && book) {
     let origin = dgl.origin(book.sbooks)

@@ -343,17 +343,17 @@ tr:nth-child(odd):not(.hidden) {
 /* } */
 
 .editable {
-    /* background-color: #69b6d5; */
-    border-style: dotted;
-    border-width: 2px;
-    border-color: eee8dd;
+    background-color: #eee8dd;
+    /* border-style: dotted; */
+    /* border-width: 2px; */
+    /* border-color: eee8dd; */
 }
 
 .editable-wf {
-    /* background-color: #69b6d5; */
-    border-style: dotted;
-    border-width: 2px;
-    border-color: eee8dd;
+    background-color: #69b6d5;
+    /* border-style: dotted; */
+    /* border-width: 2px; */
+    /* border-color: eee8dd; */
 }
 
 .truncated {

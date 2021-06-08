@@ -22,6 +22,7 @@ export const book = {
     progress.show()
     render('book')
     delete dgl.idx
+    delete book.idx
     let books
     if (state && state.bid) {
       books = bkstore.get(state.bid)
@@ -30,6 +31,7 @@ export const book = {
       throw new Error('_BOOK NO STATE')
     }
     let csyncs = getCSyncs(state.bid)
+    this.bid = state.bid
     this.srcbooks = books
     this.sbooks = this.syncCnts(this.srcbooks, csyncs)
     this.drawCont()
@@ -59,15 +61,15 @@ export const book = {
     let origin = book.sbooks.find(sbook=> sbook.origin)
     let csyncs = getCSyncs(origin.bid)
     csyncs.push(sync)
-    csyncstore.set(dgl.bid, csyncs)
+    csyncstore.set(origin.bid, csyncs)
     semaphore.ready()
     this.drawCont()
   },
   undo() {
-    let csyncs = getCSyncs(dgl.bid)
+    let csyncs = getCSyncs(this.bid)
     csyncs = csyncs.slice(0,-1)
     this.sbooks = this.syncCnts(this.srcbooks, csyncs)
-    csyncstore.set(dgl.bid, csyncs)
+    csyncstore.set(this.bid, csyncs)
     semaphore.ready()
     this.drawCont()
   },
@@ -139,7 +141,6 @@ function syncCnt(cnts, sync) {
     cnt.level = (cnt.level == 4) ? 4 : cnt.level + 1
     break
   case 'left':
-    log('_LEFT', cnt.level)
     cnt.level = (cnt.level == 1) ? 1 : cnt.level - 1
     break
   case 'mergeNext':
@@ -188,7 +189,7 @@ document.addEventListener ("click",  (ev) => {
   let opar = ev.target.closest('p.tree-text')
   if (!opar) return
   const idx = opar.getAttribute('idx') * 1
-  const state = {route: 'page', bid: dgl.bid, idx}
+  const state = {route: 'page', bid: book.bid, idx}
   router(state) // to-page
 })
 
@@ -244,12 +245,6 @@ function showSearchIcon() {
   q('#search-icon').classList.remove('hidden')
 }
 
-// todo: del
-mouse.bind('ctrl+i', function(ev) {
-  console.clear()
-  log('_B:', book.sbooks)
-})
-
 async function exitEditModeBook(ev) { // ESC book, remove tmp csyncs
   if (ev.which != 27) return
   if (!dgl.editMode) return
@@ -261,30 +256,15 @@ async function exitEditModeBook(ev) { // ESC book, remove tmp csyncs
   let csyncs = getCSyncs(origin.bid)
   csyncs = csyncs.filter(sync=> !sync.tmp)
   csyncstore.set(origin.bid, csyncs)
-  book.sbooks = book.syncCnts(book.srcbooks, csyncs)
-  book.drawCont()
-
-  header.ready()
-  let omarks = qs('.em-green-circle')
-  omarks.forEach(omark=> omark.classList.remove('em-green-circle'))
+  let state = {route: 'book', bid: origin.bid}
+  book.ready(state)
   message.show('all last changes lost', 'darkgreen')
 }
 
 document.addEventListener("keydown", exitEditModeBook)
 
-function drawCont_() {
-  let books = this.sbooks
-  let {osrc, otrn} = setPanes(books)
-  const src = dgl.origin(books)
-
-  let roots = _.filter(src.cnts, doc=> doc.level == 1)
-  let oroots = createTree(src.cnts, roots, [src])
-  oroots.forEach(oroot=> osrc.appendChild(oroot))
-
-  const trn = dgl.shown(books)
-  if (!trn) return
-  let trnroots = _.filter(trn.cnts, doc=> doc.level == 1)
-  const trns = dgl.trns(books)
-  oroots = createTree(trn.cnts, trnroots, trns)
-  oroots.forEach(oroot=> otrn.appendChild(oroot))
-}
+// todo: del
+mouse.bind('ctrl+i', function(ev) {
+  console.clear()
+  log('_B:', book.sbooks)
+})

@@ -43,12 +43,15 @@ function showRightHeader(cntidx) {
   empty(oheader)
   let oul = create('div', 'header-block')
   oul.classList.add('block')
-  if (cntidx === undefined) cntidx = dgl.idx
+  if (cntidx === undefined) cntidx = page.idx
   book.sbooks.forEach(sbook=> {
     if (sbook.origin) return
     let htext
     if (dgl.route == 'book') htext = sbook.descr.title
-    else if (dgl.route == 'page') htext = sbook.cnts[cntidx].md
+    else if (dgl.route == 'page') {
+      let cnt = sbook.cnts[cntidx]
+      htext = (cnt) ? sbook.cnts[cntidx].md : 'right header'
+    }
     htext = [': ', htext].join('')
     let oli = create('p')
     oul.appendChild(oli)
@@ -70,7 +73,7 @@ function showSimpleHeader(cntidx) {
   empty(oheader)
   let oul = create('div', 'header-block')
   oul.classList.add('block')
-  if (cntidx === undefined) cntidx = dgl.idx
+  if (cntidx === undefined) cntidx = page.idx
   let origin = dgl.origin(book.sbooks)
   let oli = create('p')
   oul.appendChild(oli)

@@ -567,6 +567,7 @@ const book = {
     _lib_progress__WEBPACK_IMPORTED_MODULE_4__.progress.show();
     (0,_app__WEBPACK_IMPORTED_MODULE_0__.render)('book');
     delete dgl.idx;
+    delete book.idx;
     let books;
 
     if (state && state.bid) {
@@ -577,6 +578,7 @@ const book = {
     }
 
     let csyncs = getCSyncs(state.bid);
+    this.bid = state.bid;
     this.srcbooks = books;
     this.sbooks = this.syncCnts(this.srcbooks, csyncs);
     this.drawCont();
@@ -610,16 +612,16 @@ const book = {
     let origin = book.sbooks.find(sbook => sbook.origin);
     let csyncs = getCSyncs(origin.bid);
     csyncs.push(sync);
-    csyncstore.set(dgl.bid, csyncs);
+    csyncstore.set(origin.bid, csyncs);
     _semaphore__WEBPACK_IMPORTED_MODULE_8__.semaphore.ready();
     this.drawCont();
   },
 
   undo() {
-    let csyncs = getCSyncs(dgl.bid);
+    let csyncs = getCSyncs(this.bid);
     csyncs = csyncs.slice(0, -1);
     this.sbooks = this.syncCnts(this.srcbooks, csyncs);
-    csyncstore.set(dgl.bid, csyncs);
+    csyncstore.set(this.bid, csyncs);
     _semaphore__WEBPACK_IMPORTED_MODULE_8__.semaphore.ready();
     this.drawCont();
   },
@@ -711,7 +713,6 @@ function syncCnt(cnts, sync) {
       break;
 
     case 'left':
-      (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_LEFT', cnt.level);
       cnt.level = cnt.level == 1 ? 1 : cnt.level - 1;
       break;
 
@@ -770,7 +771,7 @@ document.addEventListener("click", ev => {
   const idx = opar.getAttribute('idx') * 1;
   const state = {
     route: 'page',
-    bid: dgl.bid,
+    bid: book.bid,
     idx
   };
   (0,_app__WEBPACK_IMPORTED_MODULE_0__.router)(state); // to-page
@@ -819,13 +820,7 @@ mouse.bind('3', function (ev) {// todo: change page panes
 
 function showSearchIcon() {
   (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.q)('#search-icon').classList.remove('hidden');
-} // todo: del
-
-
-mouse.bind('ctrl+i', function (ev) {
-  console.clear();
-  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_B:', book.sbooks);
-});
+}
 
 async function exitEditModeBook(ev) {
   // ESC book, remove tmp csyncs
@@ -839,37 +834,20 @@ async function exitEditModeBook(ev) {
   let csyncs = getCSyncs(origin.bid);
   csyncs = csyncs.filter(sync => !sync.tmp);
   csyncstore.set(origin.bid, csyncs);
-  book.sbooks = book.syncCnts(book.srcbooks, csyncs);
-  book.drawCont();
-  _header__WEBPACK_IMPORTED_MODULE_7__.header.ready();
-  let omarks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.qs)('.em-green-circle');
-  omarks.forEach(omark => omark.classList.remove('em-green-circle'));
+  let state = {
+    route: 'book',
+    bid: origin.bid
+  };
+  book.ready(state);
   _lib_message__WEBPACK_IMPORTED_MODULE_5__.message.show('all last changes lost', 'darkgreen');
 }
 
-document.addEventListener("keydown", exitEditModeBook);
+document.addEventListener("keydown", exitEditModeBook); // todo: del
 
-function drawCont_() {
-  let books = this.sbooks;
-  let {
-    osrc,
-    otrn
-  } = setPanes(books);
-  const src = dgl.origin(books);
-
-  let roots = lodash__WEBPACK_IMPORTED_MODULE_1___default().filter(src.cnts, doc => doc.level == 1);
-
-  let oroots = (0,_lib_tree__WEBPACK_IMPORTED_MODULE_9__.createTree)(src.cnts, roots, [src]);
-  oroots.forEach(oroot => osrc.appendChild(oroot));
-  const trn = dgl.shown(books);
-  if (!trn) return;
-
-  let trnroots = lodash__WEBPACK_IMPORTED_MODULE_1___default().filter(trn.cnts, doc => doc.level == 1);
-
-  const trns = dgl.trns(books);
-  oroots = (0,_lib_tree__WEBPACK_IMPORTED_MODULE_9__.createTree)(trn.cnts, trnroots, trns);
-  oroots.forEach(oroot => otrn.appendChild(oroot));
-}
+mouse.bind('ctrl+i', function (ev) {
+  console.clear();
+  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_B:', book.sbooks);
+});
 
 /***/ }),
 
@@ -1719,11 +1697,14 @@ function showRightHeader(cntidx) {
   (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.empty)(oheader);
   let oul = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.create)('div', 'header-block');
   oul.classList.add('block');
-  if (cntidx === undefined) cntidx = dgl.idx;
+  if (cntidx === undefined) cntidx = _page__WEBPACK_IMPORTED_MODULE_4__.page.idx;
   _book__WEBPACK_IMPORTED_MODULE_3__.book.sbooks.forEach(sbook => {
     if (sbook.origin) return;
     let htext;
-    if (dgl.route == 'book') htext = sbook.descr.title;else if (dgl.route == 'page') htext = sbook.cnts[cntidx].md;
+    if (dgl.route == 'book') htext = sbook.descr.title;else if (dgl.route == 'page') {
+      let cnt = sbook.cnts[cntidx];
+      htext = cnt ? sbook.cnts[cntidx].md : 'right header';
+    }
     htext = [': ', htext].join('');
     let oli = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.create)('p');
     oul.appendChild(oli);
@@ -1744,7 +1725,7 @@ function showSimpleHeader(cntidx) {
   (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.empty)(oheader);
   let oul = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.create)('div', 'header-block');
   oul.classList.add('block');
-  if (cntidx === undefined) cntidx = dgl.idx;
+  if (cntidx === undefined) cntidx = _page__WEBPACK_IMPORTED_MODULE_4__.page.idx;
   let origin = dgl.origin(_book__WEBPACK_IMPORTED_MODULE_3__.book.sbooks);
   let oli = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.create)('p');
   oul.appendChild(oli);
@@ -3685,6 +3666,8 @@ let dgl = electron__WEBPACK_IMPORTED_MODULE_3__.remote.getGlobal('dgl');
 
 const Mark = __webpack_require__(/*! mark.js */ "mark.js");
 
+const path = __webpack_require__(/*! path */ "path");
+
 const Store = __webpack_require__(/*! electron-store */ "electron-store");
 
 const appstore = new Store({
@@ -3755,6 +3738,7 @@ document.addEventListener('click', ev => {
 function fireImport(orow, shift) {
   let bpath = orow.textContent;
   if (!bpath) return;
+  bpath = path.resolve(lookup.heappath, bpath);
   let sbooks = _book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks;
 
   if (shift && _book__WEBPACK_IMPORTED_MODULE_5__.book) {
@@ -3955,18 +3939,18 @@ const page = {
     _lib_progress__WEBPACK_IMPORTED_MODULE_8__.progress.show();
     (0,_app__WEBPACK_IMPORTED_MODULE_2__.render)('book');
     if (!state || !state.bid) throw new Error('_PAGE NO STATE');
+    this.idx = state.idx;
     let sbooks = bkstore.get(state.bid);
-    sbooks = dgl.actives(sbooks);
-    dgl.idx = state.idx;
+    sbooks = dgl.actives(sbooks); // dgl.idx = state.idx
+
     if (state.idx < 0) throw new Error('_PAGE NO CHAPTER IDX'); // todo: del
 
     let syncs = getSyncs(state.bid);
-    syncs = syncs.filter(sync => sync.idx === dgl.idx);
+    syncs = syncs.filter(sync => sync.idx === state.idx);
 
     if (state.jump) {
-      dgl.bid = state.bid;
-      dgl.idx = state.idx; // переназвать cntidx?
-
+      // dgl.bid = state.bid
+      // dgl.idx = state.idx // переназвать cntidx?
       let csyncs = (0,_book__WEBPACK_IMPORTED_MODULE_7__.getCSyncs)(state.bid);
       _book__WEBPACK_IMPORTED_MODULE_7__.book.sbooks = _book__WEBPACK_IMPORTED_MODULE_7__.book.syncCnts(sbooks, csyncs);
     }
@@ -4039,7 +4023,7 @@ const page = {
     let syncs = getSyncs(origin.bid);
     syncs = syncs.slice(0, -1);
     syncstore.set(origin.bid, syncs);
-    let chsyncs = syncs.filter(sync => sync.idx === dgl.idx);
+    let chsyncs = syncs.filter(sync => sync.idx === this.idx);
 
     let chapters = lodash__WEBPACK_IMPORTED_MODULE_1___default().cloneDeep(this.copy);
 
@@ -4389,7 +4373,7 @@ document.addEventListener("mouseover", function (ev) {
 }); // show footnote
 
 document.addEventListener("click", async ev => {
-  if (!dgl.bid || dgl.editMode) return;
+  if (!_book__WEBPACK_IMPORTED_MODULE_7__.book.bid || dgl.editMode) return;
   let owf = ev.target.closest('span.ref');
   if (!owf) return;
   let reftext = owf.textContent;
@@ -4463,17 +4447,15 @@ async function exitEditModePage(ev) {
   syncs = syncs.filter(sync => !sync.tmp);
   syncstore.set(origin.bid, syncs);
 
-  if (dgl.idx > -1) {
+  if (page.idx > -1) {
     let chapters = lodash__WEBPACK_IMPORTED_MODULE_1___default().cloneDeep(page.copy);
 
-    let chsyncs = syncs.filter(sync => sync.idx === dgl.idx);
+    let chsyncs = syncs.filter(sync => sync.idx === page.idx);
     await page.syncChapters(chapters, chsyncs);
     drawPage(chapters);
   }
 
   _header__WEBPACK_IMPORTED_MODULE_4__.header.ready();
-  let omarks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.qs)('.em-green-circle');
-  omarks.forEach(omark => omark.classList.remove('em-green-circle'));
   _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('all last changes lost', 'darkgreen');
 }
 
@@ -4496,7 +4478,7 @@ async function saveEditChanges() {
   let origin = _book__WEBPACK_IMPORTED_MODULE_7__.book.sbooks.find(sbook => sbook.origin);
   let syncs = getSyncs(origin.bid);
   syncs.forEach(sync => delete sync.tmp);
-  syncstore.set(dgl.bid, syncs);
+  syncstore.set(_book__WEBPACK_IMPORTED_MODULE_7__.book.bid, syncs);
   _header__WEBPACK_IMPORTED_MODULE_4__.header.ready();
   _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('changes saved', 'darkgreen');
   let omarks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.qs)('.em-green-circle');
@@ -5251,6 +5233,10 @@ function removeEditStyle() {
   if (oed) oed.classList.remove('editable');
   oed = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('.editable-wf');
   if (oed) oed.classList.remove('editable-wf');
+  let omarks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.qs)('.em-green-circle');
+  omarks.forEach(omark => omark.classList.remove('em-green-circle'));
+  omarks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.qs)('.em-red-circle');
+  omarks.forEach(omark => omark.classList.remove('em-red-circle'));
 }
 mouse.bind('ctrl+e', function (ev) {
   if (!(0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('.header') || dgl.editMode) return;
@@ -5263,7 +5249,7 @@ const semaphore = {
   async ready() {
     setEmptyHeader();
     setSemaphore();
-    if (!dgl.idx) setCntSynchroMarks();
+    if (!_page__WEBPACK_IMPORTED_MODULE_6__.page.idx) setCntSynchroMarks();
   }
 
 };
@@ -5276,7 +5262,7 @@ async function setSemaphore() {
   let osrc = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('#em-lang-origin');
   let otrn = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('#em-lang-shown');
 
-  if (dgl.idx && _page__WEBPACK_IMPORTED_MODULE_6__.page) {
+  if (_page__WEBPACK_IMPORTED_MODULE_6__.page && _page__WEBPACK_IMPORTED_MODULE_6__.page.idx) {
     let chapters = await _page__WEBPACK_IMPORTED_MODULE_6__.page.chapters;
     let origin = dgl.origin(chapters);
     let shown = dgl.shown(chapters);
@@ -5345,10 +5331,10 @@ function synchronize(action, param) {
     tmp: true
   }; // idx не нужен, bid только для origin/shown
 
-  if (dgl.idx > -1) {
+  if (_page__WEBPACK_IMPORTED_MODULE_6__.page.idx > -1) {
     const blockid = oblock.getAttribute('blockid') * 1;
     sync.blockid = blockid;
-    sync.idx = dgl.idx;
+    sync.idx = _page__WEBPACK_IMPORTED_MODULE_6__.page.idx;
     if (param) sync.param = param;
     _page__WEBPACK_IMPORTED_MODULE_6__.page.reSync(sync);
   } else {
@@ -5362,7 +5348,7 @@ function synchronize(action, param) {
 
 mouse.bind('ctrl+z', function (ev) {
   if (!dgl.editMode) return;
-  if (dgl.idx > -1) _page__WEBPACK_IMPORTED_MODULE_6__.page.undo();else _book__WEBPACK_IMPORTED_MODULE_7__.book.undo();
+  if (_page__WEBPACK_IMPORTED_MODULE_6__.page.idx > -1) _page__WEBPACK_IMPORTED_MODULE_6__.page.undo();else _book__WEBPACK_IMPORTED_MODULE_7__.book.undo();
 });
 mouse.bind('d', function (ev) {
   synchronize('delete');
@@ -5438,7 +5424,7 @@ document.addEventListener("click", ev => {
 
 mouse.bind('ctrl+t_', function (ev) {
   if (!dgl.editMode) return;
-  if (!dgl.idx) return;
+  if (!_page__WEBPACK_IMPORTED_MODULE_6__.page.idx) return;
   let oblocks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.qs)('.page .block');
   let oblock = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('.page .block[blockid="0"]');
   let trnk = oblock.classList.contains('truncate') ? true : false;
@@ -5477,7 +5463,7 @@ module.exports = exports;
 var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(/*! ../../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js");
 exports = ___CSS_LOADER_API_IMPORT___(false);
 // Module
-exports.push([module.id, "/* @tailwind base; */\n/* @tailwind components; */\n/* .section { */\n/*     @apply p-4 text-gray-900 w-full bg-gray-200 shadow-md rounded m-4 */\n/* } */\n/* .header { */\n/*     @apply py-2 mb-1 text-left text-gray-900 w-full bg-gray-100 shadow-md rounded */\n/* } */\n/* .header-cell { */\n/*     @apply px-12 */\n/* } */\n/* @tailwind utilities; */\n\n/* @import \"tailwindcss/base\"; */\n/* @import \"tailwindcss/components\"; */\n/* @import \"tailwindcss/utilities\"; */\n\n/* @apply p-4 text-gray-900 w-full bg-gray-200 shadow-md rounded m-4 */\n.section {\n\tmargin: 1rem;\n  padding: 1rem;\n  color: #1a202c;\n  width: 100%;\n  background-color: #edf2f7;\n  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);\n  border-radius: 0.25rem;\n  height: 100%;\n  overflow-y: hidden;\n  padding-bottom: 50px;\n}\n\n.section p {\n  padding-top: 0.5rem;\n}\n\n.section ul {\n  margin-left: 1rem;\n  list-style: disc;\n}\n\n/* @apply py-2 mb-1 text-left text-gray-900 w-full bg-gray-100 shadow-md rounded */\n.header {\n  padding-top: 0.5rem; padding-bottom: 0.5rem;\n  text-align: left;\n  color: #1a202c;\n  width: 100%;\n  background-color: #f7fafc;\n  cursor: pointer;\n  color: maroon;\n  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);\n  border-radius: 0.25rem;\n}\n\n/* @apply px-12 */\n.header-cell {\n  padding-left: 3rem; padding-right: 3rem;\n}\n\n\n\n.hidden {\n  display: none!important;\n}\n\nhtml {\n    height: 100%;\n    overflow-y: hidden;\n    overflow-x: hidden;\n}\n\nbody {\n    height: 100%;\n    font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n    margin: 0;\n    padding: 2rem;\n    padding-top: 0;\n}\n\n#app {\n    height: 100%;\n    overflow: hidden;\n}\n\n#progress {\n    height: 20px;\n    width: 100px;\n    position: absolute;\n    top: 5px;\n    right: 25px;\n    margin-right: 25px;\n    z-index: 100;\n}\n\n#ok {\n    position: absolute;\n    top: 55px;\n    right: 55px;\n    z-index: 100;\n}\n\np.ptext {\n    padding-top: 0.5rem;\n    text-indent: 1rem;\n}\n\np.plist {\n  padding-top: 0;\n  text-indent: 1rem;\n  height: 1rem;\n}\n\n.ul {\n  margin-top: 1rem;\n}\n\n\n.book {\n  height: 100%;\n  padding-bottom: 50px;\n}\n\n.page {\n    margin-top: 25px;\n    height: 100%;\n    overflow-y: hidden;\n}\n\n#message {\n    /* height: 20px; */\n    width: 80%;\n    white-space: nowrap;\n    position: absolute;\n    top: 0;\n    left: 25px;\n    z-index: 10;\n    background: white;\n}\n\n/* == text == */\n\nspan.wf:hover {\n    background-color: #eee8aa;\n}\n\nspan.ref:hover {\n    background-color: #eee8aa;\n    cursor: pointer;\n}\n\nh1, .h1 {\n    margin-top: 50px;\n    color: maroon;\n    font-size: 24px;\n    font-weight: bold;\n}\n\nh2, .h2 {\n    margin-top: 50px;\n    color: maroon;\n    font-size: 16px;\n    font-weight: bold;\n}\n\nh3, .h3 {\n    margin-top: 25px;\n    color: maroon;\n    font-size: 16px;\n}\n\nh4, .h4 {\n    color: maroon;\n    margin-top: 20px;\n    font-size: 16px;\n}\n\na {\n    cursor: pointer;\n}\n\nem {\n    color: #2f4f4f;\n}\n\n.nowrap {\n    white-space: nowrap;\n}\n\n/* .line-par { */\n/*     /\\* width: auto; *\\/ */\n/* } */\n\n/* .line-block { */\n/*     overflow: hidden; */\n/* } */\n\n.list-line .ptext {\n    text-indent: 0;\n}\n\n.line-head {\n    cursor: pointer;\n}\n\n/* =========== COLORS =============== */\n\n.maroon {\n    color: maroon;\n}\n\n.bold {\n    font-weight: bold;\n}\n\n.darkgreen {\n    color: darkgreen;\n}\n\n.darkred {\n    color: darkred;\n}\n\n.grey {\n    color: grey;\n}\n\n\n/* =========== TABLE =============== */\n\ntr:nth-child(even):not(.hidden) {\n    background-color: #edf2f7;\n}\n\ntr:nth-child(odd):not(.hidden) {\n    background-color: #f7fafc;\n}\n\n.odd {\n    background-color: #f7fafc;\n}\n\n.even {\n    background-color: #edf2f7;\n}\n\n.table-line {\n    cursor: pointer;\n}\n\n.table-line:hover {\n    background-color: #eee8aa!important;\n}\n\n.tmpl {\n    display: none!important;\n}\n\n/* == bmk ==  */\n\n\n.tree-block p {\n    overflow: hidden;\n    text-overflow: ellipsis;\n    white-space: nowrap;\n}\n\n.synchroMark {\n  width: 0.5rem;\n  height: 0.5rem;\n  float: right;\n  position: relative;\n  z-index: 100;\n  top: 1rem;\n}\n\n#dict-progress {\n  height: 20px;\n  width: auto;\n  position: absolute;\n  top: 5px;\n  right: 150px;\n  font-weight: bold;\n  z-index: 20;\n  margin-left: 25px;\n}\n\n.highlight {\n  background: orange;\n  color: black;\n}\n\n/* === search === */\n#search-input {\n  position: absolute;\n  top: 0;\n  padding: 4px;\n  right: 25px;\n  margin-right: 25px;\n  cursor: pointer;\n}\n\n#search-icon {\n  position: absolute;\n  top: 12px;\n  right: 25px;\n  margin-right: 25px;\n  cursor: pointer;\n}\n\n/* .searchinput { */\n/*   width: 100%; */\n/* } */\n\n/* auto-sync */\n\n.em-red-circle::before {\n  content: '';\n  display: inline-block;\n  width: 10px;\n  height: 10px;\n  border-radius: 5px;\n  margin-top: 6px;\n  background-color: indianred;\n  float: right;\n  margin-right: -20px;\n}\n\n.em-green-circle::before {\n  content: '';\n  display: inline-block;\n  width: 10px;\n  height: 10px;\n  border-radius: 5px;\n  margin-top: 6px;\n  background-color: #bada55;\n  float: right;\n  margin-right: -20px;\n}\n\n/* .editable { */\n/*   border-style: dotted; */\n/*   border-width: 2px; */\n/*   border-color: eee8dd; */\n/* } */\n\n.editable {\n    /* background-color: #69b6d5; */\n    border-style: dotted;\n    border-width: 2px;\n    border-color: eee8dd;\n}\n\n.editable-wf {\n    /* background-color: #69b6d5; */\n    border-style: dotted;\n    border-width: 2px;\n    border-color: eee8dd;\n}\n\n.truncated {\n  height: 2rem;\n}\n\n.external {\n  cursor: pointer;\n  color: maroon;\n}\n\n.show-page-position {\n  position: absolute;\n  top: 45px;\n  margin-right: 25px;\n  z-index: 100;\n  width: 0;\n  border-style: solid;\n  border-width: 2px;\n  border-top: 1px;\n}\n\n.footnote {\n    cursor: pointer;\n    position: absolute;\n    width: 400px;\n    padding: 15px;\n    z-index: 100;\n    font-size: 90%;\n    background-color: #f7fafc;\n    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);\n}\n\n.version {\n    cursor: pointer;\n}\n\n.export-to-block {\n    cursor: pointer;\n}\n\n#heap {\n    cursor: pointer;\n}\n\n.lookup-line {\n    cursor: pointer;\n}\n\n#lookup-help-button {\n    cursor: pointer;\n    color: maroon;\n}\n", ""]);
+exports.push([module.id, "/* @tailwind base; */\n/* @tailwind components; */\n/* .section { */\n/*     @apply p-4 text-gray-900 w-full bg-gray-200 shadow-md rounded m-4 */\n/* } */\n/* .header { */\n/*     @apply py-2 mb-1 text-left text-gray-900 w-full bg-gray-100 shadow-md rounded */\n/* } */\n/* .header-cell { */\n/*     @apply px-12 */\n/* } */\n/* @tailwind utilities; */\n\n/* @import \"tailwindcss/base\"; */\n/* @import \"tailwindcss/components\"; */\n/* @import \"tailwindcss/utilities\"; */\n\n/* @apply p-4 text-gray-900 w-full bg-gray-200 shadow-md rounded m-4 */\n.section {\n\tmargin: 1rem;\n  padding: 1rem;\n  color: #1a202c;\n  width: 100%;\n  background-color: #edf2f7;\n  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);\n  border-radius: 0.25rem;\n  height: 100%;\n  overflow-y: hidden;\n  padding-bottom: 50px;\n}\n\n.section p {\n  padding-top: 0.5rem;\n}\n\n.section ul {\n  margin-left: 1rem;\n  list-style: disc;\n}\n\n/* @apply py-2 mb-1 text-left text-gray-900 w-full bg-gray-100 shadow-md rounded */\n.header {\n  padding-top: 0.5rem; padding-bottom: 0.5rem;\n  text-align: left;\n  color: #1a202c;\n  width: 100%;\n  background-color: #f7fafc;\n  cursor: pointer;\n  color: maroon;\n  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);\n  border-radius: 0.25rem;\n}\n\n/* @apply px-12 */\n.header-cell {\n  padding-left: 3rem; padding-right: 3rem;\n}\n\n\n\n.hidden {\n  display: none!important;\n}\n\nhtml {\n    height: 100%;\n    overflow-y: hidden;\n    overflow-x: hidden;\n}\n\nbody {\n    height: 100%;\n    font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;\n    margin: 0;\n    padding: 2rem;\n    padding-top: 0;\n}\n\n#app {\n    height: 100%;\n    overflow: hidden;\n}\n\n#progress {\n    height: 20px;\n    width: 100px;\n    position: absolute;\n    top: 5px;\n    right: 25px;\n    margin-right: 25px;\n    z-index: 100;\n}\n\n#ok {\n    position: absolute;\n    top: 55px;\n    right: 55px;\n    z-index: 100;\n}\n\np.ptext {\n    padding-top: 0.5rem;\n    text-indent: 1rem;\n}\n\np.plist {\n  padding-top: 0;\n  text-indent: 1rem;\n  height: 1rem;\n}\n\n.ul {\n  margin-top: 1rem;\n}\n\n\n.book {\n  height: 100%;\n  padding-bottom: 50px;\n}\n\n.page {\n    margin-top: 25px;\n    height: 100%;\n    overflow-y: hidden;\n}\n\n#message {\n    /* height: 20px; */\n    width: 80%;\n    white-space: nowrap;\n    position: absolute;\n    top: 0;\n    left: 25px;\n    z-index: 10;\n    background: white;\n}\n\n/* == text == */\n\nspan.wf:hover {\n    background-color: #eee8aa;\n}\n\nspan.ref:hover {\n    background-color: #eee8aa;\n    cursor: pointer;\n}\n\nh1, .h1 {\n    margin-top: 50px;\n    color: maroon;\n    font-size: 24px;\n    font-weight: bold;\n}\n\nh2, .h2 {\n    margin-top: 50px;\n    color: maroon;\n    font-size: 16px;\n    font-weight: bold;\n}\n\nh3, .h3 {\n    margin-top: 25px;\n    color: maroon;\n    font-size: 16px;\n}\n\nh4, .h4 {\n    color: maroon;\n    margin-top: 20px;\n    font-size: 16px;\n}\n\na {\n    cursor: pointer;\n}\n\nem {\n    color: #2f4f4f;\n}\n\n.nowrap {\n    white-space: nowrap;\n}\n\n/* .line-par { */\n/*     /\\* width: auto; *\\/ */\n/* } */\n\n/* .line-block { */\n/*     overflow: hidden; */\n/* } */\n\n.list-line .ptext {\n    text-indent: 0;\n}\n\n.line-head {\n    cursor: pointer;\n}\n\n/* =========== COLORS =============== */\n\n.maroon {\n    color: maroon;\n}\n\n.bold {\n    font-weight: bold;\n}\n\n.darkgreen {\n    color: darkgreen;\n}\n\n.darkred {\n    color: darkred;\n}\n\n.grey {\n    color: grey;\n}\n\n\n/* =========== TABLE =============== */\n\ntr:nth-child(even):not(.hidden) {\n    background-color: #edf2f7;\n}\n\ntr:nth-child(odd):not(.hidden) {\n    background-color: #f7fafc;\n}\n\n.odd {\n    background-color: #f7fafc;\n}\n\n.even {\n    background-color: #edf2f7;\n}\n\n.table-line {\n    cursor: pointer;\n}\n\n.table-line:hover {\n    background-color: #eee8aa!important;\n}\n\n.tmpl {\n    display: none!important;\n}\n\n/* == bmk ==  */\n\n\n.tree-block p {\n    overflow: hidden;\n    text-overflow: ellipsis;\n    white-space: nowrap;\n}\n\n.synchroMark {\n  width: 0.5rem;\n  height: 0.5rem;\n  float: right;\n  position: relative;\n  z-index: 100;\n  top: 1rem;\n}\n\n#dict-progress {\n  height: 20px;\n  width: auto;\n  position: absolute;\n  top: 5px;\n  right: 150px;\n  font-weight: bold;\n  z-index: 20;\n  margin-left: 25px;\n}\n\n.highlight {\n  background: orange;\n  color: black;\n}\n\n/* === search === */\n#search-input {\n  position: absolute;\n  top: 0;\n  padding: 4px;\n  right: 25px;\n  margin-right: 25px;\n  cursor: pointer;\n}\n\n#search-icon {\n  position: absolute;\n  top: 12px;\n  right: 25px;\n  margin-right: 25px;\n  cursor: pointer;\n}\n\n/* .searchinput { */\n/*   width: 100%; */\n/* } */\n\n/* auto-sync */\n\n.em-red-circle::before {\n  content: '';\n  display: inline-block;\n  width: 10px;\n  height: 10px;\n  border-radius: 5px;\n  margin-top: 6px;\n  background-color: indianred;\n  float: right;\n  margin-right: -20px;\n}\n\n.em-green-circle::before {\n  content: '';\n  display: inline-block;\n  width: 10px;\n  height: 10px;\n  border-radius: 5px;\n  margin-top: 6px;\n  background-color: #bada55;\n  float: right;\n  margin-right: -20px;\n}\n\n/* .editable { */\n/*   border-style: dotted; */\n/*   border-width: 2px; */\n/*   border-color: eee8dd; */\n/* } */\n\n.editable {\n    background-color: #eee8dd;\n    /* border-style: dotted; */\n    /* border-width: 2px; */\n    /* border-color: eee8dd; */\n}\n\n.editable-wf {\n    background-color: #69b6d5;\n    /* border-style: dotted; */\n    /* border-width: 2px; */\n    /* border-color: eee8dd; */\n}\n\n.truncated {\n  height: 2rem;\n}\n\n.external {\n  cursor: pointer;\n  color: maroon;\n}\n\n.show-page-position {\n  position: absolute;\n  top: 45px;\n  margin-right: 25px;\n  z-index: 100;\n  width: 0;\n  border-style: solid;\n  border-width: 2px;\n  border-top: 1px;\n}\n\n.footnote {\n    cursor: pointer;\n    position: absolute;\n    width: 400px;\n    padding: 15px;\n    z-index: 100;\n    font-size: 90%;\n    background-color: #f7fafc;\n    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);\n}\n\n.version {\n    cursor: pointer;\n}\n\n.export-to-block {\n    cursor: pointer;\n}\n\n#heap {\n    cursor: pointer;\n}\n\n.lookup-line {\n    cursor: pointer;\n}\n\n#lookup-help-button {\n    cursor: pointer;\n    color: maroon;\n}\n", ""]);
 // Exports
 module.exports = exports;
 

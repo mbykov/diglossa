@@ -29,17 +29,18 @@ export const page = {
     progress.show()
     render('book')
     if (!state || !state.bid) throw new Error('_PAGE NO STATE')
+    this.idx = state.idx
 
     let sbooks = bkstore.get(state.bid)
     sbooks = dgl.actives(sbooks)
-    dgl.idx = state.idx
+    // dgl.idx = state.idx
     if (state.idx < 0) throw new Error('_PAGE NO CHAPTER IDX') // todo: del
     let syncs = getSyncs(state.bid)
-    syncs = syncs.filter(sync => sync.idx === dgl.idx)
+    syncs = syncs.filter(sync => sync.idx === state.idx)
 
     if (state.jump) {
-      dgl.bid = state.bid
-      dgl.idx = state.idx // переназвать cntidx?
+      // dgl.bid = state.bid
+      // dgl.idx = state.idx // переназвать cntidx?
       let csyncs = getCSyncs(state.bid)
       book.sbooks = book.syncCnts(sbooks, csyncs)
     }
@@ -93,7 +94,7 @@ export const page = {
     let syncs = getSyncs(origin.bid)
     syncs = syncs.slice(0,-1)
     syncstore.set(origin.bid, syncs)
-    let chsyncs = syncs.filter(sync => sync.idx === dgl.idx)
+    let chsyncs = syncs.filter(sync => sync.idx === this.idx)
     let chapters = _.cloneDeep(this.copy)
     await this.syncChapters(chapters, chsyncs)
     drawPage(chapters)
@@ -399,7 +400,7 @@ document.addEventListener("mouseover", function(ev) {
 
 // show footnote
 document.addEventListener ("click",  async (ev) => {
-  if (!dgl.bid || dgl.editMode) return
+  if (!book.bid || dgl.editMode) return
   let owf = ev.target.closest('span.ref')
   if (!owf) return
   let reftext = owf.textContent
@@ -478,16 +479,14 @@ async function exitEditModePage(ev) { // ESC page, remove tmp syncs
   syncs = syncs.filter(sync=> !sync.tmp)
   syncstore.set(origin.bid, syncs)
 
-  if (dgl.idx > -1) {
+  if (page.idx > -1) {
     let chapters = _.cloneDeep(page.copy)
-    let chsyncs = syncs.filter(sync => sync.idx === dgl.idx)
+    let chsyncs = syncs.filter(sync => sync.idx === page.idx)
     await page.syncChapters(chapters, chsyncs)
     drawPage(chapters)
   }
 
   header.ready()
-  let omarks = qs('.em-green-circle')
-  omarks.forEach(omark=> omark.classList.remove('em-green-circle'))
   message.show('all last changes lost', 'darkgreen')
 }
 
@@ -513,7 +512,7 @@ async function saveEditChanges() {
   let syncs = getSyncs(origin.bid)
 
   syncs.forEach(sync=> delete sync.tmp)
-  syncstore.set(dgl.bid, syncs)
+  syncstore.set(book.bid, syncs)
   header.ready()
   message.show('changes saved', 'darkgreen')
   let omarks = qs('.em-green-circle')
