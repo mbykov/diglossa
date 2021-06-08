@@ -144,8 +144,8 @@ function synchronize(action, param) {
   } else {
     const opar = oblock.querySelector('p.tree-text:hover:not(.hidden)')
     if (!opar) return
-    // const path = opar.getAttribute('path')
-    // sync.path = path
+    const path = opar.getAttribute('path')
+    sync.path = path
     const idx = opar.getAttribute('idx')
     sync.idx = idx*1
     book.reSync(sync)
@@ -170,7 +170,8 @@ mouse.bind('B', function(ev) {
   }
   let text = opar.textContent
   const _id = opar.getAttribute('_id')
-  let param = {md: text.slice(0, 25), _id}
+  const path = _id.split('- ')[0]
+  let param = {md: text.slice(0, 25), path}
   synchronize('breakSection', param)
 })
 

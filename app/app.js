@@ -578,7 +578,7 @@ const book = {
     this.bid = state.bid;
     this.srcbooks = books;
     this.sbooks = this.syncCnts(this.srcbooks, csyncs);
-    if (state.sync) this.reSync(state.sync);else this.drawCont();
+    if (state.sync) this.break(state.sync);else this.drawCont();
     showSearchIcon();
     _header__WEBPACK_IMPORTED_MODULE_7__.header.ready();
     _lib_progress__WEBPACK_IMPORTED_MODULE_4__.progress.hide();
@@ -616,10 +616,21 @@ const book = {
     _lib_progress__WEBPACK_IMPORTED_MODULE_4__.progress.hide();
   },
 
-  // break(sync) {
-  //   log('_book_break', sync)
-  //   // let cnt = cnts.find(cnt=> cnt.path == sync.path)
-  // },
+  break(sync) {
+    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_book_break', sync);
+    let origin = book.sbooks.find(sbook => sbook.origin);
+    let csyncs = getCSyncs(origin.bid);
+    csyncs.push(sync);
+    csyncstore.set(origin.bid, csyncs);
+    this.sbooks = this.syncCnts(this.srcbooks, csyncs);
+    let sbook = this.sbooks.find(book => book.bid == sync.bid);
+    sbook.cnts = syncCnt(sbook.cnts, sync); // но, что после релоад?
+
+    _semaphore__WEBPACK_IMPORTED_MODULE_8__.semaphore.ready();
+    this.drawCont();
+    _lib_progress__WEBPACK_IMPORTED_MODULE_4__.progress.hide();
+  },
+
   undo() {
     let csyncs = getCSyncs(this.bid);
     csyncs = csyncs.slice(0, -1);
@@ -767,7 +778,7 @@ function syncCnt(cnts, sync) {
       (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_SIZE', size, size - sync.blockid);
       newcnt.size = size - sync.blockid;
       oldcnt.size = sync.blockid;
-      newcnt._id = sync.param._id;
+      newcnt.path = sync.param.path;
       (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_OLD CNT', oldcnt);
       (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_NEW CNT', newcnt);
       cnts.splice(sync.idx, 1, oldcnt, newcnt);
@@ -5391,9 +5402,9 @@ function synchronize(action, param) {
     _page__WEBPACK_IMPORTED_MODULE_6__.page.reSync(sync);
   } else {
     const opar = oblock.querySelector('p.tree-text:hover:not(.hidden)');
-    if (!opar) return; // const path = opar.getAttribute('path')
-    // sync.path = path
-
+    if (!opar) return;
+    const path = opar.getAttribute('path');
+    sync.path = path;
     const idx = opar.getAttribute('idx');
     sync.idx = idx * 1;
     _book__WEBPACK_IMPORTED_MODULE_7__.book.reSync(sync);
@@ -5419,9 +5430,11 @@ mouse.bind('B', function (ev) {
 
   const _id = opar.getAttribute('_id');
 
+  const path = _id.split('- ')[0];
+
   let param = {
     md: text.slice(0, 25),
-    _id
+    path
   };
   synchronize('breakSection', param);
 });

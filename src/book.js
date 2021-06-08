@@ -30,7 +30,7 @@ export const book = {
     this.bid = state.bid
     this.srcbooks = books
     this.sbooks = this.syncCnts(this.srcbooks, csyncs)
-    if (state.sync) this.reSync(state.sync)
+    if (state.sync) this.break(state.sync)
     else this.drawCont()
     showSearchIcon()
     header.ready()
@@ -64,10 +64,20 @@ export const book = {
     this.drawCont()
     progress.hide()
   },
-  // break(sync) {
-  //   log('_book_break', sync)
-  //   // let cnt = cnts.find(cnt=> cnt.path == sync.path)
-  // },
+  break(sync) {
+    log('_book_break', sync)
+    let origin = book.sbooks.find(sbook=> sbook.origin)
+    let csyncs = getCSyncs(origin.bid)
+    csyncs.push(sync)
+    csyncstore.set(origin.bid, csyncs)
+    this.sbooks = this.syncCnts(this.srcbooks, csyncs)
+    let sbook = this.sbooks.find(book=> book.bid == sync.bid)
+    sbook.cnts = syncCnt(sbook.cnts, sync)
+    // но, что после релоад?
+    semaphore.ready()
+    this.drawCont()
+    progress.hide()
+  },
   undo() {
     let csyncs = getCSyncs(this.bid)
     csyncs = csyncs.slice(0,-1)
@@ -186,7 +196,7 @@ function syncCnt(cnts, sync) {
     log('_SIZE', size, size - sync.blockid)
     newcnt.size = size - sync.blockid
     oldcnt.size = sync.blockid
-    newcnt._id = sync.param._id
+    newcnt.path = sync.param.path
     log('_OLD CNT', oldcnt)
     log('_NEW CNT', newcnt)
     cnts.splice(sync.idx, 1, oldcnt, newcnt)
