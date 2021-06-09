@@ -54,7 +54,6 @@ export const book = {
     return sbooks
   },
   reSync(sync) {
-    log('_resync_book', sync)
     let sbook = this.sbooks.find(book=> book.bid == sync.bid)
     sbook.cnts = syncCnt(sbook.cnts, sync)
     let origin = book.sbooks.find(sbook=> sbook.origin)
