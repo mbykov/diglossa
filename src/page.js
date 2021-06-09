@@ -109,6 +109,10 @@ export const page = {
       return
     }
     let chapter = this.chapters.find(chapter=> chapter.bid == sync.bid)
+    if (!chapter) {
+      message.show('select book before', 'darkred')
+      return
+    }
     chapter.chdocs = syncDoc(chapter.chdocs, sync)
 
     let origin = book.sbooks.find(sbook=> sbook.origin)
@@ -503,15 +507,20 @@ async function saveEditChanges() {
   dgl.editMode = false
   removeEditStyle()
   message.hide()
+
+
   let origin = book.sbooks.find(sbook=> sbook.origin)
   let syncs = getSyncs(origin.bid)
-
   syncs.forEach(sync=> delete sync.tmp)
   syncstore.set(book.bid, syncs)
+  let csyncs = getCSyncs(origin.bid)
+  csyncs.forEach(csync=> delete csync.tmp)
+  csyncstore.set(origin.bid, csyncs)
+
   header.ready()
   message.show('changes saved', 'darkgreen')
-  let omarks = qs('.em-green-circle')
-  omarks.forEach(omark=> omark.classList.remove('em-green-circle'))
+  // let omarks = qs('.em-green-circle')
+  // omarks.forEach(omark=> omark.classList.remove('em-green-circle'))
 }
 
 function showSearchIcon() {

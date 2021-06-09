@@ -23,6 +23,7 @@ export const book = {
     render('book')
     delete dgl.idx // todo: del
     delete book.idx // todo: del
+    delete page.idx
     if (!state.bid) throw new Error('_BOOK NO STATE') // todo: del
     let books = bkstore.get(state.bid)
     books = dgl.actives(books)
@@ -53,6 +54,7 @@ export const book = {
     return sbooks
   },
   reSync(sync) {
+    log('_resync_book', sync)
     let sbook = this.sbooks.find(book=> book.bid == sync.bid)
     sbook.cnts = syncCnt(sbook.cnts, sync)
     let origin = book.sbooks.find(sbook=> sbook.origin)

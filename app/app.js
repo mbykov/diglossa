@@ -570,6 +570,7 @@ const book = {
 
     delete book.idx; // todo: del
 
+    delete _page__WEBPACK_IMPORTED_MODULE_6__.page.idx;
     if (!state.bid) throw new Error('_BOOK NO STATE'); // todo: del
 
     let books = bkstore.get(state.bid);
@@ -604,6 +605,7 @@ const book = {
   },
 
   reSync(sync) {
+    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_3__.log)('_resync_book', sync);
     let sbook = this.sbooks.find(book => book.bid == sync.bid);
     sbook.cnts = syncCnt(sbook.cnts, sync);
     let origin = book.sbooks.find(sbook => sbook.origin);
@@ -4077,6 +4079,12 @@ const page = {
     }
 
     let chapter = this.chapters.find(chapter => chapter.bid == sync.bid);
+
+    if (!chapter) {
+      _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('select book before', 'darkred');
+      return;
+    }
+
     chapter.chdocs = syncDoc(chapter.chdocs, sync);
     let origin = _book__WEBPACK_IMPORTED_MODULE_7__.book.sbooks.find(sbook => sbook.origin);
     let syncs = getSyncs(origin.bid);
@@ -4508,10 +4516,12 @@ async function saveEditChanges() {
   let syncs = getSyncs(origin.bid);
   syncs.forEach(sync => delete sync.tmp);
   syncstore.set(_book__WEBPACK_IMPORTED_MODULE_7__.book.bid, syncs);
+  let csyncs = (0,_book__WEBPACK_IMPORTED_MODULE_7__.getCSyncs)(origin.bid);
+  csyncs.forEach(csync => delete csync.tmp);
+  csyncstore.set(origin.bid, csyncs);
   _header__WEBPACK_IMPORTED_MODULE_4__.header.ready();
-  _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('changes saved', 'darkgreen');
-  let omarks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.qs)('.em-green-circle');
-  omarks.forEach(omark => omark.classList.remove('em-green-circle'));
+  _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('changes saved', 'darkgreen'); // let omarks = qs('.em-green-circle')
+  // omarks.forEach(omark=> omark.classList.remove('em-green-circle'))
 }
 
 function showSearchIcon() {
@@ -5286,26 +5296,30 @@ const semaphore = {
 async function setSemaphore() {
   if (!_book__WEBPACK_IMPORTED_MODULE_7__.book.shown()) return;
   let ocircle = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('svg #em-big-circle');
-  let oleft = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('#em-src-size');
-  let oright = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('#em-trn-size');
+  let oleftem = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('#em-src-size');
+  let orightem = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('#em-trn-size');
   let osrc = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('#em-lang-origin');
   let otrn = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.q)('#em-lang-shown');
 
-  if (_page__WEBPACK_IMPORTED_MODULE_6__.page && _page__WEBPACK_IMPORTED_MODULE_6__.page.idx) {
+  if (dgl.route == 'page') {
     let chapters = await _page__WEBPACK_IMPORTED_MODULE_6__.page.chapters;
     let origin = dgl.origin(chapters);
+    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_OR', origin);
+    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_OR', origin.chdocs.length);
     let shown = dgl.shown(chapters);
+    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_SH', shown);
+    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_SH', shown.chdocs.length);
     if (origin.chdocs.length == shown.chdocs.length) ocircle.setAttribute('fill', 'green');
-    oleft.textContent = origin.chdocs.length;
-    oright.textContent = shown.chdocs.length;
+    oleftem.textContent = origin.chdocs.length;
+    orightem.textContent = shown.chdocs.length;
     osrc.textContent = origin.lang;
     otrn.textContent = shown.lang;
-  } else if (_book__WEBPACK_IMPORTED_MODULE_7__.book) {
+  } else if (dgl.route == 'book') {
     let origin = _book__WEBPACK_IMPORTED_MODULE_7__.book.origin();
     let shown = _book__WEBPACK_IMPORTED_MODULE_7__.book.shown();
     if (origin.cnts.length == shown.cnts.length) ocircle.setAttribute('fill', 'green');
-    oleft.textContent = origin.cnts.length;
-    oright.textContent = shown.cnts.length;
+    oleftem.textContent = origin.cnts.length;
+    orightem.textContent = shown.cnts.length;
     osrc.textContent = origin.lang;
     otrn.textContent = shown.lang;
   }
@@ -5360,13 +5374,13 @@ function synchronize(action, param) {
     tmp: true
   };
 
-  if (_page__WEBPACK_IMPORTED_MODULE_6__.page.idx > -1) {
+  if (dgl.route == 'page') {
     const blockid = oblock.getAttribute('blockid') * 1;
     sync.blockid = blockid;
     sync.idx = _page__WEBPACK_IMPORTED_MODULE_6__.page.idx;
     if (param) sync.param = param;
     _page__WEBPACK_IMPORTED_MODULE_6__.page.reSync(sync);
-  } else {
+  } else if (dgl.route == 'book') {
     const opar = oblock.querySelector('p.tree-text:hover:not(.hidden)');
     if (!opar) return;
     const path = opar.getAttribute('path');

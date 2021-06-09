@@ -66,25 +66,29 @@ export const semaphore = {
 async function setSemaphore() {
   if (!book.shown()) return
   let ocircle = q('svg #em-big-circle')
-  let oleft = q('#em-src-size')
-  let oright = q('#em-trn-size')
+  let oleftem = q('#em-src-size')
+  let orightem = q('#em-trn-size')
   let osrc = q('#em-lang-origin')
   let otrn = q('#em-lang-shown')
-  if (page && page.idx) {
+  if (dgl.route == 'page') {
     let chapters = await page.chapters
     let origin = dgl.origin(chapters)
+    log('_OR', origin)
+    log('_OR', origin.chdocs.length)
     let shown = dgl.shown(chapters)
+    log('_SH', shown)
+    log('_SH', shown.chdocs.length)
     if (origin.chdocs.length == shown.chdocs.length) ocircle.setAttribute('fill', 'green')
-    oleft.textContent = origin.chdocs.length
-    oright.textContent = shown.chdocs.length
+    oleftem.textContent = origin.chdocs.length
+    orightem.textContent = shown.chdocs.length
     osrc.textContent = origin.lang
     otrn.textContent = shown.lang
-  }  else if (book) {
+  }  else if (dgl.route == 'book') {
     let origin = book.origin()
     let shown = book.shown()
     if (origin.cnts.length == shown.cnts.length) ocircle.setAttribute('fill', 'green')
-    oleft.textContent = origin.cnts.length
-    oright.textContent = shown.cnts.length
+    oleftem.textContent = origin.cnts.length
+    orightem.textContent = shown.cnts.length
     osrc.textContent = origin.lang
     otrn.textContent = shown.lang
   }
@@ -135,13 +139,13 @@ function synchronize(action, param) {
 
   let bid = oblock.closest('#src') ? book.origin().bid : book.shown().bid
   let sync = {bid, action, tmp: true}
-  if (page.idx > -1) {
+  if (dgl.route == 'page') {
     const blockid = oblock.getAttribute('blockid') * 1
     sync.blockid = blockid
     sync.idx = page.idx
     if (param) sync.param = param
     page.reSync(sync)
-  } else {
+  } else if (dgl.route == 'book') {
     const opar = oblock.querySelector('p.tree-text:hover:not(.hidden)')
     if (!opar) return
     const path = opar.getAttribute('path')
