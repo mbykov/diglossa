@@ -518,8 +518,6 @@ async function saveEditChanges() {
 
   header.ready()
   message.show('changes saved', 'darkgreen')
-  // let omarks = qs('.em-green-circle')
-  // omarks.forEach(omark=> omark.classList.remove('em-green-circle'))
 }
 
 function showSearchIcon() {
@@ -533,13 +531,9 @@ function showPagePosition() {
 }
 
 function scrollToMark(marks) {
-  log('_MS', marks)
-  log('_M', marks[0])
   let mark = marks[0]
   if (!mark) return
   let coords = getCoords(marks[0])
-  log('_CO', coords)
   let osec = q('.page')
   osec.scrollTop = coords.y
-
 }
