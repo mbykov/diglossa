@@ -33,14 +33,11 @@ export const page = {
 
     let sbooks = bkstore.get(state.bid)
     sbooks = dgl.actives(sbooks)
-    // dgl.idx = state.idx
     if (state.idx < 0) throw new Error('_PAGE NO CHAPTER IDX') // todo: del
     let syncs = getSyncs(state.bid)
     syncs = syncs.filter(sync => sync.idx === state.idx)
 
     if (state.jump) {
-      // dgl.bid = state.bid
-      // dgl.idx = state.idx // переназвать cntidx?
       let csyncs = getCSyncs(state.bid)
       book.sbooks = book.syncCnts(sbooks, csyncs)
     }
@@ -138,6 +135,8 @@ export const page = {
         })
       }
     })
+    let marks = qs('span.highlight')
+    scrollToMark(marks)
   },
   drawPage() {
     drawPage(this.chapters)
@@ -458,8 +457,8 @@ let localSearch = function(ev) {
   if (dgl.route != 'page') return
   if (ev.which == 8) page.localquery = page.localquery.slice(0, -1)
   else if (ev.which == 27) page.localquery = ''
-  else if (ev.key.length > 1) return
   else if (ev.ctrlKey) return
+  else if (ev.key.length > 1) return
   else page.localquery += ev.key
   page.localSearch()
 }
@@ -531,4 +530,16 @@ function showPagePosition() {
   let obody = q('body')
   let opos = create('hr', 'show-page-position')
   obody.appendChild(opos)
+}
+
+function scrollToMark(marks) {
+  log('_MS', marks)
+  log('_M', marks[0])
+  let mark = marks[0]
+  if (!mark) return
+  let coords = getCoords(marks[0])
+  log('_CO', coords)
+  let osec = q('.page')
+  osec.scrollTop = coords.y
+
 }

@@ -3327,9 +3327,6 @@ __webpack_require__.r(__webpack_exports__);
 
 const Store = __webpack_require__(/*! electron-store */ "electron-store");
 
-const libstore = new Store({
-  name: 'library'
-});
 const bkstore = new Store({
   name: 'libks'
 });
@@ -3353,37 +3350,7 @@ const mouse = __webpack_require__(/*! mousetrap */ "mousetrap");
 
 
 let dgl = electron__WEBPACK_IMPORTED_MODULE_2__.remote.getGlobal('dgl');
-let templates = electron__WEBPACK_IMPORTED_MODULE_2__.remote.getGlobal('templates'); // todo: del
-
-mouse.bind(['v'], function (ev) {
-  console.clear();
-  let bks = {};
-
-  for (let bid in libstore.store) {
-    let store = libstore.store[bid];
-    let books = store.books;
-    let origin = books.find(book => book.origin);
-    books.forEach(book => {
-      delete book.csyncs;
-      delete book.syncs;
-      book.descr = {
-        author: book.author,
-        title: book.title
-      };
-      delete book.author;
-      delete book.title;
-      if (!book.origin) book.orbid = origin.bid;
-    });
-    books.libidx = store.idx;
-    bks[bid] = books;
-  }
-
-  bkstore.clear();
-  bkstore.set(bks); // let libidxs = []
-  // for(let libbid in bks) {
-  //   libidxs.push(bks[libbid].libidx)
-  // }
-});
+let templates = electron__WEBPACK_IMPORTED_MODULE_2__.remote.getGlobal('templates');
 const library = {
   async ready() {
     (0,_app__WEBPACK_IMPORTED_MODULE_0__.render)('library');
@@ -3643,7 +3610,19 @@ function parseRow(book) {
   olangs.textContent = book.lang;
   orow.setAttribute('bid', book.bid);
   return orow;
+} // sometimes, for some unknown reason, Electron or Electron-store kills all the entries in the library. We have to clear also bookmarks, FTS, etc:
+
+
+function emergencyCleaning() {
+  if (lodash__WEBPACK_IMPORTED_MODULE_1___default().keys(bkstore.store).length !== 0) return;
+  bmkstore.clear();
+  csyncstore.clear();
+  syncstore.clear();
+  prefstore.clear();
+  ftstore.clear();
 }
+
+emergencyCleaning();
 
 /***/ }),
 
@@ -3972,16 +3951,13 @@ const page = {
     if (!state || !state.bid) throw new Error('_PAGE NO STATE');
     this.idx = state.idx;
     let sbooks = bkstore.get(state.bid);
-    sbooks = dgl.actives(sbooks); // dgl.idx = state.idx
-
+    sbooks = dgl.actives(sbooks);
     if (state.idx < 0) throw new Error('_PAGE NO CHAPTER IDX'); // todo: del
 
     let syncs = getSyncs(state.bid);
     syncs = syncs.filter(sync => sync.idx === state.idx);
 
     if (state.jump) {
-      // dgl.bid = state.bid
-      // dgl.idx = state.idx // переназвать cntidx?
       let csyncs = (0,_book__WEBPACK_IMPORTED_MODULE_7__.getCSyncs)(state.bid);
       _book__WEBPACK_IMPORTED_MODULE_7__.book.sbooks = _book__WEBPACK_IMPORTED_MODULE_7__.book.syncCnts(sbooks, csyncs);
     }
@@ -4111,6 +4087,8 @@ const page = {
         });
       }
     });
+    let marks = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.qs)('span.highlight');
+    scrollToMark(marks);
   },
 
   drawPage() {
@@ -4465,7 +4443,7 @@ document.addEventListener("wheel", function (ev) {
 let localSearch = function (ev) {
   if (dgl.editMode) return;
   if (dgl.route != 'page') return;
-  if (ev.which == 8) page.localquery = page.localquery.slice(0, -1);else if (ev.which == 27) page.localquery = '';else if (ev.key.length > 1) return;else if (ev.ctrlKey) return;else page.localquery += ev.key;
+  if (ev.which == 8) page.localquery = page.localquery.slice(0, -1);else if (ev.which == 27) page.localquery = '';else if (ev.ctrlKey) return;else if (ev.key.length > 1) return;else page.localquery += ev.key;
   page.localSearch();
 };
 
@@ -4532,6 +4510,17 @@ function showPagePosition() {
   let obody = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('body');
   let opos = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.create)('hr', 'show-page-position');
   obody.appendChild(opos);
+}
+
+function scrollToMark(marks) {
+  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_MS', marks);
+  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_M', marks[0]);
+  let mark = marks[0];
+  if (!mark) return;
+  let coords = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.getCoords)(marks[0]);
+  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_CO', coords);
+  let osec = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('.page');
+  osec.scrollTop = coords.y;
 }
 
 /***/ }),
@@ -5304,11 +5293,7 @@ async function setSemaphore() {
   if (dgl.route == 'page') {
     let chapters = await _page__WEBPACK_IMPORTED_MODULE_6__.page.chapters;
     let origin = dgl.origin(chapters);
-    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_OR', origin);
-    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_OR', origin.chdocs.length);
     let shown = dgl.shown(chapters);
-    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_SH', shown);
-    (0,_lib_utils__WEBPACK_IMPORTED_MODULE_1__.log)('_SH', shown.chdocs.length);
     if (origin.chdocs.length == shown.chdocs.length) ocircle.setAttribute('fill', 'green');
     oleftem.textContent = origin.chdocs.length;
     orightem.textContent = shown.chdocs.length;

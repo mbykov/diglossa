@@ -8,7 +8,6 @@ import { progress } from './lib/progress'
 import { deleteDB } from "./lib/pouch";
 
 const Store = require('electron-store')
-const libstore = new Store({name: 'library'})
 const bkstore = new Store({name: 'libks'})
 const bmkstore = new Store({name: 'bookmarks'})
 const csyncstore = new Store({name: 'csyncs'})
@@ -21,34 +20,6 @@ import { message } from './lib/message'
 
 let dgl = remote.getGlobal('dgl')
 let templates = remote.getGlobal('templates')
-
-// todo: del
-mouse.bind(['v'], function(ev) {
-  console.clear()
-  let bks = {}
-  for (let bid in libstore.store) {
-    let store = libstore.store[bid]
-    let books = store.books
-    let origin = books.find(book=> book.origin)
-    books.forEach(book=> {
-      delete book.csyncs
-      delete book.syncs
-      book.descr = {author: book.author, title: book.title}
-      delete book.author
-      delete book.title
-      if (!book.origin) book.orbid = origin.bid
-    })
-    books.libidx = store.idx
-    bks[bid] = books
-  }
-  bkstore.clear()
-  bkstore.set(bks)
-
-  // let libidxs = []
-  // for(let libbid in bks) {
-  //   libidxs.push(bks[libbid].libidx)
-  // }
-})
 
 export const library = {
   async ready() {
@@ -289,3 +260,15 @@ function parseRow (book) {
   orow.setAttribute('bid', book.bid)
   return orow
 }
+
+// sometimes, for some unknown reason, Electron or Electron-store kills all the entries in the library. We have to clear also bookmarks, FTS, etc:
+function emergencyCleaning() {
+  if (_.keys(bkstore.store).length !== 0) return
+  bmkstore.clear()
+  csyncstore.clear()
+  syncstore.clear()
+  prefstore.clear()
+  ftstore.clear()
+}
+
+emergencyCleaning()

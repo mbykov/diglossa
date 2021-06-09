@@ -73,11 +73,7 @@ async function setSemaphore() {
   if (dgl.route == 'page') {
     let chapters = await page.chapters
     let origin = dgl.origin(chapters)
-    log('_OR', origin)
-    log('_OR', origin.chdocs.length)
     let shown = dgl.shown(chapters)
-    log('_SH', shown)
-    log('_SH', shown.chdocs.length)
     if (origin.chdocs.length == shown.chdocs.length) ocircle.setAttribute('fill', 'green')
     oleftem.textContent = origin.chdocs.length
     orightem.textContent = shown.chdocs.length

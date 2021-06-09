@@ -151,7 +151,6 @@ document.addEventListener ("click",  (ev) => {
   shell.openExternal(href)
 })
 
-
 // scroll page
 document.addEventListener("wheel", function(ev) {
   if (ev.shiftKey) return
