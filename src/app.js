@@ -1,6 +1,5 @@
 'use strict'
 
-// import "./css/tailwind.css";
 import "./css/compiled.css";
 import "./css/index.css";
 import "./css/tree.css";

@@ -41,7 +41,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dicts__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./dicts */ "./src/dicts.js");
 /* harmony import */ var _search__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./search */ "./src/search.js");
 /* harmony import */ var _lookup__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./lookup */ "./src/lookup.js");
- // import "./css/tailwind.css";
+
 
 
 
@@ -4497,8 +4497,7 @@ async function saveEditChanges() {
   csyncs.forEach(csync => delete csync.tmp);
   csyncstore.set(origin.bid, csyncs);
   _header__WEBPACK_IMPORTED_MODULE_4__.header.ready();
-  _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('changes saved', 'darkgreen'); // let omarks = qs('.em-green-circle')
-  // omarks.forEach(omark=> omark.classList.remove('em-green-circle'))
+  _lib_message__WEBPACK_IMPORTED_MODULE_6__.message.show('changes saved', 'darkgreen');
 }
 
 function showSearchIcon() {
@@ -4512,12 +4511,9 @@ function showPagePosition() {
 }
 
 function scrollToMark(marks) {
-  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_MS', marks);
-  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_M', marks[0]);
   let mark = marks[0];
   if (!mark) return;
   let coords = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.getCoords)(marks[0]);
-  (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.log)('_CO', coords);
   let osec = (0,_lib_utils__WEBPACK_IMPORTED_MODULE_0__.q)('.page');
   osec.scrollTop = coords.y;
 }
