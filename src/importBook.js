@@ -10,12 +10,10 @@ import { compressDGL, uncompressDGL } from 'dgl-utils'
 import { md2json } from 'book-md2json'
 
 import { pushDocs, pushImgs } from './lib/pouch'
-// import { preference } from './prefs'
 import { book } from './book'
 
 import { router } from './app'
 const isZip = require('is-zip')
-// const JSZip = require("jszip");
 const franc = require('franc')
 
 const fse = require('fs-extra')
@@ -42,30 +40,6 @@ const mouse = require('mousetrap')
 const ftsopts = remote.getGlobal('ftsopts')
 
 export const getImportBook = {}
-
-// todo: del ctrl+o
-mouse.bind('ctrl+o_', function(ev) {
-  dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'DGL, FB2, EPUB, HTML, MD', extensions: ['dgl', 'json', 'epub', 'pdf', 'md', 'fb2', 'fb2.zip'] }]})
-    .then(result => {
-      const bpath = result.filePaths[0]
-      if (!bpath) {
-        message.show('can not locate book. Select a book', 'darkred')
-        return
-      }
-      let ext = path.extname(bpath)
-      if (!ext) {
-        message.show('can not locate book. Select a book', 'darkred')
-        return
-      }
-      progress.show()
-      if (ext == '.dgl') importDgl(bpath)
-      else if (ext == '.json') importDglJson(bpath)
-      else ipcRenderer.send('importBook', {bpath})
-    }).catch(err => {
-      message.show('can not import book', 'darkred')
-      console.log(err)
-    })
-})
 
 ipcRenderer.on('importBook', function (event) {
   dialog.showOpenDialog({properties: ['openFile'], filters: [{name: 'DGL, FB2, EPUB, HTML, MD', extensions: ['dgl', 'json', 'epub', 'pdf', 'md', 'fb2', 'fb2.zip'] }]})
@@ -229,26 +203,16 @@ async function importDglJson(bpath) {
     message.show(mess, 'darkred')
     return
   }
-  pack.bpath = bpath
 
-  let packages = []
-  for (const dgldescr of dgls) {
-    if (dgldescr.skip) continue
-    if (!dgldescr.type) continue
-    let srcpath = dgldescr.src
+  for (const text of pack.texts) {
+    if (text.skip) continue
+    if (!text.type) continue
+    let srcpath = text.src
     let bpath = path.resolve(dirpath, srcpath)
-    let { descr, docs, imgs } = await parseBookByType(bpath, dgldescr.type)
-    if (!docs) {
-      let mess = ['incorrect info.json, no book', dgldescr.src]
-      message.show(mess, 'darkred')
-      return
-    }
-    if (dgldescr.type == 'md') descr = dgldescr
-    let pack = {descr, docs, imgs}
-    packages.push(pack)
-  } // for dgls
-
-  saveDglBook(pack, packages)
+    let str = await fse.readFile(bpath, 'utf-8')
+    text.mds = str.split('\n')
+  }
+  saveDglBook(pack)
 } // import bare uncompressed dgl-json
 
 async function importDgl(dglpath) {
@@ -268,7 +232,6 @@ async function importDgl(dglpath) {
 async function saveDglBook(pack) {
   let books = []
   for (const text of pack.texts)  {
-    // let { descr, docs, imgs } = text
     let book = parseBookInfo(text)
     book.active = true
 

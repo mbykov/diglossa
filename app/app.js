@@ -1841,13 +1841,11 @@ const {
 
 
 
- // import { preference } from './prefs'
 
 
 
 
-const isZip = __webpack_require__(/*! is-zip */ "is-zip"); // const JSZip = require("jszip");
-
+const isZip = __webpack_require__(/*! is-zip */ "is-zip");
 
 const franc = __webpack_require__(/*! franc */ "franc");
 
@@ -1887,39 +1885,7 @@ let exportpath = appstore.get('exportpath');
 const mouse = __webpack_require__(/*! mousetrap */ "mousetrap");
 
 const ftsopts = electron__WEBPACK_IMPORTED_MODULE_1__.remote.getGlobal('ftsopts');
-const getImportBook = {}; // todo: del ctrl+o
-
-mouse.bind('ctrl+o_', function (ev) {
-  dialog.showOpenDialog({
-    properties: ['openFile'],
-    filters: [{
-      name: 'DGL, FB2, EPUB, HTML, MD',
-      extensions: ['dgl', 'json', 'epub', 'pdf', 'md', 'fb2', 'fb2.zip']
-    }]
-  }).then(result => {
-    const bpath = result.filePaths[0];
-
-    if (!bpath) {
-      _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show('can not locate book. Select a book', 'darkred');
-      return;
-    }
-
-    let ext = path.extname(bpath);
-
-    if (!ext) {
-      _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show('can not locate book. Select a book', 'darkred');
-      return;
-    }
-
-    _lib_progress__WEBPACK_IMPORTED_MODULE_8__.progress.show();
-    if (ext == '.dgl') importDgl(bpath);else if (ext == '.json') importDglJson(bpath);else electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.send('importBook', {
-      bpath
-    });
-  }).catch(err => {
-    _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show('can not import book', 'darkred');
-    console.log(err);
-  });
-});
+const getImportBook = {};
 electron__WEBPACK_IMPORTED_MODULE_1__.ipcRenderer.on('importBook', function (event) {
   dialog.showOpenDialog({
     properties: ['openFile'],
@@ -2121,37 +2087,16 @@ async function importDglJson(bpath) {
     return;
   }
 
-  pack.bpath = bpath;
-  let packages = [];
-
-  for (const dgldescr of dgls) {
-    if (dgldescr.skip) continue;
-    if (!dgldescr.type) continue;
-    let srcpath = dgldescr.src;
+  for (const text of pack.texts) {
+    if (text.skip) continue;
+    if (!text.type) continue;
+    let srcpath = text.src;
     let bpath = path.resolve(dirpath, srcpath);
-    let {
-      descr,
-      docs,
-      imgs
-    } = await parseBookByType(bpath, dgldescr.type);
+    let str = await fse.readFile(bpath, 'utf-8');
+    text.mds = str.split('\n');
+  }
 
-    if (!docs) {
-      let mess = ['incorrect info.json, no book', dgldescr.src];
-      _lib_message__WEBPACK_IMPORTED_MODULE_9__.message.show(mess, 'darkred');
-      return;
-    }
-
-    if (dgldescr.type == 'md') descr = dgldescr;
-    let pack = {
-      descr,
-      docs,
-      imgs
-    };
-    packages.push(pack);
-  } // for dgls
-
-
-  saveDglBook(pack, packages);
+  saveDglBook(pack);
 } // import bare uncompressed dgl-json
 
 
@@ -2175,7 +2120,6 @@ async function saveDglBook(pack) {
   let books = [];
 
   for (const text of pack.texts) {
-    // let { descr, docs, imgs } = text
     let book = parseBookInfo(text);
     book.active = true;
     let mess = [book.lang, '-', book.title, 'loading...'].join(' ');
