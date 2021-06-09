@@ -1002,7 +1002,8 @@ document.addEventListener('click', ev => {
   if (ev.target.id == 'add-bmk-button') {
     bookmarks.saveBmk();
   } else if (ev.target.classList.contains('line-delete')) {
-    const key = [bid, idx, blockid].join('.');
+    let key = [idx, blockid].join('-');
+    key = [bid, key].join('.');
     bookmarks.deleteBmk(key);
   }
 
