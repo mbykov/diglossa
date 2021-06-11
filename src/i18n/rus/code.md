@@ -1,6 +1,6 @@
 ## code:
-  diglossa.js: <span class="external">https://github.com/mbykov/diglossa.js</span></p>
+  diglossa: <span class="external">https://github.com/mbykov/diglossa</span></p>
 
 ## download:
   пакеты для Windows, MacOS, Ubuntu, Fedora:</p>
-  <p class="external">https://github.com/mbykov/diglossa.js/releases/latest</p>
+  <p class="external">https://github.com/mbykov/diglossa/releases/latest</p>

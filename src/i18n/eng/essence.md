@@ -1,10 +1,10 @@
 ## essence
 
-**diglossa.js** is a slow reading tool.
+**diglossa** is a slow reading tool.
 
 ### purposes
 
-diglossa.js is an application for a) **reading** and b) **editing the structure** of .dgl ebooks.
+diglossa is an application for a) **reading** and b) **editing the structure** of .dgl ebooks.
 
 - A dgl package can have both a single book text and several **parallel texts**.
 - any reader can add a parallel translation himself/herself at any time
@@ -14,10 +14,10 @@ diglossa.js is an application for a) **reading** and b) **editing the structure*
 
 ### methods
 
-The **diglossa.js** application does not use any linguistics and does not make or use any assumptions about so-called "language theory". Only honest comparison and transformation of strings is used. If you imagine the current trend of automatic translation systems and artificial intelligence, and turn it mentally to the exact opposite, the result will be a reference to **diglossa.js**.
+The **diglossa** application does not use any linguistics and does not make or use any assumptions about so-called "language theory". Only honest comparison and transformation of strings is used. If you imagine the current trend of automatic translation systems and artificial intelligence, and turn it mentally to the exact opposite, the result will be a reference to **diglossa**.
 
 for those who do not want, or cannot rely on automatic translation methods
 
 ### linguistics and hermeneutics
 
-the purpose of **diglossa.js** is not to learn the language, but to understand the author of the text, i.e. to talk to the author.
+the purpose of **diglossa** is not to learn the language, but to understand the author of the text, i.e. to talk to the author.

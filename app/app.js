@@ -1090,7 +1090,7 @@ __webpack_require__.r(__webpack_exports__);
 const config = {
   host: 'http://diglossa.org',
   port: '5984',
-  version: 'https://github.com/mbykov/diglossa.js/releases/latest',
+  version: 'https://github.com/mbykov/diglossa/releases/latest',
   defstate: 'library',
   batch_size: 1000,
   pageSize: 25,

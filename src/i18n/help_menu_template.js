@@ -13,15 +13,15 @@ export function helpMenuTemplate() {
         shell.openExternal(href)
       } },
       { label: t("Source Code"), click: () => {
-        href = 'https://github.com/mbykov/diglossa.js'
+        href = 'https://github.com/mbykov/diglossa'
         shell.openExternal(href)
       } },
       { label: t("Download"), click: () => {
-        href = 'https://github.com/mbykov/diglossa.js/releases/latest'
+        href = 'https://github.com/mbykov/diglossa/releases/latest'
         shell.openExternal(href)
       } },
       { label: t("Report an Issue…"), click: () => {
-        href = 'https://github.com/mbykov/diglossa.js/issues/new/'
+        href = 'https://github.com/mbykov/diglossa/issues/new/'
         // console.log('INFO', debugInfo())
         let body = debugInfo()
         href = [href, body].join('?body=')

@@ -16,7 +16,7 @@ __webpack_require__.r(__webpack_exports__);
 const config = {
   host: 'http://diglossa.org',
   port: '5984',
-  version: 'https://github.com/mbykov/diglossa.js/releases/latest',
+  version: 'https://github.com/mbykov/diglossa/releases/latest',
   defstate: 'library',
   batch_size: 1000,
   pageSize: 25,
@@ -310,19 +310,19 @@ function helpMenuTemplate() {
     }, {
       label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("Source Code"),
       click: () => {
-        href = 'https://github.com/mbykov/diglossa.js';
+        href = 'https://github.com/mbykov/diglossa';
         electron__WEBPACK_IMPORTED_MODULE_0__.shell.openExternal(href);
       }
     }, {
       label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("Download"),
       click: () => {
-        href = 'https://github.com/mbykov/diglossa.js/releases/latest';
+        href = 'https://github.com/mbykov/diglossa/releases/latest';
         electron__WEBPACK_IMPORTED_MODULE_0__.shell.openExternal(href);
       }
     }, {
       label: (0,_i18n__WEBPACK_IMPORTED_MODULE_1__.i18n)("Report an Issue…"),
       click: () => {
-        href = 'https://github.com/mbykov/diglossa.js/issues/new/'; // console.log('INFO', debugInfo())
+        href = 'https://github.com/mbykov/diglossa/issues/new/'; // console.log('INFO', debugInfo())
 
         let body = debugInfo();
         href = [href, body].join('?body=');
@@ -675,7 +675,7 @@ function MenuFactory(lang) {
   \**********************/
 /***/ ((module) => {
 
-module.exports = JSON.parse('{"version":"0.9.92","name":"diglossa.js","productName":"Diglossa.js","description":"Bilingual Reader - an application for reading and creating bi-(multi) lingual texts","author":"M. Bykov <m.bykov@gmail.com>","copyright":"© 2017- 2021, M.Bykov","homepage":"http://diglossa.org","license":"GPL-3.0","main":"app/background.js","scripts":{"postinstall":"electron-builder install-app-deps","preunit":"webpack --config=build/webpack.unit.config.js --env=test --display=none","unit":"electron-mocha temp/specs.js --renderer --require source-map-support/register","pree2e":"webpack --config=build/webpack.app.config.js --env=test --display=none && webpack --config=build/webpack.e2e.config.js --env=test --display=none","e2e":"mocha temp/e2e.js --require source-map-support/register","test":"npm run unit && npm run e2e","start":"node build/start.js","release":"webpack --config=build/webpack.app.config.js --env=production && electron-builder"},"asar":false,"build":{"appId":"org.diglossa.diglossa","files":["app/**/*","src/**/*","resources/**/*","package.json"],"directories":{"buildResources":"resources"},"linux":{"category":"Scientific software","target":[{"target":"tar.gz","arch":["x64"]},{"target":"deb","arch":["x64"]},{"target":"AppImage","arch":["x64"]},{"target":"rpm","arch":["x64"]}],"icon":"resources/icons"},"publish":"github"},"dependencies":{"@babel/runtime":"^7.12.5","book-epub2json":"0.9.1","book-fb2json":"0.9.6","book-md2json":"0.9.55","book-pdf2json":"^0.9.0","dgl-utils":"0.8.2","dict-sd2json":"0.9.1","electron-store":"8.0.0","flexsearch":"0.6.32","franc":"^5.0.0","fs-extra":"^9.0.1","glob":"^7.1.7","is-zip":"^1.0.0","json5":"^2.1.3","langs":"^2.0.0","lodash":"^4.17.20","mark.js":"^8.11.1","marked":"2.0.1","mousetrap":"^1.6.5","natural":"^2.4.1","pouchdb":"^7.2.2","snowball-german":"^1.0.0","stopword":"^1.0.6"},"devDependencies":{"@babel/core":"^7.12.10","@babel/preset-env":"^7.12.11","autoprefixer":"^10.1.0","babel-loader":"^8.0.0-beta.4","chai":"^4.1.0","css-loader":"^3.1.0","electron":"11.1.1","electron-builder":"^22.10.5","electron-mocha":"^8.1.1","file-loader":"^6.2.0","mocha":"^7.1.1","postcss":"^8.2.2","postcss-loader":"^4.1.0","source-map-support":"^0.5.6","style-loader":"^1.1.4","tailwind":"^4.0.0","webpack":"^5.11.1","webpack-cli":"^4.3.1","webpack-merge":"^5.7.3","webpack-node-externals":"^2.5.2","worker-loader":"^3.0.7"},"repository":{"type":"git","url":"git+https://github.com/mbykov/diglossa.js.git"},"bugs":{"url":"https://github.com/mbykov/diglossa.js/issues"}}');
+module.exports = JSON.parse('{"version":"0.9.93","name":"diglossa","productName":"Diglossa","description":"Bilingual Reader - an application for reading and creating bi-(multi) lingual texts","author":"M. Bykov <m.bykov@gmail.com>","copyright":"© 2017- 2021, M.Bykov","homepage":"http://diglossa.org","license":"GPL-3.0","main":"app/background.js","scripts":{"postinstall":"electron-builder install-app-deps","preunit":"webpack --config=build/webpack.unit.config.js --env=test --display=none","unit":"electron-mocha temp/specs.js --renderer --require source-map-support/register","pree2e":"webpack --config=build/webpack.app.config.js --env=test --display=none && webpack --config=build/webpack.e2e.config.js --env=test --display=none","e2e":"mocha temp/e2e.js --require source-map-support/register","test":"npm run unit && npm run e2e","start":"node build/start.js","release":"webpack --config=build/webpack.app.config.js --env=production && electron-builder"},"asar":false,"build":{"appId":"org.diglossa.diglossa","files":["app/**/*","src/**/*","resources/**/*","package.json"],"directories":{"buildResources":"resources"},"linux":{"category":"Scientific software","target":[{"target":"tar.gz","arch":["x64"]},{"target":"deb","arch":["x64"]},{"target":"AppImage","arch":["x64"]},{"target":"rpm","arch":["x64"]}],"icon":"resources/icons"},"publish":"github"},"dependencies":{"@babel/runtime":"^7.12.5","book-epub2json":"0.9.1","book-fb2json":"0.9.6","book-md2json":"0.9.55","book-pdf2json":"^0.9.0","dgl-utils":"0.8.2","dict-sd2json":"0.9.1","electron-store":"8.0.0","flexsearch":"0.6.32","franc":"^5.0.0","fs-extra":"^9.0.1","glob":"^7.1.7","is-zip":"^1.0.0","json5":"^2.1.3","langs":"^2.0.0","lodash":"^4.17.20","mark.js":"^8.11.1","marked":"2.0.1","mousetrap":"^1.6.5","natural":"^2.4.1","pouchdb":"^7.2.2","snowball-german":"^1.0.0","stopword":"^1.0.6"},"devDependencies":{"@babel/core":"^7.12.10","@babel/preset-env":"^7.12.11","autoprefixer":"^10.1.0","babel-loader":"^8.0.0-beta.4","chai":"^4.1.0","css-loader":"^3.1.0","electron":"11.1.1","electron-builder":"^22.10.5","electron-mocha":"^8.1.1","file-loader":"^6.2.0","mocha":"^7.1.1","postcss":"^8.2.2","postcss-loader":"^4.1.0","source-map-support":"^0.5.6","style-loader":"^1.1.4","tailwind":"^4.0.0","webpack":"^5.11.1","webpack-cli":"^4.3.1","webpack-merge":"^5.7.3","webpack-node-externals":"^2.5.2","worker-loader":"^3.0.7"},"repository":{"type":"git","url":"git+https://github.com/mbykov/diglossa.js.git"},"bugs":{"url":"https://github.com/mbykov/diglossa.js/issues"}}');
 
 /***/ }),
 

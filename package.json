@@ -1,7 +1,7 @@
 {
-  "version": "0.9.92",
-  "name": "diglossa.js",
-  "productName": "Diglossa.js",
+  "version": "0.9.93",
+  "name": "diglossa",
+  "productName": "Diglossa",
   "description": "Bilingual Reader - an application for reading and creating bi-(multi) lingual texts",
   "author": "M. Bykov <m.bykov@gmail.com>",
   "copyright": "© 2017- 2021, M.Bykov",

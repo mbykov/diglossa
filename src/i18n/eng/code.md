@@ -1,5 +1,6 @@
-#### code:
-  Biblos.js: <span class="external">https://github.com/mbykov/biblos.js</span></p>
+## code:
+  diglossa: <span class="external">https://github.com/mbykov/diglossa</span></p>
+
 #### download:
   packages for Windows, MacOS, Ubuntu, Fedora:</p>
-  <p class="external">https://github.com/mbykov/biblos.js/releases/latest</p>
+  <p class="external">https://github.com/mbykov/diglossa/releases/latest</p>

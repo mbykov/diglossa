@@ -1,8 +1,8 @@
-# **diglossa.js**
+# **diglossa**
 
 **slow reading tool** - detailed description <span class="external">http://diglossa.org/ru</span>
 
-**diglossa.js** is free, open source, with the GNU GPL free license, a modular structure and an intuitive interface. It can be used simply as a handy e-book reader of any kind. Plugins allow you to use any language other than the commonly used
+**diglossa** is free, open source, with the GNU GPL free license, a modular structure and an intuitive interface. It can be used simply as a handy e-book reader of any kind. Plugins allow you to use any language other than the commonly used
 
 ### language designations:
   the application uses the three-letter ISO 639 designations - <span class="external">https://iso639-3.sil.org/code_tables/639/data</span>
@@ -25,7 +25,7 @@
 - automatic paragraph synchronization check
 
 ## plugins
-in v.1.0 diglossa.js was tested only with european languages - fra,deu.eng,rus,spa,ita
+in v.1.0 diglossa was tested only with european languages - fra,deu.eng,rus,spa,ita
 
 it is possible to use plugins for any language (instructions and examples in next version)
 
