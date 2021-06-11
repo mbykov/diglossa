@@ -1,15 +1,21 @@
 # Diglossa.js
 
-Multi-lingual Reader - an application for working with parallel texts.
+Multi-lingual Reader - an application for working with parallel texts and generating contextual multilingual dictionaries
+
+look: http://diglossa.org/langs
 
 ## v.0.9 in progress, beta
 
 diglossa.js is an application for:
 
 - a) **reading** any e-books
-- b) **editing the structure** of e-books
-- c) **auto-checking** paragraphs synchronization
-- d) **generating** contextual multilingual http://diglossa.org/dictionaries
+- b) **searching** for your e-cook in a heap
+- c) **installing** dictionaries in an open formats
+- d) **auto-detections** a lang of the book
+- e) **editing the structure** of e-books
+- f) **auto-checking** paragraphs synchronization
+- g) **text snippet** analysis
+- h) **generating** contextual multilingual dictionaries: http://diglossa.org/dictionaries
 
 based on electron.js and couchdb
 

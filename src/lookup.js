@@ -83,7 +83,7 @@ function fireImport(orow, shift) {
   if (!bpath) return
   bpath = path.resolve(lookup.heappath, bpath)
   let sbooks = book.sbooks
-  if (shift && book) {
+  if (shift && book && book.sbooks) {
     let origin = dgl.origin(book.sbooks)
     ipcRenderer.send('importBook', {bpath, orbid: origin.bid})
   } else if (shift) {

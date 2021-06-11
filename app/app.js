@@ -3695,7 +3695,7 @@ function fireImport(orow, shift) {
   bpath = path.resolve(lookup.heappath, bpath);
   let sbooks = _book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks;
 
-  if (shift && _book__WEBPACK_IMPORTED_MODULE_5__.book) {
+  if (shift && _book__WEBPACK_IMPORTED_MODULE_5__.book && _book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks) {
     let origin = dgl.origin(_book__WEBPACK_IMPORTED_MODULE_5__.book.sbooks);
     electron__WEBPACK_IMPORTED_MODULE_3__.ipcRenderer.send('importBook', {
       bpath,

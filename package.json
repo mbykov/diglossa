@@ -2,7 +2,7 @@
   "version": "0.9.93",
   "name": "diglossa",
   "productName": "Diglossa",
-  "description": "Bilingual Reader - an application for reading and creating bi-(multi) lingual texts",
+  "description": "Multi-lingual Reader - an application for working with parallel texts and generating contextual multilingual dictionaries",
   "author": "M. Bykov <m.bykov@gmail.com>",
   "copyright": "© 2017- 2021, M.Bykov",
   "homepage": "http://diglossa.org",
