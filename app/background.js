@@ -260,7 +260,6 @@ function fileMenuTemplate() {
     //    click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'signin') } },
     // {  label: t("sign up"),
     //    click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'signup') } },
-    // { type: "separator" },
     {
       type: "separator"
     }, // {  label: t("Preferences"),
@@ -932,7 +931,9 @@ const createWindow = () => {
   electron__WEBPACK_IMPORTED_MODULE_2__.ipcMain.on('importBook', async (event, data) => {
     let bpath = data.bpath;
     let ext = path__WEBPACK_IMPORTED_MODULE_0___default().extname(data.bpath);
-    if (!ext) return false;
+    if (!ext) return {
+      descr: 'book should has extension'
+    };
     let type = ext.replace(/^\./, '');
     if (type == 'zip') type = bpath.split('.').slice(-2).join('.');
     let action;

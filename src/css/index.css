@@ -39,24 +39,35 @@
 }
 
 /* @apply py-2 mb-1 text-left text-gray-900 w-full bg-gray-100 shadow-md rounded */
-.header {
-  padding-top: 0.5rem; padding-bottom: 0.5rem;
+.home {
+  padding: 0.5rem;
   text-align: left;
   color: #1a202c;
   width: 100%;
   background-color: #f7fafc;
-  cursor: pointer;
   color: maroon;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border-radius: 0.25rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.header {
+    padding-top: 0.5rem; padding-bottom: 0.5rem;
+    text-align: left;
+    color: #1a202c;
+    width: 100%;
+    background-color: #f7fafc;
+    cursor: pointer;
+    color: maroon;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-radius: 0.25rem;
 }
 
 /* @apply px-12 */
 .header-cell {
   padding-left: 3rem; padding-right: 3rem;
 }
-
-
 
 .hidden {
   display: none!important;

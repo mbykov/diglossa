@@ -69,7 +69,7 @@ const createWindow = () => {
   ipcMain.on('importBook', async (event, data) => {
     let bpath = data.bpath
     let ext = path.extname(data.bpath)
-    if (!ext) return false
+    if (!ext) return {descr: 'book should has extension'}
     let type = ext.replace(/^\./, '')
     if (type == 'zip') type = bpath.split('.').slice(-2).join('.')
 

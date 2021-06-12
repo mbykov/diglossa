@@ -85,6 +85,7 @@ ipcRenderer.on('addParallelBook', function (event) {
 })
 
 ipcRenderer.on('importBookResult', function (event, result) {
+  log('_importBookR', result)
   if (!result.docs) {
     message.show('can not parse book', 'darkred')
     return
@@ -103,6 +104,7 @@ function guessLang(docs) {
 }
 
 async function importBook(result) {
+  log('_importBook')
   let { descr, docs, imgs } = result
   let half = docs.length/2
   descr.lang = guessLang(docs.slice(half, half+200))
@@ -191,7 +193,7 @@ async function parseBookByType(bpath, type) {
   return result
 }
 
-async function importDglJson(bpath) {
+export async function importDglJson(bpath) {
   let dirpath = bpath.substring(0, bpath.lastIndexOf(path.sep))
   let pack, dgls
   try {
@@ -215,7 +217,7 @@ async function importDglJson(bpath) {
   saveDglBook(pack)
 } // import bare uncompressed dgl-json
 
-async function importDgl(dglpath) {
+export async function importDgl(dglpath) {
   progress.show()
   let iszip = isZip(fse.readFileSync(dglpath))
   if (!iszip) {

@@ -1,5 +1,5 @@
 {
-  "version": "0.9.93",
+  "version": "0.9.94",
   "name": "diglossa",
   "productName": "Diglossa",
   "description": "Multi-lingual Reader - an application for working with parallel texts and generating contextual multilingual dictionaries",
@@ -18,7 +18,6 @@
     "start": "node build/start.js",
     "release": "webpack --config=build/webpack.app.config.js --env=production && electron-builder"
   },
-  "asar": false,
   "build": {
     "appId": "org.diglossa.diglossa",
     "files": [

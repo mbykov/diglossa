@@ -16,6 +16,7 @@ import { header, rotateBlock } from './header'
 const mouse = require('mousetrap')
 const Store = require('electron-store')
 const appstore = new Store({name: 'app'})
+const bkstore = new Store({name: 'libks'})
 
 let dgl = remote.getGlobal('dgl')
 import { getExportBook } from './exportBook'
@@ -92,8 +93,6 @@ export function render(template, selector = '#app') {
 function closeAll() {
   let ofn = q('#footnote')
   if (ofn) ofn.parentElement.removeChild(ofn)
-  // let oimgs = qs('img.floating')
-  // oimgs.forEach(el => { el.parentElement.removeChild(el) })
   progress.hide()
   message.hide()
   page.localquery = ''
@@ -102,7 +101,6 @@ function closeAll() {
 
 ;(async function init() {
   await loadTemplates()
-  const initState = {route: 'library'}
   dgl.langs = (books) => books.filter(book=> book.active).map(book=> book.lang),
   dgl.alllangs = (books) => books.map(book=> book.lang),
   dgl.actives = (books) => {
@@ -114,7 +112,12 @@ function closeAll() {
   dgl.shown = (books) => books.filter(book=> book.active).find(book=> book.shown),
   dgl.trns = (books) => books.filter(book=> book.active && !book.origin)
 
-  router(initState)
+  if (_.isEmpty(bkstore.store)) {
+    loadSection(config.deflang, 'home')
+  } else {
+    const initState = {route: 'library'}
+    router(initState)
+  }
   setSearchIcon()
   render('message', '#message')
 })()
@@ -212,11 +215,6 @@ ipcRenderer.on('version', async function (event, oldver) {
         message.show(versionTxt, 'darkgreen', true)
         const omessage = q('#message-text')
         omessage.classList.add('version')
-        // let omessage = omess.querySelector('#message-text')
-        // progress.hide()
-        // omess.classList.remove('hidden')
-        // omessage.classList.remove('darkred')
-        // omessage.textContent = versionTxt
       }
     })
     .catch(err=> {

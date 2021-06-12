@@ -15,6 +15,7 @@ import { book } from './book'
 let dgl = remote.getGlobal('dgl')
 const Mark = require('mark.js')
 const path = require("path")
+import { importDgl, importDglJson } from './importBook'
 
 const Store = require('electron-store')
 const appstore = new Store({name: 'appstore'})
@@ -82,14 +83,18 @@ function fireImport(orow, shift) {
   let bpath = orow.textContent
   if (!bpath) return
   bpath = path.resolve(lookup.heappath, bpath)
-  let sbooks = book.sbooks
-  if (shift && book && book.sbooks) {
+  if (!shift) {
+    let ext = path.extname(bpath)
+    if (ext == '.dgl') importDgl(bpath)
+    else if (ext == '.json') importDglJson
+    else ipcRenderer.send('importBook', {bpath})
+  } else if (shift && book && book.sbooks) {
     let origin = dgl.origin(book.sbooks)
     ipcRenderer.send('importBook', {bpath, orbid: origin.bid})
-  } else if (shift) {
+  } else {
     message.show('select book before', 'darkred')
     return
-  } else ipcRenderer.send('importBook', {bpath})
+  }
 }
 
 function openHeappath() {

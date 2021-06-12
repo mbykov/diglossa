@@ -16,8 +16,6 @@ export function fileMenuTemplate() {
       // {  label: t("sign up"),
       //    click: () => { BrowserWindow.getFocusedWindow().webContents.send('route', 'signup') } },
 
-      // { type: "separator" },
-
       { type: "separator" },
 
       // {  label: t("Preferences"),
