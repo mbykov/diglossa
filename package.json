@@ -93,7 +93,7 @@
     "babel-loader": "^8.0.0-beta.4",
     "chai": "^4.1.0",
     "css-loader": "^3.1.0",
-    "electron": "11.1.1",
+    "electron": "22.3.25",
     "electron-builder": "^22.10.5",
     "electron-mocha": "^8.1.1",
     "file-loader": "^6.2.0",
